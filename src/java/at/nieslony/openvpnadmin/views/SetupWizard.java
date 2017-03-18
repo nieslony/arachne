@@ -7,8 +7,10 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.RoleRuleIsUser;
 import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.beans.DatabaseSettings;
 import at.nieslony.openvpnadmin.beans.LocalUsers;
 import at.nieslony.openvpnadmin.beans.Pki;
+import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
 import at.nieslony.openvpnadmin.beans.Roles;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
@@ -23,11 +25,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -36,6 +41,7 @@ import javax.faces.event.ComponentSystemEvent;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
 import javax.security.auth.x500.X500Principal;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 
 /**
@@ -80,6 +86,79 @@ public class SetupWizard implements Serializable {
     private String certSignatureAlgorithm = "SHA512withRSA";
     private int certKeySize = 2048;
 
+    private String databaseHost = "localhost";
+    private int  databasePort = 5432;
+    private String databaseUser = "openvpnadmin";
+    private String databasePassword = "";
+    private String databaseName = "openvpnadmin";
+    private String dbAdminUser = "";
+    private String dbAdminPassword = "";
+    private int userExistingDb = 0;
+
+    public int getUserExistingDb() {
+        return userExistingDb;
+    }
+
+    public void setUserExistingDb(int userExistingDb) {
+        this.userExistingDb = userExistingDb;
+    }
+
+    public String getDbAdminPassword() {
+        return dbAdminPassword;
+    }
+
+    public void setDbAdminPassword(String daAdminPassword) {
+        this.dbAdminPassword = daAdminPassword;
+    }
+
+    public String getDbAdminUser() {
+        return dbAdminUser;
+    }
+
+    public void setDbAdminUser(String dbAdminUser) {
+        this.dbAdminUser = dbAdminUser;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
+    public void setDatabaseName(String databaseName) {
+        this.databaseName = databaseName;
+    }
+
+    public String getDatabasePassword() {
+        return databasePassword;
+    }
+
+    public void setDatabasePassword(String databasePassword) {
+        this.databasePassword = databasePassword;
+    }
+
+    public String getDatabaseUser() {
+        return databaseUser;
+    }
+
+    public void setDatabaseUser(String databseUser) {
+        this.databaseUser = databseUser;
+    }
+
+    public int getDatabasePort() {
+        return databasePort;
+    }
+
+    public void setDatabasePort(int databasePort) {
+        this.databasePort = databasePort;
+    }
+
+    public String getDatabaseHost() {
+        return databaseHost;
+    }
+
+    public void setDatabaseHost(String databaseHost) {
+        this.databaseHost = databaseHost;
+    }
+
     private boolean performingSetup = false;
 
     private List<SelectItem> signatureAlgorithms;
@@ -92,6 +171,12 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{roles}")
     private Roles rolesBean;
+
+    @ManagedProperty(value = "#{databaseSettings}")
+    private DatabaseSettings databaseSettings;
+
+    @ManagedProperty(value = "#{propertiesStorage}")
+    private PropertiesStorageBean propertiesStorage;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -350,8 +435,6 @@ public class SetupWizard implements Serializable {
     }
 
     private void saveCA() throws GeneralSecurityException, IOException {
-        performingSetup = true;
-
         StringWriter sw = new StringWriter();
         sw.append("CN=" + caCommonName);
         if (!caOrganizationalUnit.isEmpty())
@@ -376,8 +459,6 @@ public class SetupWizard implements Serializable {
         fw = new FileWriter(pki.getCaDir() + "/ca.key");
         pki.writeCaKey(new PrintWriter(fw));
         fw.close();
-
-        performingSetup = false;
     }
 
     private void saveServerCert() throws GeneralSecurityException, IOException {
@@ -414,15 +495,54 @@ public class SetupWizard implements Serializable {
         fw.close();
     }
 
-    public void onSave() throws GeneralSecurityException, IOException {
-        VpnUser admin = localUsers.addUser(adminUserName, password);
-        admin.setFullName("Master Administrator");
-        rolesBean.addRule("admin", new RoleRuleIsUser(adminUserName));
-        rolesBean.save();
-        saveCA();
-        saveServerCert();
+    void saveDatabaseSettings() {
+        databaseSettings.setDatabaseName(databaseName);
+        databaseSettings.setDatabaseUser(databaseUser);
+        databaseSettings.setDatabasePassword(databasePassword);
+        databaseSettings.setHost(databaseHost);
+        databaseSettings.setPort(databasePort);
 
-        FacesContext.getCurrentInstance().getExternalContext().redirect("Login.xhtml");
+        try {
+            databaseSettings.save();
+            databaseSettings.closeDatabaseConnection();
+        }
+        catch (IOException | SQLException ex) {
+            logger.severe(String.format("Cannot save databse settings: %s", ex.toString()));
+        }
+    }
+
+    public void onSave() {
+        performingSetup = true;
+
+        logger.info("--- Begin application setup ---");
+        try {
+            saveDatabaseSettings();
+            propertiesStorage.createTables();
+
+            VpnUser admin = localUsers.addUser(adminUserName, password);
+            admin.setFullName("Master Administrator");
+            rolesBean.addRule("admin", new RoleRuleIsUser(adminUserName));
+            rolesBean.save();
+            saveCA();
+            saveServerCert();
+
+            performingSetup = false;
+
+            FacesContext.getCurrentInstance().getExternalContext().redirect("Login.xhtml");
+        }
+        catch (Exception ex) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.printf("Caught %s exception duriung application setup.\n",
+                    ex.getClass().getName());
+            pw.println(ex.getMessage());
+            ex.printStackTrace(pw);
+
+            logger.severe(sw.toString());
+        }
+        finally {
+            logger.info("--- End application setup ---");
+        }
     }
 
     public void setLocalUsers(LocalUsers localUsers) {
@@ -447,5 +567,42 @@ public class SetupWizard implements Serializable {
 
     public List<SelectItem> getSignatureAlgorithms() {
         return signatureAlgorithms;
+    }
+
+    public String getDatabaseUrl() {
+        String url = String.format("jdbc:postgresql://%s:%d/%s",
+                databaseHost, databasePort, databaseName);
+
+        return url;
+    }
+
+    public void setDatabaseSettings(DatabaseSettings databaseSettings) {
+        this.databaseSettings = databaseSettings;
+    }
+
+    public void setPropertiesStorage(PropertiesStorageBean ps) {
+        propertiesStorage = ps;
+    }
+
+    public void onTestDatabaseConnection() {
+        saveDatabaseSettings();
+        Connection con;
+        String message = "Database connection seems to work";
+        try {
+            databaseSettings.closeDatabaseConnection();
+            con = databaseSettings.getDatabseConnection();
+            if (con == null)
+                message = "Cannot create database connection";
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            message = ex.getMessage();
+        }
+
+        FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_INFO,
+                "Test database connection",
+                message
+        );
+
+        RequestContext.getCurrentInstance().showMessageInDialog(facesMessage);
     }
 }

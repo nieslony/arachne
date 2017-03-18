@@ -35,12 +35,14 @@
                                        match="password2"
                                        required="true"
                                        feedback="true"
+                                       label="'Password'"
                                        />
 
                         <h:outputText value="Retype password *:"/>
                         <p:password id="password2"
                                        value="#{setupWizard.password}"
                                        required="true"
+                                       label="'Retype password'"
                                        />
                     </h:panelGrid>
                 </p:tab>
@@ -139,6 +141,49 @@
                             <f:selectItems value="#{setupWizard.certKeySizes}"/>
                         </p:selectOneMenu>
                     </h:panelGrid>
+                </p:tab>
+                <p:tab id="databaseSettings" title="Database">
+                    <h:panelGrid columns="2" columnClasses="label, value">
+                        <h:outputLabel value="Database name:"/>
+                        <p:inputText id="databaseName" value="#{setupWizard.databaseName}">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>                            
+                        
+                        <h:outputLabel value="Databse host:"/>
+                        <p:inputText value="#{setupWizard.databaseHost}">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>                            
+
+                        <h:outputLabel value="Databse port:"/>
+                        <p:inputText value="#{setupWizard.databasePort}">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>                            
+                        
+                        <h:outputLabel value="Databse user:"/>
+                        <p:inputText value="#{setupWizard.databaseUser}"/>
+
+                        <h:outputLabel value="Databse password:"/>
+                        <p:password value="#{setupWizard.databasePassword}"/>
+                        
+                        <h:outputText value="Database URL:"/>
+                        <h:outputText id="databaseUrl" value="#{setupWizard.databaseUrl}"/>
+                        
+                        <h:outputText value=""/>
+                        <p:selectOneRadio value="#{setupWizard.userExistingDb}" columns="1">
+                            <f:selectItem itemValue="0" itemLabel="Use existing database and user"/>
+                            <f:selectItem itemValue="1" itemLabel="Create database and user"/>
+                            <p:ajax event="change" 
+                                    update="lblDbAdminUser dbAdminUser lblDbAdminPassword dbAdminPassword"/>
+                        </p:selectOneRadio>
+                        
+                        <h:outputText id="lblDbAdminUser" value="Admin user name:" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        <p:inputText id="dbAdminUser" value="#{setupWizard.dbAdminUser}" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        
+                        <h:outputLabel id="lblDbAdminPassword" value="Admin user password:" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        <p:password id="dbAdminPassword" value="#{setupWizard.dbAdminPassword}" disabled="#{setupWizard.userExistingDb == 0}"/>
+                    </h:panelGrid>
+                    
+                    <p:commandButton value="Test connection" icon="ui-icon-script" actionListener="#{setupWizard.onTestDatabaseConnection()}" />
                 </p:tab>
                 <p:tab id="summary" title="Summary">
                     <p:panel>
