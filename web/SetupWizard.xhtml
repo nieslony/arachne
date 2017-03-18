@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+    <f:event listener="#{setupWizard.requireNoSetup}" type="preRenderView"/>
+
+    <h:head>
+        <title>Setup Wizard</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <h:outputStylesheet library="css" name="default.css"/>
+        <h:outputStylesheet library="css" name="cssLayout.css"/>
+        <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
+    </h:head>
+
+    <h:body>
+        <p:dialog visible="true" closable="false" resizable="false" draggable="false" header="OpenVPN Admin - SetupWizard">
+            <h:form>
+                <p:wizard flowListener="#{setupWizard.onFlowProcess}" >
+                    <p:tab title="Welcome">
+                        <p>
+                            Welcome to <strong>OpenVPN Admin</strong>!
+                            Before first use some setting hav do be done.
+                        </p>
+                    </p:tab>
+                <p:tab id="adminUser" title="Admin User">
+                    <h:panelGrid columns="2" columnClasses="label, value">
+                        <h:outputText value="Admin user name *:"/>
+                        <p:inputText value="#{setupWizard.adminUserName}" required="true"/>
+                        <h:outputText value="Password *:"/>
+                        <p:password id="password1"
+                                       value="#{setupWizard.password}"
+                                       match="password2"
+                                       required="true"
+                                       feedback="true"
+                                       />
+
+                        <h:outputText value="Retype password *:"/>
+                        <p:password id="password2"
+                                       value="#{setupWizard.password}"
+                                       required="true"
+                                       />
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="pki" title="PKI">
+                    <p:selectOneRadio columns="1">
+                        <f:selectItem itemLabel="Self signed CA"/>
+                        <f:selectItem itemLabel="Request server certificate from root CA"/>
+                        <f:selectItem itemLabel="Import CA"/>
+                    </p:selectOneRadio>
+
+                </p:tab>
+                <p:tab id="createSelfSignedCA" title="Create self signed CA">
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="caLabel"/>
+                        <p:inputText id="caLabel"
+                                     value="#{setupWizard.caTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="caCommonName"/>
+                        <p:inputText id="caCommonName"
+                                     value="#{setupWizard.caCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="caOrganization"/>
+                        <p:inputText id="caOrganization" value="#{setupWizard.caOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="caOrganizationalUnit"/>
+                        <p:inputText id="caOrganizationalUnit" value="#{setupWizard.caOrganizationalUnit}"/>
+
+                        <h:outputLabel value="City:" for="caCity"/>
+                        <p:inputText id="caCity" value="#{setupWizard.caCity}"/>
+                        <h:outputLabel value="State:" for="caState"/>
+                        <p:inputText id="caState" value="#{setupWizard.caState}"/>
+
+                        <h:outputLabel value="Country:" for="caCountry"/>
+                        <p:inputText id="caCountry" value="#{setupWizard.caCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Valid from:" for="caStartDate"/>
+                        <p:calendar id="caStartDate" value="#{setupWizard.caStartDate}"/>
+                        <p:outputLabel value="Valid to:" for="caEndDate"/>
+                        <p:calendar id="caEndDate" value="#{setupWizard.caEndDate}"/>
+
+                        <p:outputLabel value="Signature algorithm:" for="caSignatureAlgorithm"/>
+                        <p:selectOneMenu id="caSignatureAlgorithm" value="#{setupWizard.caSignatureAlgorithm}">
+                            <p:ajax update="caKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key size:"/>
+                        <p:selectOneMenu id="caKeySize" value="#{setupWizard.caKeySize}">
+                            <f:selectItems value="#{setupWizard.caKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="createCertificate" title="Create server certificate">
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="certLabel"/>
+                        <p:inputText id="certLabel"
+                                     value="#{setupWizard.certTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="certCommonName"/>
+                        <p:inputText id="certCommonName"
+                                     value="#{setupWizard.certCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="certOrganization"/>
+                        <p:inputText id="certOrganization" value="#{setupWizard.certOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="certOrganizationalUnit"/>
+                        <p:inputText id="certOrganizationalUnit" value="#{setupWizard.certOrganizationalUnit}"/>
+
+                        <h:outputLabel value="Cyity:" for="certCity"/>
+                        <p:inputText id="certCity" value="#{setupWizard.certCity}"/>
+                        <h:outputLabel value="State:" for="certState"/>
+                        <p:inputText id="certState" value="#{setupWizard.certState}"/>
+
+                        <h:outputLabel value="Country:" for="certCountry"/>
+                        <p:inputText id="certCountry" value="#{setupWizard.certCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Valid from:" for="certStartDate"/>
+                        <p:calendar id="certStartDate" value="#{setupWizard.certStartDate}"/>
+                        <p:outputLabel value="Valid to:" for="certEndDate"/>
+                        <p:calendar id="certEndDate" value="#{setupWizard.certEndDate}"/>
+
+                        <p:outputLabel value="Signature algorithm:" for="certSignatureAlgorithm"/>
+                        <p:selectOneMenu id="certSignatureAlgorithm" value="#{setupWizard.certSignatureAlgorithm}">
+                            <p:ajax update="certKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key algorithm:" for="certKeySize"/>
+                        <p:selectOneMenu id="certKeySize" value="#{setupWizard.certKeySize}">
+                            <f:selectItems value="#{setupWizard.certKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="summary" title="Summary">
+                    <p:panel>
+                        <p:commandButton value="Finish" action="#{setupWizard.onSave}"/>
+                    </p:panel>
+                </p:tab>
+
+            </p:wizard>
+            <p:messages showDetail="true" autoUpdate="true"/>
+            </h:form>
+        </p:dialog>
+    </h:body>
+</html>

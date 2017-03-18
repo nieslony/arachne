@@ -1,0 +1,10 @@
+- spec: sudo ln -s /usr/share/java/bcprov.jar ./var/lib/tomcat/webapps/OpenVPN_Admin/WEB-INF/lib/
+
+- remove douplicate LDAP user ipa
+
+- setup wizard
+  - finishd button
+  - ca management
+
+- ca: crl
+

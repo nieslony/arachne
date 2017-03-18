@@ -1,0 +1,110 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package at.nieslony.openvpnadmin.views;
+
+import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.beans.CurrentUser;
+import at.nieslony.openvpnadmin.beans.LocalUsers;
+import at.nieslony.openvpnadmin.beans.NavigationBean;
+import at.nieslony.openvpnadmin.beans.Pki;
+import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import java.io.Serializable;
+import java.io.IOException;
+
+import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
+import org.primefaces.context.RequestContext;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author claas
+ */
+@ManagedBean
+@ViewScoped
+public class LoginBean implements Serializable {
+    private static final long serialVersionUID = 1234L;
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
+    private String username;
+    private String password;
+
+    @ManagedProperty(value="#{navigationBean}")
+    private NavigationBean navigationBean;
+
+    @ManagedProperty(value = "#{localUsers}")
+    private LocalUsers localUsers;
+
+    @ManagedProperty(value = "#{currentUser}")
+    private CurrentUser currentUser;
+
+    public void onLogin() throws PermissionDenied{
+        VpnUser vpnUser = localUsers.auth(username, password);
+        if (vpnUser != null) {
+                currentUser.setLocalUser(vpnUser);
+                navigationBean.toWelcomePage(vpnUser);
+        }
+
+        FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+            "Login incorrect",
+            "The username/password combination you entered is invalid. Please try again."
+        );
+        RequestContext.getCurrentInstance().showMessageInDialog(msg);
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setNavigationBean(NavigationBean navigationBean) {
+        this.navigationBean = navigationBean;
+    }
+
+    public void setLocalUsers(LocalUsers localUsers) {
+        this.localUsers = localUsers;
+    }
+
+    public void setPki(Pki pki) {
+        //this.pki = pki;
+    }
+
+    public void setCurrentUser(CurrentUser cu) {
+        currentUser = cu;
+    }
+
+    public void alreadyLoggedIn(ComponentSystemEvent event) {
+
+    }
+
+    public void requireSetup(ComponentSystemEvent event) throws IOException {
+	FacesContext fc = FacesContext.getCurrentInstance();
+        if (!localUsers.isValid() /*|| !pki.isValid() */ ) {
+            /*ConfigurableNavigationHandler nav =
+                    (ConfigurableNavigationHandler)
+			fc.getApplication().getNavigationHandler();
+*/
+            logger.info("Navigating to SetupWizard");
+            //nav.performNavigation("SetupWizard");
+            fc.getExternalContext().redirect("SetupWizard.xhtml");
+        }
+    }
+}

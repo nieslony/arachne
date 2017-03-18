@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Welcome to openVPN_Admin - User welcome page</title>
+        <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
+        <h:outputStylesheet library="css" name="default.css"/>
+        <h:outputStylesheet library="css" name="cssLayout.css"/>
+
+        <!--<h:outputStylesheet library="css" name="default.css"/>
+        <h:outputStylesheet library="css" name="cssLayout.css"/>-->
+    </h:head>
+
+    <f:event listener="#{currentUser.isUser}" type="preRenderView" />
+
+    <h:body>
+        <p:layout fullPage="true" stateful="true">
+            <p:layoutUnit position="west">
+                <h:form>
+                    <p:menu>
+                        <p:submenu label="Actions">
+                            <p:menuitem value="Change password"/>
+                            <p:menuitem url="AdminWelcome.xhtml"
+                                value="Go to AdminWelcome"/>
+                            <p:menuitem action="#{loginBean.doLogout}" value="Logout"/>
+                        </p:submenu>
+                    </p:menu>
+                </h:form>
+            </p:layoutUnit>
+
+            <p:layoutUnit header="OpenVPN Admin" position="center">
+                <h:form>
+                <p:fieldset legend="NetworkManager">
+                    <p:panelGrid columns="2">
+                        <p:commandLink ajax="false">
+                            <p:graphicImage style="background: white" name="pics/spider2.png"/>
+                            <p:fileDownload value="#{userWelcome.downloadNetworkManagerConfig}" />
+                        </p:commandLink>
+                        <ol>
+                            <li>Click on cobweb in the left</li>
+                            <li>Save file to your download folder</li>
+                            <li>Execute downloaded shell script</li>
+                        </ol>
+                    </p:panelGrid>
+                </p:fieldset>
+                <p:fieldset legend="openVPN configuration file">
+                    <p:panelGrid columns="2">
+                        <p:commandLink ajax="false">
+                            <p:graphicImage style="background: white" name="pics/openvpn-lg.png"/>
+                            <p:fileDownload value="#{userWelcome.downloadOpenVpnConfig}"/>
+                        </p:commandLink>
+                        <h:outputText value="
+                                      Configuration file with embedded certificates
+                                      for openVPN
+                                      "/>
+                    </p:panelGrid>
+                </p:fieldset>
+                </h:form>
+            </p:layoutUnit>
+        </p:layout>
+    </h:body>
+</html>
+

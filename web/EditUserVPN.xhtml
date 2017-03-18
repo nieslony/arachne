@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<body>
+
+<ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+
+    <ui:param name="title" value="Edit user VPN"/>
+
+    <ui:define name="content">
+        <h:form>
+            <h:panelGrid columns="2">
+                <p:outputLabel value="Connection Name:" for="name"/>
+                <p:inputText size="75" value="#{userVPNBean.name}" id="name" required="true"/>
+                
+                <p:outputLabel value="NetworkManager connection name template:" for="networkManagerConnectionTemplate"/>
+                <p:inputText id="networkManagerConnectionTemplate" value="#{userVPNBean.networkManagerConnectionTemplate}"/>
+            </h:panelGrid>
+            <p:accordionPanel multiple="true" activeIndex="0,1">
+                <p:tab title="Basics">
+                    <h:panelGrid  columns="4">
+                        <p:outputLabel value="Hostname:" for="hostname"/>
+                        <p:inputText value="#{userVPNBean.host}" size="25"
+                                         id="hostname" required="true"/>
+                        <p:outputLabel value="Port:" for="port"/>
+                        <p:spinner value="#{userVPNBean.port}" id="port" min="1" max="65535"/>
+
+                        <p:outputLabel value="Client network:"/>
+                        <h:panelGroup>
+                            <p:inputText size="15" value="#{userVPNBean.clientNetwork}"/>
+                            <h:outputText value="/"/>
+                            <p:spinner size="2" value="#{userVPNBean.clientNetMask}" min="1" max="32"/>
+                        </h:panelGroup>
+                        <h:outputText value=""/>
+                        <h:outputText value=""/>
+
+                        <p:outputLabel value="Protocol:" for="protocol"/>
+                        <p:selectOneMenu value="#{userVPNBean.protocol}" id="protocol">
+                            <f:selectItem itemLabel="TCP" itemValue="TCP"/>
+                            <f:selectItem itemLabel="UDP" itemValue="UDP"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Device type:" for="deviceType"/>
+                        <p:selectOneMenu value="#{userVPNBean.deviceType}" id="deviceType">
+                            <f:selectItem itemLabel="TUN" itemValue="TUN"/>
+                            <f:selectItem itemLabel="TAP" itemValue="TAP"/>
+                        </p:selectOneMenu>
+
+                        <h:panelGroup>
+                            <p:outputLabel value="DNS servers:" for="dnsServers"/>
+                            <p:selectOneListbox style="height: 50pt" id="dnsServers" value="#{userVPNBean.selDnsServer}">
+                                <f:selectItems value="#{userVPNBean.dnsServers}"/>
+                                <p:ajax update="dnsServer"/>
+                            </p:selectOneListbox>
+                            <p:inputText size="15" id="dnsServer" value="#{userVPNBean.editDnsServer}"/>
+                        </h:panelGroup>
+                        <h:panelGroup>
+                            <p:commandButton action="#{userVPNBean.addDnsServer}" value="Add" update="dnsServers"/>
+                            <br/>
+                            <p:commandButton action="#{userVPNBean.modifyDnsServer}" value="Modify" update="dnsServers"/>
+                            <br/>
+                            <p:commandButton action="#{userVPNBean.removeDnsServer}" value="Remove" update="dnsServers"/>
+                        </h:panelGroup>
+                        <h:panelGroup>
+                            <p:outputLabel value="Push routes:" for="pushRoutes"/>
+                            <p:selectOneListbox style="height: 50pt" id="pushRoutes" value="#{userVPNBean.selPushRoute}">
+                                <f:selectItems value="#{userVPNBean.pushRoutes}"/>
+                                <p:ajax update="pushRouteNetwork"/>
+                                <p:ajax update="pushRouteMask"/>
+                            </p:selectOneListbox>
+                            <p:inputText size="15" id="pushRouteNetwork" value="#{userVPNBean.editPushRouteNetwork}"/>
+                            <h:outputText value="/"/>
+                            <p:spinner size="2" id="pushRouteMask" min="1" max="32" value="#{userVPNBean.editPushRouteMask}"/>
+                        </h:panelGroup>
+                        <h:panelGroup>
+                            <p:commandButton action="#{userVPNBean.addRoute}" value="Add" update="pushRoutes"/>
+                            <br/>
+                            <p:commandButton action="#{userVPNBean.modifyRoute}" value="Modify" update="pushRoutes"/>
+                            <br/>
+                            <p:commandButton action="#{userVPNBean.removeRoute}" value="Remove" update="pushRoutes"/>
+                        </h:panelGroup>
+
+                        <p:outputLabel value="Keepalive ping:" for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{userVPNBean.ping}" id="ping"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                        <p:outputLabel value="Restart after " for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{userVPNBean.pingRestart}" id="pingRestart"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                    </h:panelGrid>
+                </p:tab>
+
+                <p:tab title="Authentication / Authorization">
+                    <h:panelGrid columns="2">
+                        <p:outputLabel value="Authentication type:" for="authType"/>
+                        <p:selectOneMenu id="authType" value="#{userVPNBean.authType}">
+                            <f:ajax render="@form"/>                                
+                            <f:selectItems value="#{userVPNBean.authTypes}"
+                                           var="authType"
+                                           itemValue="#{authType}"
+                                           itemLabel="#{authType.description}"/>
+                        </p:selectOneMenu>
+
+                        <p:outputLabel value="Username/password via:" 
+                                       rendered="#{userVPNBean.renderUserPasswordMode}"
+                                       for="pamUrl"
+                                       />
+                        <p:selectOneMenu id="pamUrl" 
+                                         value="#{userVPNBean.userPasswordMode}"
+                                         rendered="#{userVPNBean.renderUserPasswordMode}"
+                                         immediate="true" >
+                            <f:ajax render="@form"/>                                
+                            <f:selectItems value="#{userVPNBean.userPasswordModes}"
+                                           var="userPasswordMode"
+                                           itemValue="#{userPasswordMode}"
+                                           itemLabel="#{userPasswordMode.mode}"/>
+                        </p:selectOneMenu>
+
+                        <p:outputLabel value="PAM service:" 
+                                       rendered="#{userVPNBean.renderPamService}"  
+                                       for="pamService"/>
+                        <p:inputText id="pamService" 
+                                     value="#{userVPNBean.authPamService}"
+                                     rendered="#{userVPNBean.renderPamService}"
+                                     />
+
+                        <p:outputLabel value="Authentication Url:" 
+                                       rendered="#{userVPNBean.renderAuthUrl}"
+                                       for="authUrl"/>
+                        <h:panelGroup rendered="#{userVPNBean.renderAuthUrl}">
+                            <p:inputText size="50" id="authUrl" value="#{userVPNBean.authScriptUrl}"/>
+                            <h:outputText value="/AuthOpenVPN.xhtml"/>
+                        </h:panelGroup>
+                    </h:panelGrid>
+                </p:tab>
+            </p:accordionPanel>
+            <p:commandButton value="Save" action="#{userVPNBean.save}"/>
+            <p:commandButton value="Remove" action="#{userVPNBean.remove}"/>
+        </h:form>
+    </ui:define>
+</ui:composition>
+
+</body>
+</html>

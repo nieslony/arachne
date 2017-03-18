@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<body>
+    <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+        <ui:param name="title" value="LDAP setup"/>
+
+        <ui:define name="content">
+            <h:form id="ldapForm">
+                <p:accordionPanel id="accodion" multiple="true" activeIndex="0,1,2">
+                    <p:tab title="Basics">
+                        <h:panelGrid columns="2">
+                            <p:outputLabel value="Provider URL:" for="providerUrl"/>
+                            <p:inputText value="#{ldapSetup.providerUrl}" size="50" id="providerUrl"/>
+
+                            <p:outputLabel value="Auth type:" for="authType"/>
+                            <p:selectOneMenu id="authType" immediate="true" value="#{ldapSetup.authType}">
+                                <f:ajax render="@form"/>
+                                <f:selectItem itemLabel="none" itemValue="none"/>
+                                <f:selectItem itemLabel="simple" itemValue="simple"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel value="Bind DN:"
+                                           rendered="#{ldapSetup.authType == 'simple'}"
+                                           for="securityPrincipal"/>
+                            <p:inputText value="#{ldapSetup.securityPrincipal}"
+                                         size="50"
+                                         id="securityPrincipal"
+                                         rendered="#{ldapSetup.authType == 'simple'}"
+                                         />
+
+                            <p:outputLabel value="Credentials:"
+                                           rendered="#{ldapSetup.authType == 'simple'}"
+                                           for="credentials"/>
+                            <p:password value="#{ldapSetup.securityCredentials}"
+                                        id="credentials"
+                                        size="50"
+                                        rendered="#{ldapSetup.authType == 'simple'}"
+                                        />
+                        </h:panelGrid>
+                    </p:tab>
+
+                    <p:tab title="Users">
+                        <p:dialog header="LDAP user test" widgetVar="testLdapUser" id="dlgTestUser">
+                            <h:outputText value="LDAP search seems to work. Here's the result:"/>
+                            <h:panelGrid columns="2">
+                                <h:outputText value="Username:"/>
+                                <h:outputText id="resultUsername" value="#{ldapSetup.testUser}"/>
+
+                                <h:outputText value="Full name:"/>
+                                <h:outputText id="resultFullName" value="#{ldapSetup.testFullName}"/>
+
+                                <h:outputText value="Given name:"/>
+                                <h:outputText id="resultGivenName" value="#{ldapSetup.testGivenName}"/>
+
+                                <h:outputText value="Surname:"/>
+                                <h:outputText id="resultSurname" value="#{ldapSetup.testSurname}"/>
+                            </h:panelGrid>
+                        </p:dialog>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel value="Object class users:" for="objectClassUsers"/>
+                            <p:inputText value="#{ldapSetup.objectClassUser}" id="objectClassUsers"/>
+
+                            <p:outputLabel value="OU with users:" for="ouUsers"/>
+                            <p:inputText value="#{ldapSetup.ouUsers}" id="ouUsers"/>
+
+                            <p:outputLabel value="Attribute for username:" for="attrUsername"/>
+                            <p:inputText value="#{ldapSetup.attrUsername}" id="attrUsername"/>
+
+                            <p:outputLabel value="Attribute for full name:" for="attrFullName"/>
+                            <p:inputText value="#{ldapSetup.attrFullName}" id="attrFullName"/>
+
+                            <p:outputLabel value="Attribute for given name:" for="attrGivenName"/>
+                            <p:inputText value="#{ldapSetup.attrGivenName}" id="attrGivenName"/>
+
+                            <p:outputLabel value="Attribute for surname:" for="attrSurame"/>
+                            <p:inputText value="#{ldapSetup.attrSurname}" id="attrSurame"/>
+
+                            <p:commandButton value="Test connection and search user:"
+                                             action="#{ldapSetup.testConnectionUser}"
+                                             update="resultFullName resultUsername resultGivenName resultSurname"
+                                             id="testConnectionUser">
+                            </p:commandButton>
+                            <p:inputText value="#{ldapSetup.testUser}"/>
+                        </h:panelGrid>
+                    </p:tab>
+                    <p:tab title="Groups" id="groups">
+                        <p:dialog header="LDAP group test" widgetVar="testLdapGroup" id="dlgTestGroup">
+                            <h:outputText value="LDAP search seems to work. Here's the result:"/>
+                            <h:panelGrid columns="2">
+                                <h:outputText value="Groupname:"/>
+                                <h:outputText id="resultGroupname" value="#{ldapSetup.testGroup}"/>
+
+                                <h:outputText value="Description:"/>
+                                <h:outputText id="resultGroupDescription" value="#{ldapSetup.testGroupDescription}"/>
+
+                                <h:outputText value="Members:"
+                                              style="vertical-align: top"/>
+                                <h:outputText id="resultGroupMembers"
+                                              escape="false"
+                                              value="#{ldapSetup.testGroupMembers}"/>
+                            </h:panelGrid>
+                        </p:dialog>
+                        <p:selectOneRadio id="memberAttrType"
+                                          layout="custom"
+                                          value="#{ldapSetup.memberAttrTypeStr}">
+                            <f:selectItem itemValue="#{ldapSetup.memberAttrType_MEMBER_UID}"/>
+                            <f:selectItem itemValue="#{ldapSetup.memberAttrType_MEMBER_DN}"/>
+                            <p:ajax process="@this" update="@form" />
+                        </p:selectOneRadio>
+                        <h:panelGrid columns="2">
+                            <p:outputLabel value="Object class groups:" for="objectClassGroup"/>
+                            <p:inputText id="objectClassGroup" value="#{ldapSetup.objectClassGroup}"/>
+
+                            <p:outputLabel value="OU with groups:" for="ouGroups"/>
+                            <p:inputText id="ouGroups" value="#{ldapSetup.ouGroups}"/>
+
+                            <p:outputLabel value="Attribute for group name:" for="attrGroupname"/>
+                            <p:inputText id="attrGroupname" value="#{ldapSetup.attrGroupname}"/>
+
+                            <p:outputLabel value="Attribute for group description:" for="attrGroupDescription"/>
+                            <p:inputText id="attrGroupDescription" value="#{ldapSetup.attrGroupDescription}"/>
+
+                            <p:outputPanel>
+                                <p:radioButton id="membetAttrTypeName" for="memberAttrType" itemIndex="0"/>
+                                <p:outputLabel for="membetAttrTypeName"
+                                               style="padding-left: 1em"
+                                               value="Attribute member uid:"/>
+                            </p:outputPanel>
+                            <p:inputText disabled="#{ldapSetup.memberAttrTypeStr != ldapSetup.memberAttrType_MEMBER_UID}"
+                                         value="#{ldapSetup.attrGroupMemberUid}"/>
+
+                            <p:outputPanel>
+                                <p:radioButton for="memberAttrType"
+                                               id="memberAttrTypeDn"
+                                               itemIndex="1"/>
+                                <p:outputLabel for="memberAttrTypeDn"
+                                               style="padding-left: 1em"
+                                               value="Attribute member DN:"/>
+                            </p:outputPanel>
+                            <p:inputText disabled="#{ldapSetup.memberAttrTypeStr != ldapSetup.memberAttrType_MEMBER_DN}"
+                                         value="#{ldapSetup.attrGroupMemberDn}"/>
+
+                            <p:commandButton value="Test connection and search group:"
+                                             action="#{ldapSetup.testConnectionGroup}"
+                                             update="resultGroupname resultGroupDescription resultGroupMembers"
+                                             id="testConnectionGroup"/>
+                            <p:inputText value="#{ldapSetup.testGroup}"/>
+                        </h:panelGrid>
+                    </p:tab>
+                </p:accordionPanel>
+
+                <p:commandButton value="Save" action="#{ldapSetup.onSave}"/>
+                <p:commandButton value="Reset to saved"
+                                 action="#{ldapSetup.onResetToSaved}"
+                                 update="ldapForm"/>
+                <p:commandButton value="Reset to defaults"
+                                 action="#{ldapSetup.onResetToDefaults}"
+                                 update="ldapForm"/>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</body>
+
+</html>

@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<body>
+
+<ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+
+    <ui:param name="title" value="Edit Roles"/>
+
+    <ui:define name="content">
+        <p:dialog id="dlgAddRule" header="Add rule" widgetVar="dlgAddRule">
+            <h:form id="formAddRule">
+                <h:outputText id="addRuleToRoleTxt" value="Add rule to role #{editRoles.addRuleToRole}."/>
+                <h:panelGrid columns="2">
+                    <p:outputLabel value="Rule type:" for="ruleType"/>
+                    <p:selectOneMenu id="ruleType" value="#{editRoles.addRoleRuleType}"
+                                     required="true" >
+                        <f:selectItem itemValue="at.nieslony.openvpnadmin.RoleRuleIsUser" itemLabel="Is user"/>
+                        <f:selectItem itemValue="at.nieslony.openvpnadmin.RoleRuleIsMemberOfLdapGroup" itemLabel="Is member of LDAP group"/>
+                        <p:ajax update="ruleType"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Value:" for="addRuleValue"/>
+                    <p:autoComplete id="addRuleValue" value="#{editRoles.addRoleRuleValue}"
+                                    completeMethod="#{editRoles.onCompleteRoleValue}"
+                                    forceSelection="true" 
+                                    required="true"/>
+
+                    <!-- empty cell -->
+                    <h:panelGroup>
+                        <p:commandButton value="OK" action="#{editRoles.onAddRuleOk(role)}"
+                                         update=":formRoles:roles"/>
+                        <p:commandButton value="Cancel" process="@this"
+                                         oncomplete="PF('dlgAddRule').hide();" />
+                    </h:panelGroup>
+                </h:panelGrid>
+            </h:form>
+        </p:dialog>
+
+        <h:form id="formRoles">
+            <p:accordionPanel multiple="true" value="#{editRoles.allRoles}" var="role" id="roles">
+                <p:tab title="Role #{role.name}">
+                    <p:dataTable value="#{role.rules}" var="rule" id="ruleList">
+                        <p:column headerText="Type">
+                            <h:outputText value="#{rule.roleType}"/>
+                        </p:column>
+                        <p:column headerText="Value">
+                            <h:outputText value="#{rule.value}"/>
+                        </p:column>
+                        <p:column>
+                            <p:commandButton value="Remove" update="ruleList"
+                                             action="#{editRoles.onRemoveRuleFromRole(role, rule)}"/>
+                        </p:column>
+                    </p:dataTable>
+                    <p:commandButton value="Add rule..."
+                                     action="#{editRoles.onAddRule(role)}"
+                                     update=":formAddRule:addRuleToRoleTxt" />
+                </p:tab>
+            </p:accordionPanel>
+        </h:form>
+    </ui:define>
+</ui:composition>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+<ui:composition
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets">
+    <f:event listener="#{currentUser.isUser}" type="preRenderView" />
+    <f:event type="preRenderView" listener="#{configBuilder.ovpnConfig}" />
+</ui:composition>

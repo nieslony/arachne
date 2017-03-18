@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+    >
+
+    <f:event listener="#{loginBean.requireSetup}" type="preRenderView"/>
+
+    <f:view contentType="text/html">
+    <h:head>
+        <title>Login</title>
+        <h:outputStylesheet library="css" name="default.css"/>
+        <h:outputStylesheet library="css" name="cssLayout.css"/>
+
+        <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
+    </h:head>
+    <h:body>
+        <p:dialog visible="true" closable="false" header="Login to OpenVPN Admin" draggable="false" resizable="false" >
+            <h:form>
+                <p:growl id="growl" showDetail="true" sticky="true"/>
+                <h:panelGrid columns="2" >
+                    <p:outputLabel value="Username:"/>
+                    <p:inputText value="#{loginBean.username}" id="username"/>
+
+                    <p:outputLabel value="Password:"/>
+                    <p:password value="#{loginBean.password}" id="password"/>
+                </h:panelGrid>
+                <p:commandButton id="login" value="Login" action="#{loginBean.onLogin}"/>
+            </h:form>
+        </p:dialog>
+    </h:body>
+    </f:view>
+</html>
+
