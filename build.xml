@@ -74,7 +74,7 @@
             <arg value="--input_dir"/>
             <arg value="property-templates"/>
             <arg value="--dest_dir"/>
-            <arg value="src/java"/>
+            <arg value="build/generated-sources/"/>
         </exec>
     </target>
 </project>

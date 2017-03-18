@@ -10,7 +10,8 @@
 
 CREATE TABLE users(
     id SERIAL NOT NULL PRIMARY KEY,
-    name text NOT NULL UNIQUE,
-    email text NOT NULL,
+    username text NOT NULL UNIQUE,
+    fullname text,
+    email text,
     password text NOT NULL
 );;

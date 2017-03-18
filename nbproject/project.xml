@@ -36,6 +36,10 @@
                     <file>${file.reference.bcprov.jar}</file>
                     <path-in-war>/</path-in-war>
                 </library>
+                <library dirs="200">
+                    <file>${file.reference.src-sql}</file>
+                    <path-in-war>/</path-in-war>
+                </library>
             </web-module-additional-libraries>
             <source-roots>
                 <root id="src.dir"/>

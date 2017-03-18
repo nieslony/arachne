@@ -6,6 +6,7 @@
     <property name="projectName" value="OpenVPN_Admin"/>
     <property name="root" location=".."/>
     <property name="src" location="${root}/src"/>
+    <property name="db-props-src" location="../../DatabasePropertiesStorage/src/"/>
     <property name="web" location="${root}/web"/>
     <property name="build" location="build"/>
     <property name="dist" location="dist"/>
@@ -20,6 +21,7 @@
         	dir="/usr/share/java" 
         	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"/>
         <fileset dir="lib" includes="*jar"/>
+        <fileset dir="${build}/generated/java"/>
     </path>
     
     <target name="init">
@@ -28,27 +30,34 @@
     </target>
     
     <target name="generate-code">
-        <exec executable="${property-templates}/create-properties-backend.py">
+        <exec executable="python">
+            <arg value="${property-templates}/create-properties-backend.py"/>
             <arg value="--input_dir"/>
             <arg value="${property-templates}"/>
             <arg value="--dest_dir"/>
-            <arg value="${build}/src/java"/>
+            <arg value="${build}/generated/java"/>
         </exec>        
     </target>
-    
+<!--
+                srcdir="${src}" 
+    -->    
     <target name="compile" depends="init,generate-code">
-        <javac srcdir="${src}" 
+        <javac 
                destdir="${build}" 
                includeantruntime="false" 
                classpathref="classpath"
                encoding="utf-8"
-        />
+        >
+            <src path="${src}"/>
+            <src path="${build}/generated/java"/>
+        </javac>
     </target>
     
     <target name="copystatic">
         <mkdir dir="${dist}/web"/>
         <mkdir dir="${dist}/web/WEB-INF/classes"/>
         <mkdir dir="${dist}/web/WEB-INF/lib"/>
+        <mkdir dir="${dist}/web/WEB-INF/sql"/>
         
         <copy todir="${dist}/web">
             <fileset dir="${web}"/>
@@ -58,6 +67,9 @@
         </copy>
         <copy todir="${dist}/web/WEB-INF/lib">
             <fileset dir="lib"/>
+        </copy>
+        <copy todir="${dist}/web/WEB-INF/sql">
+            <fileset dir="${src}/sql"/>
         </copy>
     </target>
     
@@ -74,15 +86,21 @@
     <target name="install">
         <mkdir dir="${install-dir}/WEB-INF/classes"/>
         <mkdir dir="${install-dir}/WEB-INF/lib"/>
+        <mkdir dir="${install-dir}/WEB-INF/sql"/>
         
         <copy todir="${install-dir}">
             <fileset dir="${web}"/>
         </copy>
-        <copy todir="${install-dir}/WEB-INF/classes">
-            <fileset dir="${build}"/>
+        <copy todir="${install-dir}/WEB-INF/classes" includeEmptyDirs="false">
+            <fileset dir="${build}">
+                <exclude name="**/*.java"/>
+            </fileset>
         </copy>
         <copy todir="${install-dir}/WEB-INF/lib">
             <fileset dir="lib"/>
+        </copy>
+        <copy todir="${install-dir}/WEB-INF/sql">
+            <fileset dir="${src}/sql"/>
         </copy>
     </target>
     
@@ -90,6 +108,7 @@
         <mkdir dir="${export}"/>
         <tar destfile="${export}/${projectName}-${version}.tar.gz">
             <tarfileset dir="${src}" prefix="${tar-prefix}/src"/>
+            <tarfileset dir="${db-props-src}" prefix="${tar-prefix}/src"/>
             <tarfileset dir="${web}" prefix="${tar-prefix}/web"/>
             <tarfileset dir="${property-templates}" prefix="${tar-prefix}/property-templates"/>
             <tarfileset dir="${root}/ant" 

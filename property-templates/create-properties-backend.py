@@ -381,6 +381,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_dir", default=".")
     parser.add_argument("--dest_dir", default=".")
+    parser.add_argument("--create_skel", action='store_true')
     args = parser.parse_args(sys.argv[1:])
     
     for fn in glob.glob("%s/*json" % args.input_dir):
@@ -404,18 +405,19 @@ def main():
         f.close()
         
         # Create backend bean
-        outdir = "%s/%s" % (
-            args.dest_dir,
-            entries["backend_package"].replace(".", "/")
-            )
-        out_fn = "%s/%s.java" % (outdir, entries["className"])
-        if not os.path.exists(out_fn):
-            print("  Writing %s ..." % out_fn)
-            f = open(out_fn, "w")
-            f.write(print_backend_class())
-            f.close()
-        else:
-            print("  Skipping %s, already exists" % out_fn)
+        if args.create_skel:
+            outdir = "%s/%s" % (
+                args.dest_dir,
+                entries["backend_package"].replace(".", "/")
+                )
+            out_fn = "%s/%s.java" % (outdir, entries["className"])
+            if not os.path.exists(out_fn):
+                print("  Writing %s ..." % out_fn)
+                f = open(out_fn, "w")
+                f.write(print_backend_class())
+                f.close()
+            else:
+                print("  Skipping %s, already exists" % out_fn)
 
         # Create edit base class
         outdir = "%s/%s/base" % (
@@ -431,18 +433,19 @@ def main():
         f.close()
 
         # Create edit bean
-        outdir = "%s/%s" % (
-            args.dest_dir,
-            entries["edit_package"].replace(".", "/")
-            )
-        out_fn = "%s/Edit%s.java" % (outdir, entries["className"])
-        if not os.path.exists(out_fn):
-            print("  Writing %s ..." % out_fn)
-            f = open(out_fn, "w")
-            f.write(print_edit_class())
-            f.close()
-        else:
-            print("  Skipping %s, already exists" % out_fn)
+        if args.create_skel:
+            outdir = "%s/%s" % (
+                args.dest_dir,
+                entries["edit_package"].replace(".", "/")
+                )
+            out_fn = "%s/Edit%s.java" % (outdir, entries["className"])
+            if not os.path.exists(out_fn):
+                print("  Writing %s ..." % out_fn)
+                f = open(out_fn, "w")
+                f.write(print_edit_class())
+                f.close()
+            else:
+                print("  Skipping %s, already exists" % out_fn)
 
 if __name__ == "__main__":
     main()
