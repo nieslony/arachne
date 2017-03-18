@@ -17,20 +17,76 @@ def print_variables():
         
     return s
     
+def print_enums_backend():
+    s = ""
+    
+    if "enums" in entries:
+        for e in entries["enums"]:
+            s += """  public enum %(enum_type)s {
+    %(values)s
+    }
+"""         % { 
+                "enum_type": e["type"],
+                "values": ", ".join(e["values"])
+            }
+    
+    return s
+    
 def print_getter_setter_backend():
     s = ""
     
     for e in entries["properties"]:
-        s += """    public %(type)s get%(u_name)s() {
-        String value = \"%(default)s\";
+        if "storeBase64" in e:
+            s += """
+    public %(type)s get%(u_name)s() {
+        String value = %(default)s;
+        
+        try {
+            PropertyGroup pg = getPropertyGroup();
+            if (pg != null) {
+                value = pg.getProperty(%(p_name)s, %(default)s);
+                if (!value.isEmpty())
+                    value = new String(Base64.getDecoder().decode(value));
+            }
+        }
+        catch (SQLException ex) {
+            value = %(default)s;
+        }
+        
+        return %(type)s.valueOf(value);
+    }
+    
+    public void set%(u_name)s(%(type)s %(name)s) {
+        if (%(name)s != null && !%(name)s.isEmpty()) {
+            %(name)s = new String(Base64.getEncoder().encode(%(name)s.getBytes()));
+        }
+    
+        try {
+            getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
+        }
+        catch (SQLException ex) {
+        }
+    }    
+    
+""" %  {
+        "u_name": e["name"][0].upper() + e["name"][1:],
+        "p_name": prop_name(e["name"]),
+        "name": e["name"],
+        "type": e["type"],
+        "default": "\"%s\"" % e["default"]
+    }
+        else:
+            s += """
+    public %(type)s get%(u_name)s() {
+        String value = %(default)s;
         
         try {
             PropertyGroup pg = getPropertyGroup();
             if (pg != null)
-                value = pg.getProperty(%(p_name)s, \"%(default)s\");
+                value = pg.getProperty(%(p_name)s, %(default)s);
         }
         catch (SQLException ex) {
-            value = \"%(default)s\";
+            value = %(default)s;
         }
         
         return %(type)s.valueOf(value);
@@ -49,7 +105,7 @@ def print_getter_setter_backend():
         "p_name": prop_name(e["name"]),
         "name": e["name"],
         "type": e["type"],
-        "default": e["default"]
+        "default": "\"%s\"" % e["default"]
     }
     
     return s
@@ -74,11 +130,13 @@ package %(package)s.base;
 
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import java.sql.SQLException;
+import java.util.Base64;
 
 public abstract class %(class_name)sBase {
 %(prop_names)s
     abstract protected PropertyGroup getPropertyGroup();
 
+%(enums)s
 %(getter_setter)s
 }
 """ % {
@@ -86,7 +144,8 @@ public abstract class %(class_name)sBase {
     "class_name": entries["className"],
     "prop_names": print_prop_names(),
     "variables": print_variables(),
-    "getter_setter": print_getter_setter_backend()
+    "getter_setter": print_getter_setter_backend(),
+    "enums": print_enums_backend()
     }
 
 def print_backend_class():
@@ -185,11 +244,38 @@ def print_load_values():
     }
     return s
 
+def print_import_enums():
+    s = ""
+    
+    if "enums" in entries:
+        for e in entries["enums"]:
+            s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;" % {
+                    "backend_package": entries["backend_package"],
+                    "enum_name": e["type"],
+                    "class_name": entries["className"]
+                }
+    
+    return s
+
+def print_reset_defaults():
+    s = ""
+    
+    for e in entries["properties"]:
+        s += """      %(name)s = %(type)s.valueOf("%(defaults)s");
+""" % {
+                "name": e["name"],
+                "defaults": e["default"],
+                "type": e["type"],
+            }
+    
+    return s
+
 def print_edit_class_base():
     return """
 package %(package)s.base;
 
 import %(backend_package)s.base.%(class_name)sBase;
+%(import_enums)s
 
 public class Edit%(class_name)sBase {
     %(class_name)sBase backend;
@@ -208,6 +294,10 @@ public class Edit%(class_name)sBase {
     protected void load() {
 %(load_values)s    
     }
+    
+    protected void resetDefaults() {
+%(reset_defaults)s    
+    }
 }
 
 """ % {
@@ -218,6 +308,8 @@ public class Edit%(class_name)sBase {
     "class_name": entries["className"],
     "save_values": print_save_values(),
     "load_values": print_load_values(),
+    "import_enums": print_import_enums(),
+    "reset_defaults": print_reset_defaults(),
     }
 
 def print_edit_class():
@@ -261,6 +353,10 @@ public class Edit%(class_name)s
     
     public void onReset() {
         load();
+    }
+    
+    public void onResetToDefaults() {
+        resetDefaults();
     }
     
     public void set%(class_name)s(%(class_name)s v) {

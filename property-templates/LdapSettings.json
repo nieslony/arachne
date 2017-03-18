@@ -1,0 +1,29 @@
+{
+    "backend_package":  "at.nieslony.openvpnadmin.beans",
+    "edit_package":     "at.nieslony.openvpnadmin.views",
+    "className": "LdapSettings",
+    "propertyGroup": "ldap-settings",
+    "enums": [
+        { "type" : "MemberAttrType", "values": ["MAT_MEMBER_DN", "MAT_MEMBER_UID" ] }
+    ],
+    "properties": 
+    [
+        { "type": "String", "name": "providerUrl",  "default": "" },        
+        { "type": "String", "name": "attrUsername",  "default": "uid" },
+        { "type": "String", "name": "attrFullName",  "default": "cn" },
+        { "type": "String", "name": "attrGivenName",  "default": "givenName" },
+        { "type": "String", "name": "attrSurname",  "default": "sn" },
+        { "type": "String", "name": "authType",  "default": "none" },
+        { "type": "String", "name": "objectClassUser",  "default": "posixAccount" },
+        { "type": "String", "name": "ouUsers",  "default": "" },
+        { "type": "String", "name": "objectClassGroup",  "default": "posixGroup" },
+        { "type": "String", "name": "attrGroupName",  "default": "cn" },
+        { "type": "String", "name": "attrGroupDescription",  "default": "description" },
+        { "type": "String", "name": "attrGroupMemberUid", "default": "memberUid" },
+        { "type": "String", "name": "ouGroups",  "default": "" },
+        { "type": "String", "name": "attrGroupMemberDn",  "default": "member" },
+        { "type": "String", "name": "securityPrincipal",  "default": "" },
+        { "type": "String", "name": "securityCredentials",  "default": "", "storeBase64": "true" },
+        { "type": "MemberAttrType", "name": "memberAttrType",  "default": "MAT_MEMBER_DN" }
+    ]
+}

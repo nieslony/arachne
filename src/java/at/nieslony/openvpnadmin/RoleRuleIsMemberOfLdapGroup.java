@@ -93,7 +93,7 @@ public class RoleRuleIsMemberOfLdapGroup implements RoleRule, Serializable {
             pattern.append("objectClass=").append(ldapSettings.getObjectClassGroup());
         pattern.append(")(");
             pattern.append("|(");
-            pattern.append(ldapSettings.getAttrGroupname()).append("=").append(userPattern).append("*");
+            pattern.append(ldapSettings.getAttrGroupName()).append("=").append(userPattern).append("*");
             pattern.append(")(");
             pattern.append(ldapSettings.getAttrGroupDescription()).append("=*").append(userPattern).append("*");
             pattern.append("))");
@@ -111,7 +111,7 @@ public class RoleRuleIsMemberOfLdapGroup implements RoleRule, Serializable {
                 Attributes attrs = result.getAttributes();
                 if (attrs == null)
                     continue;
-                Attribute attr = attrs.get(ldapSettings.getAttrGroupname());
+                Attribute attr = attrs.get(ldapSettings.getAttrGroupName());
                 if (attr == null)
                     continue;
                 String gid = (String) attr.get();
