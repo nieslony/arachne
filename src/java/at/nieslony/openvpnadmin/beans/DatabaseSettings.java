@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -26,7 +27,9 @@ import javax.faces.bean.ManagedProperty;
  */
 @ManagedBean
 @ApplicationScoped
-public class DatabaseSettings {
+public class DatabaseSettings
+        implements Serializable
+{
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private static final String PROP_HOST = "host";
@@ -126,7 +129,8 @@ public class DatabaseSettings {
         }
 
         host = props.getProperty(PROP_HOST, "localhost");
-        port = Integer.getInteger(props.getProperty(PROP_PORT, "5432"));
+        port = 5432;
+        // port = Integer.getInteger(props.getProperty(PROP_PORT, "5432"));
         databaseName = props.getProperty(PROP_DB_NAME, "openvpnadmin");
         databaseUser = props.getProperty(PROP_DB_USER, "openvpnadmin");
         databasePassword =
@@ -177,7 +181,7 @@ public class DatabaseSettings {
                     port,
                     databaseName);
             con = DriverManager.getConnection(conUrl, databaseUser, databasePassword);
-            con.setAutoCommit(false);
+            con.setAutoCommit(true);
         }
 
         return con;

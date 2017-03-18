@@ -76,9 +76,13 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem editLdapUsers = new DefaultMenuItem("Configure LDAP source");
             editLdapUsers.setHref("LdapSetup.xhtml");
 
+            DefaultMenuItem editAuthSettings = new DefaultMenuItem("Edit authentication settings");
+            editAuthSettings.setHref("EditAuthSettings.xhtml");
+
             usersMenu.addElement(editUsers);
             usersMenu.addElement(editRoles);
             usersMenu.addElement(editLdapUsers);
+            usersMenu.addElement(editAuthSettings);
         menuModel.addElement(usersMenu);
 
         DefaultSubMenu certsMenu = new DefaultSubMenu("Certificates");

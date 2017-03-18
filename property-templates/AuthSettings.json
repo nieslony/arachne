@@ -1,0 +1,12 @@
+{
+    "backend_package":  "at.nieslony.openvpnadmin.beans",
+    "edit_package":     "at.nieslony.openvpnadmin.views",
+    "className": "AuthSettings",
+    "propertyGroup": "auth-settings",
+    "properties": 
+    [
+        { "type": "Boolean", "name": "enableAjpRemoteUser",  "default": "true" },
+        { "type": "Boolean", "name": "enableHttpHeaderAuth", "default": "false" },
+        { "type": "String",  "name": "httpHeaderRemoteUser", "default": "REMOTE_USER" }
+    ]
+}
