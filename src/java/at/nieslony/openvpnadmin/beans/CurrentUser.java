@@ -58,20 +58,11 @@ public class CurrentUser implements Serializable {
         logger.info("Initializing currentUser");
 
         HttpServletRequest req = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();
-        String[] attributes = { "REMOTE_USER" };
-        String[] headers = { "REMOTE_USER" };
 
         try {
             if (authSettings.getEnableAjpRemoteUser() && req.getRemoteUser() != null) {
                 vpnUser = ldapSettings.findVpnUser(req.getRemoteUser());
             }
-/*            else {
-                for (String a: attributes) {
-                    String remUsr = (String) req.getAttribute(a);
-                    if (remUsr != null)
-                        vpnUser = ldapSettings.findVpnUser(remUsr);
-                    }
-            }*/
             if (vpnUser == null && authSettings.getEnableHttpHeaderAuth()) {
                 String remUser = (String) req.getHeader(authSettings.getHttpHeaderRemoteUser());
                 if (remUser != null) {
