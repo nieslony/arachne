@@ -274,8 +274,8 @@ public class Pki extends CertificateAuthority implements Serializable {
         logger.info("Preparing certificate creation for user " + username);
         StringWriter sw = new StringWriter();
         sw.append("CN=" + username);
-        if (!clientCertificateSettings.getOPrganizationalUnit().isEmpty())
-            sw.append(", OU=" + clientCertificateSettings.getOPrganizationalUnit());
+        if (!clientCertificateSettings.getOrganizationalUnit().isEmpty())
+            sw.append(", OU=" + clientCertificateSettings.getOrganizationalUnit());
         if (!clientCertificateSettings.getOrganization().isEmpty())
             sw.append(", O=" + clientCertificateSettings.getOrganization());
         if (!clientCertificateSettings.getCity().isEmpty())
@@ -309,9 +309,9 @@ public class Pki extends CertificateAuthority implements Serializable {
                 "  valid to: %s" +
                 "  signature algorothm: %s",
                 subject, fromDate.toString(), toDate.toString(),
-                clientCertificateSettings.getSignatureAlgorith()));
+                clientCertificateSettings.getSignatureAlgorithm()));
         cert = createCertificate(certKey.getPublic(), fromDate, toDate, subject,
-                clientCertificateSettings.getSignatureAlgorith());
+                clientCertificateSettings.getSignatureAlgorithm());
 
         if (cert == null) {
             logger.severe("Something went wrong. certificate is null");

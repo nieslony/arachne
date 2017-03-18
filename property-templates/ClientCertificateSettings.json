@@ -1,0 +1,19 @@
+{
+    "backend_package":  "at.nieslony.openvpnadmin.beans",
+    "edit_package":     "at.nieslony.openvpnadmin.views",
+    "className": "ClientCertificateSettings",
+    "propertyGroup": "client-certificate-settings",
+    "properties": 
+    [
+        { "type": "String", "name": "title",  "default": "ClientCert_%u" },
+        { "type": "String", "name": "organization", "default": "" },
+        { "type": "String",  "name": "organizationalUnit", "default": "" },
+        { "type": "String",  "name": "city", "default": "" },
+        { "type": "String",  "name": "state", "default": "" },
+        { "type": "String",  "name": "country", "default": "" },
+        { "type": "Integer",  "name": "validTime", "default": "365" },
+        { "type": "String",  "name": "validTimeUnit", "default": "days" },
+        { "type": "String",  "name": "signatureAlgorithm", "default": "SHA512withRSA" },
+        { "type": "Integer",  "name": "keySize", "default": "2048" }
+    ]
+}

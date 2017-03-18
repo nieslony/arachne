@@ -1,36 +1,34 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.ClientCertificateSettings;
+import at.nieslony.openvpnadmin.views.base.EditClientCertificateSettingsBase;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
 
-/**
- *
- * @author claas
- */
 @ManagedBean
-@SessionScoped
-public class EditClientCertificateSettings implements Serializable {
+@ViewScoped
+public class EditClientCertificateSettings
+    extends EditClientCertificateSettingsBase
+    implements Serializable
+{
     private List<SelectItem> signatureAlgorithms;
 
-    /**
-     * Creates a new instance of ClientCertificateSettings
-     */
-    public EditClientCertificateSettings() {
+    public EditClientCertificateSettings () {
     }
+
+    @ManagedProperty(value = "#{clientCertificateSettings}")
+    ClientCertificateSettings clientCertificateSettings;
 
     @PostConstruct
     public void init() {
@@ -48,141 +46,23 @@ public class EditClientCertificateSettings implements Serializable {
             signatureAlgorithms.add(group);
         }
 
-        onLoad();
-    }
-
-    @ManagedProperty(value = "#{clientCertificateSettings}")
-    private ClientCertificateSettings clientCertificateSettings;
-
-    public void setClientCertificateSettings(ClientCertificateSettings ccs) {
-        clientCertificateSettings = ccs;
-    }
-
-    private String signatureAlgorithm;
-    private int keySize = 2048;
-    private String title;
-    private String organization;
-    private String organizationalUnit;
-    private String city;
-    private String state;
-    private String country;
-    private int validTime = 365;
-    private String validTimeUnit = "days";
-
-    public void onLoad() {
-        signatureAlgorithm = clientCertificateSettings.getSignatureAlgorith();
-        keySize = clientCertificateSettings.getKeySize();
-        title = clientCertificateSettings.getTitle();
-        organization = clientCertificateSettings.getOrganization();
-        organizationalUnit = clientCertificateSettings.getOPrganizationalUnit();
-        city = clientCertificateSettings.getCity();
-        state = clientCertificateSettings.getState();
-        country = clientCertificateSettings.getCountry();
-        validTime = clientCertificateSettings.getValidTime();
-        validTimeUnit = clientCertificateSettings.getValidTimeUnit();
+        setBackend(clientCertificateSettings);
+        load();
     }
 
     public void onSave() {
-        clientCertificateSettings.setSignatureAlgorith(signatureAlgorithm);
-        clientCertificateSettings.setKeySize(keySize);
-        clientCertificateSettings.setTitle(title);
-        clientCertificateSettings.setOrganization(organization);
-        clientCertificateSettings.setOrganizationalUnit(organizationalUnit);
-        clientCertificateSettings.setCity(city);
-        clientCertificateSettings.setState(state);
-        clientCertificateSettings.setCountry(country);
-        clientCertificateSettings.setValidTime(validTime);
-        clientCertificateSettings.setValidTimeUnit(validTimeUnit);
-
-        clientCertificateSettings.save();
+        save();
+        FacesContext.getCurrentInstance().addMessage(
+                null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
     }
 
-    public String getValidTimeUnit() {
-        return validTimeUnit;
+    public void onReset() {
+        load();
     }
 
-    public void setValidTimeUnit(String validTimeUnit) {
-        this.validTimeUnit = validTimeUnit;
-    }
-
-    public String[] getValidTimeUnits() {
-        return new String[] {
-            "days",
-            "months",
-            "years"
-        };
-    }
-
-    public int getValidTime() {
-        return validTime;
-    }
-
-    public void setValidTime(int vt) {
-        validTime = vt;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getOrganizationalUnit() {
-        return organizationalUnit;
-    }
-
-    public void setOrganizationalUnit(String organizationalUnit) {
-        this.organizationalUnit = organizationalUnit;
-    }
-
-    public String getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public int getKeySize() {
-        return keySize;
-    }
-
-    public void setKeySize(int keySize) {
-        this.keySize = keySize;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
+    public void setClientCertificateSettings(ClientCertificateSettings v) {
+        clientCertificateSettings = v;
     }
 
     public List<SelectItem> getSignatureAlgorithms() {
@@ -190,7 +70,7 @@ public class EditClientCertificateSettings implements Serializable {
     }
 
     public String getKeyAlgo() {
-        return signatureAlgorithm.split("with")[1];
+        return getSignatureAlgorithm().split("with")[1];
     }
 
     public int[] getKeySizes() {
@@ -200,5 +80,13 @@ public class EditClientCertificateSettings implements Serializable {
         }
 
         return new int[0];
+    }
+
+    public String[] getValidTimeUnits() {
+        return new String[] {
+            "days",
+            "months",
+            "years"
+        };
     }
 }
