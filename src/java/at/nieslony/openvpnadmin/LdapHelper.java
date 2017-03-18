@@ -71,6 +71,10 @@ public class LdapHelper {
                 if (attr != null)
                     vpnUser.setSurname((String) attr.get());
 
+                attr = attrs.get(ldapHelperUser.getAttrEmail());
+                if (attr !=  null)
+                    vpnUser.setEmail((String) attr.get());
+
                 vpnUser.setUserType(VpnUser.UserType.UT_LDAP);
 
                 vpnUser.setDn(result.getName() + "," + getBaseDn());

@@ -13,6 +13,7 @@
         { "type": "String", "name": "attrFullName",  "default": "cn" },
         { "type": "String", "name": "attrGivenName",  "default": "givenName" },
         { "type": "String", "name": "attrSurname",  "default": "sn" },
+        { "type": "String", "name": "attrEmail", "default": "mail" },
         { "type": "String", "name": "authType",  "default": "none" },
         { "type": "String", "name": "objectClassUser",  "default": "posixAccount" },
         { "type": "String", "name": "ouUsers",  "default": "" },

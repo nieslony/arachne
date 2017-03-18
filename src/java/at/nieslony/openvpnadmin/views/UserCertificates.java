@@ -90,6 +90,8 @@ public class UserCertificates implements Serializable {
     }
 
     public String getCertifivcateStatus(X509Certificate cert) {
+        if (cert == null)
+            return "I";
         if (pki.isCertificateRevoked(cert))
             return "R";
 

@@ -94,6 +94,9 @@
                 <p:column headerText="Fullname">
                     <h:outputText value="#{user.fullName}"/>
                 </p:column>
+                <p:column headerText="E-mail">
+                    <h:outputText value="#{user.email}"/>
+                </p:column>                
                 <p:column headerText="Roles">
                     <h:outputText value="#{editUsers.getRolesString(user.username)}"/>
                 </p:column>

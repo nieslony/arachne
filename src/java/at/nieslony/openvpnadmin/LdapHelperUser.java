@@ -22,6 +22,7 @@ public interface LdapHelperUser {
     public String getAttrFullName();
     public String getAttrGivenName();
     public String getAttrSurname();
+    public String getAttrEmail();
     public String getObjectClassUser();
 
     public String getOuGroups();

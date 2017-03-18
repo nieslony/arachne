@@ -29,6 +29,7 @@ public class VpnUser implements Serializable {
     private UserType userType = UserType.UT_UNASSIGNED;
     private String passwordHash;
     private String dn;
+    private String email;
 
     public String getDn() {
         return dn;
@@ -111,5 +112,13 @@ public class VpnUser implements Serializable {
             sb.append(" (").append(givenName).append(")");
 
         return sb.toString();
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
     }
 }
