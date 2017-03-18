@@ -42,6 +42,9 @@ public class CurrentUser implements Serializable {
     @ManagedProperty(value = "#{navigationBean}")
     private NavigationBean navigationBean;
 
+    @ManagedProperty(value = "#{authSettings}")
+    private AuthSettings authSettings;
+
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     /**
@@ -59,22 +62,21 @@ public class CurrentUser implements Serializable {
         String[] headers = { "REMOTE_USER" };
 
         try {
-            if (req.getRemoteUser() != null) {
+            if (authSettings.getEnableAjpRemoteUser() && req.getRemoteUser() != null) {
                 vpnUser = ldapSettings.findVpnUser(req.getRemoteUser());
             }
-            else {
+/*            else {
                 for (String a: attributes) {
                     String remUsr = (String) req.getAttribute(a);
                     if (remUsr != null)
                         vpnUser = ldapSettings.findVpnUser(remUsr);
                     }
-            }
-            if (vpnUser == null) {
-                for (String a: headers) {
-                    String remUsr = (String) req.getHeader(a);
-                    if (remUsr != null)
-                        vpnUser = ldapSettings.findVpnUser(remUsr);
-                    }
+            }*/
+            if (vpnUser == null && authSettings.getEnableHttpHeaderAuth()) {
+                String remUser = (String) req.getHeader(authSettings.getHttpHeaderRemoteUser());
+                if (remUser != null) {
+                    vpnUser = ldapSettings.findVpnUser(remUser);
+                }
             }
             if (vpnUser == null) {
                 if (req.getHeader("authorization") != null) {
@@ -215,5 +217,9 @@ public class CurrentUser implements Serializable {
 
     public void setLocalUser(VpnUser vu) {
         vpnUser = vu;
+    }
+
+    public void setAuthSettings(AuthSettings as) {
+        authSettings = as;
     }
 }
