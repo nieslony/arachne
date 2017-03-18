@@ -22,10 +22,12 @@ def print_getter_setter_backend():
     
     for e in entries["properties"]:
         s += """    public %(type)s get%(u_name)s() {
-        String value;
+        String value = \"%(default)s\";
         
         try {
-            value = propertyGroup.getProperty(%(p_name)s, \"%(default)s\");
+            PropertyGroup pg = getPropertyGroup();
+            if (pg != null)
+                value = pg.getProperty(%(p_name)s, \"%(default)s\");
         }
         catch (SQLException ex) {
             value = \"%(default)s\";
@@ -36,7 +38,7 @@ def print_getter_setter_backend():
     
     public void set%(u_name)s(%(type)s %(name)s) {
         try {
-            propertyGroup.setProperty(%(p_name)s, String.valueOf(%(name)s));
+            getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
         }
         catch (SQLException ex) {
         }
@@ -73,14 +75,11 @@ package %(package)s.base;
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import java.sql.SQLException;
 
-public class %(class_name)sBase {
+public abstract class %(class_name)sBase {
 %(prop_names)s
-    PropertyGroup propertyGroup;
+    abstract protected PropertyGroup getPropertyGroup();
 
 %(getter_setter)s
-    public void setPropertyGroup(PropertyGroup pg) {
-        propertyGroup = pg;
-    }
 }
 """ % {
     "package": entries["backend_package"],
@@ -103,6 +102,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.annotation.PostConstruct;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+import at.nieslony.databasepropertiesstorage.PropertyGroup;
 
 @ManagedBean
 @ApplicationScoped
@@ -122,15 +122,21 @@ public class %(class_name)s
         propertiesStorage = ps;
     }
 
-    @PostConstruct
-    public void init() {
+    protected PropertyGroup getPropertyGroup() {
+        PropertyGroup  pg = null;
+    
         try {
-            setPropertyGroup(propertiesStorage.getGroup("%(prop_group)s", true));
+            return propertiesStorage.getGroup("%(prop_group)s", true);
         }
         catch (SQLException ex) {
             logger.severe(String.format("Cannot get property group %(prop_group)s: %%s",
                 ex.getMessage()));                
+            if (ex.getNextException() != null) 
+            logger.severe(String.format("Cannot get property group %(prop_group)s: %%s",
+                ex.getNextException().getMessage()));                
         }
+        
+        return null;
     }
 }
 """ % {
@@ -221,10 +227,12 @@ package %(package)s;
 import %(package)s.base.Edit%(class_name)sBase;
 import %(backend_package)s.%(class_name)s;
 import java.io.Serializable;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ViewScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 
 @ManagedBean
 @ViewScoped
@@ -246,6 +254,9 @@ public class Edit%(class_name)s
     
     public void onSave() {
         save();
+        FacesContext.getCurrentInstance().addMessage(
+                null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
     }
     
     public void onReset() {

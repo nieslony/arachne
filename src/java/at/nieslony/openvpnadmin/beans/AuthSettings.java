@@ -10,6 +10,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.annotation.PostConstruct;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+import at.nieslony.databasepropertiesstorage.PropertyGroup;
 
 @ManagedBean
 @ApplicationScoped
@@ -29,14 +30,20 @@ public class AuthSettings
         propertiesStorage = ps;
     }
 
-    @PostConstruct
-    public void init() {
+    protected PropertyGroup getPropertyGroup() {
+        PropertyGroup  pg = null;
+    
         try {
-            setPropertyGroup(propertiesStorage.getGroup("auth-settings", true));
+            return propertiesStorage.getGroup("auth-settings", true);
         }
         catch (SQLException ex) {
             logger.severe(String.format("Cannot get property group auth-settings: %s",
                 ex.getMessage()));                
+            if (ex.getNextException() != null) 
+            logger.severe(String.format("Cannot get property group auth-settings: %s",
+                ex.getNextException().getMessage()));                
         }
+        
+        return null;
     }
 }

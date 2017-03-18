@@ -2,8 +2,6 @@
     <description>
         Project Description
     </description>
-
-    
     
     <property name="projectName" value="OpenVPN_Admin"/>
     <property name="root" location=".."/>
@@ -11,6 +9,8 @@
     <property name="web" location="${root}/web"/>
     <property name="build" location="build"/>
     <property name="dist" location="dist"/>
+    <property name="export" location="dist"/>
+    <property name="property-templates" location="${root}/property-templates"/>
     <property name="version" value="0.2.3"/>
     <property name="tar-prefix" value="${projectName}-${version}"/>
     <property name="install-dir" value="/var/lib/tomcat/webapps"/>
@@ -27,7 +27,16 @@
         <mkdir dir="${build}"/>
     </target>
     
-    <target name="compile" depends="init">
+    <target name="generate-code">
+        <exec executable="${property-templates}/create-properties-backend.py">
+            <arg value="--input_dir"/>
+            <arg value="${property-templates}"/>
+            <arg value="--dest_dir"/>
+            <arg value="${build}/src/java"/>
+        </exec>        
+    </target>
+    
+    <target name="compile" depends="init,generate-code">
         <javac srcdir="${src}" 
                destdir="${build}" 
                includeantruntime="false" 
@@ -59,6 +68,7 @@
     <target name="clean">
         <delete dir="${build}"/>
         <delete dir="${dist}"/>
+        <delete dir="${export}"/>
     </target>
     
     <target name="install">
@@ -77,9 +87,11 @@
     </target>
     
     <target name="tar">
-        <tar destfile="${dist}/${projectName}-${version}.tar.gz">
+        <mkdir dir="${export}"/>
+        <tar destfile="${export}/${projectName}-${version}.tar.gz">
             <tarfileset dir="${src}" prefix="${tar-prefix}/src"/>
             <tarfileset dir="${web}" prefix="${tar-prefix}/web"/>
+            <tarfileset dir="${property-templates}" prefix="${tar-prefix}/property-templates"/>
             <tarfileset dir="${root}/ant" 
                         prefix="${tar-prefix}" 
                         excludes="build dist"

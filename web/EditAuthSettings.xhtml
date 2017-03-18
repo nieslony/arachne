@@ -16,10 +16,12 @@
                     <h:outputText value=""/>
                     
                     <h:outputLabel value="Remote user supplied by AJP:"/>
-                    <p:selectBooleanCheckbox value="#{editAuthSettings.enableAjpRemoteUser}"/>
+                    <p:selectBooleanCheckbox id="enableAjpRemoteUser" 
+                                             value="#{editAuthSettings.enableAjpRemoteUser}"/>
                     
                     <h:outputLabel value="Username given in HTTP header:"/>
-                    <p:selectBooleanCheckbox value="#{editAuthSettings.enableHttpHeaderAuth}">
+                    <p:selectBooleanCheckbox id="enableHttpHeaderAuth" 
+                                             value="#{editAuthSettings.enableHttpHeaderAuth}">
                         <p:ajax event="change" update="httpHeaderRemoteUser"/>
                     </p:selectBooleanCheckbox>
                     
@@ -29,12 +31,14 @@
                                  value="#{editAuthSettings.httpHeaderRemoteUser}"/>
                 </h:panelGrid>
                 
+                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+                
                 <p:commandButton value="Save" action="#{editAuthSettings.onSave()}"/>
                 <p:commandButton value="Reset" action="#{editAuthSettings.onReset()}">
-                    <p:ajax update="settings"/>
+                    <p:ajax update="enableAjpRemoteUser enableHttpHeaderAuth httpHeaderRemoteUser"/>
                 </p:commandButton>
             </h:form>
         </ui:define>
     </ui:composition>
-</body>
+</body>'
 </html>
