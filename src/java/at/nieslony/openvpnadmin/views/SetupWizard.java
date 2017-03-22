@@ -5,11 +5,10 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.RoleRuleIsUser;
-import at.nieslony.openvpnadmin.User;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
-import at.nieslony.openvpnadmin.beans.LocalUsers;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
 import at.nieslony.openvpnadmin.beans.Roles;
@@ -168,9 +167,6 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{pki}")
     private Pki pki;
-
-    @ManagedProperty(value = "#{localUsers}")
-    private LocalUsers localUsers;
 
     @ManagedProperty(value = "#{roles}")
     private Roles rolesBean;
@@ -533,16 +529,14 @@ public class SetupWizard implements Serializable {
             propertiesStorage.createTables();
 
             step = "Initializing local users and roles";
-            localUsers.createTables();
+            localUserFactory.createTables();
 
             step = "Creating admin user";
-            User adminUser = localUserFactory.addUser(adminUserName);
+            AbstractUser adminUser = localUserFactory.addUser(adminUserName);
             adminUser.setFullName("Master Administrator");
             adminUser.setPassword(password);
             adminUser.save();
 
-            /*VpnUser admin = localUsers.addUser(adminUserName, password);
-            admin.setFullName("Master Administrator");*/
             rolesBean.addRule("admin", new RoleRuleIsUser(adminUserName));
             rolesBean.save();
 
@@ -573,10 +567,6 @@ public class SetupWizard implements Serializable {
         finally {
             logger.info("--- End application setup ---");
         }
-    }
-
-    public void setLocalUsers(LocalUsers localUsers) {
-        this.localUsers = localUsers;
     }
 
     public void setPki(Pki pki) {

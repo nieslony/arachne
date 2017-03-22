@@ -5,11 +5,10 @@
  */
 package at.nieslony.openvpnadmin.views;
 
-import at.nieslony.openvpnadmin.User;
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
-import at.nieslony.openvpnadmin.beans.LocalUsers;
 import at.nieslony.openvpnadmin.beans.NavigationBean;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
@@ -40,9 +39,6 @@ public class LoginBean implements Serializable {
     @ManagedProperty(value="#{navigationBean}")
     private NavigationBean navigationBean;
 
-    @ManagedProperty(value = "#{localUsers}")
-    private LocalUsers localUsers;
-
     @ManagedProperty(value = "#{currentUser}")
     private CurrentUser currentUser;
 
@@ -53,7 +49,7 @@ public class LoginBean implements Serializable {
     DatabaseSettings databaseSettings;
 
     public void onLogin() throws PermissionDenied{
-        User tmpUser = localUserFactory.findUser(username);
+        AbstractUser tmpUser = localUserFactory.findUser(username);
         if (tmpUser != null && tmpUser.auth(password)) {
             currentUser.setLocalUser(tmpUser);
             navigationBean.toWelcomePage(tmpUser);
@@ -84,10 +80,6 @@ public class LoginBean implements Serializable {
 
     public void setNavigationBean(NavigationBean navigationBean) {
         this.navigationBean = navigationBean;
-    }
-
-    public void setLocalUsers(LocalUsers localUsers) {
-        this.localUsers = localUsers;
     }
 
     public void setPki(Pki pki) {

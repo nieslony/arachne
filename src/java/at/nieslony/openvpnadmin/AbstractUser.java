@@ -9,7 +9,7 @@ package at.nieslony.openvpnadmin;
  *
  * @author claas
  */
-abstract public class User {
+abstract public class AbstractUser {
     private String username;
     private String givenName;
     private String surName;
@@ -61,6 +61,7 @@ abstract public class User {
 
     abstract public boolean isImmutable();
     abstract public boolean auth(String password);
+    abstract public String getUserTypeStr();
 
     public void save()
             throws Exception

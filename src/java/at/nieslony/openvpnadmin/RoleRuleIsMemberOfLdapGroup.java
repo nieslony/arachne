@@ -73,7 +73,7 @@ public class RoleRuleIsMemberOfLdapGroup implements RoleRule, Serializable {
 
         try {
             LdapGroup group = ldapSettings.findLdapGroup(groupName);
-            VpnUser user = ldapSettings.findVpnUser(username);
+            LdapUser user = ldapSettings.findVpnUser(username);
             return group.hasMember(user);
         }
         catch (NamingException | NoSuchLdapGroup | NoSuchLdapUser ex) {

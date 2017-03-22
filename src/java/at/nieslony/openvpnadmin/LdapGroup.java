@@ -18,7 +18,7 @@ public class LdapGroup {
     private final List<String> memberUids = new LinkedList<>();
     private final List<String> memberDNs = new LinkedList<>();
 
-    public boolean hasMember(VpnUser user) {
+    public boolean hasMember(LdapUser user) {
         for (String m: memberUids) {
             if (m.equals(user.getUsername()))
                 return true;

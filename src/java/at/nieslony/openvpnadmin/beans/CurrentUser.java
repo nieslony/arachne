@@ -5,7 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.openvpnadmin.User;
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.exceptions.InvalidUsernameOrPassword;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.Serializable;
@@ -27,13 +27,10 @@ import javax.servlet.http.HttpServletRequest;
 @SessionScoped
 public class CurrentUser implements Serializable {
     //private VpnUser vpnUser = null;
-    private User user = null;
+    private AbstractUser user = null;
 
     @ManagedProperty(value = "#{ldapSettings}")
     private LdapSettings ldapSettings;
-
-    @ManagedProperty(value = "#{localUsers}")
-    private LocalUsers localUsers;
 
     @ManagedProperty(value = "#{roles}")
     private Roles roles;
@@ -78,7 +75,7 @@ public class CurrentUser implements Serializable {
                         byte[] decoded = Base64.getDecoder().decode(auth[1]);
                         String[] usrPwd = new String(decoded).split(":");
                         if (usrPwd.length == 2) {
-                            User tmpUser = localUserFactory.findUser(usrPwd[0]);
+                            AbstractUser tmpUser = localUserFactory.findUser(usrPwd[0]);
                             if (tmpUser.auth(usrPwd[1])) {
                                 user = tmpUser;
                             }
@@ -137,10 +134,6 @@ public class CurrentUser implements Serializable {
 
     public void setNavigationBean(NavigationBean nb) {
         navigationBean = nb;
-    }
-
-    public void setLocalUsers(LocalUsers lu) {
-        localUsers = lu;
     }
 
     public void setLdapSettings(LdapSettings ls) {
@@ -234,7 +227,7 @@ public class CurrentUser implements Serializable {
             logger.info(String.format("User %s has required role user", getUsername()));
    }
 
-    public void setLocalUser(User u) {
+    public void setLocalUser(AbstractUser u) {
         user = u;
     }
 

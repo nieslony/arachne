@@ -48,7 +48,7 @@ public class DatabaseSettings
 
     private boolean valid = false;
 
-    private Connection con = null;
+    private transient Connection con = null;
 
     @ManagedProperty(value = "#{folderFactory}")
     private FolderFactory folderFactory;

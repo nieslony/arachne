@@ -34,10 +34,10 @@ public class LdapHelper {
         ldapHelperUser = lhu;
     }
 
-    public List<VpnUser> findVpnUsers(String pattern) {
+    public List<LdapUser> findVpnUsers(String pattern) {
         DirContext ctx;
         NamingEnumeration results;
-        LinkedList<VpnUser> users = new LinkedList<>();
+        LinkedList<LdapUser> users = new LinkedList<>();
 
         try {
             ctx = getLdapContext();
@@ -49,11 +49,11 @@ public class LdapHelper {
                 SearchResult result = (SearchResult) results.next();
                 Attributes attrs = result.getAttributes();
                 Attribute attr;
-                VpnUser vpnUser;
+                LdapUser vpnUser;
 
                 attr = attrs.get(ldapHelperUser.getAttrUsername());
                 if (attr != null) {
-                    vpnUser = new VpnUser((String) attr.get());
+                    vpnUser = new LdapUser(ldapHelperUser, (String) attr.get());
                 }
                 else {
                     logger.warning("Ignoring user with no username");
@@ -69,13 +69,11 @@ public class LdapHelper {
 
                 attr = attrs.get(ldapHelperUser.getAttrSurname());
                 if (attr != null)
-                    vpnUser.setSurname((String) attr.get());
+                    vpnUser.setSurName((String) attr.get());
 
                 attr = attrs.get(ldapHelperUser.getAttrEmail());
                 if (attr !=  null)
                     vpnUser.setEmail((String) attr.get());
-
-                vpnUser.setUserType(VpnUser.UserType.UT_LDAP);
 
                 vpnUser.setDn(result.getName() + "," + getBaseDn());
 
@@ -90,14 +88,14 @@ public class LdapHelper {
         return users;
     }
 
-    public VpnUser findVpnUser(String username)
+    public LdapUser findVpnUser(String username)
             throws NoSuchLdapUser, NamingException
     {
         logger.info(String.format("Trying to find user %s in LDAP", username));
 
         DirContext ctx;
         NamingEnumeration results;
-        VpnUser vpnUser = null;
+        LdapUser vpnUser = null;
 
         ctx = getLdapContext();
 
@@ -105,7 +103,7 @@ public class LdapHelper {
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         results = ctx.search(ldapHelperUser.getOuUsers(), getUserSearchString(username), sc);
         if (results.hasMore()) {
-            vpnUser = new VpnUser(username);
+            vpnUser = new LdapUser(ldapHelperUser, username);
             SearchResult result = (SearchResult) results.next();
             Attributes attrs = result.getAttributes();
             Attribute attr;
@@ -119,11 +117,9 @@ public class LdapHelper {
 
             attr = attrs.get(ldapHelperUser.getAttrSurname());
             if (attr != null)
-                vpnUser.setSurname((String) attr.get());
+                vpnUser.setSurName((String) attr.get());
 
             vpnUser.setDn(result.getName() + "," + getBaseDn());
-
-            vpnUser.setUserType(VpnUser.UserType.UT_LDAP);
         }
         else {
             throw new NoSuchLdapUser(String.format("LDAP user %s not found", username));

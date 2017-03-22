@@ -5,7 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.openvpnadmin.User;
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
@@ -90,7 +90,7 @@ public class NavigationBean implements Serializable {
 
     }
 
-    public void toWelcomePage(User user)
+    public void toWelcomePage(AbstractUser user)
             throws PermissionDenied
     {
         if (user == null) {

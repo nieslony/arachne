@@ -8,6 +8,7 @@ package at.nieslony.openvpnadmin;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import java.security.MessageDigest;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Random;
@@ -19,7 +20,7 @@ import javax.xml.bind.DatatypeConverter;
  * @author claas
  */
 public class LocalUser
-        extends User
+        extends AbstractUser
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -30,6 +31,19 @@ public class LocalUser
     public LocalUser(LocalUserFactory luf, String username) {
         localUsers = luf;
         setUsername(username);
+    }
+
+    public LocalUser(LocalUserFactory luf, ResultSet result)
+            throws SQLException
+    {
+        localUsers = luf;
+        setUsername(result.getString("username"));
+        setId(result.getString("id"));
+        setEmail(result.getString("email"));
+        setFullName(result.getString("fullName"));
+        setGivenName(result.getString("givenName"));
+        setSurName(result.getString("surName"));
+        setPasswordHash(result.getString("password"));
     }
 
     public void setId(String id) {
@@ -70,7 +84,6 @@ public class LocalUser
 
     @Override
     public boolean auth(String password) {
-        logger.info(String.format("Checking password: '%s'", password));
         return checkHash(this.password, password);
     }
 
@@ -106,8 +119,6 @@ public class LocalUser
             logger.warning("Empry password suuplied => check failed");
             return false;
         }
-        logger.info(String.format("Comparing saltedHash '%s' with password '%s'",
-                saltedHash, password));
 
         boolean ret = false;
 
@@ -134,5 +145,10 @@ public class LocalUser
         }
 
         return ret;
+    }
+
+    @Override
+    public String getUserTypeStr() {
+        return "Local";
     }
 }

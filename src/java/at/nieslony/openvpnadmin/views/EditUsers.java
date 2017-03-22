@@ -5,16 +5,17 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.Role;
-import at.nieslony.openvpnadmin.VpnUser;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
-import at.nieslony.openvpnadmin.beans.LocalUsers;
+import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Roles;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateEncodingException;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -35,9 +36,6 @@ import org.primefaces.model.StreamedContent;
 public class EditUsers implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{localUsers}")
-    LocalUsers localUsers;
-
     @ManagedProperty(value = "#{ldapSettings}")
     LdapSettings ldapSettings;
 
@@ -47,6 +45,12 @@ public class EditUsers implements Serializable {
         roles = rb;
     }
 
+    @ManagedProperty(value = "#{localUserFactory}")
+    LocalUserFactory localUserFactory;
+    public void setLocalUserFactory(LocalUserFactory luf) {
+        localUserFactory = luf;
+    }
+
     @ManagedProperty(value ="#{configBuilder}")
     ConfigBuilder configBuilder;
 
@@ -54,7 +58,7 @@ public class EditUsers implements Serializable {
     private String addLocalUserPassword;
     private String passwordResetUserName;
     private String passwordReset;
-    private VpnUser selectedUser;
+    private AbstractUser selectedUser;
 
     public void setConfigBuilder(ConfigBuilder cb) {
         configBuilder = cb;
@@ -84,11 +88,6 @@ public class EditUsers implements Serializable {
         this.addLocalUserUsername = addLocalUserUsername;
     }
 
-
-    public void setLocalUsers(LocalUsers lu) {
-        localUsers = lu;
-    }
-
     public void setLdapSettings(LdapSettings ls) {
         ldapSettings = ls;
     }
@@ -97,11 +96,11 @@ public class EditUsers implements Serializable {
         return passwordResetUserName;
     }
 
-    public VpnUser getSelectedUser() {
+    public AbstractUser getSelectedUser() {
         return selectedUser;
     }
 
-    public void setSelectedUser(VpnUser su) {
+    public void setSelectedUser(AbstractUser su) {
         selectedUser = su;
     }
 
@@ -116,35 +115,79 @@ public class EditUsers implements Serializable {
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').show();");
     }
 
-    public void onAddLocalUserOk() {
-        localUsers.addUser(addLocalUserUsername, addLocalUserPassword);
+    public void onAddLocalUserOk()
+    {
+        AbstractUser user = localUserFactory.addUser(addLocalUserUsername);
+        user.setPassword(addLocalUserPassword);
+        try {
+            user.save();
+        }
+        catch (Exception ex) {
+            logger.warning(String.format("Cannot save user %s: %s",
+                    passwordResetUserName, ex.getMessage()));
+        }
 
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').hide();");
     }
 
-    public List<VpnUser> getAllUsers() {
-        List<VpnUser> lu = localUsers.getUsers();
+    public List<AbstractUser> getAllUsers() {
+        List<AbstractUser> lu = new LinkedList<>();
+
+        try {
+            lu.addAll(localUserFactory.getAllUsers());
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msg = String.format("Cannot fetch local users: %s", ex.getMessage());
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+            logger.warning(msg);
+        }
         lu.addAll(ldapSettings.findVpnUsers("*"));
 
         return lu;
     }
 
-    public void onResetPassword(VpnUser user) {
+    public void onResetPassword(AbstractUser user) {
         logger.info("Open dialog dlgResetPassword");
         passwordResetUserName = user.getUsername();
         RequestContext.getCurrentInstance().execute("PF('dlgResetPassword').show();");
     }
 
     public void onResetPasswordOk() {
-        VpnUser user = localUsers.getUser(passwordResetUserName);
-        user.setPasswordHash(localUsers.createSaltedHash(passwordReset));
-        localUsers.saveUsers();
+        AbstractUser user = localUserFactory.findUser(passwordResetUserName);
+        user.setPassword(passwordReset);
+        try {
+            user.save();
+        }
+        catch (Exception ex) {
+            logger.warning(String.format("Cannot save user %s: %s",
+                    passwordResetUserName, ex.getMessage()));
+        }
         RequestContext.getCurrentInstance().execute("PF('dlgResetPassword').hide();");
     }
 
     public void onRemoveUser(String username) {
-        localUsers.removeUser(username);
-        localUsers.saveUsers();
+        try {
+            if (!localUserFactory.removeUser(username)) {
+                FacesContext.getCurrentInstance().addMessage(
+                    null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO, "Warning", "No user removed"));
+            }
+            else {
+                FacesContext.getCurrentInstance().addMessage(
+                    null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO, "Warning",
+                            String.format("User %s removed.", username)));
+            }
+        }
+        catch (Exception ex) {
+                FacesContext.getCurrentInstance().addMessage(
+                    null, new FacesMessage(
+                        FacesMessage.SEVERITY_INFO, "Warning",
+                            String.format("Cannot remove user %s: %s",
+                                    username, ex.getMessage())));
+        }
     }
 
     public StreamedContent getDownloadNetworkManagerInstaller() {

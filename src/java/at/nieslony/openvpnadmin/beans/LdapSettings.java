@@ -5,7 +5,7 @@ import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import at.nieslony.openvpnadmin.LdapGroup;
 import at.nieslony.openvpnadmin.LdapHelper;
 import at.nieslony.openvpnadmin.LdapHelperUser;
-import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.LdapUser;
 import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
@@ -57,7 +57,7 @@ public class LdapSettings
         return null;
     }
 
-    public VpnUser findVpnUser(String username)
+    public LdapUser findVpnUser(String username)
             throws NamingException, NoSuchLdapUser
     {
         return ldapHelper.findVpnUser(username);
@@ -75,7 +75,7 @@ public class LdapSettings
         return ldapHelper.getLdapContext();
     }
 
-    public List<VpnUser> findVpnUsers(String pattern) {
+    public List<LdapUser> findVpnUsers(String pattern) {
         return ldapHelper.findVpnUsers(pattern);
     }
 }
