@@ -6,8 +6,9 @@
 package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.RoleRuleIsUser;
-import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.User;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
+import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.LocalUsers;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
@@ -26,6 +27,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,6 +38,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.faces.model.SelectItem;
@@ -177,6 +180,9 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{propertiesStorage}")
     private PropertiesStorageBean propertiesStorage;
+
+    @ManagedProperty(value = "#{localUserFactory}")
+    private LocalUserFactory localUserFactory;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -513,22 +519,39 @@ public class SetupWizard implements Serializable {
 
     public void onSave() {
         performingSetup = true;
+        String step = "";
+
+        FacesContext fc = FacesContext.getCurrentInstance();
+        ExternalContext ec = fc.getExternalContext();
 
         logger.info("--- Begin application setup ---");
         try {
+            step = "Saving database settings";
             saveDatabaseSettings();
+
+            step = "Initializiong properties storage";
             propertiesStorage.createTables();
 
-            VpnUser admin = localUsers.addUser(adminUserName, password);
-            admin.setFullName("Master Administrator");
+            step = "Initializing local users and roles";
+            localUsers.createTables();
+
+            step = "Creating admin user";
+            User adminUser = localUserFactory.addUser(adminUserName);
+            adminUser.setFullName("Master Administrator");
+            adminUser.setPassword(password);
+            adminUser.save();
+
+            /*VpnUser admin = localUsers.addUser(adminUserName, password);
+            admin.setFullName("Master Administrator");*/
             rolesBean.addRule("admin", new RoleRuleIsUser(adminUserName));
             rolesBean.save();
+
             saveCA();
             saveServerCert();
 
             performingSetup = false;
 
-            FacesContext.getCurrentInstance().getExternalContext().redirect("Login.xhtml");
+            ec.redirect("Login.xhtml");
         }
         catch (Exception ex) {
             StringWriter sw = new StringWriter();
@@ -537,6 +560,13 @@ public class SetupWizard implements Serializable {
                     ex.getClass().getName());
             pw.println(ex.getMessage());
             ex.printStackTrace(pw);
+
+            fc.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error",
+                            String.format("%s: %s", step, ex.getMessage())
+                            )
+                    );
 
             logger.severe(sw.toString());
         }
@@ -558,8 +588,13 @@ public class SetupWizard implements Serializable {
     }
 
     public void requireNoSetup(ComponentSystemEvent event) throws PermissionDenied {
+        if (performingSetup) {
+            logger.info("Still performing setup. Access to setup wizard granted");
+            return;
+        }
+
         FacesContext fc = FacesContext.getCurrentInstance();
-        if ((localUsers.isValid() || pki.isValid()) & !performingSetup) {
+        if (databaseSettings.isValid()) {
             logger.severe("Setup wizard already done. To re-run read documentation.");
             throw new PermissionDenied();
         }
@@ -580,23 +615,42 @@ public class SetupWizard implements Serializable {
         this.databaseSettings = databaseSettings;
     }
 
+    public void setLocalUserFactory(LocalUserFactory luf) {
+        localUserFactory = luf;
+    }
+
     public void setPropertiesStorage(PropertiesStorageBean ps) {
         propertiesStorage = ps;
     }
 
     public void onTestDatabaseConnection() {
-        saveDatabaseSettings();
-        Connection con;
+        Connection con = null;
         String message = "Database connection seems to work";
         try {
-            databaseSettings.closeDatabaseConnection();
-            con = databaseSettings.getDatabseConnection();
+            Class.forName("org.postgresql.Driver");
+            String conUrl = String.format("jdbc:postgresql://%s:%d/%s",
+                    databaseHost,
+                    databasePort,
+                    databaseName);
+            con = DriverManager.getConnection(conUrl, databaseUser, databasePassword);
             if (con == null)
                 message = "Cannot create database connection";
         }
         catch (ClassNotFoundException | SQLException ex) {
             message = ex.getMessage();
         }
+        finally {
+            if (con != null) {
+                try {
+                    con.close();
+                }
+                catch (SQLException ex) {
+                    message = String.format("Cannot close database connection: %s",
+                            ex.getMessage());
+                }
+            }
+        }
+
 
         FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_INFO,
                 "Test database connection",

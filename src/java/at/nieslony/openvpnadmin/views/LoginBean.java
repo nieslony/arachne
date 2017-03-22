@@ -5,15 +5,17 @@
  */
 package at.nieslony.openvpnadmin.views;
 
-import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.User;
 import at.nieslony.openvpnadmin.beans.CurrentUser;
+import at.nieslony.openvpnadmin.beans.DatabaseSettings;
+import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.LocalUsers;
 import at.nieslony.openvpnadmin.beans.NavigationBean;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
-import java.io.Serializable;
 import java.io.IOException;
-
+import java.io.Serializable;
+import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -21,7 +23,6 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import org.primefaces.context.RequestContext;
-import java.util.logging.Logger;
 
 /**
  *
@@ -45,11 +46,17 @@ public class LoginBean implements Serializable {
     @ManagedProperty(value = "#{currentUser}")
     private CurrentUser currentUser;
 
+    @ManagedProperty(value = "#{localUserFactory}")
+    LocalUserFactory localUserFactory;
+
+    @ManagedProperty(value = "#{databaseSettings}")
+    DatabaseSettings databaseSettings;
+
     public void onLogin() throws PermissionDenied{
-        VpnUser vpnUser = localUsers.auth(username, password);
-        if (vpnUser != null) {
-                currentUser.setLocalUser(vpnUser);
-                navigationBean.toWelcomePage(vpnUser);
+        User tmpUser = localUserFactory.findUser(username);
+        if (tmpUser != null && tmpUser.auth(password)) {
+            currentUser.setLocalUser(tmpUser);
+            navigationBean.toWelcomePage(tmpUser);
         }
 
         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -97,7 +104,7 @@ public class LoginBean implements Serializable {
 
     public void requireSetup(ComponentSystemEvent event) throws IOException {
 	FacesContext fc = FacesContext.getCurrentInstance();
-        if (!localUsers.isValid() /*|| !pki.isValid() */ ) {
+        if (!databaseSettings.isValid() /*|| !pki.isValid() */ ) {
             /*ConfigurableNavigationHandler nav =
                     (ConfigurableNavigationHandler)
 			fc.getApplication().getNavigationHandler();
@@ -106,5 +113,14 @@ public class LoginBean implements Serializable {
             //nav.performNavigation("SetupWizard");
             fc.getExternalContext().redirect("SetupWizard.xhtml");
         }
+    }
+
+
+    public void setLocalUserFactory(LocalUserFactory luf) {
+        localUserFactory = luf;
+    }
+
+    public void setDatabaseSettings(DatabaseSettings dbs) {
+        databaseSettings = dbs;
     }
 }

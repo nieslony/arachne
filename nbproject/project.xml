@@ -38,7 +38,11 @@
                 </library>
                 <library dirs="200">
                     <file>${file.reference.src-sql}</file>
-                    <path-in-war>/</path-in-war>
+                    <path-in-war>/WEB-INF/sql</path-in-war>
+                </library>
+                <library dirs="200">
+                    <file>${file.reference.src-sql-1}</file>
+                    <path-in-war>/WEB-INF/sql</path-in-war>
                 </library>
             </web-module-additional-libraries>
             <source-roots>

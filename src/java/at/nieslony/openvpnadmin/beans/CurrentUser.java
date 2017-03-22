@@ -5,9 +5,8 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.User;
 import at.nieslony.openvpnadmin.exceptions.InvalidUsernameOrPassword;
-import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.Serializable;
 import java.util.Base64;
@@ -18,7 +17,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
-import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -28,7 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 @ManagedBean
 @SessionScoped
 public class CurrentUser implements Serializable {
-    private VpnUser vpnUser = null;
+    //private VpnUser vpnUser = null;
+    private User user = null;
 
     @ManagedProperty(value = "#{ldapSettings}")
     private LdapSettings ldapSettings;
@@ -45,6 +44,9 @@ public class CurrentUser implements Serializable {
     @ManagedProperty(value = "#{authSettings}")
     private AuthSettings authSettings;
 
+    @ManagedProperty(value = "#{localUserFactory}")
+    LocalUserFactory localUserFactory;
+
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     /**
@@ -60,7 +62,7 @@ public class CurrentUser implements Serializable {
         HttpServletRequest req = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();
 
         try {
-            if (authSettings.getEnableAjpRemoteUser()) {
+            /*if (authSettings.getEnableAjpRemoteUser()) {
                 logger.info("AJP remoteUser enabled");
                 if (req.getRemoteUser() != null) {
                     vpnUser = ldapSettings.findVpnUser(req.getRemoteUser());
@@ -68,7 +70,27 @@ public class CurrentUser implements Serializable {
             }
             else {
                 logger.info("AJP remoteUser disabled");
+            }*/
+            if (user ==  null) {
+                if (req.getHeader("authorization") != null) {
+                    String auth[] = req.getHeader("authorization").split(" ");
+                    if (auth.length == 2 && auth[0].equals("Basic")) {
+                        byte[] decoded = Base64.getDecoder().decode(auth[1]);
+                        String[] usrPwd = new String(decoded).split(":");
+                        if (usrPwd.length == 2) {
+                            User tmpUser = localUserFactory.findUser(usrPwd[0]);
+                            if (tmpUser.auth(usrPwd[1])) {
+                                user = tmpUser;
+                            }
+                            else {
+                                throw new InvalidUsernameOrPassword();
+                            }
+                        }
+                    }
+                    throw new InvalidUsernameOrPassword();
+                }
             }
+            /*
             if (vpnUser == null && authSettings.getEnableHttpHeaderAuth()) {
                 String remUser = (String) req.getHeader(authSettings.getHttpHeaderRemoteUser());
                 if (remUser != null) {
@@ -87,27 +109,27 @@ public class CurrentUser implements Serializable {
                     }
                     throw new InvalidUsernameOrPassword();
                 }
-            }
+            }*/
         }
         catch (InvalidUsernameOrPassword iuop) {
             logger.severe(String.format("Illegal REMOTE_USER or password provided: %s",
                     iuop.getMessage()));
             // retirect to 403
         }
-        catch (NoSuchLdapUser nslu) {
+        /*catch (NoSuchLdapUser nslu) {
             logger.severe(nslu.getMessage());
         }
         catch (NamingException ne) {
             logger.severe(String.format("Error connecting to LDAP server: %s", ne.getMessage()));
-        }
+        }*/
     }
 
     public boolean isValid() {
-        return vpnUser != null && vpnUser.getUserType() != VpnUser.UserType.UT_UNASSIGNED;
+        return user != null;
     }
 
     public void isValid(ComponentSystemEvent event) {
-        if (vpnUser == null) {
+        if (user == null) {
             FacesContext fc = FacesContext.getCurrentInstance();
             navigationBean.toLoginPage();
         }
@@ -130,53 +152,53 @@ public class CurrentUser implements Serializable {
     }
 
     public String getUsername() {
-        if (vpnUser != null)
-            return vpnUser.getUsername();
+        if (user != null)
+            return user.getUsername();
         else
             return "n/a";
     }
 
     public String getSurname() {
-        if (vpnUser != null)
-            return vpnUser.getSurname();
+        if (user != null)
+            return user.getSurName();
         else
             return "";
     }
 
     public String getFullName() {
-        if (vpnUser != null)
-            return vpnUser.getFullName();
+        if (user != null)
+            return user.getFullName();
         else
             return "";
     }
 
     public String getGivename() {
-        if (vpnUser != null)
-            return vpnUser.getGivenName();
+        if (user != null)
+            return user.getGivenName();
         else
             return "";
     }
 
     public String getVisibleName() {
-        if (vpnUser == null)
+        if (user == null)
             return "unknown";
         String name;
-        name = vpnUser.getFullName();
+        name = user.getFullName();
         if (name != null && !name.isEmpty())
             return name;
-        return vpnUser.getUsername();
+        return user.getUsername();
     }
 
     public boolean hasRole(String rolename) {
 	FacesContext fc = FacesContext.getCurrentInstance();
 
-        if (vpnUser == null) {
+        if (user == null) {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
         }
-        else if (!roles.hasUserRole(vpnUser.getUsername(), rolename)) {
+        else if (!roles.hasUserRole(user.getUsername(), rolename)) {
             logger.info(String.format("User %s doesn't have role %s",
-            vpnUser.getUsername(), rolename));
+            user.getUsername(), rolename));
             return false;
         }
 
@@ -187,7 +209,7 @@ public class CurrentUser implements Serializable {
             throws PermissionDenied
     {
         if (isValid())
-            navigationBean.toWelcomePage(vpnUser);
+            navigationBean.toWelcomePage(user);
         else
            navigationBean.toLoginPage();
     }
@@ -212,11 +234,15 @@ public class CurrentUser implements Serializable {
             logger.info(String.format("User %s has required role user", getUsername()));
    }
 
-    public void setLocalUser(VpnUser vu) {
-        vpnUser = vu;
+    public void setLocalUser(User u) {
+        user = u;
     }
 
     public void setAuthSettings(AuthSettings as) {
         authSettings = as;
+    }
+
+    public void setLocalUserFactory(LocalUserFactory luf) {
+        localUserFactory = luf;
     }
 }

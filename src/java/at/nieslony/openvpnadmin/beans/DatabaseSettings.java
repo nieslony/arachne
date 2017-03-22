@@ -46,6 +46,8 @@ public class DatabaseSettings
     private String databaseUser;
     private String databasePassword;
 
+    private boolean valid = false;
+
     private Connection con = null;
 
     @ManagedProperty(value = "#{folderFactory}")
@@ -122,6 +124,8 @@ public class DatabaseSettings
         try {
             fis = new FileInputStream(getPropsFileName());
             props.load(fis);
+            logger.info("database properties successfully loaded, setting status to VALID.");
+            valid = true;
         }
         finally {
             if (fis != null)
@@ -164,6 +168,8 @@ public class DatabaseSettings
             fos = new FileOutputStream(getPropsFileName());
             props.store(fos, "");
             fos.close();
+            logger.info("database properties successfully saved, setting status to VALID.");
+            valid = true;
         }
         finally {
             if (fos != null)
@@ -194,5 +200,13 @@ public class DatabaseSettings
             con.close();
             con = null;
         }
+    }
+
+    public boolean isValid() {
+        if (valid)
+            logger.info("databaseSettings: valid");
+        else
+            logger.info("databaseSettings: not valid");
+        return valid;
     }
 }

@@ -24,6 +24,7 @@ import javax.faces.context.FacesContext;
 public class FolderFactory implements Serializable {
     private String appRoot;
     private String binDir;
+    private String sqlDir;
 
     private static final String DIR_PKI = "/pki";
     private static final String DIR_REVOKED_CERTS = DIR_PKI + "/revoked";
@@ -69,6 +70,11 @@ public class FolderFactory implements Serializable {
         new File(getRolesDir()).mkdirs();
 
         binDir = extCtx.getRealPath("/WEB-INF/bin");
+        sqlDir = extCtx.getRealPath("/WEB-INF/sql");
+    }
+
+    public String getSqlDir() {
+        return sqlDir;
     }
 
     public String getRevokedCertsDir() {

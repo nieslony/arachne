@@ -5,14 +5,13 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.openvpnadmin.VpnUser;
+import at.nieslony.openvpnadmin.User;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
-
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ApplicationScoped;
+import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -91,26 +90,27 @@ public class NavigationBean implements Serializable {
 
     }
 
-    public void toWelcomePage(VpnUser vpnUser) throws PermissionDenied {
-
-        if (vpnUser == null || vpnUser.getUserType() == VpnUser.UserType.UT_UNASSIGNED) {
+    public void toWelcomePage(User user)
+            throws PermissionDenied
+    {
+        if (user == null) {
             logger.info("There's no current user, forwarding to login page");
             toLoginPage();
             return;
         }
 
-        if (roles.hasUserRole(vpnUser.getUsername(), "admin")) {
+        if (roles.hasUserRole(user.getUsername(), "admin")) {
             logger.info(String.format("User %s has role admin => redirect to AdminWelcome",
-                    vpnUser.getUsername()));
+                    user.getUsername()));
             toPage("AdminWelcome.xhtml");
             return;
         }
-        if (roles.hasUserRole(vpnUser.getUsername(), "user")) {
+        if (roles.hasUserRole(user.getUsername(), "user")) {
             logger.info(String.format("User %s has role user=> redirect to UserWelcome",
-                    vpnUser.getUsername()));
+                    user.getUsername()));
             toPage("UserWelcome.xhtml");
             return;
         }
-        throw new PermissionDenied("User " + vpnUser.getUsername() + " has neither role admin nor role user");
+        throw new PermissionDenied("User " + user.getUsername() + " has neither role admin nor role user");
     }
 }
