@@ -52,6 +52,7 @@ public class LoginBean implements Serializable {
         AbstractUser tmpUser = localUserFactory.findUser(username);
         if (tmpUser != null && tmpUser.auth(password)) {
             currentUser.setLocalUser(tmpUser);
+            logger.info(String.format("Navigating to %s's welcome page", username));
             navigationBean.toWelcomePage(tmpUser);
         }
 

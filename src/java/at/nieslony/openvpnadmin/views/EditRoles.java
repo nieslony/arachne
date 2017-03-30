@@ -7,8 +7,9 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.Role;
 import at.nieslony.openvpnadmin.RoleRule;
+import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
+import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.Roles;
-import at.nieslony.openvpnadmin.beans.LdapSettings;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,20 +28,20 @@ import org.primefaces.context.RequestContext;
 public class EditRoles implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{ldapSettings}")
-    LdapSettings ldapSettings;
-    public void setLdapSettings(LdapSettings ls) {
-        ldapSettings = ls;
-    }
-
     @ManagedProperty(value = "#{roles}")
     Roles roles;
     public void setRoles(Roles rb) {
         roles = rb;
     }
 
+    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    RoleRuleFactoryCollection roleRuleFactoryCollection;
+    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
+        roleRuleFactoryCollection = rrfc;
+    }
+
     private String addRuleToRole;
-    private String addRuleType = "at.nieslony.openvpnadmin.RoleRuleIsUser";
+    private String addRuleType;
     private String addRuleValue;
 
     /**
@@ -77,29 +78,17 @@ public class EditRoles implements Serializable {
     }
 
     public List<String> onCompleteRoleValue(String pattern) {
+        logger.info(String.format("Trying to complete %s", pattern));
+
         if (pattern == null)
             return null;
 
-        RoleRule rule = null;
-        List<String> values = new LinkedList<>();
-
-        try {
-            rule = (RoleRule) Class.forName(getAddRoleRuleType()).newInstance();
+        RoleRuleFactory factory = roleRuleFactoryCollection.getFactory(addRuleType);
+        if (factory == null) {
+            logger.warning(String.format("rule type %s doesn't exist", addRuleType));
+            return new LinkedList<>();
         }
-        catch (InstantiationException | IllegalAccessException |
-                ClassNotFoundException | SecurityException ex) {
-            logger.severe(String.format("Cannot create rule object: %s",
-                    ex.getMessage()));
-        }
-
-        if (rule != null) {
-            values.addAll(rule.completeValue(pattern, ldapSettings));
-        }
-        else {
-            logger.info("No rule object");
-        }
-
-        return values;
+        return factory.completeValue(pattern);
     }
 
     public void onAddRule(Role role) {
@@ -110,26 +99,19 @@ public class EditRoles implements Serializable {
 
     public void onRemoveRuleFromRole(Role role, RoleRule rule) {
         roles.removeRuleFromRole(role, rule);
-        roles.save();
     }
 
     public void onAddRuleOk(Role role) {
         logger.info(String.format("Adding rule (%s=%s) to role %s",
                 addRuleType, addRuleValue, addRuleToRole));
-        try {
-            RoleRule rule = (RoleRule) Class.forName(addRuleType).newInstance();
-            rule.setValue(addRuleValue);
-            roles.addRule(addRuleToRole, rule);
-            roles.save();
 
-            logger.info("Add rule: OK");
+        RoleRule rule = roleRuleFactoryCollection.createRoleRule(addRuleType, addRuleValue);
+        if (rule != null) {
+            roles.addRule(addRuleToRole, addRuleType, addRuleValue);
         }
-        catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
-            logger.severe(String.format("Cannot add rule to role: %s",
-                    ex.getMessage()));
-        }
+        else
+            logger.warning("Unable to create rule");
 
         RequestContext.getCurrentInstance().execute("PF('dlgAddRule').hide();");
     }
-
 }

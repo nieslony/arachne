@@ -99,13 +99,13 @@ public class NavigationBean implements Serializable {
             return;
         }
 
-        if (roles.hasUserRole(user.getUsername(), "admin")) {
+        if (roles.hasUserRole(user, "admin")) {
             logger.info(String.format("User %s has role admin => redirect to AdminWelcome",
                     user.getUsername()));
             toPage("AdminWelcome.xhtml");
             return;
         }
-        if (roles.hasUserRole(user.getUsername(), "user")) {
+        if (roles.hasUserRole(user, "user")) {
             logger.info(String.format("User %s has role user=> redirect to UserWelcome",
                     user.getUsername()));
             toPage("UserWelcome.xhtml");

@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +26,9 @@ import javax.naming.directory.SearchResult;
  *
  * @author claas
  */
-public class LdapHelper {
+public class LdapHelper
+        implements Serializable
+{
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     LdapHelperUser ldapHelperUser;

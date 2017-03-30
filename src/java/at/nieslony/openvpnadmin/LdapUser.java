@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 /**
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
  */
 public class LdapUser
         extends AbstractUser
+        implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 

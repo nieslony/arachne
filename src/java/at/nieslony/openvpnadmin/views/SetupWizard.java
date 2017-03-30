@@ -6,11 +6,11 @@
 package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.AbstractUser;
-import at.nieslony.openvpnadmin.RoleRuleIsUser;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
+import at.nieslony.openvpnadmin.beans.RoleRuleIsUserFactory;
 import at.nieslony.openvpnadmin.beans.Roles;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
@@ -179,6 +179,9 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{localUserFactory}")
     private LocalUserFactory localUserFactory;
+
+    @ManagedProperty(value = "#{roleRuleIsUserFactory}")
+    RoleRuleIsUserFactory roleRuleIsUserFactory;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -537,8 +540,9 @@ public class SetupWizard implements Serializable {
             adminUser.setPassword(password);
             adminUser.save();
 
-            rolesBean.addRule("admin", new RoleRuleIsUser(adminUserName));
-            rolesBean.save();
+            step = String.format("Assigning role admin to user &s", adminUserName);
+            rolesBean.load();
+            rolesBean.addRule("admin", roleRuleIsUserFactory.getRoleRuleName(), adminUserName);
 
             saveCA();
             saveServerCert();
@@ -648,5 +652,9 @@ public class SetupWizard implements Serializable {
         );
 
         RequestContext.getCurrentInstance().showMessageInDialog(facesMessage);
+    }
+
+    public void setRoleRuleIsUserFactory(RoleRuleIsUserFactory factory) {
+        roleRuleIsUserFactory = factory;
     }
 }

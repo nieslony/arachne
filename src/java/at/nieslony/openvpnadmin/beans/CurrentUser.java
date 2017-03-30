@@ -189,7 +189,7 @@ public class CurrentUser implements Serializable {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
         }
-        else if (!roles.hasUserRole(user.getUsername(), rolename)) {
+        else if (!roles.hasUserRole(user, rolename)) {
             logger.info(String.format("User %s doesn't have role %s",
             user.getUsername(), rolename));
             return false;

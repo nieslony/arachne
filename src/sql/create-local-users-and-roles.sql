@@ -29,6 +29,7 @@ INSERT INTO roles (rolename) VALUES
 
 CREATE TABLE role_rules(
     role_id SERIAL references roles(id),
-    class text NOT NULL,    
-    param text
+    roleRuleName text NOT NULL,    
+    param text NOT NULL,
+    UNIQUE(role_id, roleRuleName, param)
 );;

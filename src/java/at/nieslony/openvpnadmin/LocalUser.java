@@ -6,6 +6,7 @@
 package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -21,6 +22,7 @@ import javax.xml.bind.DatatypeConverter;
  */
 public class LocalUser
         extends AbstractUser
+        implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 

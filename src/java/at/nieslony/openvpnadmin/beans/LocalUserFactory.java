@@ -12,6 +12,7 @@ import at.nieslony.utils.DbUtils;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +32,7 @@ import javax.faces.bean.ManagedProperty;
 @ApplicationScoped
 public class LocalUserFactory
         extends UserFactory
+        implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 

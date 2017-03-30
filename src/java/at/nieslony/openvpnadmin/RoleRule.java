@@ -5,19 +5,36 @@
  */
 package at.nieslony.openvpnadmin;
 
-import at.nieslony.openvpnadmin.beans.LdapSettings;
-import java.util.List;
+import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 
 /**
  *
  * @author claas
  */
-public interface RoleRule {
-    public boolean isAssumedByUser(String userName);
-    public String getRoleType();
+abstract public class RoleRule {
+    private String value;
+    private RoleRuleFactory factory;
 
-    public String getValue();
-    public void setValue(String s);
+    public RoleRule(RoleRuleFactory factory, String value) {
+        this.value = value;
+        this.factory = factory;
+    }
 
-    public List<String> completeValue(String value, LdapSettings ldapSettings);
+    abstract public boolean isAssumedByUser(AbstractUser user);
+
+    public String getRoleType() {
+        return factory.getRoleRuleName();
+    }
+
+    public String getRoleDescription() {
+        return factory.getDescriptionString();
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 }

@@ -234,11 +234,13 @@ public class EditUsers implements Serializable {
         return sc;
     }
 
-    public String getRolesString(String username) {
+    public String getRolesString(AbstractUser user) {
         List<String> rs = new LinkedList<>();
 
+        logger.info(String.format("Getting roles for user %s", user.getUsername()));
+
         for (Role role : roles.getRoles()) {
-            if (role.isAssumedByUser(username))
+            if (role.isAssumedByUser(user))
                 rs.add(role.getName());
         }
 

@@ -20,8 +20,12 @@
                     <p:outputLabel value="Rule type:" for="ruleType"/>
                     <p:selectOneMenu id="ruleType" value="#{editRoles.addRoleRuleType}"
                                      required="true" >
-                        <f:selectItem itemValue="at.nieslony.openvpnadmin.RoleRuleIsUser" itemLabel="Is user"/>
-                        <f:selectItem itemValue="at.nieslony.openvpnadmin.RoleRuleIsMemberOfLdapGroup" itemLabel="Is member of LDAP group"/>
+                        <f:selectItem itemLabel="Select rule" itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{roleRuleFactoryCollection.factories}"
+                                       var="factory"
+                                       itemLabel="#{factory.descriptionString}"
+                                       itemValue="#{factory.roleRuleName}"
+                                       />
                         <p:ajax update="ruleType"/>
                     </p:selectOneMenu>
 
@@ -43,11 +47,12 @@
         </p:dialog>
 
         <h:form id="formRoles">
+            <p:messages showDetail="true" autoUpdate="true"/>
             <p:accordionPanel multiple="true" value="#{editRoles.allRoles}" var="role" id="roles">
                 <p:tab title="Role #{role.name}">
                     <p:dataTable value="#{role.rules}" var="rule" id="ruleList">
                         <p:column headerText="Type">
-                            <h:outputText value="#{rule.roleType}"/>
+                            <h:outputText value="#{rule.roleDescription}"/>
                         </p:column>
                         <p:column headerText="Value">
                             <h:outputText value="#{rule.value}"/>
