@@ -19,6 +19,10 @@ public class RoleRuleIsUser
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
+    /*
+    public RoleRuleIsUser() {
+    }
+*/
     public RoleRuleIsUser(RoleRuleIsUserFactory factory, String username) {
         super(factory, username);
     }
@@ -30,8 +34,12 @@ public class RoleRuleIsUser
             return false;
         }
         else {
-            return getValue().equals(user.getUsername());
+            String value = getValue();
+            if (value != null) {
+                    logger.info("RoleRuleIsUser has no value");
+                    return getValue().equals(user.getUsername());
+            }
+            return false;
         }
     }
-
 }

@@ -164,7 +164,8 @@ public class CertificateAuthority {
         throws IOException, CertificateEncodingException
     {
         out.println("-----BEGIN CERTIFICATE-----");
-        writeBase64(cert.getEncoded(), out);
+        if (cert != null)
+            writeBase64(cert.getEncoded(), out);
         out.println("-----END CERTIFICATE-----");
         out.flush();
     }
@@ -254,7 +255,8 @@ public class CertificateAuthority {
 
     public void writePrivateKey(PrivateKey key, PrintWriter out) throws IOException {
         out.println("-----BEGIN PRIVATE KEY-----");
-        writeBase64(key.getEncoded(), out);
+        if (key != null)
+            writeBase64(key.getEncoded(), out);
         out.println("-----END PRIVATE KEY-----");
         out.flush();
     }

@@ -6,17 +6,22 @@
 package at.nieslony.openvpnadmin.beans;
 
 
+import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.pki.CertificateAuthority;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -26,18 +31,29 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.security.auth.x500.X500Principal;
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.PrincipalUtil;
 
 /**
  *
@@ -58,6 +74,12 @@ public class Pki extends CertificateAuthority implements Serializable {
     private X509Certificate serverCert;
     private PrivateKey serverKey;
 
+    enum CertType {
+        CA,
+        SERVER,
+        CLIENT
+    }
+
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{folderFactory}")
@@ -65,6 +87,13 @@ public class Pki extends CertificateAuthority implements Serializable {
 
     @ManagedProperty(value = "#{clientCertificateSettings}")
     private ClientCertificateSettings clientCertificateSettings;
+
+    @ManagedProperty(value = "#{databaseSettings}")
+    private DatabaseSettings databaseSettings;
+
+    public void setDatabaseSettings(DatabaseSettings databaseSettings) {
+        this.databaseSettings = databaseSettings;
+    }
 
     public void setClientCertificateSettings(ClientCertificateSettings ccs) {
         clientCertificateSettings = ccs;
@@ -222,20 +251,21 @@ public class Pki extends CertificateAuthority implements Serializable {
         setCaDir(folderFactory.getPkiDir());
 
         try {
-            loadCaCert();
-            loadCaKey();
-            loadServerCert();
-            loadServerKey();
+            logger.info("Loading CA key and certificate");
+            loadCaKeyAndCert();
+            logger.info("Loading server key and certificate");
+            loadServerKeyAndCert()
+                    ;
             loadCrl();
-        }
-        catch (FileNotFoundException ex) {
-            logger.severe(String.format("Cannot init Pki: %s", ex.toString()));
         }
         catch (Exception ex) {
             logger.severe(String.format("Cannot init Pki: %s", ex.toString()));
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ex.printStackTrace(pw);
+            logger.severe(sw.toString());
         }
     }
-
 
     public void setServerCert(X509Certificate cert) {
         this.serverCert = cert;
@@ -243,6 +273,45 @@ public class Pki extends CertificateAuthority implements Serializable {
 
     public void setServerKey(PrivateKey key) {
         this.serverKey = key;
+    }
+
+    public void setServerKeyAndCert(PrivateKey key, X509Certificate cert)
+            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    {
+        this.serverKey = key;
+        this.serverCert = cert;
+
+        addKeyAndCert(CertType.SERVER, key, cert);
+    }
+
+    public void saveCaKeyAndCert()
+            throws CertificateEncodingException, ClassNotFoundException, SQLException
+    {
+        addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
+    }
+
+    public void addKeyAndCert(CertType type, PrivateKey key, X509Certificate cert)
+            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    {
+        Connection con = databaseSettings.getDatabseConnection();
+        String sql = "INSERT INTO certificates " +
+                "(serial, commonName, validFrom, validTo, certificate, privateKey, certtype)" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?::certtype);";
+        PreparedStatement stm = con.prepareStatement(sql);
+        int pos = 1;
+        stm.setString(pos++, cert.getSerialNumber().toString(10));
+        stm.setString(pos++, (String) PrincipalUtil.getSubjectX509Principal(cert).getValues(X509Name.CN).get(0));
+        stm.setDate(pos++, new java.sql.Date(cert.getNotBefore().getTime()));
+        stm.setDate(pos++, new java.sql.Date(cert.getNotAfter().getTime()));
+        stm.setBytes(pos++, cert.getEncoded());
+        stm.setBytes(pos++, key.getEncoded());
+        stm.setString(pos++, type.toString());
+        if (stm.executeUpdate() != 1) {
+            logger.warning(String.format("Cannot add certificate %s", cert.getSubjectDN().getName()));
+        }
+        else {
+            logger.info(String.format("Successfully added certificate %s", cert.getSubjectDN().getName()));
+        }
     }
 
     public X509Certificate getServerCert() {
@@ -353,6 +422,10 @@ public class Pki extends CertificateAuthority implements Serializable {
         return cert;
     }
 
+    public PrivateKey getServerKey() {
+        return serverKey;
+    }
+
     public PrivateKey getUserKey(String username) {
         PrivateKey key = null;
 
@@ -439,6 +512,115 @@ public class Pki extends CertificateAuthority implements Serializable {
         else {
             logger.severe(String.format("Principal doesn't contain common name: %s",
                     princLeaf));
+        }
+    }
+
+    public void createTables()
+                throws IOException, SQLException, ClassNotFoundException
+    {
+        logger.info("Creating tables for propertiesStorage...");
+        String resourceName = "create-pki-tables.sql";
+        Reader r = null;
+        try {
+            r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
+
+            if (r == null) {
+                logger.severe(String.format("Cannot open %s as resource", resourceName));
+            }
+            Connection con = databaseSettings.getDatabseConnection();
+            if (con == null) {
+                logger.severe("Cannot get database connection");
+            }
+            DbUtils.executeSql(con, r);
+        }
+        finally {
+            if (r != null) {
+                try {
+                    r.close();
+                }
+                catch (IOException ex) {
+                    logger.severe(String.format("Cannot close reader: %s", ex.getMessage()));
+                }
+            }
+        }
+    }
+
+    public void loadServerKeyAndCert()
+            throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
+    {
+        ConcurrentHashMap<String, Object> hm = getKeyAndCert(Pki.CertType.SERVER, null);
+        if (hm != null) {
+            X509Certificate cert = (X509Certificate) hm.get("cert");
+            PrivateKey key = (PrivateKey) hm.get("key");
+
+            if (cert != null)
+                setServerCert(cert);
+            if (key != null)
+                setServerKey(key);
+        }
+    }
+
+    public ConcurrentHashMap<String, Object> getKeyAndCert(CertType type, String cn)
+            throws ClassNotFoundException, SQLException, GeneralSecurityException, IOException
+    {
+        ConcurrentHashMap<String, Object> ret = new ConcurrentHashMap<>();
+        X509Certificate cert = null;
+        PrivateKey key = null;
+
+        Connection con = databaseSettings.getDatabseConnection();
+        Statement stm = con.createStatement();
+        String sql;
+        if (cn == null)
+            sql = String.format(
+                    "SELECT commonName, certificate, privateKey FROM certificates WHERE certtype = '%s' AND isRevoked = false;",
+                    type.toString());
+        else
+            sql = String.format(
+                    "SELECT commonName, certificatge, key FROM certificates WHERE certtype = '%s' AND isRevoked = false AND commonName = '%s';",
+                    type.toString(), cn);
+        logger.info(sql);
+        ResultSet result = stm.executeQuery(sql);
+        if (result.next()) {
+            logger.info(String.format("Found %s", result.getString("commonName")));
+            byte[] bytes;
+
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            bytes = result.getBytes("certificate");
+            cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            bytes = result.getBytes("privateKey");
+            key = kf.generatePrivate(new PKCS8EncodedKeySpec(bytes));
+        }
+
+        if (key != null & cert != null) {
+            ret.put("key", key);
+            ret.put("cert", cert);
+        }
+        else {
+            if (key == null) {
+                logger.warning("Cannot create private key");
+            }
+            if (cert == null) {
+                logger.warning("Cannot create certificate");
+            }
+        }
+
+        return ret;
+    }
+
+    public void loadCaKeyAndCert()
+            throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
+    {
+        ConcurrentHashMap<String, Object> hm = getKeyAndCert(Pki.CertType.CA, null);
+        if (hm != null) {
+            X509Certificate cert = (X509Certificate) hm.get("cert");
+            PrivateKey key = (PrivateKey) hm.get("key");
+
+            if (cert != null)
+                setCaCert(cert);
+            if (key != null)
+                setCaKey(key);
         }
     }
 }

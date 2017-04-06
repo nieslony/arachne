@@ -128,7 +128,9 @@ public class ConfigBuilder implements Serializable {
         }
     }
 
-    public void writeUserVpnServerConfig(Properties props, Pki pki, Writer wr) {
+    public void writeUserVpnServerConfig(Properties props, Pki pki, Writer wr)
+            throws CertificateEncodingException, IOException
+    {
         int scriptSecurity = 1;
         String authScript = folderFactory.getBinDir() + "/auth.sh";
 
@@ -165,9 +167,15 @@ public class ConfigBuilder implements Serializable {
                         Integer.parseInt(props.getProperty(UserVPNBean.PROP_CLIENT_NET_MASK))
                         )
         );
-        pr.println("ca " + pki.getCaCertFilename());
-        pr.println("cert " + pki.getServerCertFilename());
-        pr.println("key " + pki.getServerKeyFilename());
+        pr.println("<ca>");
+        pki.writeCaCert(pr);
+        pr.println("</ca>");
+        pr.println("<key>");
+        pki.writePrivateKey(pki.getServerKey(), pr);
+        pr.println("</key>");
+        pr.println("<cert>");
+        pki.writeCertificate(pki.getServerCert(), pr);
+        pr.println("</cert>");
         pr.println("dh " + pki.getDhFilename());
         pr.println("crl-verify " + pki.getCrlFilename());
         pr.println("keepalive " + props.getProperty(UserVPNBean.PROP_PING) +

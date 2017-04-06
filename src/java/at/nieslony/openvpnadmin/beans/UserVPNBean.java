@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -382,10 +383,20 @@ public class UserVPNBean implements Serializable {
         fos.close();
 
         logger.info("Writing server config to " + serverConfigFile);
-        FileWriter fwr= new FileWriter(serverConfigFile);
-        configBuilder.writeUserVpnServerConfig(props, pki, fwr);
-        fwr.flush();
-        fwr.close();
+        FileWriter fwr = null;
+        try {
+            fwr = new FileWriter(serverConfigFile);
+            configBuilder.writeUserVpnServerConfig(props, pki, fwr);
+            fwr.flush();
+            fwr.close();
+        }
+        catch (CertificateEncodingException | IOException ex) {
+            logger.warning(String.format("Cannot write server config: %s", ex.getMessage()));
+        }
+        finally {
+            if (fwr != null)
+                fwr.close();
+        }
 
         adminWelcome.loadUserVpns();
         RequestContext.getCurrentInstance().update("menuForm:mainMenu");

@@ -181,7 +181,7 @@ public class SetupWizard implements Serializable {
     private LocalUserFactory localUserFactory;
 
     @ManagedProperty(value = "#{roleRuleIsUserFactory}")
-    RoleRuleIsUserFactory roleRuleIsUserFactory;
+    private RoleRuleIsUserFactory roleRuleIsUserFactory;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -439,7 +439,11 @@ public class SetupWizard implements Serializable {
         return event.getNewStep();
     }
 
-    private void saveCA() throws GeneralSecurityException, IOException {
+    private void saveCA()
+            throws GeneralSecurityException, IOException, ClassNotFoundException, SQLException
+    {
+
+
         StringWriter sw = new StringWriter();
         sw.append("CN=" + caCommonName);
         if (!caOrganizationalUnit.isEmpty())
@@ -458,15 +462,12 @@ public class SetupWizard implements Serializable {
         pki.createSelfSignedCa(caStartDate, caEndDate, issuerDN, subjectDN,
                 caSignatureAlgorithm,
                 keyAlgo, caKeySize);
-        FileWriter fw = new FileWriter(pki.getCaDir() + "/ca.crt");
-        pki.writeCaCert(new PrintWriter(fw));
-        fw.close();
-        fw = new FileWriter(pki.getCaDir() + "/ca.key");
-        pki.writeCaKey(new PrintWriter(fw));
-        fw.close();
+        pki.saveCaKeyAndCert();
     }
 
-    private void saveServerCert() throws GeneralSecurityException, IOException {
+    private void saveServerCert()
+            throws ClassNotFoundException, GeneralSecurityException, SQLException
+    {
         StringWriter sw = new StringWriter();
         sw.append("CN=" + certCommonName);
         if (!certOrganizationalUnit.isEmpty())
@@ -483,17 +484,15 @@ public class SetupWizard implements Serializable {
         keygen.initialize(certKeySize, new SecureRandom());
         KeyPair certKey = keygen.generateKeyPair();
         X500Principal subjectDN = new X500Principal(sw.toString());
-        pki.setServerCert(pki.createCertificate(certKey.getPublic(),
-                certStartDate, certEndDate,
-                subjectDN, certSignatureAlgorithm));
-        pki.setServerKey(certKey.getPrivate());
-        FileWriter fw = new FileWriter(pki.getCaDir() + "/server.crt");
-        pki.writeCertificate(pki.getServerCert(), new PrintWriter(fw));
-        fw.close();
 
-        fw = new FileWriter(pki.getCaDir() + "/server.key");
-        pki.writePrivateKey(certKey.getPrivate(), new PrintWriter(fw));
-        fw.close();
+        java.security.cert.X509Certificate cert = pki.createCertificate(certKey.getPublic(), caStartDate, caEndDate, subjectDN, caSignatureAlgorithm);
+        pki.setServerKeyAndCert(certKey.getPrivate(), cert);
+    }
+
+    private void saveDhParams()
+            throws IOException
+    {
+        FileWriter fw;
 
         fw = new FileWriter(pki.getDhFilename());
         pki.writeDhParameters(new PrintWriter(fw));
@@ -544,8 +543,16 @@ public class SetupWizard implements Serializable {
             rolesBean.load();
             rolesBean.addRule("admin", roleRuleIsUserFactory.getRoleRuleName(), adminUserName);
 
+            step = "Creating CA";
+            pki.createTables();
+
             saveCA();
+
+            step = "Creating server certificate";
             saveServerCert();
+
+            step = "Creating DH parameters";
+            saveDhParams();
 
             performingSetup = false;
 
