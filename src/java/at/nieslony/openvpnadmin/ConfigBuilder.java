@@ -27,9 +27,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.PrivateKey;
+import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -109,22 +109,24 @@ public class ConfigBuilder implements Serializable {
         pr.println("</ca>");
 
         if (authType != UserVPNBean.VpnAuthType.AUTH_USERNAME_PASSWORD) {
-            X509Certificate userCert = pki.getUserCert(username);
-            pr.println("<cert>");
-            if (userCert != null)
-                pki.writeCertificate(userCert, pr);
-            else {
-                logger.warning("There's no vertificyte for user " + username);
+            Pki.KeyAndCert kac = null;
+            try {
+                kac = pki.getUserKeyAndCert(username);
             }
-            pr.println("</cert>");
+            catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+                logger.warning(String.format("Cannot get private key and certificate for user %s: %s",
+                        username, ex.getMessage()));
+            }
 
-            PrivateKey key = pki.getUserKey(username);
-            pr.println("<key>");
-            if (key != null)
-                pki.writePrivateKey(key, pr);
-            else
-                logger.warning("There's no private key for user " + username);
-            pr.println("</key>");
+            if (kac != null) {
+                pr.println("<cert>");
+                pki.writeCertificate(kac.getCert(), pr);
+                pr.println("</cert>");
+
+                pr.println("<key>");
+                pki.writeCertificate(kac.getCert(), pr);
+                pr.println("</key>");
+            }
         }
     }
 
@@ -221,7 +223,8 @@ public class ConfigBuilder implements Serializable {
     }
 
     public static void writeUserVpnNetworkManagerConfig(Properties props, Pki pki, Writer wr, String username)
-        throws IOException, CertificateEncodingException {
+        throws IOException, CertificateEncodingException, ClassNotFoundException, GeneralSecurityException, SQLException
+    {
         UserVPNBean.VpnAuthType authType = UserVPNBean.VpnAuthType.valueOf(props.getProperty(PROP_AUTH_TYPE));
         boolean writeUserCert = authType != UserVPNBean.VpnAuthType.AUTH_USERNAME_PASSWORD;
 
@@ -278,14 +281,14 @@ public class ConfigBuilder implements Serializable {
         pki.writeCaCert(pr);
         pr.println("EOF");
         if (writeUserCert) {
-            X509Certificate cert = pki.getUserCert(username);
+            Pki.KeyAndCert kac = pki.getUserKeyAndCert(username);
+
             pr.println("cat <<EOF > $VPN_USER_CERT");
-            pki.writeCertificate(cert, pr);
+            pki.writeCertificate(kac.getCert(), pr);
             pr.println("EOF");
 
-            PrivateKey key = pki.getUserKey(username);
             pr.println("cat <<EOF > $VPN_USER_KEY");
-            pki.writePrivateKey(key, pr);
+            pki.writePrivateKey(kac.getKey(), pr);
             pr.println("EOF");
             pr.println("chmod 600 $VPN_USER_KEY");
         }
@@ -329,7 +332,7 @@ public class ConfigBuilder implements Serializable {
             ec.setResponseCharacterEncoding("UTF-8");
             writeUserVpnNetworkManagerConfig(props, pki, wr, currentUser.getUsername());
         }
-        catch (CertificateEncodingException | IOException ex) {
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
             logger.severe(ex.getMessage());
         }
 
@@ -369,7 +372,8 @@ public class ConfigBuilder implements Serializable {
     }
 
     public StreamedContent getDownloadNetworkManagerConfig(String username)
-            throws IOException, CertificateEncodingException {
+            throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
+    {
         Properties props = new Properties();
         FileInputStream fis = new FileInputStream(folderFactory.getUserVpnPath("0"));
         props.load(fis);

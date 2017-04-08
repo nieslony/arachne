@@ -9,11 +9,9 @@ package at.nieslony.openvpnadmin.beans;
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -26,7 +24,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
@@ -34,6 +31,7 @@ import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
@@ -45,7 +43,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
@@ -62,187 +59,56 @@ import org.bouncycastle.jce.PrincipalUtil;
 @ManagedBean
 @ApplicationScoped
 public class Pki extends CertificateAuthority implements Serializable {
-    private static final long serialVersionUID = 1237L;
-
-    private static final String FN_CA_CRT = "/ca.crt";
-    private static final String FN_CA_KEY = "/ca.key";
-    private static final String FN_SERVER_CRT = "/server.crt";
-    private static final String FN_SERVER_KEY = "/server.key";
-    private static final String FN_DH = "/dh.pem";
-    private static final String FN_CRL = "/ca.crl";
-
     private X509Certificate serverCert;
     private PrivateKey serverKey;
 
-    enum CertType {
+    private static final String FN_DH = "/dh.pem";
+    private static final String FN_CRL = "/ca.crl";
+
+    public enum CertType {
         CA,
         SERVER,
         CLIENT
+    }
+
+    public class KeyAndCert {
+        private PrivateKey key;
+        private X509Certificate cert;
+
+        public KeyAndCert(PrivateKey key, X509Certificate cert) {
+            this.key = key;
+            this.cert = cert;
+        }
+
+        public X509Certificate getCert() {
+            return cert;
+        }
+
+        public PrivateKey getKey() {
+            return key;
+        }
     }
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{folderFactory}")
     private FolderFactory folderFactory;
-
-    @ManagedProperty(value = "#{clientCertificateSettings}")
-    private ClientCertificateSettings clientCertificateSettings;
-
-    @ManagedProperty(value = "#{databaseSettings}")
-    private DatabaseSettings databaseSettings;
-
-    public void setDatabaseSettings(DatabaseSettings databaseSettings) {
-        this.databaseSettings = databaseSettings;
-    }
-
-    public void setClientCertificateSettings(ClientCertificateSettings ccs) {
-        clientCertificateSettings = ccs;
-    }
-
-    public String getDhFilename() {
-        return folderFactory.getPkiDir() + FN_DH;
-    }
-
-    public String getCaCertFilename() {
-        return folderFactory.getPkiDir() + FN_CA_CRT;
-    }
-
-    public String getServerCertFilename() {
-        return folderFactory.getPkiDir() + FN_SERVER_CRT;
-    }
-
-    public String getServerKeyFilename() {
-        return folderFactory.getPkiDir() + FN_SERVER_KEY;
-    }
-
-    public String getCrlFilename() {
-        return folderFactory.getPkiDir() + FN_CRL;
-    }
-
-    public List<X509Certificate> getAllUserCerts() throws IOException, CertificateException  {
-        List<X509Certificate> certs = new LinkedList<>();
-
-        File dir = new File(folderFactory.getUserCertsDir());
-        for (String certFN: dir.list(
-                new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.matches(".*\\.crt");
-                    }
-                })
-                ) {
-            X509Certificate cert;
-            String fn = dir.getPath() + "/" + certFN;
-            logger.info(String.format("Reading cert %s", fn));
-            FileInputStream fis = new FileInputStream(fn);
-            cert = readCertificate(fis);
-            fis.close();
-
-            certs.add(cert);
-        }
-
-        return certs;
-    }
-
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;
     }
 
-    public String getUserCertFilename(String username) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(folderFactory.getUserCertsDir());
-        sb.append("/");
-        sb.append(username);
-        sb.append(".crt");
-
-        return sb.toString();
+    @ManagedProperty(value = "#{clientCertificateSettings}")
+    private ClientCertificateSettings clientCertificateSettings;
+    public void setClientCertificateSettings(ClientCertificateSettings ccs) {
+        clientCertificateSettings = ccs;
     }
 
-    public String getUserKeyFilename(String username) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(folderFactory.getUserCertsDir());
-        sb.append("/");
-        sb.append(username);
-        sb.append(".key");
-
-        return sb.toString();
+    @ManagedProperty(value = "#{databaseSettings}")
+    private DatabaseSettings databaseSettings;
+    public void setDatabaseSettings(DatabaseSettings databaseSettings) {
+        this.databaseSettings = databaseSettings;
     }
 
-    public Pki() {
-    }
-
-    private void loadCaCert() throws Exception {
-        FileInputStream fis;
-        logger.info("Loading CA certificate...");
-        fis = new FileInputStream(folderFactory.getPkiDir() + FN_CA_CRT);
-        setCaCert(readCertificate(fis));
-        fis.close();
-    }
-
-    private void loadCaKey() throws Exception {
-        FileInputStream fis;
-        logger.info("Loading CA key...");
-        fis = new FileInputStream(folderFactory.getPkiDir() + FN_CA_KEY);
-        setCaKey(readPrivateKey(fis));
-        fis.close();
-    }
-
-    private void loadCrl()
-            throws CRLException, IOException, CertificateException,
-            NoSuchAlgorithmException, InvalidKeyException,
-            NoSuchProviderException, SignatureException
-    {
-        FileInputStream fis;
-        String fn = folderFactory.getPkiDir() + FN_CRL;
-        logger.info(String.format("Loading CRL from %s...", fn));
-
-        try {
-            fis = new FileInputStream(fn);
-            setCrl(readCrl(fis));
-        }
-        catch (FileNotFoundException ex) {
-            logger.info("CRL not found, creating new one");
-            createCrl();
-            logger.info("Writing CRL");
-            try (PrintWriter pw = new PrintWriter(fn)) {
-                writeCrl(pw);
-            }
-        }
-    }
-
-    private void loadServerCert() throws Exception {
-        FileInputStream fis;
-        logger.info("Loading server certificate...");
-        fis = new FileInputStream(folderFactory.getPkiDir() + FN_SERVER_CRT);
-        serverCert = readCertificate(fis);
-        fis.close();
-    }
-
-    private void loadServerKey() throws Exception {
-        FileInputStream fis;
-        logger.info("Loading server key...");
-        fis = new FileInputStream(folderFactory.getPkiDir() + FN_SERVER_KEY);
-        serverKey = readPrivateKey(fis);
-        fis.close();
-    }
-
-    private X509Certificate loadUserCert(String username) throws Exception {
-        X509Certificate cert;
-
-        FileInputStream fis = new FileInputStream(getUserCertFilename(username));
-        cert = readCertificate(fis);
-        return cert;
-    }
-
-    private PrivateKey loadUserKey(String username) throws Exception {
-        PrivateKey key;
-
-        FileInputStream fis = new FileInputStream(getUserKeyFilename(username));
-        key  = readPrivateKey(fis);
-        return key;
-    }
 
     @PostConstruct
     public void init() {
@@ -254,8 +120,8 @@ public class Pki extends CertificateAuthority implements Serializable {
             logger.info("Loading CA key and certificate");
             loadCaKeyAndCert();
             logger.info("Loading server key and certificate");
-            loadServerKeyAndCert()
-                    ;
+            loadServerKeyAndCert();
+            logger.info("Loading CRL");
             loadCrl();
         }
         catch (Exception ex) {
@@ -267,30 +133,86 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
     }
 
-    public void setServerCert(X509Certificate cert) {
-        this.serverCert = cert;
+    public String getDhFilename() {
+        return folderFactory.getPkiDir() + FN_DH;
     }
 
-    public void setServerKey(PrivateKey key) {
-        this.serverKey = key;
+    public String getCrlFilename() {
+        return folderFactory.getPkiDir() + FN_CRL;
     }
 
-    public void setServerKeyAndCert(PrivateKey key, X509Certificate cert)
-            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    public void createTables()
+                throws IOException, SQLException, ClassNotFoundException
     {
-        this.serverKey = key;
-        this.serverCert = cert;
+        logger.info("Creating tables for propertiesStorage...");
+        String resourceName = "create-pki-tables.sql";
+        Reader r = null;
+        try {
+            r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
 
-        addKeyAndCert(CertType.SERVER, key, cert);
+            if (r == null) {
+                logger.severe(String.format("Cannot open %s as resource", resourceName));
+            }
+            Connection con = databaseSettings.getDatabseConnection();
+            if (con == null) {
+                logger.severe("Cannot get database connection");
+            }
+            DbUtils.executeSql(con, r);
+        }
+        finally {
+            if (r != null) {
+                try {
+                    r.close();
+                }
+                catch (IOException ex) {
+                    logger.severe(String.format("Cannot close reader: %s", ex.getMessage()));
+                }
+            }
+        }
     }
 
-    public void saveCaKeyAndCert()
-            throws CertificateEncodingException, ClassNotFoundException, SQLException
+    public void removeKeyAndCert(X509Certificate cert)
+            throws ClassNotFoundException, SQLException
     {
-        addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
+        if (cert == null) {
+            logger.info("Cannot remove null certificate");
+            return;
+        }
+
+        Connection con = databaseSettings.getDatabseConnection();
+        Statement stm = con.createStatement();
+        String sql = String.format(
+                "DELETE FROM certificates WHERE serial ='%s';",
+                cert.getSerialNumber().toString());
+        stm.executeUpdate(sql);
     }
 
-    public void addKeyAndCert(CertType type, PrivateKey key, X509Certificate cert)
+    public void revoveCert(X509Certificate cert)
+            throws ClassNotFoundException, SQLException,
+            CRLException, CertificateParsingException, IOException, InvalidKeyException,
+            NoSuchAlgorithmException, NoSuchProviderException, SignatureException
+    {
+        Connection con = databaseSettings.getDatabseConnection();
+        Statement stm = con.createStatement();
+        String sql = String.format(
+                "UPDATE certificates SET isRevoked = true WHERE serial = '%s';",
+                cert.getSerialNumber().toString()
+        );
+        stm.executeUpdate(sql);
+
+        addCertificateToCrl(cert);
+        writeCrl();
+    }
+
+    private void writeCrl()
+            throws CRLException, IOException
+    {
+        PrintWriter pr = new PrintWriter(getCrlFilename());
+        writeCrl(pr);
+        pr.close();
+    }
+
+    private void addKeyAndCert(CertType type, PrivateKey key, X509Certificate cert)
             throws ClassNotFoundException, SQLException, CertificateEncodingException
     {
         Connection con = databaseSettings.getDatabseConnection();
@@ -314,12 +236,9 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
     }
 
-    public X509Certificate getServerCert() {
-        return serverCert;
-    }
-
-    private void createUserCertAndKey(String username)
-            throws GeneralSecurityException, IOException {
+    private KeyAndCert createUserKeyAndCert(String username)
+            throws GeneralSecurityException, IOException
+    {
         X509Certificate cert;
 
         if (clientCertificateSettings == null) {
@@ -354,8 +273,6 @@ public class Pki extends CertificateAuthority implements Serializable {
         if (!clientCertificateSettings.getCountry().isEmpty())
             sw.append(", C=" + clientCertificateSettings.getCountry());
 
-        logger.info("------------ Subject:" + sw.toString());
-
         X500Principal subject = new X500Principal(sw.toString());
         Date fromDate = new Date();
         Calendar cal = Calendar.getInstance();
@@ -386,184 +303,26 @@ public class Pki extends CertificateAuthority implements Serializable {
             logger.severe("Something went wrong. certificate is null");
         }
 
-        PrintWriter pw;
-        pw = new PrintWriter(new File(getUserCertFilename(username)));
-        writeCertificate(cert, pw);
-        pw.close();
-
-        pw = new PrintWriter(new File(getUserKeyFilename(username)));
-        writePrivateKey(certKey.getPrivate(), pw);
-        pw.close();
+        return new KeyAndCert(certKey.getPrivate(), cert);
     }
 
-    public X509Certificate getUserCert(String username) {
-        X509Certificate cert = null;
-
-        try {
-            cert = loadUserCert(username);
-        }
-        catch (FileNotFoundException ex) {
-            logger.warning(String.format("There's no certificate for user %s, creating new certificate and private key",
-                    username));
-            try {
-                createUserCertAndKey(username);
-                cert = loadUserCert(username);
-            }
-            catch (Exception ex2) {
-                logger.severe(String.format("Error creating and writing user certificate for user %s\n%s,",
-                        username, ex.getMessage()));
-            }
-        }
-        catch (Exception ex) {
-            logger.severe(String.format("Error loading user certificate for user %s: %s",
-                    username, ex.getMessage()));
-        }
-
-        return cert;
-    }
-
-    public PrivateKey getServerKey() {
-        return serverKey;
-    }
-
-    public PrivateKey getUserKey(String username) {
-        PrivateKey key = null;
-
-        try {
-            key = loadUserKey(username);
-        }
-        catch (FileNotFoundException ex) {
-            logger.severe(String.format("There's no private key for user %s, creating new certificate and private key",
-                    username));
-            try {
-                createUserCertAndKey(username);
-                key = loadUserKey(username);
-            }
-            catch (Exception ex2) {
-                logger.severe(String.format(
-                        "Error creating and writing user certificate for user %s: %s",
-                        username, ex.getMessage()));
-            }
-        }
-        catch (Exception ex) {
-            logger.severe(String.format("Error loading private key for user %s: %s",
-                    username, ex.getMessage()));
-        }
-
-        return key;
-    }
-
-
-
-    public boolean isValid() {
-        try {
-            if (getCaCert() == null) {
-                logger.warning("CA cert is invalid, trying reload.");
-                loadCaCert();
-                if (getCaCert() == null) {
-                    logger.severe("CA cert is still invalid. giving up.");
-                    return false;
-                }
-            }
-            if (getCaKey() == null) {
-                logger.warning("CA key is invalid, trying reload.");
-                loadCaKey();
-                if (getCaKey() == null) {
-                    logger.severe("CA key is still invalid. giving up.");
-                    return false;
-                }
-            }
-            if (serverCert == null) {
-                logger.warning("Server cert is invalid, trying reload.");
-                loadServerCert();
-                if (serverCert== null) {
-                    logger.severe("Server cert is still invalid. giving up.");
-                    return false;
-                }
-            }
-            if (serverKey == null) {
-                logger.warning("Server key is invalid, trying reload.");
-                loadServerKey();
-                if (serverKey == null) {
-                    logger.severe("Server key is still invalid. giving up.");
-                    return false;
-                }
-            }
-            return true;
-        }
-        catch (Exception ex) {
-            logger.severe(String.format("PKI is invalid: %s", ex.getMessage()));
-        }
-        return false;
-    }
-
-    public void removeUserCert(X509Certificate cert) {
-        if (cert == null)
-            logger.warning("Cannot remove a null certificate");
-        Principal princ = cert.getSubjectDN();
-        String princLeaf = princ.getName().split(",")[0];
-        if (princLeaf.split("=")[0].equalsIgnoreCase("cn")) {
-            String username = princLeaf.split("=")[1];
-            String fn = getUserCertFilename(username);
-            File f = new File(fn);
-            logger.info(String.format("Removing %s", fn));
-            f.delete();
-        }
-        else {
-            logger.severe(String.format("Principal doesn't contain common name: %s",
-                    princLeaf));
-        }
-    }
-
-    public void createTables()
-                throws IOException, SQLException, ClassNotFoundException
+    public KeyAndCert getUserKeyAndCert(String username)
+        throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
     {
-        logger.info("Creating tables for propertiesStorage...");
-        String resourceName = "create-pki-tables.sql";
-        Reader r = null;
-        try {
-            r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
+        KeyAndCert kac = getKeyAndCert(CertType.CLIENT, username);
 
-            if (r == null) {
-                logger.severe(String.format("Cannot open %s as resource", resourceName));
-            }
-            Connection con = databaseSettings.getDatabseConnection();
-            if (con == null) {
-                logger.severe("Cannot get database connection");
-            }
-            DbUtils.executeSql(con, r);
+        if (kac == null) {
+            kac = createUserKeyAndCert(username);
+            addKeyAndCert(CertType.CLIENT, kac.getKey(), kac.getCert());
         }
-        finally {
-            if (r != null) {
-                try {
-                    r.close();
-                }
-                catch (IOException ex) {
-                    logger.severe(String.format("Cannot close reader: %s", ex.getMessage()));
-                }
-            }
-        }
+
+        return kac;
     }
 
-    public void loadServerKeyAndCert()
-            throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
-    {
-        ConcurrentHashMap<String, Object> hm = getKeyAndCert(Pki.CertType.SERVER, null);
-        if (hm != null) {
-            X509Certificate cert = (X509Certificate) hm.get("cert");
-            PrivateKey key = (PrivateKey) hm.get("key");
-
-            if (cert != null)
-                setServerCert(cert);
-            if (key != null)
-                setServerKey(key);
-        }
-    }
-
-    public ConcurrentHashMap<String, Object> getKeyAndCert(CertType type, String cn)
+    private KeyAndCert getKeyAndCert(CertType type, String cn)
             throws ClassNotFoundException, SQLException, GeneralSecurityException, IOException
     {
-        ConcurrentHashMap<String, Object> ret = new ConcurrentHashMap<>();
+        KeyAndCert ret = null;
         X509Certificate cert = null;
         PrivateKey key = null;
 
@@ -576,7 +335,7 @@ public class Pki extends CertificateAuthority implements Serializable {
                     type.toString());
         else
             sql = String.format(
-                    "SELECT commonName, certificatge, key FROM certificates WHERE certtype = '%s' AND isRevoked = false AND commonName = '%s';",
+                    "SELECT commonName, certificate, privatekey FROM certificates WHERE certtype = '%s' AND isRevoked = false AND commonName = '%s';",
                     type.toString(), cn);
         logger.info(sql);
         ResultSet result = stm.executeQuery(sql);
@@ -594,8 +353,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
 
         if (key != null & cert != null) {
-            ret.put("key", key);
-            ret.put("cert", cert);
+            ret = new KeyAndCert(key, cert);
         }
         else {
             if (key == null) {
@@ -609,18 +367,117 @@ public class Pki extends CertificateAuthority implements Serializable {
         return ret;
     }
 
-    public void loadCaKeyAndCert()
+    private void loadCaKeyAndCert()
             throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
     {
-        ConcurrentHashMap<String, Object> hm = getKeyAndCert(Pki.CertType.CA, null);
-        if (hm != null) {
-            X509Certificate cert = (X509Certificate) hm.get("cert");
-            PrivateKey key = (PrivateKey) hm.get("key");
-
-            if (cert != null)
-                setCaCert(cert);
-            if (key != null)
-                setCaKey(key);
+        KeyAndCert kac = getKeyAndCert(Pki.CertType.CA, null);
+        if (kac != null) {
+            setCaCert(kac.getCert());
+            setCaKey(kac.getKey());
         }
     }
+
+    private void loadServerKeyAndCert()
+            throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
+    {
+        KeyAndCert kac = getKeyAndCert(Pki.CertType.CA, null);
+        if (kac != null) {
+            serverCert = kac.getCert();
+            serverKey = kac.getKey();
+        }
+    }
+
+    public X509Certificate getServerCert() {
+        return serverCert;
+    }
+
+    public PrivateKey getServerKey() {
+        return serverKey;
+    }
+
+    private void updateCrlFromDb()
+            throws ClassNotFoundException, SQLException, CertificateException,
+            CRLException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchProviderException, SignatureException
+    {
+        Connection con = databaseSettings.getDatabseConnection();
+        Statement stm = con.createStatement();
+        String sql = "SELECT certificate FROM certificates WHERE isRevoked = true;";
+        ResultSet result = stm.executeQuery(sql);
+        while (result.next()) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            byte[] bytes = result.getBytes("certificate");
+            X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+            if (!isCertificateRevoked(cert))
+                addCertificateToCrl(cert);
+        }
+    }
+
+    private void loadCrl()
+            throws CRLException, IOException, CertificateException,
+            NoSuchAlgorithmException, InvalidKeyException,
+            NoSuchProviderException, SignatureException,
+            ClassNotFoundException, SQLException
+    {
+        FileInputStream fis;
+        String fn = folderFactory.getPkiDir() + FN_CRL;
+        logger.info(String.format("Loading CRL from %s...", fn));
+
+        try {
+            fis = new FileInputStream(fn);
+            setCrl(readCrl(fis));
+            updateCrlFromDb();
+        }
+        catch (FileNotFoundException ex) {
+            logger.info("CRL not found, creating new one");
+            createCrl();
+            updateCrlFromDb();
+            logger.info("Writing CRL");
+            try (PrintWriter pw = new PrintWriter(fn)) {
+                writeCrl(pw);
+            }
+        }
+    }
+
+    public void setServerKeyAndCert(PrivateKey key, X509Certificate cert)
+            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    {
+        this.serverKey = key;
+        this.serverCert = cert;
+
+        addKeyAndCert(CertType.SERVER, key, cert);
+    }
+
+    public void saveCaKeyAndCert()
+            throws CertificateEncodingException, ClassNotFoundException, SQLException
+    {
+        addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
+    }
+
+    public List<X509Certificate> getAllUserCerts()
+            throws CertificateException, ClassNotFoundException, SQLException
+    {
+        List<X509Certificate> certs = new LinkedList<>();
+
+        Connection con = databaseSettings.getDatabseConnection();
+        Statement stm = con.createStatement();
+        String sql = "SELECT certificate FROM certificates WHERE certtype = 'CLIENT';";
+        ResultSet result = stm.executeQuery(sql);
+
+        while (result.next()) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            byte[] bytes = result.getBytes("certificate");
+            X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+            if (cert == null) {
+                logger.warning("Cannot load certificate");
+            }
+            else {
+                certs.add(cert);
+            }
+        }
+
+        return certs;
+    }
+
 }
+

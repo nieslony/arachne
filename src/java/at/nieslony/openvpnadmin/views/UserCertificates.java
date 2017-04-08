@@ -7,24 +7,20 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.DSAPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.sql.SQLException;
 import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.PrincipalUtil;
-import org.bouncycastle.jce.X509Principal;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -62,27 +58,29 @@ public class UserCertificates implements Serializable {
         return selectedCert;
     }
 
-    public void removeCertificate() {
-        pki.removeUserCert(selectedCert);
+    public void removeCertificate()
+    {
+        if (selectedCert == null) {
+            String msg = "No certificate selected";
+            logger.info(msg);
+            return;
+        }
+
+        try {
+            pki.removeKeyAndCert(selectedCert);
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msgStr = String.format("Cannot remove certificate %s: %s",
+                    selectedCert.getSubjectDN().toString(),
+                    ex.getMessage());
+            FacesContext.getCurrentInstance().addMessage(
+                    null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Warning", msgStr));
+        }
     }
 
     public void onRevokeCertificate() {
         try {
-            X509Principal princ = PrincipalUtil.getSubjectX509Principal(selectedCert);
-            String cn = princ.getValues(X509Name.CN).get(0).toString();
-
-            Path oldPath = Paths.get(pki.getUserCertFilename(cn));
-            Path newPath = Paths.get(folderFactory.getRevokedCertsDir(),
-                    String.format("%s.crt", selectedCert.getSerialNumber().toString(16)));
-
-            logger.info(String.format("Revoking cert, moving %s to %s",
-                    oldPath.toString(), newPath.toString()));
-            Files.move(oldPath, newPath);
-
-            pki.addCertificateToCrl(selectedCert);
-            PrintWriter pr = new PrintWriter(pki.getCrlFilename());
-            pki.writeCrl(pr);
-            pr.close();
+            pki.revoveCert(selectedCert);
         }
         catch (Exception ex) {
             logger.severe(String.format("Cannot revoke certificate: %s", ex.getMessage()));

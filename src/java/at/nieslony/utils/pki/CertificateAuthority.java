@@ -35,6 +35,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
@@ -238,10 +239,16 @@ public class CertificateAuthority {
 
 
         X509CRL crl = (X509CRL) cf.generateCRL(new ByteArrayInputStream(data));
-        logger.info(String.format("Found %d revoked certificates", crl.getRevokedCertificates().size()));
-        for (X509CRLEntry entry : crl.getRevokedCertificates()) {
-            String serial = entry.getSerialNumber().toString(16);
-            logger.info(String.format("   serial: %s", serial));
+        Set<? extends X509CRLEntry> certs = crl.getRevokedCertificates();
+        if (certs != null) {
+            logger.info(String.format("Found %d revoked certificates", crl.getRevokedCertificates().size()));
+            for (X509CRLEntry entry : certs) {
+                String serial = entry.getSerialNumber().toString(16);
+                logger.info(String.format("   serial: %s", serial));
+            }
+        }
+        else {
+            logger.info("Found no revoked certificates");
         }
 
         return crl;

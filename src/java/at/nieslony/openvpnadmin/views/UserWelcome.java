@@ -11,7 +11,9 @@ import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
+import java.sql.SQLException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -63,7 +65,10 @@ public class UserWelcome implements Serializable {
         return configBuilder.getDownloadOpenVpnConfig(currentUser.getUsername());
     }
 
-    public StreamedContent getDownloadNetworkManagerConfig() throws IOException, CertificateEncodingException {
+    public StreamedContent getDownloadNetworkManagerConfig()
+            throws IOException, CertificateEncodingException, ClassNotFoundException,
+            GeneralSecurityException, SQLException
+    {
         return configBuilder.getDownloadNetworkManagerConfig(currentUser.getUsername());
     }
 }

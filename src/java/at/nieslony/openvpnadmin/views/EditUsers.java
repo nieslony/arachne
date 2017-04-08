@@ -14,6 +14,7 @@ import at.nieslony.openvpnadmin.beans.Roles;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -190,7 +191,9 @@ public class EditUsers implements Serializable {
         }
     }
 
-    public StreamedContent getDownloadNetworkManagerInstaller() {
+    public StreamedContent getDownloadNetworkManagerInstaller()
+            throws ClassNotFoundException, GeneralSecurityException, SQLException
+    {
         StreamedContent sc = null;
         try {
             sc = configBuilder.getDownloadNetworkManagerConfig(selectedUser.getUsername());
