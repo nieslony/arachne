@@ -9,8 +9,8 @@ import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.Pki;
-import at.nieslony.openvpnadmin.beans.UserVPNBean;
-import static at.nieslony.openvpnadmin.beans.UserVPNBean.PROP_AUTH_TYPE;
+import at.nieslony.openvpnadmin.beans.UserVpn;
+import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.utils.NetUtils;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -64,6 +64,13 @@ public class ConfigBuilder implements Serializable {
     @ManagedProperty(value = "#{folderFactory}")
     FolderFactory folderFactory;
 
+    @ManagedProperty(value = "#{userVpn}")
+    UserVpn userVpn;
+
+    public void setUserVpn(UserVpn uv) {
+        userVpn = uv;
+    }
+
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;
     }
@@ -84,22 +91,19 @@ public class ConfigBuilder implements Serializable {
     {
     }
 
-    public static void writeUserVpnClientConfig(Properties props,
-            Pki pki,
-            Writer wr,
+    public void writeUserVpnClientConfig(Writer wr,
             String username)
     throws IOException, CertificateEncodingException {
         PrintWriter pr = new PrintWriter(wr);
-        UserVPNBean.VpnAuthType authType = UserVPNBean.VpnAuthType.valueOf(props.getProperty(PROP_AUTH_TYPE));
 
         pr.println("# openVPN config for user " + username);
         pr.println("client");
-        pr.println("remote " + props.getProperty(UserVPNBean.PROP_HOST));
-        pr.println("port " + props.getProperty(UserVPNBean.PROP_PORT));
-        pr.println("dev " + props.getProperty(UserVPNBean.PROP_DEVICE_TYPE).toLowerCase());
-        pr.println("proto " + props.getProperty(UserVPNBean.PROP_PROTOCOL).toLowerCase());
+        pr.println("remote " + userVpn.getHost());
+        pr.println("port " + userVpn.getPort());
+        pr.println("dev " + userVpn.getDeviceType().name().toLowerCase());
+        pr.println("proto " + userVpn.getProtocol().name().toLowerCase());
 
-        if (authType != UserVPNBean.VpnAuthType.AUTH_CLIENT_CERT) {
+        if (userVpn.getAuthType() != UserVpnBase.VpnAuthType.CERTIFICATE) {
             pr.println("auth-user-pass");
         }
 
@@ -108,7 +112,7 @@ public class ConfigBuilder implements Serializable {
         pki.writeCaCert(pr);
         pr.println("</ca>");
 
-        if (authType != UserVPNBean.VpnAuthType.AUTH_USERNAME_PASSWORD) {
+        if (userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD) {
             Pki.KeyAndCert kac = null;
             try {
                 kac = pki.getUserKeyAndCert(username);
@@ -130,7 +134,7 @@ public class ConfigBuilder implements Serializable {
         }
     }
 
-    public void writeUserVpnServerConfig(Properties props, Pki pki, Writer wr)
+    public void writeUserVpnServerConfig(Writer wr)
             throws CertificateEncodingException, IOException
     {
         int scriptSecurity = 1;
@@ -155,19 +159,17 @@ public class ConfigBuilder implements Serializable {
         sb.append("\"")
                 .append(authScript)
                 .append(" ")
-                .append(props.getProperty(UserVPNBean.PROP_AUTH_SCRIPT_URL))
+                .append(userVpn.getAuthScriptUrl())
                 .append("/AuthOpenVPN.xhtml")
                 .append("\"");
         String authCmd = sb.toString();
         PrintWriter pr = new PrintWriter(wr);
 
-        pr.println("port " + props.getProperty(UserVPNBean.PROP_PORT));
-        pr.println("proto " + props.getProperty(UserVPNBean.PROP_PROTOCOL).toLowerCase());
-        pr.println("dev " + props.getProperty(UserVPNBean.PROP_DEVICE_TYPE).toLowerCase());
-        pr.println("server " + props.getProperty(UserVPNBean.PROP_CLIENT_NETWORK) +
-                " " + NetUtils.maskLen2Mask(
-                        Integer.parseInt(props.getProperty(UserVPNBean.PROP_CLIENT_NET_MASK))
-                        )
+        pr.println("port " + userVpn.getPort());
+        pr.println("proto " + userVpn.getProtocol().name().toLowerCase());
+        pr.println("dev " + userVpn.getDeviceType().name().toLowerCase());
+        pr.println("server " + userVpn.getClientNetwork() +
+                " " + NetUtils.maskLen2Mask(userVpn.getClientNetmask())
         );
         pr.println("<ca>");
         pki.writeCaCert(pr);
@@ -180,31 +182,29 @@ public class ConfigBuilder implements Serializable {
         pr.println("</cert>");
         pr.println("dh " + pki.getDhFilename());
         pr.println("crl-verify " + pki.getCrlFilename());
-        pr.println("keepalive " + props.getProperty(UserVPNBean.PROP_PING) +
-                " " + props.getProperty(UserVPNBean.PROP_PING_RESTART));
+        pr.println("keepalive " + userVpn.getPing() + " " + userVpn.getPingRestart());
         pr.println("management 127.0.0.1 9544");
-        switch (UserVPNBean.VpnAuthType.valueOf(props.getProperty(UserVPNBean.PROP_AUTH_TYPE))) {
-            case AUTH_BOTH:
+        switch (userVpn.getAuthType()) {
+            case USERPWD_CERTIFICATE:
                 if (scriptSecurity < 2)
                     scriptSecurity = 2;
                 pr.println("auth-user-pass-verify " + authCmd + " via-file");
                 break;
-            case AUTH_USERNAME_PASSWORD:
+            case USERPWD:
                 if (scriptSecurity < 2)
                     scriptSecurity = 2;
                 pr.println("auth-user-pass-verify " + authCmd + " via-file");
                 pr.println("client-cert-not-required");
                 pr.println("username-as-common-name");
         }
-        String dnsServers = props.getProperty(UserVPNBean.PROP_DNS_SERVERS);
+        String dnsServers = userVpn.getDnsServers();
         if (dnsServers != null && !dnsServers.isEmpty()) {
             for (String dns : dnsServers.split(",")) {
                 if (!dns.isEmpty())
                     pr.println("push \"dhcp-option DNS " + dns + "\"");
             }
-
         }
-        String routes = props.getProperty(UserVPNBean.PROP_PUSH_ROUTES);
+        String routes = userVpn.getPushRoutes();
         if (routes != null && !routes.isEmpty()) {
             for (String route : routes.split(",")) {
                 if (!route.isEmpty()) {
@@ -222,53 +222,52 @@ public class ConfigBuilder implements Serializable {
         }
     }
 
-    public static void writeUserVpnNetworkManagerConfig(Properties props, Pki pki, Writer wr, String username)
+    public void writeUserVpnNetworkManagerConfig(Writer wr, String username)
         throws IOException, CertificateEncodingException, ClassNotFoundException, GeneralSecurityException, SQLException
     {
-        UserVPNBean.VpnAuthType authType = UserVPNBean.VpnAuthType.valueOf(props.getProperty(PROP_AUTH_TYPE));
-        boolean writeUserCert = authType != UserVPNBean.VpnAuthType.AUTH_USERNAME_PASSWORD;
+        boolean writeUserCert = userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD.USERPWD;
 
         PrintWriter pr = new PrintWriter(wr);
         StringWriter vpnName = new StringWriter();
         vpnName
-                .append(props.getProperty(UserVPNBean.PROP_NAME))
+                .append(userVpn.getConnectionName())
                 .append(" - ")
                 .append(username)
                 .append("@")
-                .append(props.getProperty(UserVPNBean.PROP_HOST));
+                .append(userVpn.getHost());
         StringBuilder vpnOpts = new StringBuilder();
         vpnOpts.append("remote = $VPN_HOST");
         vpnOpts.append(", port = $VPN_PORT");
         vpnOpts.append(", ca = $VPN_CA");
         vpnOpts.append(", password-flags = 1");
 
-        switch (authType) {
-            case AUTH_BOTH:
+        switch (userVpn.getAuthType()) {
+            case USERPWD_CERTIFICATE:
                 vpnOpts.append(", connection-type = password-tls")
                         .append(", cert-pass-flags = 4");
                 break;
-            case AUTH_CLIENT_CERT:
+            case CERTIFICATE:
                 vpnOpts.append(", connection-type = tls");
                 break;
-            case AUTH_USERNAME_PASSWORD:
+            case USERPWD:
                 vpnOpts.append(", connection-type = password");
                 break;
         }
 
-        if (authType != UserVPNBean.VpnAuthType.AUTH_USERNAME_PASSWORD) {
+        if (userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD) {
             vpnOpts.append(", cert = $VPN_USER_CERT");
             vpnOpts.append(", key = $VPN_USER_KEY");
         }
 
         vpnOpts.append(", username = $VPN_USER");
-        if (props.getProperty(UserVPNBean.PROP_PROTOCOL).equalsIgnoreCase("TCP"))
+        if (userVpn.getProtocol() == UserVpnBase.Protocol.TCP)
             vpnOpts.append(", proto-tcp = yes");
 
         pr.println("#!/bin/bash");
         pr.println("");
         pr.println("VPN_USER=\"" + username + "\"");
-        pr.println("VPN_HOST=" + props.getProperty(UserVPNBean.PROP_HOST));
-        pr.println("VPN_PORT=" + props.getProperty(UserVPNBean.PROP_PORT));
+        pr.println("VPN_HOST=" + userVpn.getHost());
+        pr.println("VPN_PORT=" + userVpn.getPort());
         pr.println("VPN_NAME=\"" + vpnName.toString() + "\"");
         pr.println("CERTS_DIR=$HOME/.cert");
         pr.println("VPN_CA=$CERTS_DIR/${VPN_HOST}-ca.pem");
@@ -330,7 +329,7 @@ public class ConfigBuilder implements Serializable {
 
             ec.setResponseContentType("text/plain");
             ec.setResponseCharacterEncoding("UTF-8");
-            writeUserVpnNetworkManagerConfig(props, pki, wr, currentUser.getUsername());
+            writeUserVpnNetworkManagerConfig(wr, currentUser.getUsername());
         }
         catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
             logger.severe(ex.getMessage());
@@ -362,7 +361,7 @@ public class ConfigBuilder implements Serializable {
                 wr.write("# No client VPN configured yet.\n");
             }
             if (props != null && !props.isEmpty())
-                writeUserVpnClientConfig(props, pki, wr, currentUser.getUsername());
+                writeUserVpnClientConfig(wr, currentUser.getUsername());
         }
         catch (CertificateEncodingException | IOException ex) {
             logger.severe(ex.getMessage());
@@ -381,7 +380,7 @@ public class ConfigBuilder implements Serializable {
         InputStream in;
 
         StringWriter writer = new StringWriter();
-        ConfigBuilder.writeUserVpnNetworkManagerConfig(props, pki, writer, username);
+        writeUserVpnNetworkManagerConfig(writer, username);
 
         in = new ByteArrayInputStream(writer.toString().getBytes());
 
@@ -400,7 +399,7 @@ public class ConfigBuilder implements Serializable {
         InputStream in;
 
         StringWriter writer = new StringWriter();
-        ConfigBuilder.writeUserVpnClientConfig(props, pki, writer, username);
+        writeUserVpnClientConfig(writer, username);
 
         in = new ByteArrayInputStream(writer.toString().getBytes());
 

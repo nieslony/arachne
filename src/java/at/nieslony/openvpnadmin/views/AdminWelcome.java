@@ -7,14 +7,10 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
-import at.nieslony.openvpnadmin.beans.UserVPNBean;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.ConfigurableNavigationHandler;
@@ -24,7 +20,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import org.primefaces.model.menu.DefaultMenuItem;
-import org.primefaces.model.menu.DefaultSeparator;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.DynamicMenuModel;
 import org.primefaces.model.menu.MenuElement;
@@ -136,34 +131,6 @@ public class AdminWelcome implements Serializable {
     public void loadUserVpns() {
         logger.info("Loading user VPNs...");
         List<MenuElement> items = new LinkedList<>();
-
-        String[] userVpns = folderFactory.getUserVpns();
-        if (userVpns == null) {
-            logger.info("No user VPNs found.");
-        }
-        else {
-            for (String s: userVpns) {
-                String fn = folderFactory.getVpnConfigDir() + "/" + s;
-                Properties props = new Properties();
-                try {
-                    File f = new File(fn);
-
-                    logger.info(String.format("Loading user VPN %s", fn));
-                    props.load(new FileInputStream(fn));
-                    String vpnName = props.getProperty(UserVPNBean.PROP_NAME);
-                    DefaultMenuItem item = new DefaultMenuItem(vpnName);
-
-                    item.setUrl("EditUserVPN.xhtml?userVpn=" + f.getName().split("\\.")[0]);
-
-                    items.add(item);
-                }
-                catch (IOException ex) {
-                    logger.severe(String.format("Cannot load VPN %s: %s",
-                            fn, ex.getMessage()));
-                }
-            }
-            items.add(new DefaultSeparator());
-        }
 
         DefaultMenuItem addUserVPN = new DefaultMenuItem("Add user VPN");
         addUserVPN.setHref("EditUserVPN.xhtml");

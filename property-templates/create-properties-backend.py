@@ -22,14 +22,41 @@ def print_enums_backend():
     
     if "enums" in entries:
         for e in entries["enums"]:
-            s += """  public enum %(enum_type)s {
-    %(values)s
-    }
+            s += """      public enum %(enum_type)s {
+      %(values)s
+      }
 """         % { 
                 "enum_type": e["type"],
                 "values": ", ".join(e["values"])
             }
     
+    return s
+
+def print_ext_enums_backend():
+    s = ""
+    
+    if "ext_enums" in entries:
+        for e in entries["ext_enums"]:
+            consts = e["values"]
+            
+            s += """  public enum %(enum_type)s {
+        %(values)s;
+
+        final private String description;
+    
+        private %(enum_type)s(String description) {
+            this.description = description;
+        }
+        
+        public String getDescription() {
+            return description;
+        }
+    }
+""" % {
+       "enum_type": e["type"],    
+       "values": ",\n        ".join("%s(\"%s\")" % (ent["const"], ent["description"]) for ent in consts)
+    }
+
     return s
     
 def print_getter_setter_backend():
@@ -137,6 +164,7 @@ public abstract class %(class_name)sBase {
     abstract protected PropertyGroup getPropertyGroup();
 
 %(enums)s
+%(ext_enums)s
 %(getter_setter)s
 }
 """ % {
@@ -145,7 +173,8 @@ public abstract class %(class_name)sBase {
     "prop_names": print_prop_names(),
     "variables": print_variables(),
     "getter_setter": print_getter_setter_backend(),
-    "enums": print_enums_backend()
+    "enums": print_enums_backend(),
+    "ext_enums": print_ext_enums_backend()
     }
 
 def print_backend_class():
@@ -249,11 +278,19 @@ def print_import_enums():
     
     if "enums" in entries:
         for e in entries["enums"]:
-            s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;" % {
+            s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;\n" % {
                     "backend_package": entries["backend_package"],
                     "enum_name": e["type"],
                     "class_name": entries["className"]
                 }
+            
+    if "ext_enums" in entries:
+        for e in entries["ext_enums"]:
+            s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;\n" % {
+                    "backend_package": entries["backend_package"],
+                    "enum_name": e["type"],
+                    "class_name": entries["className"]        
+                    }
     
     return s
 

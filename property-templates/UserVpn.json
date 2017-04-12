@@ -1,0 +1,43 @@
+{
+    "backend_package":  "at.nieslony.openvpnadmin.beans",
+    "edit_package":     "at.nieslony.openvpnadmin.views",
+    "className": "UserVpn",
+    "propertyGroup": "user-vpn",
+    "enums": [
+        { "type": "Protocol",    "values": [ "TCP", "UDP" ] },
+        { "type": "Interface",   "values": [ "TUN", "TAP" ] }
+    ],
+    "ext_enums": [
+        { "type": "VpnAuthType", 
+          "values": [ 
+              { "const": "USERPWD",             "description": "Username / password" },
+              { "const": "CERTIFICATE",         "description": "Client certificate" },
+              { "const": "USERPWD_CERTIFICATE", "description": "Username / pwd. + client cert." }
+            ] 
+        },
+        { "type": "UserPasswordMode", 
+          "values": [ 
+            { "const": "PAM",  "description": "PAM" },
+            { "const": "HTTP", "description": "HTTP url" }
+        ]
+        }
+    ],
+    "properties": [
+        { "type": "String",      "name": "connectionName",       "default": "New user VPN" },
+        { "type": "String",      "name": "nmConnectionTemplate", "default": "" },
+        { "type": "String",      "name": "host" ,                "default": ""},
+        { "type": "Protocol",    "name": "protocol",             "default": "TCP" },
+        { "type": "String",      "name": "clientNetwork",        "default": "192.168.1.0" }, 
+        { "type": "Integer",     "name": "clientNetmask",        "default": "24" },
+        { "type": "VpnAuthType", "name": "authType",             "default": "USERPWD_CERTIFICATE" } ,
+        { "type": "Interface",   "name": "deviceType",           "default": "TUN" },
+        { "type": "Integer",     "name": "port",                 "default": "1194" },
+        { "type": "String",      "name": "dnsServers",           "default": "" },
+        { "type": "String",      "name": "pushRoutes",           "default": "" },
+        { "type": "Integer",     "name": "ping",                 "default": "10" },
+        { "type": "Integer",     "name": "pingRestart",          "default": "60" },
+        { "type": "String",      "name": "authPamService",       "default": "openvpn" },
+        { "type": "String",      "name": "authScriptUrl",        "default": "" },
+        { "type": "UserPasswordMode", "name": "userPasswordMode","default": "HTTP" }
+    ]
+}
