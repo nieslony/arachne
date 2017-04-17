@@ -89,13 +89,13 @@ public class EditUserVpn
 
     private void updatePushRoutesList() {
         pushRoutes.clear();
-        String[] routes = getPushRoutes().split("\\s,\\s");
+        String[] routes = getPushRoutes().split("\\s*,\\s*");
         pushRoutes.addAll(Arrays.asList(routes));
     }
 
     private void updateDnsServersList() {
         dnsServers.clear();
-        String[] ds = getDnsServers().split("\\s,\\s");
+        String[] ds = getDnsServers().split("\\s*,\\s*");
         dnsServers.addAll(Arrays.asList(ds));
     }
 
@@ -212,7 +212,10 @@ public class EditUserVpn
     }
 
     public void onRemoveRoute() {
-
+        int index = pushRoutes.indexOf(selPushRoute);
+        if (index != -1) {
+            pushRoutes.remove(index);
+        }
     }
 
     public void onAddDnsServer() {
@@ -232,7 +235,14 @@ public class EditUserVpn
     }
 
     public void onRemoveDnsServer() {
-
+        logger.info(String.format("Removong DNS server %s", selDnsServer));
+        int index = dnsServers.indexOf(selDnsServer);
+        if (index != -1) {
+            dnsServers.remove(index);
+        }
+        else {
+            logger.warning(String.format("Cannot find index of %s", selDnsServer));
+        }
     }
 
     public Boolean getRenderPamService() {
@@ -254,6 +264,7 @@ public class EditUserVpn
     }
 
     public UserVpnBase.UserPasswordMode[] getUserPasswordModes() {
+
         return UserVpnBase.UserPasswordMode.values();
     }
 }

@@ -24,20 +24,20 @@
     ],
     "properties": [
         { "type": "String",      "name": "connectionName",       "default": "New user VPN" },
-        { "type": "String",      "name": "nmConnectionTemplate", "default": "" },
-        { "type": "String",      "name": "host" ,                "default": ""},
+        { "type": "String",      "name": "nmConnectionTemplate", "default": "%n - %u@%h" },
+        { "type": "String",      "name": "host" ,                "default": "getDefaultHost()"},
         { "type": "Protocol",    "name": "protocol",             "default": "TCP" },
         { "type": "String",      "name": "clientNetwork",        "default": "192.168.1.0" }, 
         { "type": "Integer",     "name": "clientNetmask",        "default": "24" },
         { "type": "VpnAuthType", "name": "authType",             "default": "USERPWD_CERTIFICATE" } ,
         { "type": "Interface",   "name": "deviceType",           "default": "TUN" },
         { "type": "Integer",     "name": "port",                 "default": "1194" },
-        { "type": "String",      "name": "dnsServers",           "default": "" },
-        { "type": "String",      "name": "pushRoutes",           "default": "" },
+        { "type": "String",      "name": "dnsServers",           "default": "getDefaultDnsServers()" },
+        { "type": "String",      "name": "pushRoutes",           "default": "getDefaultPushRoutes()" },
         { "type": "Integer",     "name": "ping",                 "default": "10" },
         { "type": "Integer",     "name": "pingRestart",          "default": "60" },
         { "type": "String",      "name": "authPamService",       "default": "openvpn" },
-        { "type": "String",      "name": "authScriptUrl",        "default": "" },
+        { "type": "String",      "name": "authScriptUrl",        "default": "getDefaultAuthScriptUrl()" },
         { "type": "UserPasswordMode", "name": "userPasswordMode","default": "HTTP" }
     ]
 }

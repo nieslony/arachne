@@ -103,6 +103,16 @@ def print_getter_setter_backend():
         "default": "\"%s\"" % e["default"]
     }
         else:
+            default = e["default"]
+            
+            if default.endswith("()"):
+                s += """
+    abstract public %(type)s %(func)s;                
+""" % {
+        "type": e["type"],
+        "func": default
+    }
+            
             s += """
     public %(type)s get%(u_name)s() {
         String value = %(default)s;
@@ -132,7 +142,7 @@ def print_getter_setter_backend():
         "p_name": prop_name(e["name"]),
         "name": e["name"],
         "type": e["type"],
-        "default": "\"%s\"" % e["default"]
+        "default": default if default.endswith("()") else "\"%s\"" % e["default"]
     }
     
     return s

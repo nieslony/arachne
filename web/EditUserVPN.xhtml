@@ -13,7 +13,7 @@
     <ui:param name="title" value="Edit user VPN"/>
 
     <ui:define name="content">
-        <h:form>
+        <h:form id="userVpnForm">
             <h:panelGrid columns="2">
                 <p:outputLabel value="Connection Name:" for="name"/>
                 <p:inputText size="75" value="#{editUserVpn.connectionName}" id="name" required="true"/>
@@ -53,7 +53,7 @@
                         <h:panelGroup>
                             <p:outputLabel value="DNS servers:" for="dnsServers"/>
                             <p:selectOneListbox style="height: 50pt" id="dnsServers" value="#{editUserVpn.selDnsServer}">
-                                <f:selectItems value="#{editUserVpn.dnsServers}"/>
+                                <f:selectItems value="#{editUserVpn.dnsServersList}"/>
                                 <p:ajax update="dnsServer"/>
                             </p:selectOneListbox>
                             <p:inputText size="15" id="dnsServer" value="#{editUserVpn.editDnsServer}"/>
@@ -70,7 +70,7 @@
                         <h:panelGroup>
                             <p:outputLabel value="Push routes:" for="pushRoutes"/>
                             <p:selectOneListbox style="height: 50pt" id="pushRoutes" value="#{editUserVpn.selPushRoute}">
-                                <f:selectItems value="#{editUserVpn.pushRoutes}"/>
+                                <f:selectItems value="#{editUserVpn.pushRoutesList}"/>
                                 <p:ajax update="pushRouteNetwork"/>
                                 <p:ajax update="pushRouteMask"/>
                             </p:selectOneListbox>
@@ -145,8 +145,10 @@
             </p:accordionPanel>
             <p:messages showDetail="true" autoUpdate="true"/>
             <p:commandButton value="Save" action="#{editUserVpn.onSave}"/>
-            <p:commandButton value="Reset to saved" action="#{editUserVpn.onReset}"/>
-            <p:commandButton value="Reset to defaults" action="#{editUserVpn.onResetToDefaults}"/>
+            <p:commandButton value="Reset to saved" action="#{editUserVpn.onReset}"
+                             update="userVpnForm" type="reset"/>
+            <p:commandButton value="Reset to defaults" action="#{editUserVpn.onResetToDefaults}"
+                             update="userVpnForm" type="reset"/>
             <p:commandButton value="Remove" action="#{editUserVpn.remove}"/>
         </h:form>
     </ui:define>
