@@ -23,6 +23,7 @@
         }
     ],
     "properties": [
+        { "type": "Boolean",     "name": "isEnabled",            "default": "false" },
         { "type": "String",      "name": "connectionName",       "default": "New user VPN" },
         { "type": "String",      "name": "nmConnectionTemplate", "default": "%n - %u@%h" },
         { "type": "String",      "name": "host" ,                "default": "getDefaultHost()"},

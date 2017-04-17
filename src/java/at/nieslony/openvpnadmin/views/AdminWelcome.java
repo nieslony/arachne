@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
+import at.nieslony.openvpnadmin.beans.UserVpn;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -42,6 +43,13 @@ public class AdminWelcome implements Serializable {
 
     @ManagedProperty(value = "#{currentUser}")
     CurrentUser currentUser;
+
+    @ManagedProperty(value = "#{userVpn}")
+    UserVpn userVpn;
+
+    public void setUserVpn(UserVpn uv) {
+        userVpn = uv;
+    }
 
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;
@@ -132,7 +140,10 @@ public class AdminWelcome implements Serializable {
         logger.info("Loading user VPNs...");
         List<MenuElement> items = new LinkedList<>();
 
-        DefaultMenuItem addUserVPN = new DefaultMenuItem("Add user VPN");
+        String vpnName = userVpn.getIsEnabled() ?
+            userVpn.getConnectionName() : "Add user VPN";
+
+        DefaultMenuItem addUserVPN = new DefaultMenuItem(vpnName);
         addUserVPN.setHref("EditUserVPN.xhtml");
         items.add(addUserVPN);
 

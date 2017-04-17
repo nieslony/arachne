@@ -6,6 +6,7 @@ import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.openvpnadmin.views.base.EditUserVpnBase;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
@@ -20,6 +21,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import org.primefaces.context.RequestContext;
 
 @ManagedBean
 @ViewScoped
@@ -49,6 +51,9 @@ public class EditUserVpn
     @ManagedProperty(value = "#{folderFactory}")
     FolderFactory folderFactory;
 
+    @ManagedProperty(value = "#{adminWelcome}")
+    private AdminWelcome adminWelcome;
+
     @PostConstruct
     public void init() {
         setBackend(userVpn);
@@ -62,6 +67,7 @@ public class EditUserVpn
     {
         joinDnsServers();
         joinPushRoutes();
+        setIsEnabled(true);
         save();
 
         String serverConfigFile =
@@ -85,6 +91,9 @@ public class EditUserVpn
         FacesContext.getCurrentInstance().addMessage(
                 null, new FacesMessage(
                         FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
+
+        adminWelcome.loadUserVpns();
+        RequestContext.getCurrentInstance().update("menuForm:mainMenu");
     }
 
     private void updatePushRoutesList() {
@@ -129,6 +138,10 @@ public class EditUserVpn
 
     public void setFolderFactory(FolderFactory ff) {
         folderFactory = ff;
+    }
+
+    public void setAdminWelcome(AdminWelcome ab) {
+        this.adminWelcome = ab;
     }
 
     public List<String> getDnsServersList() {
@@ -266,5 +279,18 @@ public class EditUserVpn
     public UserVpnBase.UserPasswordMode[] getUserPasswordModes() {
 
         return UserVpnBase.UserPasswordMode.values();
+    }
+
+    public void onRemove() {
+        setIsEnabled(false);
+        save();
+        adminWelcome.loadUserVpns();
+        RequestContext.getCurrentInstance().update("menuForm:mainMenu");
+
+        String serverConfigFile =
+                String.format("%s/clientvpn.conf", folderFactory.getServerConfDir());
+        logger.info(String.format("Removing %s", serverConfigFile));
+        File f = new File(serverConfigFile);
+        f.delete();
     }
 }
