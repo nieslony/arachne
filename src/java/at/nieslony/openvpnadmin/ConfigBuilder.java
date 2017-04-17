@@ -13,7 +13,6 @@ import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.utils.NetUtils;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -228,13 +227,13 @@ public class ConfigBuilder implements Serializable {
         boolean writeUserCert = userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD.USERPWD;
 
         PrintWriter pr = new PrintWriter(wr);
-        StringWriter vpnName = new StringWriter();
-        vpnName
-                .append(userVpn.getConnectionName())
-                .append(" - ")
-                .append(username)
-                .append("@")
-                .append(userVpn.getHost());
+
+        String vpnName = userVpn.getNmConnectionTemplate();
+        vpnName = vpnName
+                .replaceAll("%u", username)
+                .replaceAll("%h", userVpn.getHost())
+                .replaceAll("%n", userVpn.getConnectionName());
+
         StringBuilder vpnOpts = new StringBuilder();
         vpnOpts.append("remote = $VPN_HOST");
         vpnOpts.append(", port = $VPN_PORT");
@@ -268,7 +267,7 @@ public class ConfigBuilder implements Serializable {
         pr.println("VPN_USER=\"" + username + "\"");
         pr.println("VPN_HOST=" + userVpn.getHost());
         pr.println("VPN_PORT=" + userVpn.getPort());
-        pr.println("VPN_NAME=\"" + vpnName.toString() + "\"");
+        pr.println("VPN_NAME=\"" + vpnName + "\"");
         pr.println("CERTS_DIR=$HOME/.cert");
         pr.println("VPN_CA=$CERTS_DIR/${VPN_HOST}-ca.pem");
         pr.println("VPN_USER_CERT=$CERTS_DIR/${VPN_USER}.crt");
@@ -373,10 +372,6 @@ public class ConfigBuilder implements Serializable {
     public StreamedContent getDownloadNetworkManagerConfig(String username)
             throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
     {
-        Properties props = new Properties();
-        FileInputStream fis = new FileInputStream(folderFactory.getUserVpnPath("0"));
-        props.load(fis);
-
         InputStream in;
 
         StringWriter writer = new StringWriter();
@@ -392,10 +387,6 @@ public class ConfigBuilder implements Serializable {
 
     public StreamedContent getDownloadOpenVpnConfig(String username)
             throws IOException, CertificateEncodingException {
-        Properties props = new Properties();
-        FileInputStream fis = new FileInputStream(folderFactory.getUserVpnPath("0"));
-        props.load(fis);
-
         InputStream in;
 
         StringWriter writer = new StringWriter();

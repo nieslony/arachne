@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.exceptions.InvalidUsernameOrPassword;
+import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.Serializable;
 import java.util.Base64;
@@ -17,6 +18,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -57,17 +59,23 @@ public class CurrentUser implements Serializable {
         logger.info("Initializing currentUser");
 
         HttpServletRequest req = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        user = null;
 
         try {
-            /*if (authSettings.getEnableAjpRemoteUser()) {
+            if (authSettings.getEnableAjpRemoteUser()) {
                 logger.info("AJP remoteUser enabled");
                 if (req.getRemoteUser() != null) {
-                    vpnUser = ldapSettings.findVpnUser(req.getRemoteUser());
+                    try {
+                        user = ldapSettings.findVpnUser(req.getRemoteUser());
+                    }
+                    catch (NamingException | NoSuchLdapUser ex) {
+                        logger.info(String.format("Cannot find LDAP user %s: %s", ex.getMessage()));
+                    }
                 }
             }
             else {
                 logger.info("AJP remoteUser disabled");
-            }*/
+            }
             if (user ==  null) {
                 if (req.getHeader("authorization") != null) {
                     String auth[] = req.getHeader("authorization").split(" ");
@@ -87,38 +95,12 @@ public class CurrentUser implements Serializable {
                     throw new InvalidUsernameOrPassword();
                 }
             }
-            /*
-            if (vpnUser == null && authSettings.getEnableHttpHeaderAuth()) {
-                String remUser = (String) req.getHeader(authSettings.getHttpHeaderRemoteUser());
-                if (remUser != null) {
-                    vpnUser = ldapSettings.findVpnUser(remUser);
-                }
-            }
-            if (vpnUser == null) {
-                if (req.getHeader("authorization") != null) {
-                    String auth[] = req.getHeader("authorization").split(" ");
-                    if (auth.length == 2 && auth[0].equals("Basic")) {
-                        byte[] decoded = Base64.getDecoder().decode(auth[1]);
-                        String[] usrPwd = new String(decoded).split(":");
-                        if (usrPwd.length == 2) {
-                            vpnUser = localUsers.auth(usrPwd[0], usrPwd[1]);
-                        }
-                    }
-                    throw new InvalidUsernameOrPassword();
-                }
-            }*/
         }
         catch (InvalidUsernameOrPassword iuop) {
             logger.severe(String.format("Illegal REMOTE_USER or password provided: %s",
                     iuop.getMessage()));
             // retirect to 403
         }
-        /*catch (NoSuchLdapUser nslu) {
-            logger.severe(nslu.getMessage());
-        }
-        catch (NamingException ne) {
-            logger.severe(String.format("Error connecting to LDAP server: %s", ne.getMessage()));
-        }*/
     }
 
     public boolean isValid() {
