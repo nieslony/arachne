@@ -1,2 +1,2 @@
-- remove douplicate LDAP user ipa
+- redesign user vpn page
 
