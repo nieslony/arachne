@@ -72,6 +72,9 @@ public class CurrentUser implements Serializable {
                         logger.info(String.format("Cannot find LDAP user %s: %s", ex.getMessage()));
                     }
                 }
+                else {
+                    logger.info("No remoteUser supplied");
+                }
             }
             else {
                 logger.info("AJP remoteUser disabled");
@@ -165,8 +168,6 @@ public class CurrentUser implements Serializable {
     }
 
     public boolean hasRole(String rolename) {
-	FacesContext fc = FacesContext.getCurrentInstance();
-
         if (user == null) {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
