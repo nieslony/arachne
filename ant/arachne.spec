@@ -8,13 +8,13 @@
 %define webappgroup tomcat
 %endif
 
-%define destdir %{webappsdir}/OpenVPN_Admin
+%define destdir %{webappsdir}/arachne
 %define libdir %{destdir}/WEB-INF/lib
 %define debug_package %{nil}
 
-Name:       OpenVPN_Admin
-Version:    0.2.3
-Release:    3
+Name:       arachne
+Version:    0.3.0
+Release:    1
 Summary:    Web application for administering openVPN
 
 License:    GPL-2.0+
@@ -36,12 +36,12 @@ BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api
 %endif
  
 %package server
-Summary:	OpenVPN_Admin server
+Summary:	arachne server
 BuildArch:	noarch
-Requires:	tomcat bouncycastle openvpn
+Requires:	tomcat bouncycastle openvpn postgresql-jdbc
 
 %package config-downloader
-Summary:	OpenVPN_Admin downloader for NetworkManager config
+Summary:	arachne downloader for NetworkManager config
 BuildArch:	noarch
 Requires:	curl NetworkManager NetworkManager-openvpn
 
@@ -64,18 +64,23 @@ ant -Droot=%{_builddir}/%{name}-%{version}
 %install 
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-dir=%{buildroot}/%{webappsdir}/%{name}
 
-mkdir -pv %{buildroot}/usr/bin
+mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
+install apache/arachne.conf %{buildroot}/%_defaultdocdir/%{name}
 
 %clean
 ant clean 
 
 %post server
-ln -sfv /usr/share/java/bcprov.jar %{libdir}
+ln -sfv \
+	/usr/share/java/bcprov.jar \
+	/usr/share/java/postgresql-jdbc.jar \
+	%{libdir}
 
 %preun server
 if [ $1 = 0 ] ; then
 	rm -vf %{libdir}/bcprov.jar
+	rm -vf %{libdir}/postgresql-jdbc.jar
 else
 	echo Do not remove %{libdir}/bcprov.jar, still needed.
 fi
@@ -84,6 +89,8 @@ fi
 %defattr(-, %{webappuser}, %{webappgroup}, -)
 %attr(755,  %{webappuser}, %{webappgroup}) %{webappsdir}/%{name}/WEB-INF/bin/*.sh
 %webappsdir/%{name}
+
+%attr(664, root, root) %_defaultdocdir/%{name}/*
 
 %files config-downloader
 /usr/bin/download-vpn-config.sh
