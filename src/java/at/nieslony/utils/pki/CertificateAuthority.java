@@ -358,6 +358,6 @@ public class CertificateAuthority {
     }
 
     public boolean isCertificateRevoked(X509Certificate cert) {
-        return crl.isRevoked(cert);
+        return crl != null ? crl.isRevoked(cert) : false;
     }
 }
