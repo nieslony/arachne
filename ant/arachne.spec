@@ -17,7 +17,7 @@ Version:    0.3.0
 Release:    1
 Summary:    Web application for administering openVPN
 
-License:    GPL-2.0+
+License:    GPL-3.0+
 URL:        http://www.nieslony.site/OpenVPN_Admin
 Source0:    %{name}-%{version}.tar.gz
 
@@ -28,11 +28,11 @@ BuildRequires:  ant bouncycastle tomcat python
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
 %endif
-%if 0%{?suse_version}
-BuildRequires:  java-1_8_0-openjdk  java-1_8_0-openjdk-headless  libgcj-devel   tomcat-el-3_0-api
-%endif
 %if 0%{?centos_version}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api
+%endif
+%if 0%{?suse_version}
+BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
 %endif
  
 %package server
@@ -67,6 +67,7 @@ ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-dir=%{buildroot}/%{
 mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
 install apache/arachne.conf %{buildroot}/%_defaultdocdir/%{name}
+install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 %clean
 ant clean 

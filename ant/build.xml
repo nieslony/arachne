@@ -107,6 +107,9 @@
     <target name="tar">
         <mkdir dir="${export}"/>
         <tar destfile="${export}/${projectName}-${version}.tar.gz">
+            <tarfileset dir="${root}" prefix="${tar-prefix}">
+                <include name="COPYING-GPL3"/>
+            </tarfileset>
             <tarfileset dir="${root}/apache" prefix="${tar-prefix}/apache"/>
             <tarfileset dir="${src}" prefix="${tar-prefix}/src"/>
             <tarfileset dir="${db-props-src}" prefix="${tar-prefix}/src"/>
