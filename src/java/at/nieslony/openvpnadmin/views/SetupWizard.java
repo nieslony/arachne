@@ -554,8 +554,11 @@ public class SetupWizard implements Serializable {
             step = "Creating DH parameters";
             saveDhParams();
 
+            pki.init();
+
             performingSetup = false;
 
+            logger.info("Setup successful, redirecting to login page");
             ec.redirect("Login.xhtml");
         }
         catch (Exception ex) {
