@@ -103,9 +103,11 @@ public class AdminWelcome implements Serializable {
         loadUserVpns();
         menuModel.addElement(userVpnsMenu);
 
+        /*
         siteVpnsMenu = new DefaultSubMenu("Site VPNs");
         loadSiteVpns();
         menuModel.addElement(siteVpnsMenu);
+        */
 
         DefaultSubMenu actionsMenu = new DefaultSubMenu("Actions");
             if (currentUser.hasRole("user")) {
