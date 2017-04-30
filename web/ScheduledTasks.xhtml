@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<body>
+    <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+        <ui:param name="title" value="Scheduled tasks"/>
+
+        <ui:define name="content">
+            <h:form id="taskForm">
+                <p:dialog header="Add task" widgetVar="dlgAddTask" minHeight="40">
+                    <p:panelGrid columns="2" layout="grid">
+                        <h:outputLabel value="Task type:"/>
+                        <p:selectOneMenu>
+                            <f:selectItems value="#{taskScheduler.availableTasks}"
+                                           var="availableTask" 
+                                           itemLabel="#{availableTask.name}"/>
+                        </p:selectOneMenu>
+                        
+                        <p:outputLabel value="Startup delay:"/>
+                        <p:inputMask mask="99:99:99"/>
+                        
+                        <p:outputLabel value="Interval:"/>
+                        <p:inputMask mask="99 d\ays 99:99:99"/>
+                    </p:panelGrid>
+                    
+                    <p:commandButton value="OK" actionListener="#{taskScheduler.onAddTask}"/>
+                    <p:commandButton value="Cancel" onclick="PF('dlgAddTask').hide();"/>
+                </p:dialog>
+                
+                <p:dataTable var="task" value="#{taskScheduler.scheduledTasks}">
+                    <p:column headerText="Task type">
+                        <h:outputText value="task.name"/>
+                    </p:column>
+                </p:dataTable>
+                
+                <p:commandButton value="Add task" onclick="PF('dlgAddTask').show();"/>
+                <p:commandButton value="Edit task" actionListener="#{taskScheduler.onEditTask}"/>
+                <p:commandButton value="Remove task" actionListener="#{taskScheduler.onRemoveTask}"/>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</body>
+</html>

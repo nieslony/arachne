@@ -119,6 +119,10 @@ public class AdminWelcome implements Serializable {
             statusItem.setHref("ShowUserStatus.xhtml");
             actionsMenu.addElement(statusItem);
 
+            DefaultMenuItem schedulesTasksItem = new DefaultMenuItem("Edit schedules tasks");
+            schedulesTasksItem.setHref("ScheduledTasks.xhtml");
+            actionsMenu.addElement(schedulesTasksItem);
+
             DefaultMenuItem logoutItem = new DefaultMenuItem("Logout...");
             logoutItem.setCommand("#{adminWelcome.logout}");
             actionsMenu.addElement(logoutItem);
