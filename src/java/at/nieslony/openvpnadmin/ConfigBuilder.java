@@ -13,8 +13,6 @@ import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.utils.NetUtils;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -29,16 +27,11 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
@@ -311,62 +304,6 @@ public class ConfigBuilder implements Serializable {
         pr.println("quit");
         pr.println("EOF");
         pr.println("fi");
-    }
-
-    public void networkManagerConfig(ComponentSystemEvent event) {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-        Map<String, String> params = ec.getRequestParameterMap();
-
-        try {
-            String fn = folderFactory.getUserVpnPath("0");
-            FileReader in = new FileReader(fn);
-            Properties props = new Properties();
-            props.load(in);
-
-            Writer wr = ec.getResponseOutputWriter();
-
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-            writeUserVpnNetworkManagerConfig(wr, currentUser.getUsername());
-        }
-        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
-            logger.severe(ex.getMessage());
-        }
-
-        fc.responseComplete(); // Important! Prevents JSF from proceeding to render HTML.
-    }
-
-    public void ovpnConfig(ComponentSystemEvent event) {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-        Map<String, String> params = ec.getRequestParameterMap();
-
-        try {
-            Writer wr = ec.getResponseOutputWriter();
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-
-            String fn = folderFactory.getUserVpnPath("0");
-            FileReader in;
-            Properties props = null;
-            try {
-                in = new FileReader(fn);
-                props = new Properties();
-                props.load(in);
-            }
-            catch (FileNotFoundException ex) {
-                logger.warning("Writing empty config");
-                wr.write("# No client VPN configured yet.\n");
-            }
-            if (props != null && !props.isEmpty())
-                writeUserVpnClientConfig(wr, currentUser.getUsername());
-        }
-        catch (CertificateEncodingException | IOException ex) {
-            logger.severe(ex.getMessage());
-        }
-
-        fc.responseComplete(); // Important! Prevents JSF from proceeding to render HTML.
     }
 
     public StreamedContent getDownloadNetworkManagerConfig(String username)
