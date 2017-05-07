@@ -12,9 +12,11 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -86,9 +88,16 @@ public class ShowUserStatus implements Serializable {
     }
 
     public void onRefresh()
-            throws IOException, ManagementInterfaceException
     {
-        userStatus.clear();
-        managementInterface.getStatus(userStatus);
+        try {
+            userStatus.clear();
+            managementInterface.getStatus(userStatus);
+        }
+        catch (IOException | ManagementInterfaceException ex) {
+            String msg = String.format("Cannot refresh user status: %s", ex.getMessage());
+
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
     }
 }

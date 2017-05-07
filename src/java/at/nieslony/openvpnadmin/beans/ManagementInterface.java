@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -30,7 +31,9 @@ import javax.faces.bean.ManagedBean;
  */
 @ManagedBean
 @ApplicationScoped
-public class ManagementInterface {
+public class ManagementInterface
+        implements Serializable
+{
     private BufferedReader miReader;
     private PrintWriter miWriter;
     private Socket socket;
