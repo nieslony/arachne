@@ -11,35 +11,88 @@
 
         <ui:define name="content">
             <h:form id="taskForm">
-                <p:dialog header="Add task" widgetVar="dlgAddTask" minHeight="40">
+                <p:dialog header="Add task" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
                     <p:panelGrid columns="2" layout="grid">
                         <h:outputLabel value="Task type:"/>
-                        <p:selectOneMenu>
+                        <p:selectOneMenu value="#{editTaskScheduler.dlgAddTask_taskType}">
+                            <f:selectItem itemLabel="Select task type" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{taskScheduler.availableTasks}"
                                            var="availableTask" 
                                            itemLabel="#{availableTask.name}"/>
                         </p:selectOneMenu>
                         
                         <p:outputLabel value="Startup delay:"/>
-                        <p:inputMask mask="99:99:99"/>
+                        <p:outputPanel>
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayDays}"
+                                       min="0" max="365"
+                                       size="7"
+                                       suffix=" days"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayHours}"
+                                       min="0" max="59"
+                                       suffix=" hours"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayMins}"
+                                       min="0" max="59"
+                                       suffix=" mins"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelaySecs}"
+                                       min="0" max="59"
+                                       suffix=" secs"
+                                       size="7"/>
+                        </p:outputPanel>
                         
                         <p:outputLabel value="Interval:"/>
-                        <p:inputMask mask="99 d\ays 99:99:99"/>
+                        <p:outputPanel>
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalDays}"
+                                       min="0" max="365"
+                                       size="7"
+                                       suffix=" days"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalHours}"
+                                       min="0" max="59"
+                                       suffix=" hours"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalMins}"
+                                       min="0" max="59"
+                                       suffix=" mins"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalSecs}"
+                                       min="0" max="59"
+                                       suffix=" secs"
+                                       size="7"/>
+                        </p:outputPanel>
+                        
+                        <p:outputLabel value="Comment:"/>
+                        <p:inputText value="#{editTaskScheduler.dlgAddTask_comment}"/>     
+                        
+                        <p:outputLabel value="Enabled:"/>
+                        <p:selectBooleanCheckbox value="#{editTaskScheduler.dlgAddTask_isEnabled}"/>
                     </p:panelGrid>
                     
-                    <p:commandButton value="OK" actionListener="#{taskScheduler.onAddTask}"/>
+                    <p:commandButton value="OK" actionListener="#{editTaskScheduler.onAddTaskOk}"/>
                     <p:commandButton value="Cancel" onclick="PF('dlgAddTask').hide();"/>
                 </p:dialog>
                 
                 <p:dataTable var="task" value="#{taskScheduler.scheduledTasks}">
                     <p:column headerText="Task type">
-                        <h:outputText value="task.name"/>
+                        <h:outputText value="#{task.name}"/>
+                    </p:column>
+                    <p:column headerText="Enabled">
+                        <h:outputText value="#{task.enabled}"/>
+                    </p:column>
+                    <p:column headerText="Startup delay">
+                        <h:outputText value="#{task.formatStartupDelay}"/>
+                    </p:column>
+                    <p:column headerText="Interval">
+                        <h:outputText value="#{task.formatInterval}"/>
+                    </p:column>
+                    <p:column headerText="Comment">
+                        <h:outputText value="#{task.comment}"/>
                     </p:column>
                 </p:dataTable>
                 
                 <p:commandButton value="Add task" onclick="PF('dlgAddTask').show();"/>
-                <p:commandButton value="Edit task" actionListener="#{taskScheduler.onEditTask}"/>
-                <p:commandButton value="Remove task" actionListener="#{taskScheduler.onRemoveTask}"/>
+                <p:commandButton value="Edit task" actionListener="#{editTaskScheduler.onEditTask}"/>
+                <p:commandButton value="Remove task" actionListener="#{editTaskScheduler.onRemoveTask}"/>
             </h:form>
         </ui:define>
     </ui:composition>

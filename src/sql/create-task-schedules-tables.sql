@@ -8,3 +8,19 @@
  * Created: 30.04.2017
  */
 
+CREATE TABLE scheduledTasks (
+    id serial NOT NULL PRIMARY KEY,
+    taskClass text NOT NULL,
+    startupDelay bigint,
+    interval bigint,
+    comment text,
+    isEnabled boolean
+);;
+
+INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES 
+    ( 'at.nieslony.openvpnadmin.tasks.UpdateCrl', 
+        60 * 1, 
+        60 * 60 * 60 * 24 * 7,
+        true
+    )
+;;
