@@ -10,69 +10,88 @@
         <ui:param name="title" value="Scheduled tasks"/>
 
         <ui:define name="content">
-            <h:form id="taskForm">
-                <p:dialog header="Add task" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
+            <p:dialog header="Add task" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
+                <h:form id="formAddTask">
                     <p:panelGrid columns="2" layout="grid">
                         <h:outputLabel value="Task type:"/>
-                        <p:selectOneMenu value="#{editTaskScheduler.dlgAddTask_taskType}">
+                        <p:selectOneMenu id="taskType" value="#{editTaskScheduler.dlgAddTask_taskType}">
+                            <p:ajax update="formAddTask"/>
                             <f:selectItem itemLabel="Select task type" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{taskScheduler.availableTasks}"
                                            var="availableTask" 
-                                           itemLabel="#{availableTask.name}"/>
+                                           itemLabel="#{availableTask.name}"
+                                           itemValue="#{availableTask.klass.name}"/>
                         </p:selectOneMenu>
                         
                         <p:outputLabel value="Startup delay:"/>
-                        <p:outputPanel>
+                        <p:outputPanel id="startupDelay">
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayDays}"
                                        min="0" max="365"
                                        size="7"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        suffix=" days"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayHours}"
                                        min="0" max="59"
                                        suffix=" hours"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayMins}"
                                        min="0" max="59"
                                        suffix=" mins"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelaySecs}"
                                        min="0" max="59"
                                        suffix=" secs"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>
                         </p:outputPanel>
                         
                         <p:outputLabel value="Interval:"/>
-                        <p:outputPanel>
+                        <p:outputPanel disabled="#{!editTaskScheduler.inputOk}">
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalDays}"
                                        min="0" max="365"
                                        size="7"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        suffix=" days"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalHours}"
                                        min="0" max="59"
                                        suffix=" hours"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalMins}"
                                        min="0" max="59"
                                        suffix=" mins"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>&nbsp;
                             <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalSecs}"
                                        min="0" max="59"
                                        suffix=" secs"
+                                       disabled="#{!editTaskScheduler.inputOk}"
                                        size="7"/>
                         </p:outputPanel>
                         
                         <p:outputLabel value="Comment:"/>
-                        <p:inputText value="#{editTaskScheduler.dlgAddTask_comment}"/>     
+                        <p:inputText value="#{editTaskScheduler.dlgAddTask_comment}"
+                                     disabled="#{!editTaskScheduler.inputOk}"/>     
                         
                         <p:outputLabel value="Enabled:"/>
-                        <p:selectBooleanCheckbox value="#{editTaskScheduler.dlgAddTask_isEnabled}"/>
+                        <p:selectBooleanCheckbox value="#{editTaskScheduler.dlgAddTask_isEnabled}"
+                                                 disabled="#{!editTaskScheduler.inputOk}"/>
                     </p:panelGrid>
                     
-                    <p:commandButton value="OK" actionListener="#{editTaskScheduler.onAddTaskOk}"/>
+                    <p:commandButton value="OK" 
+                                     actionListener="#{editTaskScheduler.onAddTaskOk}"
+                                     disabled="#{!editTaskScheduler.inputOk}"
+                                     update=":editTaskScheduler:tasks"
+                                     />
                     <p:commandButton value="Cancel" onclick="PF('dlgAddTask').hide();"/>
-                </p:dialog>
+                </h:form>
+            </p:dialog>
                 
-                <p:dataTable var="task" value="#{taskScheduler.scheduledTasks}">
+            <h:form id="editTaskScheduler">
+                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+                <p:dataTable id="tasks" var="task" value="#{taskScheduler.scheduledTasks}">
                     <p:column headerText="Task type">
                         <h:outputText value="#{task.name}"/>
                     </p:column>

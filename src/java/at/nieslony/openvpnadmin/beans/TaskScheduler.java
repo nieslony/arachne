@@ -5,15 +5,18 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
+import at.nieslony.openvpnadmin.tasks.AvailableTask;
 import at.nieslony.openvpnadmin.tasks.ScheduledTask;
-import at.nieslony.openvpnadmin.tasks.ScheduledTaskInfo;
+import at.nieslony.openvpnadmin.tasks.TaskListEntry;
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.classfinder.ClassFinder;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -35,7 +38,9 @@ import javax.faces.bean.ManagedProperty;
  */
 @ManagedBean(eager = true)
 @ApplicationScoped
-public class TaskScheduler {
+public class TaskScheduler
+        implements Serializable
+{
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{databaseSettings}")
@@ -52,187 +57,10 @@ public class TaskScheduler {
         folderFactory = ff;
     }
 
-    public class AvailableTask {
-        private final Class klass;
-        private final String name;
-        private final String description;
 
-        AvailableTask(Class klass, String name, String description) {
-            this.klass = klass;
-            this.name = name;
-            this.description = description;
-        }
 
-        public Class getKlass() {
-            return klass;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
-
-    public class TaskListEntry {
-        private String name;
-        private String comment = null;
-        private long  startupDelay = -1;
-        private long interval = -1;
-        private boolean isEnabled = false;
-        private final Class<ScheduledTask> taskClass;
-
-        public TaskListEntry(Class taskClass) {
-            this.taskClass = taskClass;
-            ScheduledTaskInfo info = (ScheduledTaskInfo) taskClass.getAnnotation(ScheduledTaskInfo.class);
-            if (info != null) {
-                name = info.name();
-            }
-            else {
-                name = taskClass.getName();
-            }
-        }
-
-        private int getSecs(long l) {
-            long secs = l % (60 * 60) / (60);
-
-            return (int) secs;
-        }
-
-        private int getMins(long l) {
-            long mins = l % (60 * 60 * 60) / (60 * 60);
-
-            return (int) mins;
-        }
-
-        private int getHours(long l) {
-            long hours = l % (60 * 60 * 60 * 24) / (60 * 60 * 60);
-
-            return (int) hours;
-        }
-
-        private int getDays(long l) {
-            long days = l / (60 * 60 * 60 * 24);
-
-            return (int) days;
-        }
-
-        private long getLongTime(int days, int hours, int mins, int secs) {
-            long time = secs + mins * 60 + hours * 60 * 60 + days * 60 * 60 * 24;
-
-            return time;
-        }
-
-        public void setInterval(int days, int hours, int mins, int secs) {
-            interval = getLongTime(days, hours, mins, secs);
-        }
-
-        public void setStartupDelay(int days, int hours, int mins, int secs) {
-            startupDelay = getLongTime(days, hours, mins, secs);
-        }
-
-        private String formatTime(long l) {
-            int days = getDays(l);
-            int hours = getHours(l);
-            int mins = getMins(l);
-            int secs = getSecs(l);
-
-            String s;
-            if (days > 0) {
-                s = String.format("%d days, %02d:%02d:%02d hours", days, hours, mins, secs);
-            }
-            else {
-                s = String.format("%02d:%02d:%02d hours", hours, mins, secs);
-            }
-
-            return s;
-        }
-
-        public String getFormatStartupDelay() {
-            return formatTime(startupDelay);
-        }
-
-        public String getFormatInterval() {
-            return formatTime(interval);
-        }
-
-        public Class getTaskClass() {
-            return taskClass;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-
-        public long getStartupDelay() {
-            return startupDelay;
-        }
-
-        public void setStartupDelay(long startupDelay) {
-            this.startupDelay = startupDelay;
-        }
-
-        public long getInterval() {
-            return interval;
-        }
-
-        public void setInterval(long interval) {
-            this.interval = interval;
-        }
-
-        public boolean isEnabled() {
-            return isEnabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.isEnabled = enabled;
-        }
-
-        public int getStartupDelayDays() {
-            return getDays(startupDelay);
-        }
-
-        public int getStartupDelayHours() {
-            return getDays(startupDelay);
-        }
-
-        public int getStartupDelayMins() {
-            return getMins(startupDelay);
-        }
-
-        public int getStartupDelaySecs() {
-            return getSecs(startupDelay);
-        }
-
-        public int getIntervalDays() {
-            return getDays(interval);
-        }
-
-        public int getIntervalHours() {
-            return getDays(interval);
-        }
-
-        public int getIntervalMins() {
-            return getMins(interval);
-        }
-
-        public int getIntervalSecs() {
-            return getSecs(interval);
-        }
-    }
-
-    final List<AvailableTask> availableTasks = new LinkedList<>();
-    final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
+    transient final List<AvailableTask> availableTasks = new LinkedList<>();
+    transient final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
 
     /**
      * Creates a new instance of TaskScheduler
@@ -248,16 +76,7 @@ public class TaskScheduler {
             List<Class> classes = classFinder.getAllClassesImplementing(ScheduledTask.class);
             for (Class c : classes) {
                 logger.info(String.format("Found task scheduler class %s", c.getName()));
-                if (c.isAnnotationPresent(ScheduledTaskInfo.class)) {
-                    ScheduledTaskInfo info =
-                            (ScheduledTaskInfo) c.getAnnotation(ScheduledTaskInfo.class);
-
-                    availableTasks.add(
-                            new AvailableTask(c, info.name(), info.description()));
-                }
-                else {
-                    availableTasks.add(new AvailableTask(c, null, null));
-                }
+                availableTasks.add(new AvailableTask(c));
             }
 
             reloadTasks();
@@ -290,10 +109,10 @@ public class TaskScheduler {
                 else {
                     task = scheduledTasks.get(id);
                 }
-                task.interval = interval;
-                task.startupDelay = startupDelay;
-                task.isEnabled = isEnabled;
-                task.comment = comment;
+                task.setInterval(interval);
+                task.setStartupDelay(startupDelay);
+                task.setEnabled(isEnabled);
+                task.setComment(comment);
             }
         }
         catch (ClassNotFoundException | SQLException ex) {
@@ -342,4 +161,30 @@ public class TaskScheduler {
         return scheduledTasks.values();
     }
 
+    public void addTask(TaskListEntry tle) {
+        try {
+            Connection con = databaseSettings.getDatabseConnection();
+            String sql = "INSERT INTO scheduledTasks " +
+                    "(taskClass, startupDelay, interval, isEnabled, comment) " +
+                    "VALUES (?, ?, ?, ?, ?);";
+            PreparedStatement stm = con.prepareStatement(sql);
+            logger.info(String.format("Executing sql: %s", stm.toString()));
+            int pos = 1;
+            stm.setString(pos++, tle.getTaskClass().getName());
+            stm.setLong(pos++, tle.getStartupDelay());
+            stm.setLong(pos++, tle.getInterval());
+            stm.setBoolean(pos++, tle.isEnabled());
+            stm.setString(pos++, tle.getComment());
+
+            int ret = stm.executeUpdate();
+            logger.info(String.format("%d entries inserted", ret));
+            stm.close();
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msg = String.format("Cannot add task: %s", ex.getMessage());
+            logger.warning(msg);
+        }
+
+        reloadTasks();
+    }
 }

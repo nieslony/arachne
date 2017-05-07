@@ -6,7 +6,8 @@
 package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.TaskScheduler;
-import at.nieslony.openvpnadmin.tasks.ScheduledTask;
+import at.nieslony.openvpnadmin.tasks.TaskListEntry;
+import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -19,7 +20,9 @@ import org.primefaces.context.RequestContext;
  */
 @ManagedBean
 @ViewScoped
-public class EditTaskScheduler {
+public class EditTaskScheduler
+    implements Serializable
+{
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{taskScheduler}")
@@ -45,15 +48,32 @@ public class EditTaskScheduler {
     private int dlgAddTask_intervalDays;
     private boolean dlgAddTask_isEnabled;
     private String dlgAddTask_comment;
-    private TaskScheduler.AvailableTask dlgAddTask_taskType;
+    private String dlgAddTask_taskType = null;
 
     public void onAddTaskOk() {
-        Class cl = dlgAddTask_taskType.getKlass();
-        try {
-            ScheduledTask task = (ScheduledTask) cl.newInstance();
-        }
-        catch (IllegalAccessException | InstantiationException ex) {
+        logger.info(String.format("Creating task for class %s", dlgAddTask_taskType));
 
+        Class cl = null;
+
+        try {
+            cl = Class.forName(dlgAddTask_taskType);
+        }
+        catch (ClassNotFoundException ex) {
+            logger.warning(String.format("Cannot create task for class %s", ex));
+        }
+
+        if (cl != null) {
+            TaskListEntry task = null;
+            task = new TaskListEntry(cl);
+            task.setComment(dlgAddTask_comment);
+            task.setEnabled(dlgAddTask_isEnabled);
+            task.setInterval(dlgAddTask_intervalDays, dlgAddTask_intervalHours, dlgAddTask_intervalMins, dlgAddTask_intervalSecs);
+            task.setStartupDelay(dlgAddTask_intervalDays, dlgAddTask_intervalHours, dlgAddTask_intervalMins, dlgAddTask_intervalSecs);
+
+            taskScheduler.addTask(task);
+        }
+        else {
+            logger.info(String.format("There's no task class, don't create task"));
         }
 
         RequestContext.getCurrentInstance().execute("PF('dlgAddTask').hide();");
@@ -66,11 +86,11 @@ public class EditTaskScheduler {
 
     }
 
-    public TaskScheduler.AvailableTask getDlgAddTask_taskType() {
+    public String getDlgAddTask_taskType() {
         return dlgAddTask_taskType;
     }
 
-    public void setDlgAddTask_taskType(TaskScheduler.AvailableTask tt) {
+    public void setDlgAddTask_taskType(String tt) {
         dlgAddTask_taskType = tt;
     }
 
@@ -152,5 +172,9 @@ public class EditTaskScheduler {
 
     public void setDlgAddTask_comment(String comment) {
         dlgAddTask_comment = comment;
+    }
+
+    public boolean isInputOk() {
+        return dlgAddTask_taskType != null;
     }
 }
