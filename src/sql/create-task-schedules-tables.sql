@@ -20,7 +20,7 @@ CREATE TABLE scheduledTasks (
 INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES 
     ( 'at.nieslony.openvpnadmin.tasks.UpdateCrl', 
         60 * 1, 
-        60 * 60 * 60 * 24 * 7,
+        60 * 60 * 24 * 7,
         true
     )
 ;;
