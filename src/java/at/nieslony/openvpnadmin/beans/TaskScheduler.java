@@ -113,6 +113,7 @@ public class TaskScheduler
                 task.setStartupDelay(startupDelay);
                 task.setEnabled(isEnabled);
                 task.setComment(comment);
+                task.setId(id);
             }
         }
         catch (ClassNotFoundException | SQLException ex) {
@@ -161,12 +162,57 @@ public class TaskScheduler
         return scheduledTasks.values();
     }
 
-    public void addTask(TaskListEntry tle) {
-        try {
+    public void removeTask(TaskListEntry tle)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabseConnection();
+        String sql = "DELETE FROM scheduledTasks WHERE id = ?;";
+        PreparedStatement stm = con.prepareStatement(sql);
+        int pos = 1;
+        stm.setLong(pos, tle.getId());
+        stm.executeUpdate();
+
+        scheduledTasks.remove(tle.getId());
+    }
+
+    public void addTask(TaskListEntry tle)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabseConnection();
+        String sql = "INSERT INTO scheduledTasks " +
+                "(taskClass, startupDelay, interval, isEnabled, comment) " +
+                "VALUES (?, ?, ?, ?, ?);";
+        PreparedStatement stm = con.prepareStatement(sql);
+        logger.info(String.format("Executing sql: %s", stm.toString()));
+        int pos = 1;
+        stm.setString(pos++, tle.getTaskClass().getName());
+        stm.setLong(pos++, tle.getStartupDelay());
+        stm.setLong(pos++, tle.getInterval());
+        stm.setBoolean(pos++, tle.isEnabled());
+        stm.setString(pos++, tle.getComment());
+
+        int ret = stm.executeUpdate();
+        logger.info(String.format("%d entries inserted", ret));
+        stm.close();
+
+        reloadTasks();
+    }
+
+    public void updateTask(TaskListEntry tle)
+            throws ClassNotFoundException, SQLException
+    {
+        TaskListEntry entry = scheduledTasks.get(tle.getId());
+
+        if (entry != null) {
+            entry.setComment(tle.getComment());
+            entry.setInterval(tle.getInterval());
+            entry.setStartupDelay(tle.getStartupDelay());
+            entry.setEnabled(tle.isEnabled());
+
             Connection con = databaseSettings.getDatabseConnection();
-            String sql = "INSERT INTO scheduledTasks " +
-                    "(taskClass, startupDelay, interval, isEnabled, comment) " +
-                    "VALUES (?, ?, ?, ?, ?);";
+            String sql = "UPDATE scheduledTasks " +
+                    "SET taskClass = ?, startupDelay = ?, interval = ?, isEnabled = ?, comment = ? " +
+                    "WHERE id = ?;";
             PreparedStatement stm = con.prepareStatement(sql);
             logger.info(String.format("Executing sql: %s", stm.toString()));
             int pos = 1;
@@ -175,16 +221,9 @@ public class TaskScheduler
             stm.setLong(pos++, tle.getInterval());
             stm.setBoolean(pos++, tle.isEnabled());
             stm.setString(pos++, tle.getComment());
+            stm.setLong(pos, tle.getId());
 
-            int ret = stm.executeUpdate();
-            logger.info(String.format("%d entries inserted", ret));
-            stm.close();
+            stm.executeUpdate();
         }
-        catch (ClassNotFoundException | SQLException ex) {
-            String msg = String.format("Cannot add task: %s", ex.getMessage());
-            logger.warning(msg);
-        }
-
-        reloadTasks();
     }
 }

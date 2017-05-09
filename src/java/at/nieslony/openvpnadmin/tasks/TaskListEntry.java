@@ -5,8 +5,6 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
-import at.nieslony.openvpnadmin.tasks.ScheduledTask;
-import at.nieslony.openvpnadmin.tasks.ScheduledTaskInfo;
 import java.io.Serializable;
 
 /**
@@ -21,6 +19,7 @@ public class TaskListEntry implements Serializable {
     private long interval = -1;
     private boolean isEnabled = false;
     private final Class<ScheduledTask> taskClass;
+    private long id;
 
     public TaskListEntry(Class taskClass) {
         this.taskClass = taskClass;
@@ -33,22 +32,22 @@ public class TaskListEntry implements Serializable {
     }
 
     private int getSecs(long l) {
-        long secs = l % (60 * 60) / (60);
+        long secs = l % 60;
         return (int) secs;
     }
 
     private int getMins(long l) {
-        long mins = l % (60 * 60 * 60) / (60 * 60);
+        long mins = l % (60 * 60) / 60;
         return (int) mins;
     }
 
     private int getHours(long l) {
-        long hours = l % (60 * 60 * 60 * 24) / (60 * 60 * 60);
+        long hours = l % (24 * 60 * 60) / (60 * 60);
         return (int) hours;
     }
 
     private int getDays(long l) {
-        long days = l / (60 * 60 * 60 * 24);
+        long days = l / (24 * 60 * 60);
         return (int) days;
     }
 
@@ -132,7 +131,7 @@ public class TaskListEntry implements Serializable {
     }
 
     public int getStartupDelayHours() {
-        return getDays(startupDelay);
+        return getHours(startupDelay);
     }
 
     public int getStartupDelayMins() {
@@ -148,7 +147,7 @@ public class TaskListEntry implements Serializable {
     }
 
     public int getIntervalHours() {
-        return getDays(interval);
+        return getHours(interval);
     }
 
     public int getIntervalMins() {
@@ -159,4 +158,11 @@ public class TaskListEntry implements Serializable {
         return getSecs(interval);
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 }

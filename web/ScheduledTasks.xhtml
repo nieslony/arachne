@@ -10,12 +10,12 @@
         <ui:param name="title" value="Scheduled tasks"/>
 
         <ui:define name="content">
-            <p:dialog header="Add task" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
-                <h:form id="formAddTask">
-                    <p:panelGrid columns="2" layout="grid">
+            <h:form id="formAddTask">
+                <p:dialog header="#{editTaskScheduler.dlgTaskMode}" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
+                    <p:panelGrid id="panelAddTask" columns="2" layout="grid">
                         <h:outputLabel value="Task type:"/>
                         <p:selectOneMenu id="taskType" value="#{editTaskScheduler.dlgAddTask_taskType}">
-                            <p:ajax update="formAddTask"/>
+                            <p:ajax update="panelAddTask dlgAddTaskOk"/>
                             <f:selectItem itemLabel="Select task type" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{taskScheduler.availableTasks}"
                                            var="availableTask" 
@@ -81,17 +81,33 @@
                     </p:panelGrid>
                     
                     <p:commandButton value="OK" 
+                                     id="dlgAddTaskOk"
                                      actionListener="#{editTaskScheduler.onAddTaskOk}"
                                      disabled="#{!editTaskScheduler.inputOk}"
                                      update=":editTaskScheduler:tasks"
                                      />
                     <p:commandButton value="Cancel" onclick="PF('dlgAddTask').hide();"/>
-                </h:form>
-            </p:dialog>
+                </p:dialog>
+            </h:form>
                 
             <h:form id="editTaskScheduler">
+                <p:contextMenu for="tasks">
+                    <p:menuitem value="Edit..."
+                                actionListener="#{editTaskScheduler.onEditTask}"
+                                update=":formAddTask"
+                                />
+                    <p:menuitem value="Remove" 
+                                actionListener="#{editTaskScheduler.onRemoveTask}"
+                                update="tasks"/>
+                </p:contextMenu>
+                
                 <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
-                <p:dataTable id="tasks" var="task" value="#{taskScheduler.scheduledTasks}">
+                <p:dataTable id="tasks" var="task" 
+                             value="#{taskScheduler.scheduledTasks}"
+                             rowKey="#{task.id}"
+                             selectionMode="single"
+                             selection="#{editTaskScheduler.selectedTask}"                             
+                             >
                     <p:column headerText="Task type">
                         <h:outputText value="#{task.name}"/>
                     </p:column>
@@ -109,9 +125,9 @@
                     </p:column>
                 </p:dataTable>
                 
-                <p:commandButton value="Add task" onclick="PF('dlgAddTask').show();"/>
-                <p:commandButton value="Edit task" actionListener="#{editTaskScheduler.onEditTask}"/>
-                <p:commandButton value="Remove task" actionListener="#{editTaskScheduler.onRemoveTask}"/>
+                <p:commandButton value="Add task..." 
+                                 actionListener="#{editTaskScheduler.onAddTask}"
+                                 update=":formAddTask"/>
             </h:form>
         </ui:define>
     </ui:composition>
