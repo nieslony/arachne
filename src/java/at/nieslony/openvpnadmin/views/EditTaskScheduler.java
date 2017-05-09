@@ -280,5 +280,9 @@ public class EditTaskScheduler
     public String getDlgTaskMode() {
         return dlgTaskMode.getTitle();
     }
+
+    public boolean getSelectTaskTypeEnabled() {
+        return dlgTaskMode == DlgTaskMode.ADD;
+    }
 }
 

@@ -14,7 +14,10 @@
                 <p:dialog header="#{editTaskScheduler.dlgTaskMode}" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
                     <p:panelGrid id="panelAddTask" columns="2" layout="grid">
                         <h:outputLabel value="Task type:"/>
-                        <p:selectOneMenu id="taskType" value="#{editTaskScheduler.dlgAddTask_taskType}">
+                        <p:selectOneMenu id="taskType" 
+                                         value="#{editTaskScheduler.dlgAddTask_taskType}"
+                                         disabled="#{!editTaskScheduler.selectTaskTypeEnabled}"
+                                         >
                             <p:ajax update="panelAddTask dlgAddTaskOk"/>
                             <f:selectItem itemLabel="Select task type" itemValue="" noSelectionOption="true" />
                             <f:selectItems value="#{taskScheduler.availableTasks}"
