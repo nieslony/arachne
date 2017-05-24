@@ -123,6 +123,9 @@
                     <p:column headerText="Interval">
                         <h:outputText value="#{task.formatInterval}"/>
                     </p:column>
+                    <p:column headerText="Next run">
+                        <h:outputText value="#{task.scheduledExecutionTime}"/>
+                    </p:column>
                     <p:column headerText="Comment">
                         <h:outputText value="#{task.comment}"/>
                     </p:column>

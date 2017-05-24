@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.tasks.AvailableTask;
 import at.nieslony.openvpnadmin.tasks.ScheduledTask;
+import at.nieslony.openvpnadmin.tasks.ScheduledTaskMemberBean;
 import at.nieslony.openvpnadmin.tasks.TaskListEntry;
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.classfinder.ClassFinder;
@@ -14,6 +15,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,12 +29,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -57,10 +64,9 @@ public class TaskScheduler
         folderFactory = ff;
     }
 
-
-
     transient final List<AvailableTask> availableTasks = new LinkedList<>();
     transient final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
+    transient final Timer timer = new Timer("arachne timer");
 
     /**
      * Creates a new instance of TaskScheduler
@@ -77,6 +83,31 @@ public class TaskScheduler
             for (Class c : classes) {
                 logger.info(String.format("Found task scheduler class %s", c.getName()));
                 availableTasks.add(new AvailableTask(c));
+
+                for (Field field : c.getDeclaredFields()) {
+                    if (field.isAnnotationPresent(ScheduledTaskMemberBean.class)) {
+                        String fieldName = field.getName();
+                        String setterName = "set" +
+                                fieldName.substring(0, 1).toUpperCase() +
+                                fieldName.substring(1);
+                        Method setter = null;
+                        try {
+                            setter = c.getMethod(setterName, field.getType());
+                        }
+                        catch (NoSuchMethodException ex) {
+                            logger.warning(String.format("Cannot find method %s in class %s: %s",
+                                    setterName, c.getName(), ex.getMessage()));
+                        }
+                        try {
+                            if (setter != null)
+                                setter.invoke(c, (Object) findBean(fieldName));
+                        }
+                        catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                            logger.warning(String.format("Cannot invoke %s.%s: %s",
+                                    c.getName(),  setter, ex.getMessage()));
+                        }
+                    }
+                }
             }
 
             reloadTasks();
@@ -85,6 +116,29 @@ public class TaskScheduler
         }
 
         reloadTasks();
+
+        scheduledTasks.values().forEach((tle) -> {
+            logger.info(
+                    String.format("Scheduling task %s: delay: %d days, %d:%d:%d interval: %d days, %d:%d:%d",
+                            tle.getName(),
+                            tle.getStartupDelayDays(),
+                            tle.getStartupDelayHours(), tle.getStartupDelayMins(), tle.getStartupDelaySecs(),
+                            tle.getIntervalDays(),
+                            tle.getIntervalHours(), tle.getIntervalMins(), tle.getIntervalSecs()
+                    ));
+
+            timer.schedule(tle.getTimerTask(), tle.getStartupDelay() * 1000, tle.getInterval() * 1000);
+        });
+    }
+
+    public static <T> T findBean(String beanName) {
+        FacesContext context = FacesContext.getCurrentInstance();
+        return (T) context.getApplication().evaluateExpressionGet(context, "#{" + beanName + "}", Object.class);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        timer.cancel();
     }
 
     private void reloadTasks() {
@@ -172,6 +226,8 @@ public class TaskScheduler
         stm.setLong(pos, tle.getId());
         stm.executeUpdate();
 
+        tle.getTimerTask().cancel();
+
         scheduledTasks.remove(tle.getId());
     }
 
@@ -195,6 +251,10 @@ public class TaskScheduler
         logger.info(String.format("%d entries inserted", ret));
         stm.close();
 
+        timer.schedule(tle.getTimerTask(),
+                tle.getInterval() * 1000,
+                tle.getInterval() * 1000);
+
         reloadTasks();
     }
 
@@ -204,6 +264,12 @@ public class TaskScheduler
         TaskListEntry entry = scheduledTasks.get(tle.getId());
 
         if (entry != null) {
+            long scheduledExecTime = entry.getTimerTask().scheduledExecutionTime();
+            long now = System.currentTimeMillis();
+            long restTime = scheduledExecTime - now;
+            long lastRun = scheduledExecTime - entry.getInterval() * 1000;
+            long interOld = entry.getInterval();
+
             entry.setComment(tle.getComment());
             entry.setInterval(tle.getInterval());
             entry.setStartupDelay(tle.getStartupDelay());
@@ -224,6 +290,25 @@ public class TaskScheduler
             stm.setLong(pos, tle.getId());
 
             stm.executeUpdate();
+
+            entry.getTimerTask().cancel();
+            if (tle.getInterval() > interOld) {
+                timer.schedule(entry.getTimerTask(),
+                        entry.getInterval() * 1000 - restTime,
+                        entry.getInterval());
+            }
+            else {
+                if (lastRun + entry.getInterval() * 1000 > now) {
+                    timer.schedule(entry.getTimerTask(),
+                            entry.getInterval() * 1000 - (now - lastRun),
+                            entry.getInterval() * 1000);
+                }
+                else {
+                    timer.schedule(entry.getTimerTask(),
+                            0,
+                            entry.getInterval());
+                }
+            }
         }
     }
 }

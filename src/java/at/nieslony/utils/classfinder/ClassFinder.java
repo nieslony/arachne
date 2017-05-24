@@ -55,7 +55,7 @@ public class ClassFinder {
                     classes.add(c);
                 }
                 catch (ClassNotFoundException ex) {
-                    logger.warning(String.format("Cannot find class %s: %s", className, ex.toString()));
+                    //logger.warning(String.format("Cannot find class %s: %s", className, ex.toString()));
                 }
             }
 

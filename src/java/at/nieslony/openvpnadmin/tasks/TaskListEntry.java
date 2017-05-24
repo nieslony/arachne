@@ -6,19 +6,22 @@
 package at.nieslony.openvpnadmin.tasks;
 
 import java.io.Serializable;
+import java.util.TimerTask;
+import java.util.logging.Logger;
 
 /**
  *
  * @author claas
  */
 public class TaskListEntry implements Serializable {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private String name;
     private String comment = null;
     private long startupDelay = -1;
     private long interval = -1;
     private boolean isEnabled = false;
-    private final Class<ScheduledTask> taskClass;
+    private Class<ScheduledTask> taskClass;
     private long id;
 
     public TaskListEntry(Class taskClass) {
@@ -164,5 +167,35 @@ public class TaskListEntry implements Serializable {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    private final TimerTask timerTask = new TimerTask() {
+        ScheduledTask task = null;
+
+        @Override
+        public void run() {
+            if (task == null) {
+                try {
+                    task = taskClass.newInstance();
+                }
+                catch (IllegalAccessException | InstantiationException ex) {
+                    logger.warning(String.format("Cannot create task %s: %s",
+                            getName(), ex.getMessage()));
+                    return;
+                }
+            }
+
+            logger.info(String.format("Executing task \"%s\"", getName()));
+            task.run();
+        }
+    };
+
+    public TimerTask getTimerTask() {
+        return timerTask;
+    }
+
+
+    public long getScheduledExecutionTime() {
+        return timerTask.scheduledExecutionTime();
     }
 }
