@@ -6,7 +6,11 @@
 package at.nieslony.openvpnadmin.tasks;
 
 import java.io.Serializable;
-import java.util.TimerTask;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -23,6 +27,7 @@ public class TaskListEntry implements Serializable {
     private boolean isEnabled = false;
     private Class<ScheduledTask> taskClass;
     private long id;
+    ScheduledFuture<?> future;
 
     public TaskListEntry(Class taskClass) {
         this.taskClass = taskClass;
@@ -169,7 +174,7 @@ public class TaskListEntry implements Serializable {
         this.id = id;
     }
 
-    private final TimerTask timerTask = new TimerTask() {
+    private final Runnable runnable = new Runnable() {
         ScheduledTask task = null;
 
         @Override
@@ -190,12 +195,32 @@ public class TaskListEntry implements Serializable {
         }
     };
 
-    public TimerTask getTimerTask() {
-        return timerTask;
+    public void scheduleTask(ScheduledThreadPoolExecutor scheduler) {
+        future = scheduler.scheduleAtFixedRate(runnable,
+                getStartupDelay(),
+                getInterval(),
+                TimeUnit.SECONDS);
+    }
+
+    public void scheduleTask(ScheduledThreadPoolExecutor scheduler, long delay) {
+        future = scheduler.scheduleAtFixedRate(runnable,
+                delay,
+                getInterval(),
+                TimeUnit.SECONDS);
+    }
+
+    public void cancel() {
+        future.cancel(false);
     }
 
 
-    public long getScheduledExecutionTime() {
-        return timerTask.scheduledExecutionTime();
+    public long getRemainingDelay() {
+        return future.getDelay(TimeUnit.SECONDS);
+    }
+
+    public String getScheduledExecutionTime() {
+        Date date = new Date(System.currentTimeMillis() + getRemainingDelay() * 1000);
+
+        return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(date);
     }
 }

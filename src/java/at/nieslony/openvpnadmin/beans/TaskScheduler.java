@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -66,7 +66,7 @@ public class TaskScheduler
 
     transient final List<AvailableTask> availableTasks = new LinkedList<>();
     transient final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
-    transient final Timer timer = new Timer("arachne timer");
+    transient final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
 
     /**
      * Creates a new instance of TaskScheduler
@@ -127,7 +127,7 @@ public class TaskScheduler
                             tle.getIntervalHours(), tle.getIntervalMins(), tle.getIntervalSecs()
                     ));
 
-            timer.schedule(tle.getTimerTask(), tle.getStartupDelay() * 1000, tle.getInterval() * 1000);
+            tle.scheduleTask(scheduler);
         });
     }
 
@@ -138,7 +138,9 @@ public class TaskScheduler
 
     @PreDestroy
     public void destroy() {
-        timer.cancel();
+        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        scheduler.shutdown();
     }
 
     private void reloadTasks() {
@@ -226,7 +228,7 @@ public class TaskScheduler
         stm.setLong(pos, tle.getId());
         stm.executeUpdate();
 
-        tle.getTimerTask().cancel();
+        tle.cancel();
 
         scheduledTasks.remove(tle.getId());
     }
@@ -251,9 +253,7 @@ public class TaskScheduler
         logger.info(String.format("%d entries inserted", ret));
         stm.close();
 
-        timer.schedule(tle.getTimerTask(),
-                tle.getInterval() * 1000,
-                tle.getInterval() * 1000);
+        tle.scheduleTask(scheduler);
 
         reloadTasks();
     }
@@ -264,11 +264,8 @@ public class TaskScheduler
         TaskListEntry entry = scheduledTasks.get(tle.getId());
 
         if (entry != null) {
-            long scheduledExecTime = entry.getTimerTask().scheduledExecutionTime();
-            long now = System.currentTimeMillis();
-            long restTime = scheduledExecTime - now;
-            long lastRun = scheduledExecTime - entry.getInterval() * 1000;
-            long interOld = entry.getInterval();
+            long restTime = entry.getRemainingDelay();
+            long intervalOld = entry.getInterval();
 
             entry.setComment(tle.getComment());
             entry.setInterval(tle.getInterval());
@@ -291,24 +288,20 @@ public class TaskScheduler
 
             stm.executeUpdate();
 
-            entry.getTimerTask().cancel();
-            if (tle.getInterval() > interOld) {
-                timer.schedule(entry.getTimerTask(),
-                        entry.getInterval() * 1000 - restTime,
-                        entry.getInterval());
+            entry.cancel();
+            long delay;
+            if (tle.getInterval() > intervalOld) {
+                delay = entry.getInterval() - restTime;
             }
             else {
-                if (lastRun + entry.getInterval() * 1000 > now) {
-                    timer.schedule(entry.getTimerTask(),
-                            entry.getInterval() * 1000 - (now - lastRun),
-                            entry.getInterval() * 1000);
+                if (entry.getInterval() - restTime > intervalOld) {
+                    delay = entry.getInterval();
                 }
                 else {
-                    timer.schedule(entry.getTimerTask(),
-                            0,
-                            entry.getInterval());
+                    delay = 0;
                 }
             }
+            tle.scheduleTask(scheduler, delay);
         }
     }
 }
