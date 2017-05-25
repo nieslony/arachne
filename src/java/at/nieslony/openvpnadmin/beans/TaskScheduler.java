@@ -70,8 +70,8 @@ public class TaskScheduler
     transient final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
     transient final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1,
             new ThreadFactory() {
-
                 private final AtomicInteger counter = new AtomicInteger();
+
                 @Override
                 public Thread newThread(Runnable r) {
                     final String threadName =
@@ -302,7 +302,7 @@ public class TaskScheduler
             stm.executeUpdate();
 
             entry.cancel();
-
+            scheduler.purge();
 
             long delay;
             if (tle.getInterval() > intervalOld) {
@@ -316,7 +316,7 @@ public class TaskScheduler
                     delay = 0;
                 }
             }
-            tle.scheduleTask(scheduler, delay);
+            entry.scheduleTask(scheduler, delay);
         }
     }
 }

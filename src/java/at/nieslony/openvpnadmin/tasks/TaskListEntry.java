@@ -27,7 +27,7 @@ public class TaskListEntry implements Serializable {
     private boolean isEnabled = false;
     private Class<ScheduledTask> taskClass;
     private long id;
-    ScheduledFuture<?> future;
+    transient private ScheduledFuture<?> future;
 
     public TaskListEntry(Class taskClass) {
         this.taskClass = taskClass;
