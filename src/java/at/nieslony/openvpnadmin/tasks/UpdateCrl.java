@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  * @author claas
  */
 @ScheduledTaskInfo(
-        description = "Update CRL from database",
+        description = "Update CRL from certificate database",
         name = "Update CRL"
 )
 public class UpdateCrl
