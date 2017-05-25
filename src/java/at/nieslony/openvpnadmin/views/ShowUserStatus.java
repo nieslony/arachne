@@ -38,47 +38,6 @@ public class ShowUserStatus implements Serializable {
         onRefresh();
     }
 
-    public class StatusEntry {
-
-        final private String commonName;
-        final private String remoteIP;
-        final private String bytesReceived;
-        final private String bytesSent;
-        final private String connectedSince;
-
-        public StatusEntry(String statusLine) {
-            logger.fine(String.format("Parsing line %s", statusLine));
-            // claas,89.144.222.73:37880,34730,10740,Fri Oct 30 21:57:44 2015
-            String[] split = statusLine.split(",");
-            commonName = split[0];
-            remoteIP = split[1].split(":")[0];
-            bytesReceived = split[2];
-            bytesSent = split[3];
-            connectedSince = split[4];
-        }
-
-        public String getCommonName() {
-            return commonName;
-        }
-
-        public String getRemoteIP() {
-            return remoteIP;
-        }
-
-        public String getBytesReceived() {
-            return bytesReceived;
-        }
-
-        public String getBytesSent() {
-            return bytesSent;
-        }
-
-        public String getConnectedSince() {
-            return connectedSince;
-        }
-    }
-
-    List<StatusEntry> statusEntries = new LinkedList<>();
     List<ManagementInterface.UserStatus> userStatus = new LinkedList<>();
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -89,7 +48,6 @@ public class ShowUserStatus implements Serializable {
     }
 
     public List<ManagementInterface.UserStatus> getStatusEntries() {
-        //return statusEntries;
         return userStatus;
     }
 
