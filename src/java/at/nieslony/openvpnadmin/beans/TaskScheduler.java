@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -66,7 +68,18 @@ public class TaskScheduler
 
     transient final List<AvailableTask> availableTasks = new LinkedList<>();
     transient final Map<Long, TaskListEntry> scheduledTasks = new HashMap<>();
-    transient final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
+    transient final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1,
+            new ThreadFactory() {
+
+                private final AtomicInteger counter = new AtomicInteger();
+                @Override
+                public Thread newThread(Runnable r) {
+                    final String threadName =
+                            String.format("arachne-task-executor-%d", counter.incrementAndGet());
+
+                    return new Thread(r, threadName);
+                }
+    });
 
     /**
      * Creates a new instance of TaskScheduler
@@ -289,6 +302,8 @@ public class TaskScheduler
             stm.executeUpdate();
 
             entry.cancel();
+
+
             long delay;
             if (tle.getInterval() > intervalOld) {
                 delay = entry.getInterval() - restTime;
