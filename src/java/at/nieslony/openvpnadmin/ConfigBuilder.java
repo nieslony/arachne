@@ -120,7 +120,7 @@ public class ConfigBuilder implements Serializable {
                 pr.println("</cert>");
 
                 pr.println("<key>");
-                pki.writeCertificate(kac.getCert(), pr);
+                pki.writePrivateKey(kac.getKey(), pr);
                 pr.println("</key>");
             }
         }
@@ -317,7 +317,7 @@ public class ConfigBuilder implements Serializable {
         in = new ByteArrayInputStream(writer.toString().getBytes());
 
         StreamedContent sc = new DefaultStreamedContent(in,
-                "text/plain", "client-config.ovpn");
+                "text/plain", "client-config.sh");
 
         return sc;
     }
