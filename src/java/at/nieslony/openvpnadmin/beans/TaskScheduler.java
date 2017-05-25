@@ -140,7 +140,8 @@ public class TaskScheduler
                             tle.getIntervalHours(), tle.getIntervalMins(), tle.getIntervalSecs()
                     ));
 
-            tle.scheduleTask(scheduler);
+            if (tle.isEnabled())
+                tle.scheduleTask(scheduler);
         });
     }
 
@@ -244,6 +245,7 @@ public class TaskScheduler
         tle.cancel();
 
         scheduledTasks.remove(tle.getId());
+        scheduler.purge();
     }
 
     public void addTask(TaskListEntry tle)
@@ -266,7 +268,8 @@ public class TaskScheduler
         logger.info(String.format("%d entries inserted", ret));
         stm.close();
 
-        tle.scheduleTask(scheduler);
+        if (tle.isEnabled())
+            tle.scheduleTask(scheduler);
 
         reloadTasks();
     }
@@ -304,19 +307,21 @@ public class TaskScheduler
             entry.cancel();
             scheduler.purge();
 
-            long delay;
-            if (tle.getInterval() > intervalOld) {
-                delay = entry.getInterval() - restTime;
-            }
-            else {
-                if (entry.getInterval() - restTime > intervalOld) {
-                    delay = entry.getInterval();
+            if (entry.isEnabled()) {
+                long delay;
+                if (tle.getInterval() > intervalOld) {
+                    delay = entry.getInterval() - restTime;
                 }
                 else {
-                    delay = 0;
+                    if (entry.getInterval() - restTime > intervalOld) {
+                        delay = entry.getInterval();
+                    }
+                    else {
+                        delay = 0;
+                    }
                 }
+                entry.scheduleTask(scheduler, delay);
             }
-            entry.scheduleTask(scheduler, delay);
         }
     }
 }

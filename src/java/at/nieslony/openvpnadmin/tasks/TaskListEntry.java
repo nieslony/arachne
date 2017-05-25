@@ -219,8 +219,13 @@ public class TaskListEntry implements Serializable {
     }
 
     public String getScheduledExecutionTime() {
-        Date date = new Date(System.currentTimeMillis() + getRemainingDelay() * 1000);
+        if (isEnabled()) {
+            Date date = new Date(System.currentTimeMillis() + getRemainingDelay() * 1000);
 
-        return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(date);
+            return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(date);
+        }
+        else {
+            return "";
+        }
     }
 }
