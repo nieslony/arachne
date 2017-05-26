@@ -6,11 +6,16 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.RoleRule;
+import at.nieslony.utils.classfinder.ClassFinder;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
@@ -33,7 +38,33 @@ public class RoleRuleFactoryCollection
     public RoleRuleFactoryCollection() {
     }
 
+    @PostConstruct
+    public void init() {
+        logger.info("Initializing RoleRuleFactoryCollection");
+        ClassFinder classFinder = new ClassFinder((getClass().getClassLoader()));
+
+        List<Class> factories = null;
+        try {
+            factories = classFinder.getAllClassesImplementing(RoleRuleFactory.class);
+        }
+        catch (ClassNotFoundException | IOException | URISyntaxException ex) {
+            logger.warning(String.format("Cannot load classes: %s", ex.getMessage()));
+        }
+
+        for (Class c : factories) {
+            try {
+                RoleRuleFactory roleRuleFactory = (RoleRuleFactory) c.newInstance();
+                addRoleRuleFactory(roleRuleFactory);
+            }
+            catch (IllegalAccessException | InstantiationException ex) {
+                logger.warning(String.format("Cannot create role rule factory %s: %s",
+                        c.getName(), ex.getMessage()));
+            }
+        }
+    }
+
     public void addRoleRuleFactory(RoleRuleFactory factory) {
+        logger.info(String.format("Add RoleRuleFactory %s", factory.getRoleRuleName()));
         factories.put(factory.getRoleRuleName(), factory);
     }
 

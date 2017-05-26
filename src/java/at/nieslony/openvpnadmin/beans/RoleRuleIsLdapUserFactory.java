@@ -11,10 +11,6 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.context.FacesContext;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -28,20 +24,11 @@ import javax.naming.directory.SearchResult;
  *
  * @author claas
  */
-@ManagedBean(eager = true)
-@ApplicationScoped
 public class RoleRuleIsLdapUserFactory
         implements RoleRuleFactory, Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private LdapSettings ldapSettings = null;
-
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
-    private RoleRuleFactoryCollection roleRuleFactoryCollection;
-
-    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
-        roleRuleFactoryCollection = rrfc;
-    }
 
     private LdapSettings getLdapSettings() {
         if (ldapSettings == null) {
@@ -59,14 +46,10 @@ public class RoleRuleIsLdapUserFactory
     public RoleRuleIsLdapUserFactory() {
     }
 
-    @PostConstruct
-    public void init() {
-        roleRuleFactoryCollection.addRoleRuleFactory(this);
-    }
-
     @Override
     public RoleRule createRule(String groupname) {
-        RoleRuleIsMemberOfLdapGroup rule = new RoleRuleIsMemberOfLdapGroup(this, groupname);
+        RoleRuleIsMemberOfLdapGroup rule = new RoleRuleIsMemberOfLdapGroup();
+        rule.init(this, groupname);
 
         return rule;
     }

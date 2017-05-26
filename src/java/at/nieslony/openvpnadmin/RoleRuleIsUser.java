@@ -19,12 +19,11 @@ public class RoleRuleIsUser
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    /*
     public RoleRuleIsUser() {
     }
-*/
-    public RoleRuleIsUser(RoleRuleIsUserFactory factory, String username) {
-        super(factory, username);
+
+    public void init (RoleRuleIsUserFactory factory, String username) {
+        super.init(factory, username);
     }
 
     @Override

@@ -264,6 +264,13 @@ END
         sendCommand("signal HUP");
     }
 
+    public void killUser(String username)
+            throws IOException, ManagementInterfaceException
+    {
+        logger.info(String.format("Kill user %s", username));
+        sendCommand(String.format("kill %s", username));
+    }
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize(); //To change body of generated methods, choose Tools | Templates.

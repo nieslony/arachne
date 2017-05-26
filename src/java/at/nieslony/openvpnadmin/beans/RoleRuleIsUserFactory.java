@@ -11,10 +11,6 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.context.FacesContext;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -28,20 +24,11 @@ import javax.naming.directory.SearchResult;
  *
  * @author claas
  */
-@ManagedBean(eager=true)
-@ApplicationScoped
 public class RoleRuleIsUserFactory
         implements RoleRuleFactory, Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private LdapSettings ldapSettings = null;
-
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
-    private RoleRuleFactoryCollection roleRuleFactoryCollection;
-
-    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
-        roleRuleFactoryCollection = rrfc;
-    }
 
     private LdapSettings getLdapSettings() {
         if (ldapSettings == null) {
@@ -54,21 +41,16 @@ public class RoleRuleIsUserFactory
         return ldapSettings;
     }
 
-
     /**
      * Creates a new instance of RoleRuleIsUserFactory
      */
     public RoleRuleIsUserFactory() {
     }
 
-    @PostConstruct
-    public void init() {
-        roleRuleFactoryCollection.addRoleRuleFactory(this);
-    }
-
     @Override
     public RoleRule createRule(String username) {
-        RoleRuleIsUser rule = new RoleRuleIsUser(this, username);
+        RoleRuleIsUser rule = new RoleRuleIsUser();
+        rule.init(this, username);
 
         return rule;
     }

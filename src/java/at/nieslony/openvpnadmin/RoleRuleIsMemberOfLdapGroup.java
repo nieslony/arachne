@@ -21,7 +21,7 @@ public class RoleRuleIsMemberOfLdapGroup
         extends RoleRule
         implements Serializable
 {
-    private LdapSettings ldapSettings = null;
+    transient private LdapSettings ldapSettings = null;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private LdapSettings getLdapSettings() {
@@ -35,8 +35,11 @@ public class RoleRuleIsMemberOfLdapGroup
         return ldapSettings;
     }
 
-    public RoleRuleIsMemberOfLdapGroup(RoleRuleIsLdapUserFactory factory, String groupName) {
-        super(factory, groupName);
+    public RoleRuleIsMemberOfLdapGroup() {
+    }
+
+    public void init(RoleRuleIsLdapUserFactory factory, String groupName) {
+        super.init(factory, groupName);
     }
 
     @Override
