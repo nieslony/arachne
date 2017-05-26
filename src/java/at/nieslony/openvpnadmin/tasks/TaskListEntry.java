@@ -215,12 +215,18 @@ public class TaskListEntry implements Serializable {
 
 
     public long getRemainingDelay() {
+        if (future == null)
+            return -1;
         return future.getDelay(TimeUnit.SECONDS);
     }
 
     public String getScheduledExecutionTime() {
         if (isEnabled()) {
-            Date date = new Date(System.currentTimeMillis() + getRemainingDelay() * 1000);
+            long remainiung = getRemainingDelay();
+            if (remainiung <= 0)
+                return "unknown";
+
+            Date date = new Date(System.currentTimeMillis() + remainiung * 1000);
 
             return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(date);
         }

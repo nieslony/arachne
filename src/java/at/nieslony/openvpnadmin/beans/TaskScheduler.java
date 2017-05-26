@@ -152,9 +152,10 @@ public class TaskScheduler
 
     @PreDestroy
     public void destroy() {
+        logger.info("Destroying task scheduler");
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        scheduler.shutdown();
+        scheduler.shutdownNow();
     }
 
     private void reloadTasks() {
