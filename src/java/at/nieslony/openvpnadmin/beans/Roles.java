@@ -110,7 +110,7 @@ public class Roles implements Serializable {
     public void addRule(String roleName, String roleRuleType, String value) {
         Role role = roles.get(roleName);
         if (role == null) {
-            logger.warning(String.format("Role %s doesn't exist"));
+            logger.warning(String.format("Role %s doesn't exist", roleName));
         }
         else {
             try {
