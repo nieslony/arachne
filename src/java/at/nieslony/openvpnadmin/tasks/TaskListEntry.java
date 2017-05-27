@@ -5,7 +5,9 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
@@ -191,7 +193,17 @@ public class TaskListEntry implements Serializable {
             }
 
             logger.info(String.format("Executing task \"%s\"", getName()));
-            task.run();
+            try {
+                task.run();
+            }
+            catch (Throwable ex) {
+                logger.warning(String.format("Task \"%s\" failed: %s",
+                        getName(), ex.getMessage()));
+                StringWriter sw = new StringWriter();
+                ex.printStackTrace(new PrintWriter(sw));
+                logger.warning(sw.toString());
+            }
+            logger.info(String.format("Task \"%s\" terminated", getName()));
         }
     };
 
