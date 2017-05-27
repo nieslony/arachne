@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
@@ -34,9 +35,9 @@ import javax.faces.bean.ManagedBean;
 public class ManagementInterface
         implements Serializable
 {
-    private BufferedReader miReader;
-    private PrintWriter miWriter;
-    private Socket socket;
+    private transient BufferedReader miReader;
+    private transient PrintWriter miWriter;
+    private transient Socket socket;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private static final transient DateFormat dateFormat =
             new SimpleDateFormat("E MMM d HH:mm:ss yyyy", Locale.US);
@@ -128,7 +129,18 @@ public class ManagementInterface
                 !socket.isConnected() || socket.isClosed() ||
                 socket.isInputShutdown() || socket.isOutputShutdown())
         {
+            if (socket != null) {
+                logger.info("Trying to close socket");
+                try {
+                    socket.close();
+                }
+                catch (IOException ex) {
+                    logger.warning(String.format("Cannot close socket: %s", ex.getMessage()));
+                }
+            }
+
             try {
+                logger.info("Connecting to management interface");
                 connect("127.0.0.1", 9544);
             }
             catch (IOException ex) {
@@ -271,12 +283,10 @@ END
         sendCommand(String.format("kill %s", username));
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize(); //To change body of generated methods, choose Tools | Templates.
-
+    @PreDestroy
+    public void destroy() throws Throwable {
         try {
-            logger.info("Closing socket");
+            logger.info("Closing socket to management interface");
             socket.close();
         }
         catch (IOException ex) {
