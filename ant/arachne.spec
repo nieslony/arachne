@@ -93,7 +93,7 @@ fi
 %webappsdir/%{name}
 
 %attr(664, root, root) %_defaultdocdir/%{name}/*
-%attr(660, %{webappuser}, %{webappgroup}) /var/lib/arachne
+%attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %files config-downloader
 /usr/bin/download-vpn-config.sh
