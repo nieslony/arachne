@@ -21,7 +21,7 @@ License:    GPL-3.0+
 URL:        http://www.nieslony.site/OpenVPN_Admin
 Source0:    %{name}-%{version}.tar.gz
 
-BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires:  ant bouncycastle tomcat python
 
@@ -56,19 +56,20 @@ Tomcat Web application for administering openVPN
 
 
 %prep
-%setup -q
+%setup 
 
 %build
-ant -Droot=%{_builddir}/%{name}-%{version}
+ant dist -Droot=%{_builddir}/%{name}-%{version}
 
 %install 
-ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-dir=%{buildroot}/%{webappsdir}/%{name}
+ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot}
 
 mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
-install apache/arachne.conf %{buildroot}/%_defaultdocdir/%{name}
+install apache/arachne-redhat.conf %{buildroot}/%_defaultdocdir/%{name}/arachne.conf
 install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
+mkdir -pv %{buildroot}/var/lib/arachne
 %clean
 ant clean 
 
@@ -92,6 +93,7 @@ fi
 %webappsdir/%{name}
 
 %attr(664, root, root) %_defaultdocdir/%{name}/*
+%attr(660, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %files config-downloader
 /usr/bin/download-vpn-config.sh
