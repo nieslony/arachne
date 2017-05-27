@@ -23,7 +23,7 @@ import javax.naming.NamingException;
  * @author claas
  */
 @ScheduledTaskInfo(
-        name = "Drop disapprioved connected users",
+        name = "Drop disapproved connected users",
         description = "Drop connected users who no longer have role user"
 )
 public class DropDisapprovedConnectedUsers
@@ -82,17 +82,17 @@ public class DropDisapprovedConnectedUsers
                     }
                 }
                 if (user == null) {
-                    logger.info(String.format("User %s is unknown, dropping from VPN."));
+                    logger.info(String.format("User %s is unknown, dropping from VPN.", username));
                     managementInterface.killUser(username);
                 }
                 else {
                     if (!roles.hasUserRole(user, "user")) {
                         logger.info(String.format(
-                                "User %s has no longer role user, dropping from VPN."));
+                                "User %s has no longer role user, dropping from VPN.", username));
                         managementInterface.killUser(username);
                     }
                     else {
-                        logger.info("User %s still has role user");
+                        logger.info(String.format("User %s still has role user", username));
                     }
                 }
             }
