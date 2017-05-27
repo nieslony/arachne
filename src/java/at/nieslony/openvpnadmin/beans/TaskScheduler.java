@@ -221,9 +221,6 @@ public class TaskScheduler
             }
         }
     }
-    public void setupDatebase() {
-        reloadTasks();
-    }
 
     public List<AvailableTask> getAvailableTasks() {
         return availableTasks;

@@ -14,13 +14,19 @@ CREATE TABLE scheduledTasks (
     startupDelay bigint,
     interval bigint,
     comment text,
-    isEnabled boolean
+    isEnabled boolean,
+    UNIQUE(taskClass, startupDelay, interval)
 );;
 
 INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES 
     ( 'at.nieslony.openvpnadmin.tasks.UpdateCrl', 
         60 * 1, 
         60 * 60 * 24 * 7,
+        true
+    ),
+    ( 'at.nieslony.openvpnadmin.tasks.DropDisapprovedConnectedUsers', 
+        0,
+        60 * 2,
         true
     )
 ;;

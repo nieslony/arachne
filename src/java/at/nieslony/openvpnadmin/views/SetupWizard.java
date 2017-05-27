@@ -11,6 +11,7 @@ import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
 import at.nieslony.openvpnadmin.beans.Roles;
+import at.nieslony.openvpnadmin.beans.TaskScheduler;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.FileWriter;
@@ -181,6 +182,9 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{roles}")
     private Roles roles;
+
+    @ManagedProperty(value = "#{taskScheduler}")
+    private TaskScheduler taskScheduler;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -514,6 +518,13 @@ public class SetupWizard implements Serializable {
         }
     }
 
+    public void setupTaskScheduler()
+            throws ClassNotFoundException, IOException, SQLException
+    {
+        taskScheduler.createTables();
+        taskScheduler.init();
+    }
+
     public void onSave() {
         performingSetup = true;
         String step = "";
@@ -561,6 +572,9 @@ public class SetupWizard implements Serializable {
             saveDhParams();
 
             pki.init();
+
+            step = "Scheduling tasks";
+            setupTaskScheduler();
 
             performingSetup = false;
 
@@ -672,5 +686,9 @@ public class SetupWizard implements Serializable {
 
     public void setRoles(Roles roles) {
         this.roles = roles;
+    }
+
+    public void setTaskScheduler(TaskScheduler ts) {
+        taskScheduler = ts;
     }
 }
