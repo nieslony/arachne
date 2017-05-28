@@ -73,7 +73,8 @@ public class CurrentUser implements Serializable {
                         user = ldapSettings.findVpnUser(req.getRemoteUser());
                     }
                     catch (NamingException | NoSuchLdapUser ex) {
-                        logger.info(String.format("Cannot find LDAP user %s: %s", ex.getMessage()));
+                        logger.info(String.format("Cannot find LDAP user %s: %s",
+                                req.getRemoteUser(), ex.getMessage()));
                     }
                 }
                 else {
