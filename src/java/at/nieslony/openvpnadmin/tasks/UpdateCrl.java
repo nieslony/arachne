@@ -44,7 +44,8 @@ public class UpdateCrl
             return;
         }
         try {
-            pki.loadCrl();
+            pki.createCrl();
+            pki.updateCrlFromDb();
             String fn = pki.getCrlFilename();
             try (PrintWriter pw = new PrintWriter(fn)) {
                 pki.writeCrl(pw);

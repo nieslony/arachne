@@ -395,7 +395,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         return serverKey;
     }
 
-    private void updateCrlFromDb()
+    public void updateCrlFromDb()
             throws ClassNotFoundException, SQLException, CertificateException,
             CRLException, InvalidKeyException, NoSuchAlgorithmException,
             NoSuchProviderException, SignatureException

@@ -311,7 +311,7 @@ public class CertificateAuthority {
     {
         X509V2CRLGenerator crlGen = new X509V2CRLGenerator();
         Date now = new Date();
-        Date nextUpdate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 31);
+        Date nextUpdate = new Date(now.getTime() + (long) 1000 * 60 * 60 * 24 * 31);
 
         crlGen.setIssuerDN(caCert.getSubjectX500Principal());
         crlGen.setThisUpdate(now);
