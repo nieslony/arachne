@@ -6,6 +6,7 @@
 package at.nieslony.openvpnadmin.errorhandling;
 
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.el.ELException;
 import javax.faces.FacesException;
-import javax.faces.application.ConfigurableNavigationHandler;
 import javax.faces.context.ExceptionHandlerWrapper;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -71,7 +71,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (rootCause instanceof PermissionDenied) {
                     String message = String.format(
                             "Permission denied: \nPath: %s\nRemote IP: %s",
-                            request.getPathInfo(),
+                            request.getRequestURL(),
                             request.getRemoteAddr());
 
                     LOG.warning(message);
@@ -91,12 +91,18 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                         context.responseComplete();
                         String errPage = "/error/error.xhtml";
                         LOG.info(String.format("Going to %s", errPage));
-                        //extContext.dispatch(errPage);
-                        final ConfigurableNavigationHandler nav =
+                        try {
+                            extContext.dispatch(errPage);
+                        }
+                        catch (IOException ex) {
+                            LOG.severe(String.format("Cannot go to error page: %s",
+                            ex.getMessage()));
+                        }
+                        /*final ConfigurableNavigationHandler nav =
                                 (ConfigurableNavigationHandler)
                                 context.getApplication().getNavigationHandler();
                         nav.performNavigation(errPage);
-                        context.renderResponse();
+                        context.renderResponse();*/
                     } catch (FacesException e) {
                         LOG.severe(String.format("Cannot dispatch error page: %s", e.getMessage()));
                     }
