@@ -23,7 +23,8 @@
         
     <property name="install-root" value=""/>
     
-    <property name="app-root" value="/var/lib/tomcat/webapps/arachne"/>
+    <property name="webapps.dir" value="/usr/share/tomcat/webapps"/>
+    <property name="app-root" value="${webapps.dir}/arachne"/>
     <property name="web-inf.dir" value="${app-root}/WEB-INF"/>
     <property name="sql.dir" value="${web-inf.dir}/sql"/>
     <property name="bin.dir" value="${web-inf.dir}/bin"/>

@@ -39,6 +39,7 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
 Summary:	arachne server
 BuildArch:	noarch
 Requires:	tomcat bouncycastle openvpn postgresql-jdbc
+Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
 Summary:	arachne downloader for NetworkManager config
@@ -62,11 +63,15 @@ Tomcat Web application for administering openVPN
 ant dist -Droot=%{_builddir}/%{name}-%{version}
 
 %install 
-ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot}
+ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
 
 mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
+%if 0%{?suse_version}
+install apache/arachne-suse.conf %{buildroot}/%_defaultdocdir/%{name}/arachne.conf
+%else
 install apache/arachne-redhat.conf %{buildroot}/%_defaultdocdir/%{name}/arachne.conf
+%endif
 install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 mkdir -pv %{buildroot}/var/lib/arachne
