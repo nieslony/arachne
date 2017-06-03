@@ -56,8 +56,9 @@
                 srcdir="${src}" 
     -->    
     <target name="compile" depends="init,generate-code">
+        <mkdir dir="${build}/classes"/>
         <javac 
-               destdir="${build}" 
+               destdir="${build}/classes" 
                includeantruntime="false" 
                classpathref="classpath"
                encoding="utf-8"
@@ -73,7 +74,7 @@
             <fileset dir="${web}"/>
         </copy>
         <copy todir="${build}/web/WEB-INF/classes">
-            <fileset dir="${build}"/>
+            <fileset dir="${build}/classes"/>
         </copy>
         <copy todir="${build}/web/WEB-INF/lib">
             <fileset dir="${lib}"/>
