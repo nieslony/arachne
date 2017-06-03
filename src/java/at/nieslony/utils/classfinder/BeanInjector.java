@@ -5,7 +5,6 @@
  */
 package at.nieslony.utils.classfinder;
 
-import at.nieslony.openvpnadmin.tasks.StaticMemberBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

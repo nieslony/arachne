@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package at.nieslony.openvpnadmin.tasks;
+package at.nieslony.utils.classfinder;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

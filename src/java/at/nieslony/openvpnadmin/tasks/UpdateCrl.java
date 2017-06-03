@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
+import at.nieslony.utils.classfinder.StaticMemberBean;
 import at.nieslony.openvpnadmin.beans.Pki;
 import java.io.IOException;
 import java.io.PrintWriter;

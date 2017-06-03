@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
+import at.nieslony.utils.classfinder.StaticMemberBean;
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
