@@ -3,8 +3,10 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
+import at.nieslony.openvpnadmin.beans.ManagementInterface;
 import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
+import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
 import at.nieslony.openvpnadmin.views.base.EditUserVpnBase;
 import java.io.File;
 import java.io.FileWriter;
@@ -54,6 +56,9 @@ public class EditUserVpn
     @ManagedProperty(value = "#{adminWelcome}")
     private AdminWelcome adminWelcome;
 
+    @ManagedProperty(value = "#{managementInterface}")
+    private ManagementInterface managementInterface;
+
     @PostConstruct
     public void init() {
         setBackend(userVpn);
@@ -93,6 +98,13 @@ public class EditUserVpn
                         FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
 
         adminWelcome.loadUserVpns();
+        try {
+            managementInterface.sendSignal(ManagementInterface.Signal.Hup);
+        }
+        catch (IOException | ManagementInterfaceException ex) {
+            logger.warning(String.format("Cannot trigger reload of VPN configuration: %s",
+                    ex.getMessage()));
+        }
         RequestContext.getCurrentInstance().update("menuForm:mainMenu");
     }
 
@@ -142,6 +154,10 @@ public class EditUserVpn
 
     public void setAdminWelcome(AdminWelcome ab) {
         this.adminWelcome = ab;
+    }
+
+    public void setManagementInterface(ManagementInterface mi) {
+        managementInterface = mi;
     }
 
     public List<String> getDnsServersList() {

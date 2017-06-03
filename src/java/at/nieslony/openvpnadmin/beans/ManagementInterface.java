@@ -52,6 +52,25 @@ public class ManagementInterface
         ConnectedSinceTimeT
     };
 
+    public enum Signal {
+        // SIGHUP, SIGTERM, SIGUSR1, or SIGUSR2.
+
+        Hup("SIGNUP"),
+        Term("SIGTERM"),
+        User1("SIGUSR1"),
+        User2("SIGUSR2");
+
+        private String signalName;
+
+        private Signal(String s) {
+            signalName = s;
+        }
+
+        public String getSignalName() {
+            return signalName;
+        }
+    }
+
     /**
      * Creates a new instance of ManagementInterface
      */
@@ -340,10 +359,10 @@ END
         }
     }
 
-    public void sendSigHup()
+    public void sendSignal(Signal s)
             throws ManagementInterfaceException, IOException
     {
-        sendCommand("signal HUP");
+        sendCommand(String.format("signal %s", s.getSignalName()));
     }
 
     public void killUser(String username)
