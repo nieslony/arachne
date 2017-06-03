@@ -6,16 +6,22 @@
 package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
+import java.io.Serializable;
 
 /**
  *
  * @author claas
  */
-abstract public class RoleRule {
+abstract public class RoleRule
+        implements Serializable
+{
     private String value;
     private RoleRuleFactory factory;
 
-    public RoleRule(RoleRuleFactory factory, String value) {
+    public RoleRule() {
+    }
+
+    public void init (RoleRuleFactory factory, String value) {
         this.value = value;
         this.factory = factory;
     }

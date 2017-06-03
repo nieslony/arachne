@@ -69,6 +69,8 @@
 
     -->
     
+    
+    
     <target name="-pre-compile">
         <exec executable="property-templates/create-properties-backend.py">
             <arg value="--input_dir"/>
@@ -76,5 +78,29 @@
             <arg value="--dest_dir"/>
             <arg value="build/generated-sources/"/>
         </exec>
+    </target>
+    
+    <target name="-pre-dist">
+        <property name="work.dir" value="${basedir}/${build.dir}/work"/>
+        <property name="sql.dir"  value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
+        <property name="bin.dir"  value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
+        
+        <echo message="Creating ${work.dir}..."/>
+        <mkdir dir="${work.dir}"/>
+        <replace 
+            file="${build.web.dir}/WEB-INF/web.xml" 
+            token="@@DYNAMIC-DATA-DIR@@" 
+            value="${work.dir}"
+            />
+        <replace 
+            file="${build.web.dir}/WEB-INF/web.xml" 
+            token="@@SQL-DIR@@" 
+            value="${sql.dir}"
+            />        
+        <replace 
+            file="${build.web.dir}/WEB-INF/web.xml" 
+            token="@@BIN-DIR@@" 
+            value="${bin.dir}"
+            />        
     </target>
 </project>

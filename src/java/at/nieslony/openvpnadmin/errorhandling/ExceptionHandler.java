@@ -71,14 +71,14 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (rootCause instanceof PermissionDenied) {
                     String message = String.format(
                             "Permission denied: \nPath: %s\nRemote IP: %s",
-                            request.getPathTranslated(),
+                            request.getRequestURL(),
                             request.getRemoteAddr());
 
                     LOG.warning(message);
                     errorMsg = "Access denied";
                     extContext.setResponseStatus(403);
                 }
-                if (rootCause instanceof ELException) {
+                else if (rootCause instanceof ELException) {
                     isFatal = true;
                 }
                 else {
@@ -89,8 +89,21 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (!isFatal) {
                     try {
                         context.responseComplete();
-                        extContext.dispatch("/error/error.xhtml");
-                    } catch (final IOException | FacesException e) {
+                        String errPage = "/error/error.xhtml";
+                        LOG.info(String.format("Going to %s", errPage));
+                        try {
+                            extContext.dispatch(errPage);
+                        }
+                        catch (IOException ex) {
+                            LOG.severe(String.format("Cannot go to error page: %s",
+                            ex.getMessage()));
+                        }
+                        /*final ConfigurableNavigationHandler nav =
+                                (ConfigurableNavigationHandler)
+                                context.getApplication().getNavigationHandler();
+                        nav.performNavigation(errPage);
+                        context.renderResponse();*/
+                    } catch (FacesException e) {
                         LOG.severe(String.format("Cannot dispatch error page: %s", e.getMessage()));
                     }
                     context.renderResponse();

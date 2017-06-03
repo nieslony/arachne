@@ -11,6 +11,8 @@ import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -48,6 +50,8 @@ public class CurrentUser implements Serializable {
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
+    private Map<String, Boolean> cachedRoles = new HashMap<>();
+
     /**
      * Creates a new instance of CurrentUserBean
      */
@@ -69,7 +73,8 @@ public class CurrentUser implements Serializable {
                         user = ldapSettings.findVpnUser(req.getRemoteUser());
                     }
                     catch (NamingException | NoSuchLdapUser ex) {
-                        logger.info(String.format("Cannot find LDAP user %s: %s", ex.getMessage()));
+                        logger.info(String.format("Cannot find LDAP user %s: %s",
+                                req.getRemoteUser(), ex.getMessage()));
                     }
                 }
                 else {
@@ -172,12 +177,17 @@ public class CurrentUser implements Serializable {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
         }
+        else if (cachedRoles.containsKey(rolename)) {
+            return cachedRoles.get(rolename);
+        }
         else if (!roles.hasUserRole(user, rolename)) {
             logger.info(String.format("User %s doesn't have role %s",
             user.getUsername(), rolename));
+            cachedRoles.put(rolename, false);
             return false;
         }
 
+        cachedRoles.put(rolename, true);
         return true;
     }
 

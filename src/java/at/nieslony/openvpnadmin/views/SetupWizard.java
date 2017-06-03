@@ -10,8 +10,8 @@ import at.nieslony.openvpnadmin.beans.DatabaseSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
-import at.nieslony.openvpnadmin.beans.RoleRuleIsUserFactory;
 import at.nieslony.openvpnadmin.beans.Roles;
+import at.nieslony.openvpnadmin.beans.TaskScheduler;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.FileWriter;
@@ -180,8 +180,11 @@ public class SetupWizard implements Serializable {
     @ManagedProperty(value = "#{localUserFactory}")
     private LocalUserFactory localUserFactory;
 
-    @ManagedProperty(value = "#{roleRuleIsUserFactory}")
-    private RoleRuleIsUserFactory roleRuleIsUserFactory;
+    @ManagedProperty(value = "#{roles}")
+    private Roles roles;
+
+    @ManagedProperty(value = "#{taskScheduler}")
+    private TaskScheduler taskScheduler;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -515,6 +518,13 @@ public class SetupWizard implements Serializable {
         }
     }
 
+    public void setupTaskScheduler()
+            throws ClassNotFoundException, IOException, SQLException
+    {
+        taskScheduler.createTables();
+        taskScheduler.init();
+    }
+
     public void onSave() {
         performingSetup = true;
         String step = "";
@@ -525,23 +535,28 @@ public class SetupWizard implements Serializable {
         logger.info("--- Begin application setup ---");
         try {
             step = "Saving database settings";
+            logger.info(step);
             saveDatabaseSettings();
 
             step = "Initializiong properties storage";
+            logger.info(step);
             propertiesStorage.createTables();
 
             step = "Initializing local users and roles";
+            logger.info(step);
             localUserFactory.createTables();
 
             step = "Creating admin user";
+            logger.info(step);
             AbstractUser adminUser = localUserFactory.addUser(adminUserName);
             adminUser.setFullName("Master Administrator");
             adminUser.setPassword(password);
             adminUser.save();
 
-            step = String.format("Assigning role admin to user &s", adminUserName);
-            rolesBean.load();
-            rolesBean.addRule("admin", roleRuleIsUserFactory.getRoleRuleName(), adminUserName);
+            step = String.format("Assigning role admin to user %s", adminUserName);
+            logger.info(step);
+            roles.load();
+            roles.addRule("admin", "isUser", "admin");
 
             step = "Creating CA";
             pki.createTables();
@@ -549,12 +564,17 @@ public class SetupWizard implements Serializable {
             saveCA();
 
             step = "Creating server certificate";
+            logger.info(step);
             saveServerCert();
 
             step = "Creating DH parameters";
+            logger.info(step);
             saveDhParams();
 
             pki.init();
+
+            step = "Scheduling tasks";
+            setupTaskScheduler();
 
             performingSetup = false;
 
@@ -664,7 +684,11 @@ public class SetupWizard implements Serializable {
         RequestContext.getCurrentInstance().showMessageInDialog(facesMessage);
     }
 
-    public void setRoleRuleIsUserFactory(RoleRuleIsUserFactory factory) {
-        roleRuleIsUserFactory = factory;
+    public void setRoles(Roles roles) {
+        this.roles = roles;
+    }
+
+    public void setTaskScheduler(TaskScheduler ts) {
+        taskScheduler = ts;
     }
 }

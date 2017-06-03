@@ -103,9 +103,11 @@ public class AdminWelcome implements Serializable {
         loadUserVpns();
         menuModel.addElement(userVpnsMenu);
 
+        /*
         siteVpnsMenu = new DefaultSubMenu("Site VPNs");
         loadSiteVpns();
         menuModel.addElement(siteVpnsMenu);
+        */
 
         DefaultSubMenu actionsMenu = new DefaultSubMenu("Actions");
             if (currentUser.hasRole("user")) {
@@ -116,6 +118,10 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem statusItem = new DefaultMenuItem("Show user status");
             statusItem.setHref("ShowUserStatus.xhtml");
             actionsMenu.addElement(statusItem);
+
+            DefaultMenuItem schedulesTasksItem = new DefaultMenuItem("Edit schedules tasks");
+            schedulesTasksItem.setHref("ScheduledTasks.xhtml");
+            actionsMenu.addElement(schedulesTasksItem);
 
             DefaultMenuItem logoutItem = new DefaultMenuItem("Logout...");
             logoutItem.setCommand("#{adminWelcome.logout}");

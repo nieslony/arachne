@@ -48,7 +48,7 @@
 
         <h:form id="formRoles">
             <p:messages showDetail="true" autoUpdate="true"/>
-            <p:accordionPanel multiple="true" value="#{editRoles.allRoles}" var="role" id="roles">
+            <p:accordionPanel multiple="true" activeIndex="0,1" value="#{editRoles.allRoles}" var="role" id="roles">
                 <p:tab title="Role #{role.name}">
                     <p:dataTable value="#{role.rules}" var="rule" id="ruleList">
                         <p:column headerText="Type">

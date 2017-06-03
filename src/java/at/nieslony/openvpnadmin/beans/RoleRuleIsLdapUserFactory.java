@@ -7,15 +7,11 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.RoleRuleIsMemberOfLdapGroup;
+import at.nieslony.utils.classfinder.StaticMemberBean;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.context.FacesContext;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -28,29 +24,19 @@ import javax.naming.directory.SearchResult;
  *
  * @author claas
  */
-@ManagedBean(eager = true)
-@ApplicationScoped
 public class RoleRuleIsLdapUserFactory
         implements RoleRuleFactory, Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
-    private LdapSettings ldapSettings = null;
 
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
-    private RoleRuleFactoryCollection roleRuleFactoryCollection;
+    @StaticMemberBean
+    static private LdapSettings ldapSettings = null;
 
-    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
-        roleRuleFactoryCollection = rrfc;
+    static public void setLdapSettings(LdapSettings ls) {
+        ldapSettings = ls;
     }
 
-    private LdapSettings getLdapSettings() {
-        if (ldapSettings == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            ldapSettings = (LdapSettings) context.getExternalContext().getApplicationMap().get("ldapSettings");
-            if (ldapSettings == null)
-                logger.severe("Cannot find attribute ldapSettings");
-        }
-
+    static public LdapSettings getLdapSettings() {
         return ldapSettings;
     }
     /**
@@ -59,14 +45,10 @@ public class RoleRuleIsLdapUserFactory
     public RoleRuleIsLdapUserFactory() {
     }
 
-    @PostConstruct
-    public void init() {
-        roleRuleFactoryCollection.addRoleRuleFactory(this);
-    }
-
     @Override
     public RoleRule createRule(String groupname) {
-        RoleRuleIsMemberOfLdapGroup rule = new RoleRuleIsMemberOfLdapGroup(this, groupname);
+        RoleRuleIsMemberOfLdapGroup rule = new RoleRuleIsMemberOfLdapGroup();
+        rule.init(this, groupname);
 
         return rule;
     }

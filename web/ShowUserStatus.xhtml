@@ -12,6 +12,7 @@
 
         <ui:define name="content">
             <h:form id="userStatusForm">
+                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
                 <p:remoteCommand name="onload" action="#{showUserStatus.onRefresh()}" autoRun="true"/>
                 <p:dialog id="exceptionDialog"
                             header="Error"
@@ -31,6 +32,14 @@
                              id="statusTable">
                     <p:column headerText="Common Name">
                         <h:outputText value="#{statusEntry.user}"/>
+                    </p:column>
+
+                    <p:column headerText="Remote host">
+                        <h:outputText value="#{statusEntry.remoteHost}"/>
+                    </p:column>
+
+                    <p:column headerText="VPN host">
+                        <h:outputText value="#{statusEntry.vpnHost}"/>
                     </p:column>
 
                     <p:column headerText="Bytes received">

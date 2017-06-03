@@ -56,7 +56,7 @@ import org.bouncycastle.jce.PrincipalUtil;
  *
  * @author claas
  */
-@ManagedBean
+@ManagedBean(name = "pki")
 @ApplicationScoped
 public class Pki extends CertificateAuthority implements Serializable {
     private X509Certificate serverCert;
@@ -395,7 +395,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         return serverKey;
     }
 
-    private void updateCrlFromDb()
+    public void updateCrlFromDb()
             throws ClassNotFoundException, SQLException, CertificateException,
             CRLException, InvalidKeyException, NoSuchAlgorithmException,
             NoSuchProviderException, SignatureException
@@ -413,7 +413,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
     }
 
-    private void loadCrl()
+    public void loadCrl()
             throws CRLException, IOException, CertificateException,
             NoSuchAlgorithmException, InvalidKeyException,
             NoSuchProviderException, SignatureException,

@@ -6,7 +6,15 @@
     </context-param>
     <context-param>
         <param-name>dynamic-data-dir</param-name>
-        <param-value>WEB-INF/properties</param-value>
+        <param-value>@@DYNAMIC-DATA-DIR@@</param-value>
+    </context-param>
+    <context-param>
+        <param-name>sql-dir</param-name>
+        <param-value>@@SQL-DIR@@</param-value>
+    </context-param>
+    <context-param>
+        <param-name>bin-dir</param-name>
+        <param-value>@@BIN-DIR@@</param-value>
     </context-param>
     <context-param>
         <param-name>

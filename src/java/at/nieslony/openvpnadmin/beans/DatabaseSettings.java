@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Properties;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -104,18 +103,6 @@ public class DatabaseSettings
     public DatabaseSettings() {
     }
 
-    @PostConstruct
-    public void init()
-    {
-        try {
-            load();
-        }
-        catch (IOException ex) {
-            logger.warning(String.format("Cannot load database properties from %s: %s",
-                    getPropsFileName(), ex.getMessage()));
-        }
-    }
-
     public void load()
             throws IOException
     {
@@ -181,6 +168,14 @@ public class DatabaseSettings
             throws ClassNotFoundException, SQLException
     {
         if (con == null) {
+            try {
+                load();
+            }
+            catch (IOException ex) {
+                logger.warning(
+                        String.format("Cannot load database settings: %s", ex.getMessage()));
+            }
+
             Class.forName("org.postgresql.Driver");
             String conUrl = String.format("jdbc:postgresql://%s:%d/%s",
                     host,

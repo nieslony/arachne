@@ -5,12 +5,10 @@
  */
 package at.nieslony.openvpnadmin;
 
-import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.RoleRuleIsLdapUserFactory;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import java.io.Serializable;
 import java.util.logging.Logger;
-import javax.faces.context.FacesContext;
 import javax.naming.NamingException;
 
 /**
@@ -21,22 +19,15 @@ public class RoleRuleIsMemberOfLdapGroup
         extends RoleRule
         implements Serializable
 {
-    private LdapSettings ldapSettings = null;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    RoleRuleIsLdapUserFactory factory;
 
-    private LdapSettings getLdapSettings() {
-        if (ldapSettings == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            ldapSettings = (LdapSettings) context.getExternalContext().getApplicationMap().get("ldapSettings");
-            if (ldapSettings == null)
-                logger.severe("Cannot find attribute ldapSettings");
-        }
-
-        return ldapSettings;
+    public RoleRuleIsMemberOfLdapGroup() {
     }
 
-    public RoleRuleIsMemberOfLdapGroup(RoleRuleIsLdapUserFactory factory, String groupName) {
-        super(factory, groupName);
+    public void init(RoleRuleIsLdapUserFactory factory, String groupName) {
+        super.init(factory, groupName);
+        this.factory = factory;
     }
 
     @Override
@@ -48,7 +39,7 @@ public class RoleRuleIsMemberOfLdapGroup
         }
 
         try {
-            LdapGroup group = getLdapSettings().findLdapGroup(getValue());
+            LdapGroup group = RoleRuleIsLdapUserFactory.getLdapSettings().findLdapGroup(getValue());
             return group.hasMember((LdapUser) user);
         }
         catch (NamingException | NoSuchLdapGroup ex) {

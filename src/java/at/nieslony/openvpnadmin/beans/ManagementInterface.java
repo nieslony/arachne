@@ -10,17 +10,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.text.DateFormat;
+import java.net.UnknownHostException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
@@ -30,13 +33,24 @@ import javax.faces.bean.ManagedBean;
  */
 @ManagedBean
 @ApplicationScoped
-public class ManagementInterface {
-    private BufferedReader miReader;
-    private PrintWriter miWriter;
-    private Socket socket;
+public class ManagementInterface
+        implements Serializable
+{
+    private transient BufferedReader miReader;
+    private transient PrintWriter miWriter;
+    private transient Socket socket;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
-    private static final transient DateFormat dateFormat =
-            new SimpleDateFormat("E MMM d HH:mm:ss yyyy", Locale.US);
+
+    enum UserStatusField {
+        CommonName,
+        RemoteIpV4,
+        RemoteIpV6,
+        VpnIpV4,
+        VpnIpV6,
+        BytesReceived,
+        BytesSent,
+        ConnectedSinceTimeT
+    };
 
     /**
      * Creates a new instance of ManagementInterface
@@ -55,21 +69,36 @@ public class ManagementInterface {
         }
     }
 
-
-    public class UserStatus {
-        public UserStatus(String statusLine)
-                throws NumberFormatException, ParseException, ArrayIndexOutOfBoundsException
+    public class UserStatus
+            implements Serializable
+    {
+        public UserStatus(Map<UserStatusField, Integer> usfm, String statusLine)
+                throws NumberFormatException, ParseException,
+                ArrayIndexOutOfBoundsException, UnknownHostException
         {
             logger.info(String.format("Creating user status: %s", statusLine));
             // claas,172.24.71.175:44800,8264,8341,Sun Aug 14 13:53:51 2016
+            //HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username
+            //CLIENT_LIST,claas,172.24.71.185:40276,192.168.1.6,4074,3635,Sat Jun  3 11:39:41 2017,1496482781,claas
+            //CLIENT_LIST,claas,172.24.71.185:39806,192.168.1.6,,4501,3946,Sat Jun  3 14:32:45 2017,1496493165,claas,0,0
             String[] fields = statusLine.split(",");
-            user = fields[0];
-            bytesReceived = Integer.parseInt(fields[2]);
-            bytesSent = Integer.parseInt(fields[3]);
-            connectedSince = dateFormat.parse(fields[4]);
+            user = fields[usfm.get(UserStatusField.CommonName)];
+            remoteHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
+            vpnHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
+            if (usfm.get(UserStatusField.BytesReceived) != null)
+                bytesReceived = Integer.parseInt(fields[usfm.get(UserStatusField.BytesReceived)]);
+            else
+                bytesReceived = -1;
+            if (usfm.get(UserStatusField.BytesSent) != null)
+                bytesSent = Integer.parseInt(fields[usfm.get(UserStatusField.BytesSent)]);
+            else
+                bytesSent = -1;
+            connectedSince = new Date(Long.parseLong(fields[usfm.get(UserStatusField.ConnectedSinceTimeT)]) * 1000);
         }
 
         private final String user;
+        private InetAddress remoteHost;
+        private InetAddress vpnHost;
         private final long bytesReceived;
         private final long bytesSent;
         private final Date connectedSince;
@@ -88,6 +117,14 @@ public class ManagementInterface {
 
         public Date getConnectedSince() {
             return connectedSince;
+        }
+
+        public String getRemoteHost() {
+            return remoteHost.getHostAddress();
+        }
+
+        public String getVpnHost() {
+            return vpnHost.getHostAddress();
         }
     }
 
@@ -125,7 +162,18 @@ public class ManagementInterface {
                 !socket.isConnected() || socket.isClosed() ||
                 socket.isInputShutdown() || socket.isOutputShutdown())
         {
+            if (socket != null) {
+                logger.info("Trying to close socket");
+                try {
+                    socket.close();
+                }
+                catch (IOException ex) {
+                    logger.warning(String.format("Cannot close socket: %s", ex.getMessage()));
+                }
+            }
+
             try {
+                logger.info("Connecting to management interface");
                 connect("127.0.0.1", 9544);
             }
             catch (IOException ex) {
@@ -238,18 +286,55 @@ Virtual Address,Common Name,Real Address,Last Ref
 GLOBAL STATS
 Max bcast/mcast queue length,0
 END
+
+status 2
+TITLE,OpenVPN 2.3.8 x86_64-suse-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [MH] [IPv6] built on Aug  4 2015
+TIME,Sat Jun  3 11:41:03 2017,1496482863
+HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username
+CLIENT_LIST,claas,172.24.71.185:40276,192.168.1.6,4074,3635,Sat Jun  3 11:39:41 2017,1496482781,claas
+HEADER,ROUTING_TABLE,Virtual Address,Common Name,Real Address,Last Ref,Last Ref (time_t)
+ROUTING_TABLE,192.168.1.6,claas,172.24.71.185:40276,Sat Jun  3 11:39:42 2017,1496482782
+GLOBAL_STATS,Max bcast/mcast queue length,0
+END
+
+
         */
-        Queue<String> lines = sendMultiLineCommand("status");
+        Queue<String> lines = sendMultiLineCommand("status 2");
+        Map<UserStatusField, Integer> userStatusFieldMap = new HashMap<>();
+
+
         userStatus.clear();
 
         for (String line: lines) {
-            if (line != null) {
+            if (line != null && line.startsWith("HEADER,CLIENT_LIST")) {
+                String[] fieldNames = line.split(",");
+                for (int i = 2; i < fieldNames.length; i++) {
+                    if (fieldNames[i].equals("Common Name"))
+                        userStatusFieldMap.put(UserStatusField.CommonName, i-1);
+                    else if (fieldNames[i].equals("Real Address"))
+                        userStatusFieldMap.put(UserStatusField.RemoteIpV4, i-1);
+                    else if (fieldNames[i].equals("Virtual Address"))
+                        userStatusFieldMap.put(UserStatusField.VpnIpV4, i-1);
+                    else if (fieldNames[i].equals("Virtual IPv6 Address"))
+                        userStatusFieldMap.put(UserStatusField.RemoteIpV6, i-1);
+                    else if (fieldNames[i].equals("Bytes Received"))
+                        userStatusFieldMap.put(UserStatusField.BytesReceived, i-1);
+                    else if (fieldNames[i].equals("Bytes Sent"))
+                        userStatusFieldMap.put(UserStatusField.BytesSent, i-1);
+                    else if (fieldNames[i].equals("Connected Since (time_t)"))
+                        userStatusFieldMap.put(UserStatusField.ConnectedSinceTimeT, i-1);
+                    else
+                        logger.info(String.format("Ignoring fieöd %s", fieldNames[i-1]));
+                }
+            }
+            else if (line != null && line.startsWith("CLIENT_LIST,")) {
                 try {
-                    UserStatus us = new UserStatus(line);
+                    UserStatus us = new UserStatus(userStatusFieldMap, line);
                     userStatus.add(us);
                 }
                 catch (ArrayIndexOutOfBoundsException | NumberFormatException | ParseException ex) {
-                    logger.info(String.format("Line %s does't contain user status", line));
+                    logger.info(String.format("Line %s does't contain user status (%s)",
+                            line, ex.getMessage()));
                 }
             }
         }
@@ -261,12 +346,18 @@ END
         sendCommand("signal HUP");
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize(); //To change body of generated methods, choose Tools | Templates.
+    public void killUser(String username)
+            throws IOException, ManagementInterfaceException
+    {
+        logger.info(String.format("Kill user %s", username));
+        sendCommand(String.format("kill %s", username));
+    }
 
+    @PreDestroy
+    public void destroy() throws Throwable {
         try {
-            logger.info("Closing socket");
+            logger.info("Closing socket to management interface");
+            sendCommand("quit");
             socket.close();
         }
         catch (IOException ex) {

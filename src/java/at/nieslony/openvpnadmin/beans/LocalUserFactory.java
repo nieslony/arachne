@@ -52,6 +52,7 @@ public class LocalUserFactory
         folderFactory = ff;
     }
 
+    @Override
     public AbstractUser addUser(String username) {
         LocalUser user = null;
 

@@ -33,7 +33,7 @@ import javax.faces.context.FacesContext;
 @ManagedBean
 @ApplicationScoped
 public class Roles implements Serializable {
-    Map<String, Role> roles = new HashMap<>();
+    private Map<String, Role> roles = new HashMap<>();
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{databaseSettings}")
@@ -82,7 +82,8 @@ public class Roles implements Serializable {
             while (result.next()) {
                 String roleName = result.getString("rolename");
                 String id = result.getString("id");
-                Role role = new Role(this, id, roleName);
+                Role role = new Role();
+                role.init(this, id, roleName);
                 roles.put(roleName, role);
             }
         }
@@ -109,7 +110,7 @@ public class Roles implements Serializable {
     public void addRule(String roleName, String roleRuleType, String value) {
         Role role = roles.get(roleName);
         if (role == null) {
-            logger.warning(String.format("Role %s doesn't exist"));
+            logger.warning(String.format("Role %s doesn't exist", roleName));
         }
         else {
             try {

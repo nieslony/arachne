@@ -2,9 +2,8 @@
 
 PWD_FILE=$2
 AUTH_URL=$1
-MACHINE=$( echo $AUTH_URL | sed -e 's/^https\?:\/\/\([a-z.\-]\+\).*/\1/g' )
+MACHINE=$( echo $AUTH_URL | sed -e 's/^https\?:\/\/\([a-z0-9.\-]\+\).*/\1/g' )
 
-(
 echo "--- BEGIN authentication script ---"
 echo "Reading username and password from $PWD_FILE"
 echo "Trying to get URL $AUTH_URL ..."
@@ -25,7 +24,8 @@ else
     echo Authentication failed.
     RET=1
 fi
+
+echo Exit with code $RET
 echo "--- END authentication script ---"
-) | logger
 
 exit $RET

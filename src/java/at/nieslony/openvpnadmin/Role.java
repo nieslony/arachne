@@ -20,7 +20,9 @@ import java.util.logging.Logger;
  *
  * @author claas
  */
-public class Role implements Serializable {
+public class Role
+        implements Serializable
+{
     private String name = "noname";
     private final List<RoleRule> rules = new LinkedList<>();
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
@@ -33,17 +35,16 @@ public class Role implements Serializable {
     }
 
     public Role() {
-
     }
 
-    public Role(Roles roles, String id, String name)
+    public void init(Roles roles, String id, String name)
             throws SQLException, ClassNotFoundException
     {
         this.id = id;
         this.roles = roles;
         this.name = name;
 
-        logger.info(String.format("Initializing role %s", id));
+        logger.info(String.format("Initializing role %s", name));
 
         Connection con = roles.getDatabaseConnection();
         Statement stm = con.createStatement();

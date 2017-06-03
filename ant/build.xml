@@ -4,17 +4,31 @@
     </description>
     
     <property name="projectName" value="arachne"/>
-    <property name="root" location=".."/>
-    <property name="src" location="${root}/src"/>
-    <property name="db-props-src" location="../../DatabasePropertiesStorage/src/"/>
-    <property name="web" location="${root}/web"/>
-    <property name="build" location="build"/>
-    <property name="dist" location="dist"/>
-    <property name="export" location="dist"/>
-    <property name="property-templates" location="${root}/property-templates"/>
     <property name="version" value="0.3.0"/>
     <property name="tar-prefix" value="${projectName}-${version}"/>
-    <property name="install-dir" value="/var/lib/tomcat/webapps"/>
+
+    <property name="root"  location=".."/>
+    <property name="src"   location="${root}/src"/>
+    <property name="lib"   location="${root}/lib"/>
+    <property name="dist"  location="${root}/dist"/>
+    <property name="web"   location="${root}/web"/>
+    <property name="build" location="${root}/build"/>
+    <property name="export" location="${root}/ant/dist"/>
+    
+    <property name="build.webxml" location="${build}/web/WEB-INF/web.xml"/>
+
+    <property name="property-templates" location="${root}/property-templates"/>
+
+    <property name="db-props-src" location="../../DatabasePropertiesStorage/src/"/>
+        
+    <property name="install-root" value=""/>
+    
+    <property name="webapps.dir" value="/usr/share/tomcat/webapps"/>
+    <property name="app-root" value="${webapps.dir}/arachne"/>
+    <property name="web-inf.dir" value="${app-root}/WEB-INF"/>
+    <property name="sql.dir" value="${web-inf.dir}/sql"/>
+    <property name="bin.dir" value="${web-inf.dir}/bin"/>
+    <property name="work.dir" value="/var/lib/arachne"/>
  
     <path id="classpath">
         <fileset 
@@ -42,8 +56,9 @@
                 srcdir="${src}" 
     -->    
     <target name="compile" depends="init,generate-code">
+        <mkdir dir="${build}/classes"/>
         <javac 
-               destdir="${build}" 
+               destdir="${build}/classes" 
                includeantruntime="false" 
                classpathref="classpath"
                encoding="utf-8"
@@ -54,27 +69,24 @@
     </target>
     
     <target name="copystatic">
-        <mkdir dir="${dist}/web"/>
-        <mkdir dir="${dist}/web/WEB-INF/classes"/>
-        <mkdir dir="${dist}/web/WEB-INF/lib"/>
-        <mkdir dir="${dist}/web/WEB-INF/sql"/>
-        
-        <copy todir="${dist}/web">
+        <echo message="--- BEGIN copy static ---"/>
+        <copy todir="${build}/web">
             <fileset dir="${web}"/>
         </copy>
-        <copy todir="${dist}/web/WEB-INF/classes">
-            <fileset dir="${build}"/>
+        <copy todir="${build}/web/WEB-INF/classes">
+            <fileset dir="${build}/classes"/>
         </copy>
-        <copy todir="${dist}/web/WEB-INF/lib">
-            <fileset dir="lib"/>
+        <copy todir="${build}/web/WEB-INF/lib">
+            <fileset dir="${lib}"/>
         </copy>
-        <copy todir="${dist}/web/WEB-INF/sql">
+        <copy todir="${build}/web/WEB-INF/sql">
             <fileset dir="${src}/sql"/>
         </copy>
+        <echo message="--- END copy static ---"/>
     </target>
     
-    <target name="dist" depends="compile,copystatic">
-        <jar jarfile="${dist}/${projectName}.war" basedir="${dist}/web"/>    
+    <target name="dist" depends="compile,copystatic,patch-webxml">
+        <jar jarfile="${dist}/${projectName}.war" basedir="${build}/web"/>    
     </target>
     
     <target name="clean">
@@ -84,25 +96,29 @@
     </target>
     
     <target name="install">
-        <mkdir dir="${install-dir}/WEB-INF/classes"/>
-        <mkdir dir="${install-dir}/WEB-INF/lib"/>
-        <mkdir dir="${install-dir}/WEB-INF/sql"/>
-        
-        <copy todir="${install-dir}">
-            <fileset dir="${web}"/>
-        </copy>
-        <copy todir="${install-dir}/WEB-INF/classes" includeEmptyDirs="false">
-            <fileset dir="${build}">
-                <exclude name="**/*.java"/>
-            </fileset>
-        </copy>
-        <copy todir="${install-dir}/WEB-INF/lib">
-            <fileset dir="lib"/>
-        </copy>
-        <copy todir="${install-dir}/WEB-INF/sql">
-            <fileset dir="${src}/sql"/>
+        <mkdir dir="${install-root}/${app-root}"/>
+        <mkdir dir="${install-root}/${work.dir}"/>
+        <copy todir="${install-root}/${app-root}">
+            <fileset dir="${build}/web"/>
         </copy>
     </target>
+    
+    <target name="patch-webxml">
+        <replace 
+            file="${build.webxml}" 
+            token="@@DYNAMIC-DATA-DIR@@" 
+            value="${work.dir}"
+            />
+        <replace 
+            file="${build.webxml}" 
+            token="@@SQL-DIR@@" 
+            value="${sql.dir}"
+            />        
+        <replace 
+            file="${build.webxml}" 
+            token="@@BIN-DIR@@" 
+            value="${bin.dir}"
+            />         </target>
     
     <target name="tar">
         <mkdir dir="${export}"/>
