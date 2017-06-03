@@ -84,7 +84,7 @@ public class ManagementInterface
             String[] fields = statusLine.split(",");
             user = fields[usfm.get(UserStatusField.CommonName)];
             remoteHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
-            vpnHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
+            vpnHost = InetAddress.getByName(fields[usfm.get(UserStatusField.VpnIpV4)].split(":")[0]);
             if (usfm.get(UserStatusField.BytesReceived) != null)
                 bytesReceived = Integer.parseInt(fields[usfm.get(UserStatusField.BytesReceived)]);
             else
