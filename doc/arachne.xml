@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V5.0//EN"
+ "/usr/share/xml/docbook5/schema/dtd/5.0/docbook.dtd">
+
+<book xmlns='http://docbook.org/ns/docbook'>
+<title>Arachne - Administrator's Guide</title>
+<titleabbrev>Arachne</titleabbrev>
+<info>
+  <legalnotice><para>No notice is required.</para></legalnotice>
+  <author><personname>
+    <firstname>Claas</firstname><surname>Nieslony</surname>
+  </personname></author>
+</info>
+<dedication>
+<para>This book is dedicated to you.
+</para>
+</dedication>
+<preface><title>Foreword</title>
+<para>Some content is always required.
+</para>
+</preface>
+
+<chapter><title>Installation</title>
+    <section>
+        <title>CentOS 7</title>
+        <orderedlist>
+            <listitem>
+                <para>Add arache repository</para>
+                <programlisting>
+                    wget http://... -C /etc/yum.re
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Install packages</para>
+                <programlisting>
+                    yum -y install epel.repo
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Install packages</para>
+                <programlisting>
+                    yum install arachne-server arachne-doc postgres-server
+                </programlisting>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section>
+        <title>openSUSE</title>
+    </section>
+</chapter>
+
+<appendix><title>Optional Appendix</title>
+<para>Appendixes are optional.
+</para>
+</appendix>
+</book>
