@@ -14,13 +14,12 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -41,8 +40,17 @@ public class ManagementInterface
     private transient PrintWriter miWriter;
     private transient Socket socket;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
-    private static final transient DateFormat dateFormat =
-            new SimpleDateFormat("E MMM d HH:mm:ss yyyy", Locale.US);
+
+    enum UserStatusField {
+        CommonName,
+        RemoteIpV4,
+        RemoteIpV6,
+        VpnIpV4,
+        VpnIpV6,
+        BytesReceived,
+        BytesSent,
+        ConnectedSinceTimeT
+    };
 
     /**
      * Creates a new instance of ManagementInterface
@@ -61,11 +69,10 @@ public class ManagementInterface
         }
     }
 
-
     public class UserStatus
             implements Serializable
     {
-        public UserStatus(String statusLine)
+        public UserStatus(Map<UserStatusField, Integer> usfm, String statusLine)
                 throws NumberFormatException, ParseException,
                 ArrayIndexOutOfBoundsException, UnknownHostException
         {
@@ -73,15 +80,20 @@ public class ManagementInterface
             // claas,172.24.71.175:44800,8264,8341,Sun Aug 14 13:53:51 2016
             //HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username
             //CLIENT_LIST,claas,172.24.71.185:40276,192.168.1.6,4074,3635,Sat Jun  3 11:39:41 2017,1496482781,claas
+            //CLIENT_LIST,claas,172.24.71.185:39806,192.168.1.6,,4501,3946,Sat Jun  3 14:32:45 2017,1496493165,claas,0,0
             String[] fields = statusLine.split(",");
-            int fieldNr = 1;
-            user = fields[fieldNr++];
-            remoteHost = InetAddress.getByName(fields[fieldNr++].split(":")[0]);
-            vpnHost = InetAddress.getByName(fields[fieldNr++].split(":")[0]);
-            bytesReceived = Integer.parseInt(fields[fieldNr++]);
-            bytesSent = Integer.parseInt(fields[fieldNr++]);
-            fieldNr++; // ignoring date
-            connectedSince = new Date(Long.parseLong(fields[fieldNr++]) * 1000);
+            user = fields[usfm.get(UserStatusField.CommonName)];
+            remoteHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
+            vpnHost = InetAddress.getByName(fields[usfm.get(UserStatusField.RemoteIpV4)].split(":")[0]);
+            if (usfm.get(UserStatusField.BytesReceived) != null)
+                bytesReceived = Integer.parseInt(fields[usfm.get(UserStatusField.BytesReceived)]);
+            else
+                bytesReceived = -1;
+            if (usfm.get(UserStatusField.BytesSent) != null)
+                bytesSent = Integer.parseInt(fields[usfm.get(UserStatusField.BytesSent)]);
+            else
+                bytesSent = -1;
+            connectedSince = new Date(Long.parseLong(fields[usfm.get(UserStatusField.ConnectedSinceTimeT)]) * 1000);
         }
 
         private final String user;
@@ -108,11 +120,11 @@ public class ManagementInterface
         }
 
         public String getRemoteHost() {
-            return remoteHost.toString();
+            return remoteHost.getHostAddress();
         }
 
         public String getVpnHost() {
-            return vpnHost.toString();
+            return vpnHost.getHostAddress();
         }
     }
 
@@ -288,16 +300,41 @@ END
 
         */
         Queue<String> lines = sendMultiLineCommand("status 2");
+        Map<UserStatusField, Integer> userStatusFieldMap = new HashMap<>();
+
+
         userStatus.clear();
 
         for (String line: lines) {
-            if (line != null && line.startsWith("CLIENT_LIST,")) {
+            if (line != null && line.startsWith("HEADER,CLIENT_LIST")) {
+                String[] fieldNames = line.split(",");
+                for (int i = 2; i < fieldNames.length; i++) {
+                    if (fieldNames[i].equals("Common Name"))
+                        userStatusFieldMap.put(UserStatusField.CommonName, i-1);
+                    else if (fieldNames[i].equals("Real Address"))
+                        userStatusFieldMap.put(UserStatusField.RemoteIpV4, i-1);
+                    else if (fieldNames[i].equals("Virtual Address"))
+                        userStatusFieldMap.put(UserStatusField.VpnIpV4, i-1);
+                    else if (fieldNames[i].equals("Virtual IPv6 Address"))
+                        userStatusFieldMap.put(UserStatusField.RemoteIpV6, i-1);
+                    else if (fieldNames[i].equals("Bytes Received"))
+                        userStatusFieldMap.put(UserStatusField.BytesReceived, i-1);
+                    else if (fieldNames[i].equals("Bytes Sent"))
+                        userStatusFieldMap.put(UserStatusField.BytesSent, i-1);
+                    else if (fieldNames[i].equals("Connected Since (time_t)"))
+                        userStatusFieldMap.put(UserStatusField.ConnectedSinceTimeT, i-1);
+                    else
+                        logger.info(String.format("Ignoring fieöd %s", fieldNames[i-1]));
+                }
+            }
+            else if (line != null && line.startsWith("CLIENT_LIST,")) {
                 try {
-                    UserStatus us = new UserStatus(line);
+                    UserStatus us = new UserStatus(userStatusFieldMap, line);
                     userStatus.add(us);
                 }
                 catch (ArrayIndexOutOfBoundsException | NumberFormatException | ParseException ex) {
-                    logger.info(String.format("Line %s does't contain user status", line));
+                    logger.info(String.format("Line %s does't contain user status (%s)",
+                            line, ex.getMessage()));
                 }
             }
         }
