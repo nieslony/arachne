@@ -9,6 +9,7 @@ import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.utils.classfinder.ClassFinder;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,6 +56,12 @@ public class RoleRuleFactoryCollection
             try {
                 RoleRuleFactory roleRuleFactory = (RoleRuleFactory) c.newInstance();
                 addRoleRuleFactory(roleRuleFactory);
+
+                for (Field field : c.getFields()) {
+                    if (field.isAnnotationPresent(c)) {
+
+                    }
+                }
             }
             catch (IllegalAccessException | InstantiationException ex) {
                 logger.warning(String.format("Cannot create role rule factory %s: %s",

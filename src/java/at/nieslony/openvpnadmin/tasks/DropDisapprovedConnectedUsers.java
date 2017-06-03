@@ -31,28 +31,28 @@ public class DropDisapprovedConnectedUsers
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ScheduledTaskMemberBean
+    @StaticMemberBean
     private static ManagementInterface managementInterface;
 
     static public void setManagementInterface(ManagementInterface mi) {
         managementInterface = mi;
     }
 
-    @ScheduledTaskMemberBean
+    @StaticMemberBean
     private static LocalUserFactory localUserFactory;
 
     static public void setLocalUserFactory(LocalUserFactory luf) {
         localUserFactory = luf;
     }
 
-    @ScheduledTaskMemberBean
+    @StaticMemberBean
     private static LdapSettings ldapSettings;
 
     static public void setLdapSettings(LdapSettings ls) {
         ldapSettings = ls;
     }
 
-    @ScheduledTaskMemberBean
+    @StaticMemberBean
     private static Roles roles;
 
     static public void setRoles(Roles r) {

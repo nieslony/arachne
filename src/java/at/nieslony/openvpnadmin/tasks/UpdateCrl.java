@@ -30,7 +30,7 @@ public class UpdateCrl
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ScheduledTaskMemberBean
+    @StaticMemberBean
     static Pki pki;
 
     static public void setPki(Pki _pki) {

@@ -7,17 +7,15 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.tasks.AvailableTask;
 import at.nieslony.openvpnadmin.tasks.ScheduledTask;
-import at.nieslony.openvpnadmin.tasks.ScheduledTaskMemberBean;
 import at.nieslony.openvpnadmin.tasks.TaskListEntry;
 import at.nieslony.utils.DbUtils;
+import at.nieslony.utils.classfinder.BeanInjector;
 import at.nieslony.utils.classfinder.ClassFinder;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -93,34 +91,23 @@ public class TaskScheduler
             ClassFinder classFinder = new ClassFinder((getClass().getClassLoader()));
 
             List<Class> classes = classFinder.getAllClassesImplementing(ScheduledTask.class);
+            FacesContext ctx = FacesContext.getCurrentInstance();
             for (Class c : classes) {
                 logger.info(String.format("Found task scheduler class %s", c.getName()));
                 availableTasks.add(new AvailableTask(c));
 
-                for (Field field : c.getDeclaredFields()) {
-                    if (field.isAnnotationPresent(ScheduledTaskMemberBean.class)) {
-                        String fieldName = field.getName();
-                        String setterName = "set" +
-                                fieldName.substring(0, 1).toUpperCase() +
-                                fieldName.substring(1);
-                        Method setter = null;
-                        try {
-                            setter = c.getMethod(setterName, field.getType());
-                        }
-                        catch (NoSuchMethodException ex) {
-                            logger.warning(String.format("Cannot find method %s in class %s: %s",
-                                    setterName, c.getName(), ex.getMessage()));
-                        }
-                        try {
-                            if (setter != null)
-                                setter.invoke(c, (Object) findBean(fieldName));
-                        }
-                        catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                            logger.warning(String.format("Cannot invoke %s.%s: %s",
-                                    c.getName(),  setter, ex.getMessage()));
-                        }
-                    }
+                try {
+                    BeanInjector.injectStaticBeans(ctx, c);
                 }
+                catch (NoSuchMethodException ex) {
+                    logger.warning(String.format("Cannot find method in class %s: %s",
+                        c.getName(), ex.getMessage()));
+                }
+                catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                    logger.warning(String.format("Cannot invoke method: %s",
+                            c.getName(),  ex.getMessage()));
+                }
+
             }
 
             reloadTasks();
@@ -143,11 +130,6 @@ public class TaskScheduler
             if (tle.isEnabled())
                 tle.scheduleTask(scheduler);
         });
-    }
-
-    public static <T> T findBean(String beanName) {
-        FacesContext context = FacesContext.getCurrentInstance();
-        return (T) context.getApplication().evaluateExpressionGet(context, "#{" + beanName + "}", Object.class);
     }
 
     @PreDestroy
