@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -60,20 +62,31 @@ public class ManagementInterface
     }
 
 
-    public class UserStatus {
+    public class UserStatus
+            implements Serializable
+    {
         public UserStatus(String statusLine)
-                throws NumberFormatException, ParseException, ArrayIndexOutOfBoundsException
+                throws NumberFormatException, ParseException,
+                ArrayIndexOutOfBoundsException, UnknownHostException
         {
             logger.info(String.format("Creating user status: %s", statusLine));
             // claas,172.24.71.175:44800,8264,8341,Sun Aug 14 13:53:51 2016
+            //HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username
+            //CLIENT_LIST,claas,172.24.71.185:40276,192.168.1.6,4074,3635,Sat Jun  3 11:39:41 2017,1496482781,claas
             String[] fields = statusLine.split(",");
-            user = fields[0];
-            bytesReceived = Integer.parseInt(fields[2]);
-            bytesSent = Integer.parseInt(fields[3]);
-            connectedSince = dateFormat.parse(fields[4]);
+            int fieldNr = 1;
+            user = fields[fieldNr++];
+            remoteHost = InetAddress.getByName(fields[fieldNr++].split(":")[0]);
+            vpnHost = InetAddress.getByName(fields[fieldNr++].split(":")[0]);
+            bytesReceived = Integer.parseInt(fields[fieldNr++]);
+            bytesSent = Integer.parseInt(fields[fieldNr++]);
+            fieldNr++; // ignoring date
+            connectedSince = new Date(Long.parseLong(fields[fieldNr++]) * 1000);
         }
 
         private final String user;
+        private InetAddress remoteHost;
+        private InetAddress vpnHost;
         private final long bytesReceived;
         private final long bytesSent;
         private final Date connectedSince;
@@ -92,6 +105,14 @@ public class ManagementInterface
 
         public Date getConnectedSince() {
             return connectedSince;
+        }
+
+        public String getRemoteHost() {
+            return remoteHost.toString();
+        }
+
+        public String getVpnHost() {
+            return vpnHost.toString();
         }
     }
 
@@ -253,12 +274,24 @@ Virtual Address,Common Name,Real Address,Last Ref
 GLOBAL STATS
 Max bcast/mcast queue length,0
 END
+
+status 2
+TITLE,OpenVPN 2.3.8 x86_64-suse-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [MH] [IPv6] built on Aug  4 2015
+TIME,Sat Jun  3 11:41:03 2017,1496482863
+HEADER,CLIENT_LIST,Common Name,Real Address,Virtual Address,Bytes Received,Bytes Sent,Connected Since,Connected Since (time_t),Username
+CLIENT_LIST,claas,172.24.71.185:40276,192.168.1.6,4074,3635,Sat Jun  3 11:39:41 2017,1496482781,claas
+HEADER,ROUTING_TABLE,Virtual Address,Common Name,Real Address,Last Ref,Last Ref (time_t)
+ROUTING_TABLE,192.168.1.6,claas,172.24.71.185:40276,Sat Jun  3 11:39:42 2017,1496482782
+GLOBAL_STATS,Max bcast/mcast queue length,0
+END
+
+
         */
-        Queue<String> lines = sendMultiLineCommand("status");
+        Queue<String> lines = sendMultiLineCommand("status 2");
         userStatus.clear();
 
         for (String line: lines) {
-            if (line != null) {
+            if (line != null && line.startsWith("CLIENT_LIST,")) {
                 try {
                     UserStatus us = new UserStatus(line);
                     userStatus.add(us);
@@ -287,6 +320,7 @@ END
     public void destroy() throws Throwable {
         try {
             logger.info("Closing socket to management interface");
+            sendCommand("quit");
             socket.close();
         }
         catch (IOException ex) {

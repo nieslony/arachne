@@ -34,6 +34,14 @@
                         <h:outputText value="#{statusEntry.user}"/>
                     </p:column>
 
+                    <p:column headerText="Remote host">
+                        <h:outputText value="#{statusEntry.remoteHost}"/>
+                    </p:column>
+
+                    <p:column headerText="VPN host">
+                        <h:outputText value="#{statusEntry.vpnHost}"/>
+                    </p:column>
+
                     <p:column headerText="Bytes received">
                         <h:outputText value="#{statusEntry.bytesReceived}"/>
                     </p:column>
