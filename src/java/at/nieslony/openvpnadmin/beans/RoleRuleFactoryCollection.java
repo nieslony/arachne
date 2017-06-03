@@ -6,10 +6,11 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.RoleRule;
+import at.nieslony.utils.classfinder.BeanInjector;
 import at.nieslony.utils.classfinder.ClassFinder;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -52,20 +54,25 @@ public class RoleRuleFactoryCollection
             logger.warning(String.format("Cannot load classes: %s", ex.getMessage()));
         }
 
+        FacesContext ctx = FacesContext.getCurrentInstance();
         for (Class c : factories) {
             try {
                 RoleRuleFactory roleRuleFactory = (RoleRuleFactory) c.newInstance();
                 addRoleRuleFactory(roleRuleFactory);
 
-                for (Field field : c.getFields()) {
-                    if (field.isAnnotationPresent(c)) {
-
-                    }
-                }
+                BeanInjector.injectStaticBeans(ctx, c);
             }
             catch (IllegalAccessException | InstantiationException ex) {
                 logger.warning(String.format("Cannot create role rule factory %s: %s",
                         c.getName(), ex.getMessage()));
+            }
+            catch (NoSuchMethodException ex) {
+                logger.warning(String.format("Cannot find method in class %s: %s",
+                    c.getName(), ex.getMessage()));
+            }
+            catch (IllegalArgumentException | InvocationTargetException ex) {
+                logger.warning(String.format("Cannot invoke method: %s",
+                        c.getName(),  ex.getMessage()));
             }
         }
     }
