@@ -1,2 +1,5 @@
 - redesign user vpn page
 
+- LDAP
+  - basic auth
+  - default values for IPA, AD, rfc...
