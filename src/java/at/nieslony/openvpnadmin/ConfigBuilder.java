@@ -32,6 +32,9 @@ import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import javax.faces.event.ComponentSystemEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
@@ -265,9 +268,9 @@ public class ConfigBuilder implements Serializable {
         pr.println("VPN_CA=$CERTS_DIR/${VPN_HOST}-ca.pem");
         pr.println("VPN_USER_CERT=$CERTS_DIR/${VPN_USER}.crt");
         pr.println("VPN_USER_KEY=$CERTS_DIR/${VPN_USER}.key");
+        pr.println("RESTORECON=\"$( which restorecon 2>/dev/null )\"");
         pr.println("");
         pr.println("mkdir -p $CERTS_DIR");
-        pr.println("restorecon -Rv $CERTS_DIR");
         pr.println("cat <<EOF > $VPN_CA");
         pki.writeCaCert(pr);
         pr.println("EOF");
@@ -283,8 +286,7 @@ public class ConfigBuilder implements Serializable {
             pr.println("EOF");
             pr.println("chmod 600 $VPN_USER_KEY");
         }
-        pr.println("restorecon -R $CERTS_DIR");
-
+        pr.println("if [ -n \"$RESTORECON\" ]; then restorecon -Rv $CERTS_DIR ; fi");
         pr.println("if nmcli con show | grep -q \"$VPN_NAME\" ; then");
         pr.println("nmcli connection modify \"$VPN_NAME\" vpn.service-type org.freedesktop.NetworkManager.openvpn");
         pr.println("nmcli connection modify \"$VPN_NAME\" vpn.data \"" + vpnOpts.toString() + "\"");
@@ -304,6 +306,62 @@ public class ConfigBuilder implements Serializable {
         pr.println("quit");
         pr.println("EOF");
         pr.println("fi");
+    }
+
+    public void getOvpnConfig(ComponentSystemEvent event) {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        ExternalContext ec = fc.getExternalContext();
+
+        Writer wr = null;
+        try {
+            wr = ec.getResponseOutputWriter();
+            ec.setResponseContentType("text/plain");
+            ec.setResponseCharacterEncoding("UTF-8");
+        }
+        catch (IOException ex) {
+            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
+            return;
+        }
+
+        String username = currentUser.getUsername();
+        try {
+            writeUserVpnClientConfig(wr, username);
+        }
+        catch (CertificateEncodingException | IOException ex) {
+            logger.warning(String.format("Error getting openvpn configuration for user %s: %s",
+                    username, ex.getMessage()));
+
+            PrintWriter pw = new PrintWriter(wr);
+            pw.println("# Error getting configuration.");
+        }
+    }
+
+    public void getNetworkManagerConfig(ComponentSystemEvent event) {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        ExternalContext ec = fc.getExternalContext();
+
+        Writer wr = null;
+        try {
+            wr = ec.getResponseOutputWriter();
+            ec.setResponseContentType("text/plain");
+            ec.setResponseCharacterEncoding("UTF-8");
+        }
+        catch (IOException ex) {
+            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
+            return;
+        }
+
+        String username = currentUser.getUsername();
+        try {
+            writeUserVpnNetworkManagerConfig(wr, username);
+        }
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+            logger.warning(String.format("Error getting network manager configuration for user %s: %s",
+                    username, ex.getMessage()));
+
+            PrintWriter pw = new PrintWriter(wr);
+            pw.println("# Error getting configuration.");
+        }
     }
 
     public StreamedContent getDownloadNetworkManagerConfig(String username)
