@@ -134,7 +134,7 @@ public class EditLdapSettings
         testUser = tu;
     }
 
-    public void testConnectionGroup() {
+    public void onTestConnectionGroup() {
         if (testGroup == null || testGroup.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", "Please enter groupname to search for.");
@@ -193,7 +193,7 @@ public class EditLdapSettings
         }
     }
 
-    public void testConnectionUser() {
+    public void onTestConnectionUser() {
         if (testUser == null || testUser.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", "Please enter username to search for.");
@@ -352,5 +352,59 @@ public class EditLdapSettings
         if (getCustomGroupSearchFilter().isEmpty()) {
             setCustomGroupSearchFilter(ldapHelper.getGroupSearchString("%g"));
         }
+    }
+
+    public void onLoadDefaultsforActiveDirectory() {
+        setObjectClassUser("person");
+        setAttrUsername("samAccountName");
+        setAttrFullName("cn");
+        setAttrGivenName("givenName");
+        setAttrSurname("sn");
+        setOuUsers("cn=persons");
+
+        setObjectClassGroup("group");
+        setAttrGroupName("cn");
+        setOuGroups("cn=groups");
+        setAttrGroupDescription("description");
+        setMemberAttrType(LdapSettingsBase.MemberAttrType.MAT_MEMBER_DN);
+        setAttrGroupMemberDn("member");
+
+        setUseCustomUserSearchFilter(Boolean.FALSE);
+    }
+
+    public void onLoadDefaultsForFreeIPA() {
+        setObjectClassUser("person");
+        setAttrUsername("uid");
+        setAttrFullName("cn");
+        setAttrGivenName("givenName");
+        setAttrSurname("sn");
+        setOuUsers("cn=users,cn=accounts");
+
+        setObjectClassGroup("ipausergroup");
+        setAttrGroupName("cn");
+        setOuGroups("cn=groups,cn=accounts");
+        setAttrGroupDescription("description");
+        setMemberAttrType(LdapSettingsBase.MemberAttrType.MAT_MEMBER_DN);
+        setAttrGroupMemberDn("member");
+
+        setUseCustomUserSearchFilter(Boolean.FALSE);
+    }
+
+    public void onLoadDefaultsForRfc2307bis() {
+        setObjectClassUser("posixAccount");
+        setAttrUsername("uid");
+        setAttrFullName("gecos");
+        setAttrGivenName("");
+        setAttrSurname("");
+        setOuUsers("");
+
+        setObjectClassGroup("posixGroup");
+        setAttrGroupName("gid");
+        setOuGroups("");
+        setAttrGroupDescription("");
+        setMemberAttrType(LdapSettingsBase.MemberAttrType.MAT_MEMBER_UID);
+        setAttrGroupMemberDn("memberUid");
+
+        setUseCustomUserSearchFilter(Boolean.FALSE);
     }
 }

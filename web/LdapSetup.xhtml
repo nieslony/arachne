@@ -104,7 +104,7 @@
                             </p:outputPanel>
                             
                             <p:commandButton value="Test connection and search user:"
-                                             action="#{editLdapSettings.testConnectionUser}"
+                                             action="#{editLdapSettings.onTestConnectionUser}"
                                              update="resultFullName resultUsername resultGivenName resultSurname"
                                              id="testConnectionUser">
                             </p:commandButton>
@@ -189,7 +189,7 @@
                             </p:outputPanel>
                             
                             <p:commandButton value="Test connection and search group:"
-                                             action="#{editLdapSettings.testConnectionGroup}"
+                                             action="#{editLdapSettings.onTestConnectionGroup}"
                                              update="useCustomGroupSearchFilter customGroupSearchFilter resultGroupname resultGroupDescription resultGroupMembers"
                                              id="testConnectionGroup"/>
                             <p:inputText value="#{editLdapSettings.testGroup}"/>
@@ -199,12 +199,23 @@
 
                 <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
                 <p:commandButton value="Save" action="#{editLdapSettings.onSave()}"/>
+                <p:splitButton value="Reset to defaults" 
+                               actionListener="#{editLdapSettings.onResetToDefaults}"
+                               update="ldapForm"
+                               >
+                    <p:menuitem value="Load defaults for RFC2370bis"
+                                actionListener="#{editLdapSettings.onLoadDefaultsForRfc2307bis}"
+                                update="ldapForm"/>
+                    <p:menuitem value="Load defaults for FreeIPA"
+                                actionListener="#{editLdapSettings.onLoadDefaultsForFreeIPA}"
+                                update="ldapForm"/>
+                    <p:menuitem value="Load defaults for ActiveDirectory"
+                                actionListener="#{editLdapSettings.onLoadDefaultsforActiveDirectory}"
+                                update="ldapForm"/>
+                </p:splitButton>
                 <p:commandButton value="Reset to saved"
                                  action="#{editLdapSettings.onReset()}"
-                                 update="ldapForm"/>
-                <p:commandButton value="Reset to defaults"
-                                 action="#{editLdapSettings.onResetToDefaults()}"
-                                 update="ldapForm"/>
+                                 update="ldapForm"/>                                                 
             </h:form>
         </ui:define>
     </ui:composition>
