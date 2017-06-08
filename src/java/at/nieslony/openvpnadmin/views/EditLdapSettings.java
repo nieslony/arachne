@@ -208,7 +208,10 @@ public class EditLdapSettings
             ctx = ldapHelper.getLdapContext();
             SearchControls sc = new SearchControls();
             sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            results = ctx.search(getOuUsers(), ldapHelper.getUserSearchString(testUser), sc);
+            String searchString = ldapHelper.getUserSearchString(testUser);
+            results = ctx.search(getOuUsers(), searchString, sc);
+            logger.info(String.format("Search for user %s. Filter: %s",
+                    testUser, searchString));
 
             if (results.hasMore()) {
                 SearchResult result = (SearchResult) results.next();
@@ -329,5 +332,25 @@ public class EditLdapSettings
         String defaultDn = String.join(",", myDomSplit);
 
         return String.format("ldap://%s/%s", defaultHost, defaultDn);
+    }
+
+    public String getDefaultUserSearchFilter() {
+        return ldapHelper.getDefaultUserSearchString("%u");
+    }
+
+    public String getDefaultGroupSearchFilter() {
+        return ldapHelper.getDefaultGroupSearchString("%g");
+    }
+
+    public void onDefaultUserSearchFilter() {
+        if (getCustomUserSearchFilter().isEmpty()) {
+            setCustomUserSearchFilter(ldapHelper.getUserSearchString("%u"));
+        }
+    }
+
+    public void onDefaultGroupSearchFilter() {
+        if (getCustomGroupSearchFilter().isEmpty()) {
+            setCustomGroupSearchFilter(ldapHelper.getGroupSearchString("%g"));
+        }
     }
 }

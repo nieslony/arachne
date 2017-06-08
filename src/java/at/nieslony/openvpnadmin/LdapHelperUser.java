@@ -24,6 +24,8 @@ public interface LdapHelperUser {
     public String getAttrSurname();
     public String getAttrEmail();
     public String getObjectClassUser();
+    public String getCustomUserSearchFilter();
+    public Boolean getUseCustomUserSearchFilter();
 
     public String getOuGroups();
     public String getObjectClassGroup();
@@ -31,5 +33,7 @@ public interface LdapHelperUser {
     public String getAttrGroupDescription();
     public String getAttrGroupMemberDn();
     public String getAttrGroupMemberUid();
+    public String getCustomGroupSearchFilter();
+    public Boolean getUseCustomGroupSearchFilter();
     public LdapSettingsBase.MemberAttrType getMemberAttrType();
 }

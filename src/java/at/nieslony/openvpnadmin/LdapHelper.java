@@ -94,7 +94,9 @@ public class LdapHelper
     public LdapUser findVpnUser(String username)
             throws NoSuchLdapUser, NamingException
     {
-        logger.info(String.format("Trying to find user %s in LDAP", username));
+        String searchString = getUserSearchString(username);
+        logger.info(String.format("Trying to find user %s in LDAP. Search: %s",
+                username, searchString));
 
         DirContext ctx;
         NamingEnumeration results;
@@ -104,7 +106,7 @@ public class LdapHelper
 
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        results = ctx.search(ldapHelperUser.getOuUsers(), getUserSearchString(username), sc);
+        results = ctx.search(ldapHelperUser.getOuUsers(), searchString, sc);
         if (results.hasMore()) {
             vpnUser = new LdapUser(ldapHelperUser, username);
             SearchResult result = (SearchResult) results.next();
@@ -131,9 +133,17 @@ public class LdapHelper
         return vpnUser;
     }
 
-    public String getUserSearchString(String username) {
+    public String getDefaultUserSearchString(String username) {
         return String.format("(&(objectClass=%s)(%s=%s))",
                 ldapHelperUser.getObjectClassUser(), ldapHelperUser.getAttrUsername(),  username);
+    }
+
+    public String getUserSearchString(String username) {
+        if (ldapHelperUser.getUseCustomUserSearchFilter()) {
+            return ldapHelperUser.getCustomUserSearchFilter().replaceAll("%u", username);
+        }
+
+        return getDefaultUserSearchString(username);
     }
 
     public LdapGroup findLdapGroup(String groupname)
@@ -211,9 +221,17 @@ public class LdapHelper
         return group;
     }
 
-    public String getGroupSearchString(String groupname) {
+    public String getDefaultGroupSearchString(String groupname) {
         return String.format("(&(objectClass=%s)(%s=%s))",
                 ldapHelperUser.getObjectClassGroup(), ldapHelperUser.getAttrGroupName(),  groupname);
+    }
+
+    public String getGroupSearchString(String groupname) {
+        if (ldapHelperUser.getUseCustomGroupSearchFilter()) {
+            return ldapHelperUser.getCustomGroupSearchFilter().replaceAll("%g", groupname);
+        }
+
+        return getDefaultGroupSearchString(groupname);
     }
 
     public DirContext getLdapContext() throws NamingException {
@@ -221,7 +239,7 @@ public class LdapHelper
         env.put(Context.SECURITY_AUTHENTICATION, ldapHelperUser.getAuthType());
         logger.info(String.format("LDAP bind to %s", ldapHelperUser.getProviderUrl()));
         if (ldapHelperUser.getAuthType().equals("simple")) {
-            logger.info(String.format("bind type simple => etting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
+            logger.info(String.format("bind type simple => getting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
             env.put(Context.SECURITY_PRINCIPAL, //"cn=ldap-ro,cn=groups,cn=compat,dc=nieslony,dc=lan"
                     ldapHelperUser.getSecurityPrincipal()
             );
