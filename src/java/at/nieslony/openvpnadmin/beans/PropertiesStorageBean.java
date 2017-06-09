@@ -55,6 +55,7 @@ public class PropertiesStorageBean
 
     @PostConstruct
     public void init() {
+        setCacheTimeout(1000L * 60 * 10);
         try {
             setConnection(databaseSettings.getDatabseConnection());
         }
