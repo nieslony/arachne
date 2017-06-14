@@ -9,6 +9,7 @@ import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.exceptions.InvalidUsernameOrPassword;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Base64;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.naming.NamingException;
@@ -96,8 +98,13 @@ public class CurrentUser implements Serializable {
                     AbstractUser tmpUser;
 
                     tmpUser = localUserFactory.findUser(username);
-                    if (tmpUser != null && tmpUser.auth(password)) {
-                        user = tmpUser;
+                    if (tmpUser != null) {
+                        if (tmpUser.auth(password)) {
+                            user = tmpUser;
+                        }
+                        else {
+                            throw new InvalidUsernameOrPassword();
+                        }
                     }
                     else
                         if (authSettings.getAllowBasicAuthLdap()) {
@@ -105,11 +112,18 @@ public class CurrentUser implements Serializable {
                                 username));
                         try {
                             tmpUser = ldapSettings.findVpnUser(username);
-                            if (tmpUser != null && tmpUser.auth(password))
-                                user = tmpUser;
+                            if (tmpUser != null) {
+                                if (tmpUser.auth(password)) {
+                                    user = tmpUser;
+                                }
+                                else {
+                                    throw new InvalidUsernameOrPassword();
+                                }
+                            }
                         }
                         catch (NamingException | NoSuchLdapUser ex) {
-                            logger.warning(String.format("Cannot find LDAP user %s: %s"));
+                            logger.warning(String.format("Cannot find LDAP user %s: %s",
+                                    username, ex.getMessage()));
                         }
                     }
                     else {
@@ -121,10 +135,12 @@ public class CurrentUser implements Serializable {
     }
 
     @PostConstruct
-    public void init() {
+    public void init()
+    {
         logger.info("Initializing currentUser");
 
-        HttpServletRequest req = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest req = (HttpServletRequest) ectx.getRequest();
         user = null;
 
         try {
@@ -132,15 +148,26 @@ public class CurrentUser implements Serializable {
             if (user ==  null) {
                 initWithBasicAuth(req);
             }
-            if (user == null) {
+/*            if (user == null) {
                 logger.warning("Cannot authorize");
                 throw new InvalidUsernameOrPassword();
-            }
+            }*/
         }
         catch (InvalidUsernameOrPassword iuop) {
             logger.severe(String.format("Illegal REMOTE_USER or password provided: %s",
                     iuop.getMessage()));
-            // retirect to 403
+
+            ectx.setResponseStatus(403);
+            Map<String, Object> requestMap = ectx.getRequestMap();
+            requestMap.put("errorMsg", "Permission denied");
+            String errPage = "/error/error.xhtml";
+            try {
+                ectx.dispatch(errPage);
+            }
+            catch (IOException ex) {
+                logger.severe(String.format("Cannot go to error page: %s",
+                ex.getMessage()));
+            }
         }
     }
 
