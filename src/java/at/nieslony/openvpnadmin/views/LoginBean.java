@@ -6,11 +6,15 @@
 package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.AbstractUser;
+import at.nieslony.openvpnadmin.LdapUser;
+import at.nieslony.openvpnadmin.beans.AuthSettings;
 import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
+import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.NavigationBean;
 import at.nieslony.openvpnadmin.beans.Pki;
+import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
@@ -21,6 +25,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.naming.NamingException;
 import org.primefaces.context.RequestContext;
 
 /**
@@ -48,12 +53,36 @@ public class LoginBean implements Serializable {
     @ManagedProperty(value = "#{databaseSettings}")
     DatabaseSettings databaseSettings;
 
+    @ManagedProperty(value = "#{authSettings}")
+    AuthSettings authSettings;
+
+    @ManagedProperty(value = "#{ldapSettings}")
+    LdapSettings ldapSettings;
+
     public void onLogin() throws PermissionDenied{
         AbstractUser tmpUser = localUserFactory.findUser(username);
         if (tmpUser != null && tmpUser.auth(password)) {
             currentUser.setLocalUser(tmpUser);
             logger.info(String.format("Navigating to %s's welcome page", username));
             navigationBean.toWelcomePage(tmpUser);
+        }
+        else {
+            if (authSettings.getAllowBasicAuthLdap()) {
+                LdapUser ldapUser = null;
+
+                try {
+                    ldapUser = ldapSettings.findVpnUser(username);
+                    if (ldapUser != null && ldapUser.auth(password)) {
+                        currentUser.setLocalUser(ldapUser);
+                        logger.info(String.format("Navigating to %s's welcome page", username));
+                        navigationBean.toWelcomePage(ldapUser);
+                    }
+                }
+                catch (NamingException | NoSuchLdapUser ex) {
+                    logger.warning(String.format("Cannot find LDAP user %s: %s",
+                            username, ex.getMessage()));
+                }
+            }
         }
 
         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -115,5 +144,13 @@ public class LoginBean implements Serializable {
 
     public void setDatabaseSettings(DatabaseSettings dbs) {
         databaseSettings = dbs;
+    }
+
+    public void setAuthSettings(AuthSettings as) {
+        authSettings = as;
+    }
+
+    public void setLdapSettings(LdapSettings ls) {
+        ldapSettings = ls;
     }
 }

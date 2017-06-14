@@ -19,6 +19,10 @@
                     <p:selectBooleanCheckbox id="enableAjpRemoteUser" 
                                              value="#{editAuthSettings.enableAjpRemoteUser}"/>
                     
+                    <h:outputLabel value="Basic auth aith LDAP:"/>
+                    <p:selectBooleanCheckbox id="basicAuthWithLdap" 
+                                             value="#{editAuthSettings.allowBasicAuthLdap}"/>
+                    
                     <h:outputLabel value="Username given in HTTP header:"/>
                     <p:selectBooleanCheckbox id="enableHttpHeaderAuth" 
                                              value="#{editAuthSettings.enableHttpHeaderAuth}">

@@ -41,7 +41,7 @@ public class LdapUser
 
     @Override
     public boolean auth(String password) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return ldapHelperUser.auth(getDn(), password);
     }
 
     @Override

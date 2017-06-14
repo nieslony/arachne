@@ -265,4 +265,29 @@ public class LdapHelper
             return "";
         }
     }
+
+    public boolean auth(String dn, String password)
+    {
+        Hashtable<String,String> env = new Hashtable<>();
+
+        boolean ok = true;
+
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, dn);
+        env.put(Context.SECURITY_CREDENTIALS, password);
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapHelperUser.getProviderUrl());
+
+        try {
+            DirContext ctx = new InitialDirContext(env);
+        }
+        catch (NamingException ex) {
+            logger.warning(String.format("Cannot authticate DN %s: %s",
+                    dn, ex.getMessage()));
+
+            ok = false;
+        }
+
+        return ok;
+    }
 }

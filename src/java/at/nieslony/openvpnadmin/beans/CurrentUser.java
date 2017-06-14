@@ -58,6 +58,68 @@ public class CurrentUser implements Serializable {
     public CurrentUser() {
     }
 
+    private void initWithAjpRemoteUser(HttpServletRequest req) {
+        if (authSettings.getEnableAjpRemoteUser()) {
+            logger.info("AJP remoteUser enabled");
+            if (req.getRemoteUser() != null) {
+                try {
+                    user = ldapSettings.findVpnUser(req.getRemoteUser());
+                }
+                catch (NamingException | NoSuchLdapUser ex) {
+                    logger.info(String.format("Cannot find LDAP user %s: %s",
+                            req.getRemoteUser(), ex.getMessage()));
+                }
+            }
+            else {
+                logger.info("No remoteUser supplied");
+            }
+        }
+        else {
+            logger.info("AJP remoteUser disabled");
+        }
+    }
+
+    private void initWithBasicAuth(HttpServletRequest req)
+            throws InvalidUsernameOrPassword
+    {
+        if (req.getHeader("authorization") != null) {
+            String auth[] = req.getHeader("authorization").split(" ");
+            if (auth.length == 2 && auth[0].equals("Basic")) {
+                byte[] decoded = Base64.getDecoder().decode(auth[1]);
+                String[] usrPwd = new String(decoded).split(":");
+                if (usrPwd.length == 2) {
+                    String username = usrPwd[0];
+                    String password = usrPwd[1];
+
+                    logger.info(String.format("Trying basic auth with local user %s...",
+                            username));
+                    AbstractUser tmpUser;
+
+                    tmpUser = localUserFactory.findUser(username);
+                    if (tmpUser != null && tmpUser.auth(password)) {
+                        user = tmpUser;
+                    }
+                    else
+                        if (authSettings.getAllowBasicAuthLdap()) {
+                        logger.info(String.format("Trying basic auth with LDAP user %s...",
+                                username));
+                        try {
+                            tmpUser = ldapSettings.findVpnUser(username);
+                            if (tmpUser != null && tmpUser.auth(password))
+                                user = tmpUser;
+                        }
+                        catch (NamingException | NoSuchLdapUser ex) {
+                            logger.warning(String.format("Cannot find LDAP user %s: %s"));
+                        }
+                    }
+                    else {
+                        logger.info("Basic auth with LDAP disabled");
+                    }
+                }
+            }
+        }
+    }
+
     @PostConstruct
     public void init() {
         logger.info("Initializing currentUser");
@@ -66,42 +128,13 @@ public class CurrentUser implements Serializable {
         user = null;
 
         try {
-            if (authSettings.getEnableAjpRemoteUser()) {
-                logger.info("AJP remoteUser enabled");
-                if (req.getRemoteUser() != null) {
-                    try {
-                        user = ldapSettings.findVpnUser(req.getRemoteUser());
-                    }
-                    catch (NamingException | NoSuchLdapUser ex) {
-                        logger.info(String.format("Cannot find LDAP user %s: %s",
-                                req.getRemoteUser(), ex.getMessage()));
-                    }
-                }
-                else {
-                    logger.info("No remoteUser supplied");
-                }
-            }
-            else {
-                logger.info("AJP remoteUser disabled");
-            }
+            initWithAjpRemoteUser(req);
             if (user ==  null) {
-                if (req.getHeader("authorization") != null) {
-                    String auth[] = req.getHeader("authorization").split(" ");
-                    if (auth.length == 2 && auth[0].equals("Basic")) {
-                        byte[] decoded = Base64.getDecoder().decode(auth[1]);
-                        String[] usrPwd = new String(decoded).split(":");
-                        if (usrPwd.length == 2) {
-                            AbstractUser tmpUser = localUserFactory.findUser(usrPwd[0]);
-                            if (tmpUser.auth(usrPwd[1])) {
-                                user = tmpUser;
-                            }
-                            else {
-                                throw new InvalidUsernameOrPassword();
-                            }
-                        }
-                    }
-                    throw new InvalidUsernameOrPassword();
-                }
+                initWithBasicAuth(req);
+            }
+            if (user == null) {
+                logger.warning("Cannot authorize");
+                throw new InvalidUsernameOrPassword();
             }
         }
         catch (InvalidUsernameOrPassword iuop) {

@@ -78,4 +78,8 @@ public class LdapSettings
     public List<LdapUser> findVpnUsers(String pattern) {
         return ldapHelper.findVpnUsers(pattern);
     }
+
+    public boolean auth(String dn, String password) {
+        return ldapHelper.auth(dn, password);
+    }
 }

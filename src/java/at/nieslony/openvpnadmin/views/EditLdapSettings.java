@@ -407,4 +407,8 @@ public class EditLdapSettings
 
         setUseCustomUserSearchFilter(Boolean.FALSE);
     }
+
+    public boolean auth(String dn, String password) {
+        return ldapHelper.auth(dn, password);
+    }
 }
