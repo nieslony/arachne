@@ -19,7 +19,6 @@ build: build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 	touch build-stamp
-	ls ${CURDIR}
 	CLASSPATH=${CLASS_PATH} ant dist -Droot=${CURDIR}
 
 clean:
@@ -34,6 +33,7 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
+	ant install -Droot=${CURDIR} -Dinstall-root=${CURDIR}/debian/arachne
 
 binary-arch: build install
 	dh_testdir

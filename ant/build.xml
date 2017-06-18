@@ -33,7 +33,12 @@
     <path id="classpath">
         <fileset 
         	dir="/usr/share/java" 
-        	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"/>
+        	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"
+        />
+        <fileset 
+        	dir="/usr/share/java" 
+        	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar"
+        />
         <fileset dir="lib" includes="*jar"/>
         <fileset dir="${build}/generated/java"/>
     </path>
@@ -122,7 +127,9 @@
     
     <target name="tar">
         <mkdir dir="${export}"/>
-        <tar destfile="${export}/${projectName}-${version}.tar.gz">
+        <tar destfile="${export}/${projectName}-${version}.tar.gz"
+             compression="gzip"
+        >
             <tarfileset dir="${root}" prefix="${tar-prefix}">
                 <include name="COPYING-GPL3"/>
             </tarfileset>
