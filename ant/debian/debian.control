@@ -7,5 +7,5 @@ Standards-Version: 0.3.1
 
 Package: arachne
 Architecture: all
-Depends: tomcat
+Depends: tomcat8, libpostgresql-jdbc-java
 Description: Web application for administering openvpn
