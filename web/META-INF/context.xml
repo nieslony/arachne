@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context allowLinking="true" antiJARLocking="true" path="/arachne"/>
+<Context allowLinking="true" antiJARLocking="true" path="/arachne">
+      <Resources allowLinking="true" />
+</Context>
