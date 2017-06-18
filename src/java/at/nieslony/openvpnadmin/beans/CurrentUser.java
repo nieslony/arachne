@@ -148,10 +148,6 @@ public class CurrentUser implements Serializable {
             if (user ==  null) {
                 initWithBasicAuth(req);
             }
-/*            if (user == null) {
-                logger.warning("Cannot authorize");
-                throw new InvalidUsernameOrPassword();
-            }*/
         }
         catch (InvalidUsernameOrPassword iuop) {
             logger.severe(String.format("Illegal REMOTE_USER or password provided: %s",
