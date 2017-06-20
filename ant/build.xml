@@ -14,6 +14,9 @@
     <property name="web"   location="${root}/web"/>
     <property name="build" location="${root}/build"/>
     <property name="export" location="${root}/ant/dist"/>
+    <property name="doc-src" location="${root}/doc"/>
+    <property name="doc-dest" location="${build}/doc"/>
+    <property name="doc-style" value="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"/>
     
     <property name="build.webxml" location="${build}/web/WEB-INF/web.xml"/>
 
@@ -41,6 +44,15 @@
     <target name="init">
         <tstamp/>
         <mkdir dir="${build}"/>
+    </target>
+    
+    <target name="doc">
+        <mkdir dir="${doc-dest}"/>
+        <xslt
+            basedir="${doc-src}"
+            destdir="${doc-dest}"
+            style="${doc-style}"
+            />
     </target>
     
     <target name="generate-code">
