@@ -62,23 +62,21 @@ public class LdapHelper
                     logger.warning("Ignoring user with no username");
                     continue;
                 }
-                attr = attrs.get(ldapHelperUser.getAttrFullName());
-                if (attr != null)
-                    vpnUser.setFullName((String) attr.get());
 
-                attr = attrs.get(ldapHelperUser.getAttrGivenName());
-                if (attr != null)
-                    vpnUser.setGivenName((String) attr.get());
-
-                attr = attrs.get(ldapHelperUser.getAttrSurname());
-                if (attr != null)
-                    vpnUser.setSurName((String) attr.get());
-
-                attr = attrs.get(ldapHelperUser.getAttrEmail());
-                if (attr !=  null)
-                    vpnUser.setEmail((String) attr.get());
-
-                vpnUser.setDn(result.getName() + "," + getBaseDn());
+                vpnUser.setLdapAttributes(attrs);
+                String dn;
+                if (ldapHelperUser.getOuUsers() != null &
+                        !ldapHelperUser.getOuUsers().isEmpty()
+                        )
+                    dn = String.format("%s,%s,%s",
+                            result.getName(),
+                            ldapHelperUser.getOuUsers(),
+                            getBaseDn());
+                else
+                    dn = String.format("%s,%s",
+                            result.getName(),
+                            getBaseDn());
+                vpnUser.setDn(dn);
 
                 users.add(vpnUser);
             }
@@ -111,20 +109,21 @@ public class LdapHelper
             vpnUser = new LdapUser(ldapHelperUser, username);
             SearchResult result = (SearchResult) results.next();
             Attributes attrs = result.getAttributes();
-            Attribute attr;
-            attr = attrs.get(ldapHelperUser.getAttrFullName());
-            if (attr != null)
-                vpnUser.setFullName((String) attr.get());
 
-            attr = attrs.get(ldapHelperUser.getAttrGivenName());
-            if (attr != null)
-                vpnUser.setGivenName((String) attr.get());
-
-            attr = attrs.get(ldapHelperUser.getAttrSurname());
-            if (attr != null)
-                vpnUser.setSurName((String) attr.get());
-
-            vpnUser.setDn(result.getName() + "," + getBaseDn());
+            vpnUser.setLdapAttributes(attrs);
+            String dn;
+            if (ldapHelperUser.getOuUsers() != null &
+                    !ldapHelperUser.getOuUsers().isEmpty()
+                    )
+                dn = String.format("%s,%s,%s",
+                        result.getName(),
+                        ldapHelperUser.getOuUsers(),
+                        getBaseDn());
+            else
+                dn = String.format("%s,%s",
+                        result.getName(),
+                        getBaseDn());
+            vpnUser.setDn(dn);
         }
         else {
             throw new NoSuchLdapUser(String.format("LDAP user %s not found", username));

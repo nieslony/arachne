@@ -35,6 +35,7 @@ public interface LdapHelperUser {
     public String getAttrGroupMemberUid();
     public String getCustomGroupSearchFilter();
     public Boolean getUseCustomGroupSearchFilter();
+    public String getGroupSearchFilter(String group);
     public LdapSettingsBase.MemberAttrType getMemberAttrType();
 
     public boolean auth(String dn, String password);

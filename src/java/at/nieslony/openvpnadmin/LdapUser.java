@@ -7,6 +7,9 @@ package at.nieslony.openvpnadmin;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
 
 /**
  *
@@ -31,7 +34,28 @@ public class LdapUser
 
     public LdapUser(LdapHelperUser ls, String username) {
         ldapHelperUser = ls;
-        setUsername(username);
+        super.setUsername(username);
+    }
+
+    public void setLdapAttributes(Attributes attrs)
+            throws NamingException
+    {
+        Attribute attr;
+        attr = attrs.get(ldapHelperUser.getAttrFullName());
+        if (attr != null)
+            setFullName((String) attr.get());
+
+        attr = attrs.get(ldapHelperUser.getAttrGivenName());
+        if (attr != null)
+            setGivenName((String) attr.get());
+
+        attr = attrs.get(ldapHelperUser.getAttrSurname());
+        if (attr != null)
+            setSurName((String) attr.get());
+
+        attr = attrs.get(ldapHelperUser.getAttrEmail());
+        if (attr !=  null)
+            setEmail((String) attr.get());
     }
 
     @Override

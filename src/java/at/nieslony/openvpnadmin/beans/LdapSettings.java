@@ -69,6 +69,11 @@ public class LdapSettings
         return ldapHelper.findLdapGroup(groupname);
     }
 
+    @Override
+    public String getGroupSearchFilter(String group) {
+        return ldapHelper.getGroupSearchString(group);
+    }
+
     public DirContext getLdapContext()
             throws NamingException
     {

@@ -401,7 +401,13 @@ public class EditLdapSettings
         setUseCustomUserSearchFilter(Boolean.FALSE);
     }
 
+    @Override
     public boolean auth(String dn, String password) {
         return ldapHelper.auth(dn, password);
+    }
+
+    @Override
+    public String getGroupSearchFilter(String group) {
+        return ldapHelper.getGroupSearchString(group);
     }
 }
