@@ -20,33 +20,74 @@
 </para>
 </preface>
 
-<chapter><title>Installation</title>
+<chapter>
+    <title>Installation</title>
     <section>
         <title>CentOS 7</title>
         <orderedlist>
             <listitem>
                 <para>Add arache repository</para>
                 <programlisting>
-                    wget http://... -C /etc/yum.re
+                    wget http://download.opensuse.org/repositories/home:/nieslony/CentOS_7/home:nieslony.repo -C /etc/yum.repos.d
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Add EPEL repository</para>
+                <programlisting>
+                    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
                 </programlisting>
             </listitem>
             <listitem>
                 <para>Install packages</para>
                 <programlisting>
-                    yum -y install epel.repo
-                </programlisting>
-            </listitem>
-            <listitem>
-                <para>Install packages</para>
-                <programlisting>
-                    yum install arachne-server arachne-doc postgres-server
+                    yum install arachne-server arachne postgres-server
                 </programlisting>
             </listitem>
         </orderedlist>
     </section>
     <section>
         <title>openSUSE</title>
+        <orderedlist>
+            <listitem>
+                <para>Add arachne repository</para>
+                <programlisting>
+                    zypper ar http://download.opensuse.org/repositories/home:/nieslony/openSUSE_Leap_42.2/
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Install packages</para>
+                <programlisting>
+                    zypper install arachne-server postgresql-server
+                </programlisting>
+            </listitem>
+        </orderedlist>
     </section>
+</chapter>
+
+<chapter>
+    <title>Initial setup</title>
+    <para>
+        In the following steps replace arachne.example.com with your arachne server's full
+        qualified domain name.
+    </para>
+    <orderedlist>
+        <listitem>
+            <para>Start Tomcat server</para>
+            <programlisting>
+                systemctl start tomcat
+            </programlisting>
+        </listitem>
+        <listitem>
+            <para>Open arachne in Mozilla Firefox or in your favorite web browser.</para>
+            <programlisting>
+                firefox http://arachne.example.com:8080/arachne
+            </programlisting>
+            <para>You will see arachne's setup wizard</para>
+        </listitem>
+        <listitem>
+            <para>Set name of master adminitrative user and password.</para>
+        </listitem>
+    </orderedlist>
 </chapter>
 
 <appendix><title>Optional Appendix</title>
