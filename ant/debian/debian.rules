@@ -6,7 +6,7 @@ SHELL=/bin/bash
 NAME=arachne
 VERSION=0.3.1
 BUILD_DIR=$(CURDIR)/debian/build/${NAME}-${VERSION}
-CLASS_PATH=/usr/share/java/tomcat-servlet-api-3.0.jar
+CLASS_PATH=/usr/share/java/tomcat-servlet-api-3.0.jar:/usr/share/java/tomcat8-servlet-api.jar
 
 APP_ROOT=/var/lib/tomcat8/webapps/${NAME}
 INST_ROOT=${CURDIR}/debian/${NAME}

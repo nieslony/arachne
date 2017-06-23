@@ -37,7 +37,7 @@
         />
         <fileset 
         	dir="/usr/share/java" 
-        	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar"
+        	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar tomcat8-servlet-api.jar"
         />
         <fileset dir="lib" includes="*jar"/>
         <fileset dir="${build}/generated/java"/>
