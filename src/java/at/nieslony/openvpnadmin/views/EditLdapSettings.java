@@ -160,9 +160,6 @@ public class EditLdapSettings
             }
             testGroupDesciption = ldapGroup.getDescription();
 
-            rctx.update("resultGroupDescription");
-            rctx.update("resultGroupname");
-            rctx.update("resultGroupMembers");
             rctx.execute("PF('testLdapGroup').show();");
         }
         catch (NoSuchLdapGroup nslg) {
@@ -225,10 +222,6 @@ public class EditLdapSettings
                 setTestSurname(attr != null ? (String) attr.get() : "");
 
                 RequestContext rctx = RequestContext.getCurrentInstance();
-                rctx.update("resultUserame");
-                rctx.update("resultFullName");
-                rctx.update("resultGivenName");
-                rctx.update("resultSurame");
                 rctx.execute("PF('testLdapUser').show();");
 
             }
