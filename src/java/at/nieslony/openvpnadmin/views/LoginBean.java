@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
+import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.naming.NamingException;
@@ -33,7 +33,7 @@ import org.primefaces.context.RequestContext;
  * @author claas
  */
 @ManagedBean
-@ViewScoped
+@RequestScoped
 public class LoginBean implements Serializable {
     private static final long serialVersionUID = 1234L;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
@@ -43,9 +43,6 @@ public class LoginBean implements Serializable {
 
     @ManagedProperty(value="#{navigationBean}")
     private NavigationBean navigationBean;
-
-    @ManagedProperty(value = "#{currentUser}")
-    private CurrentUser currentUser;
 
     @ManagedProperty(value = "#{localUserFactory}")
     LocalUserFactory localUserFactory;
@@ -60,6 +57,10 @@ public class LoginBean implements Serializable {
     LdapSettings ldapSettings;
 
     public void onLogin() throws PermissionDenied{
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        CurrentUser currentUser = ctx.getApplication()
+                .evaluateExpressionGet(ctx, "#{currentUser}", CurrentUser.class);
+
         AbstractUser tmpUser = localUserFactory.findUser(username);
         if (tmpUser != null && tmpUser.auth(password)) {
             currentUser.setLocalUser(tmpUser);
@@ -114,10 +115,6 @@ public class LoginBean implements Serializable {
 
     public void setPki(Pki pki) {
         //this.pki = pki;
-    }
-
-    public void setCurrentUser(CurrentUser cu) {
-        currentUser = cu;
     }
 
     public void alreadyLoggedIn(ComponentSystemEvent event) {

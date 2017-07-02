@@ -8,7 +8,7 @@
 
     <f:event listener="#{loginBean.requireSetup}" type="preRenderView"/>
 
-    <f:view contentType="text/html">
+    <f:view contentType="text/html" transient="true">
     <h:head>
         <title>Login</title>
         <h:outputStylesheet library="css" name="default.css"/>
@@ -17,7 +17,7 @@
         <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
     </h:head>
     <h:body>
-        <p:dialog visible="true" closable="false" header="Login to OpenVPN Admin" draggable="false" resizable="false" >
+        <p:dialog visible="true" closable="false" header="Login to Arachne" draggable="false" resizable="false" >
             <h:form>
                 <p:growl id="growl" showDetail="true" sticky="true"/>
                 <h:panelGrid columns="2" >
