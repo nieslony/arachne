@@ -16,18 +16,18 @@
                     <h:outputText value=""/>
                     
                     <h:outputLabel value="Remote user supplied by AJP:"/>
-                    <p:selectBooleanCheckbox id="enableAjpRemoteUser" 
+                    <p:inputSwitch id="enableAjpRemoteUser" onLabel="yes" offLabel="no"
                                              value="#{editAuthSettings.enableAjpRemoteUser}"/>
                     
                     <h:outputLabel value="Basic auth aith LDAP:"/>
-                    <p:selectBooleanCheckbox id="basicAuthWithLdap" 
+                    <p:inputSwitch id="basicAuthWithLdap" onLabel="yes" offLabel="no"
                                              value="#{editAuthSettings.allowBasicAuthLdap}"/>
                     
                     <h:outputLabel value="Username given in HTTP header:"/>
-                    <p:selectBooleanCheckbox id="enableHttpHeaderAuth" 
+                    <p:inputSwitch id="enableHttpHeaderAuth" onLabel="yes" offLabel="no"
                                              value="#{editAuthSettings.enableHttpHeaderAuth}">
                         <p:ajax event="change" update="httpHeaderRemoteUser"/>
-                    </p:selectBooleanCheckbox>
+                    </p:inputSwitch>
                     
                     <h:outputLabel value="HTTP header:"/>
                     <p:inputText id="httpHeaderRemoteUser" 
