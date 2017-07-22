@@ -58,7 +58,8 @@
     </welcome-file-list>
     <context-param>
         <param-name>primefaces.THEME</param-name>
-        <param-value>trontastic</param-value>
+<!--        <param-value>trontastic</param-value> -->
+        <param-value>arachne</param-value>
     </context-param>
 
     <!--
