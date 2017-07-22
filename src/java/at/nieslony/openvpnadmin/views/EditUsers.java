@@ -98,6 +98,7 @@ public class EditUsers implements Serializable {
     }
 
     public AbstractUser getSelectedUser() {
+        logger.info(selectedUser == null ? "null" : selectedUser.getUsername());
         return selectedUser;
     }
 
@@ -191,12 +192,14 @@ public class EditUsers implements Serializable {
         }
     }
 
-    public StreamedContent getDownloadNetworkManagerInstaller()
+    public StreamedContent getDownloadNetworkManagerInstaller(AbstractUser user)
             throws ClassNotFoundException, GeneralSecurityException, SQLException
     {
+        logger.info(String.format("Preparing NetworkManager config of user %s fow download.",
+                user.getUsername()));
         StreamedContent sc = null;
         try {
-            sc = configBuilder.getDownloadNetworkManagerConfig(selectedUser.getUsername());
+            sc = configBuilder.getDownloadNetworkManagerConfig(user.getUsername());
         }
         catch (FileNotFoundException ex) {
             FacesContext fc = FacesContext.getCurrentInstance();
@@ -215,10 +218,12 @@ public class EditUsers implements Serializable {
         return sc;
     }
 
-    public StreamedContent getDownloadOpenVPNConfig() {
+    public StreamedContent getDownloadOpenVPNConfig(AbstractUser user) {
+        logger.info(String.format("Preparing openVPN config of user %s fow download.",
+                user.getUsername()));
         StreamedContent sc = null;
         try {
-            sc = configBuilder.getDownloadOpenVpnConfig(selectedUser.getUsername());
+            sc = configBuilder.getDownloadOpenVpnConfig(user.getUsername());
         }
         catch (FileNotFoundException ex) {
             FacesContext fc = FacesContext.getCurrentInstance();
