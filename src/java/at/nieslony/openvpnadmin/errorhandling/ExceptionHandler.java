@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.el.ELException;
 import javax.faces.FacesException;
+import javax.faces.application.ViewExpiredException;
 import javax.faces.context.ExceptionHandlerWrapper;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -66,6 +67,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 HttpServletRequest request = (HttpServletRequest) extContext.getRequest();
 
                 String errorMsg = "Unhandled Exception";
+                String errorPage = "/error/error.xhtml";
                 boolean isFatal = false;
 
                 if (rootCause instanceof PermissionDenied) {
@@ -81,6 +83,10 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 else if (rootCause instanceof ELException) {
                     isFatal = true;
                 }
+                if (rootCause instanceof ViewExpiredException) {
+                    LOG.warning("View expired");
+                    errorPage = "Login.xhtml";
+                }
                 else {
                     extContext.setResponseStatus(500);
                 }
@@ -89,10 +95,9 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (!isFatal) {
                     try {
                         context.responseComplete();
-                        String errPage = "/error/error.xhtml";
-                        LOG.info(String.format("Going to %s", errPage));
+                        LOG.info(String.format("Going to %s", errorPage));
                         try {
-                            extContext.dispatch(errPage);
+                            extContext.dispatch(errorPage);
                         }
                         catch (IOException ex) {
                             LOG.severe(String.format("Cannot go to error page: %s",
