@@ -136,7 +136,6 @@ public class TaskScheduler
     public void destroy() {
         logger.info("Destroying task scheduler");
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         scheduler.shutdownNow();
     }
 
