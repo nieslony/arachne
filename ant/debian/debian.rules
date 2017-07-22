@@ -1,60 +1,28 @@
 #!/usr/bin/make -f
 
-export DH_VERBOSE=1
+export JAVA_HOME=/usr/lib/jvm/default-java
 
-SHELL=/bin/bash
-NAME=arachne
-VERSION=0.3.1
-BUILD_DIR=$(CURDIR)/debian/build/${NAME}-${VERSION}
-CLASS_PATH=/usr/share/java/tomcat-servlet-api-3.0.jar:/usr/share/java/tomcat8-servlet-api.jar
+export VERSION=0.3.1
 
-APP_ROOT=/var/lib/tomcat8/webapps/${NAME}
-INST_ROOT=${CURDIR}/debian/${NAME}
+export APP_ROOT=/var/lib/tomcat8/webapps/${NAME}
+export INST_ROOT=${CURDIR}/debian/${NAME}
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	touch configure-stamp
+%:
+	dh $@ --with javahelper
 
+override_dh_auto_clean:
+	# Leave empty to avoid a FTBFS
 
-build: build-stamp
+override_dh_auto_build:
+	ant dist -Droot=/usr/src/packages/BUILD
 
-build-stamp: configure-stamp 
-	dh_testdir
-	touch build-stamp
-	CLASSPATH=${CLASS_PATH} ant dist -Droot=${CURDIR}
+# add a symlink from javacsv.jar to csv.jar
+override_jh_installlibs:
+	pwd
+	find -name *jar
+	jh_installlibs
+	dh_installdocs COPYING*
+	dh_install dist/arachne.war ${APP_ROOT}
 
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp configure-stamp
-
-	dh_clean 
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_installdirs
-	ant install -Droot=${CURDIR} -Dinstall-root=${INST_ROOT} -Dapp-root=${APP_ROOT}
-
-binary-arch: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs
-	dh_installexamples
-	dh_installman
-	dh_link
-	dh_strip
-	dh_compress
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary-indep: build install
-
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+get-orig-source:
+	uscan --force-download --download-current-version --repack --compression xz

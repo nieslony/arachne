@@ -29,6 +29,9 @@
     <property name="sql.dir" value="${web-inf.dir}/sql"/>
     <property name="bin.dir" value="${web-inf.dir}/bin"/>
     <property name="work.dir" value="/var/lib/arachne"/>
+    
+    <property name="theme.src" value="${root}/arachne-theme"/>
+    <property name="theme.dir" value="${build}/web/WEB-INF/resources/primefaces-arachne"/>
  
     <path id="classpath">
         <fileset 
@@ -87,6 +90,14 @@
         <copy todir="${build}/web/WEB-INF/sql">
             <fileset dir="${src}/sql"/>
         </copy>
+        
+        <mkdir dir="${theme.dir}"/>
+        <copy toDir="${theme.dir}"
+              file="${theme.src}/theme.css"
+              />
+        <copy toDir="${theme.dir}">
+            <fileset dir="${theme.src}/images"/>
+        </copy>
         <echo message="--- END copy static ---"/>
     </target>
     
@@ -142,6 +153,9 @@
                         prefix="${tar-prefix}" 
                         excludes="build dist"
             />
+            <tarfileset dir="${theme.src}"
+                        prefix="${tar-prefix}/arachne-theme"
+                        />
             <tarfileset dir="${root}/bin" prefix="${tar-prefix}/bin/"/>
         </tar>
     </target>
