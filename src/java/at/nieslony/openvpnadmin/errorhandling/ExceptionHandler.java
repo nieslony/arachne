@@ -68,7 +68,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
 
                 String errorMsg = "Unhandled Exception";
                 String errorPage = "/error/error.xhtml";
-                boolean isFatal = false;
+                boolean isFatal = true;
 
                 if (rootCause instanceof PermissionDenied) {
                     String message = String.format(
@@ -79,6 +79,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     LOG.warning(message);
                     errorMsg = "Access denied";
                     extContext.setResponseStatus(403);
+                    isFatal = false;
                 }
                 else if (rootCause instanceof ELException) {
                     isFatal = true;
@@ -86,6 +87,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (rootCause instanceof ViewExpiredException) {
                     LOG.warning("View expired");
                     errorPage = "Login.xhtml";
+                    isFatal = false;
                 }
                 else {
                     extContext.setResponseStatus(500);
@@ -114,6 +116,15 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     context.renderResponse();
                 }
                 else {
+                    context.responseComplete();
+                    LOG.info(String.format("Going to %s", errorPage));
+                    try {
+                        extContext.dispatch("/error/error.html");
+                    }
+                    catch (IOException ex) {
+                        LOG.severe(String.format("Cannot go to error page: %s",
+                        ex.getMessage()));
+                    }
                     LOG.severe("#####  BEGIN ...---... #####");
                     LOG.severe(rootCause.toString());
                     LOG.severe("#####  ...---... END #####");
