@@ -27,6 +27,11 @@
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+        <!--<url-pattern>/faces/*</url-pattern>-->
+    </servlet-mapping>
     <servlet>
         <servlet-name>ConfigNetworkManager</servlet-name>
         <servlet-class>at.nieslony.openvpnadmin.servlets.ConfigNetworkManager</servlet-class>
@@ -35,11 +40,6 @@
         <servlet-name>ConfigOvpn</servlet-name>
         <servlet-class>at.nieslony.openvpnadmin.servlets.ConfigOvpn</servlet-class>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>Faces Servlet</servlet-name>
-        <url-pattern>*.xhtml</url-pattern>
-        <!--<url-pattern>/faces/*</url-pattern>-->
-    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ConfigNetworkManager</servlet-name>
         <url-pattern>/download/add-vpn-to-networkmanager.sh</url-pattern>
@@ -58,10 +58,11 @@
     </welcome-file-list>
     <context-param>
         <param-name>primefaces.THEME</param-name>
-<!--        <param-value>trontastic</param-value> -->
         <param-value>arachne</param-value>
     </context-param>
-
+<listener>
+  <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
+</listener>
     <!--
     <error-page>
         <exception-type>at.nieslony.openvpnadmin.exceptions.PermissionDenied</exception-type>
