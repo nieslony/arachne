@@ -19,6 +19,7 @@ import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
+import javax.faces.application.ConfigurableNavigationHandler;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -124,13 +125,13 @@ public class LoginBean implements Serializable {
     public void requireSetup(ComponentSystemEvent event) throws IOException {
 	FacesContext fc = FacesContext.getCurrentInstance();
         if (!databaseSettings.isValid() /*|| !pki.isValid() */ ) {
-            /*ConfigurableNavigationHandler nav =
+            ConfigurableNavigationHandler nav =
                     (ConfigurableNavigationHandler)
 			fc.getApplication().getNavigationHandler();
-*/
+
             logger.info("Navigating to SetupWizard");
-            //nav.performNavigation("SetupWizard");
-            fc.getExternalContext().redirect("SetupWizard.xhtml");
+            nav.performNavigation("SetupWizard");
+            //fc.getExternalContext().redirect("SetupWizard.xhtml");
         }
     }
 
