@@ -381,10 +381,17 @@ END
     }
 
     @PreDestroy
-    public void destroy() throws Throwable {
+    public void destroy() {
+        logger.info("Closing socket to management interface");
+
         try {
-            logger.info("Closing socket to management interface");
             sendCommand("quit");
+        }
+        catch (IOException | ManagementInterfaceException ex) {
+            logger.warning(String.format("Cannot quit mamagement interface: %s", ex.getMessage()));
+        }
+        
+        try {
             socket.close();
         }
         catch (IOException ex) {
