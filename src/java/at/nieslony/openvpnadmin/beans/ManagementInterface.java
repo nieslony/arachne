@@ -390,9 +390,10 @@ END
         catch (IOException | ManagementInterfaceException ex) {
             logger.warning(String.format("Cannot quit mamagement interface: %s", ex.getMessage()));
         }
-        
+
         try {
-            socket.close();
+            if (socket != null)
+                socket.close();
         }
         catch (IOException ex) {
             logger.warning(String.format("Canot close socket: %s", ex.getMessage()));
