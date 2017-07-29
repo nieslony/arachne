@@ -5,8 +5,10 @@
  */
 package at.nieslony.openvpnadmin;
 
+import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -236,7 +238,9 @@ public class LdapHelper
     public DirContext getLdapContext() throws NamingException {
         Hashtable<String,String> env = new Hashtable<>();
         env.put(Context.SECURITY_AUTHENTICATION, ldapHelperUser.getAuthType());
-        logger.info(String.format("LDAP bind to %s", ldapHelperUser.getProviderUrl()));
+
+        String url = formLdapUrl();
+        logger.info(String.format("LDAP bind to %s", url));
         if (ldapHelperUser.getAuthType().equals("simple")) {
             logger.info(String.format("bind type simple => getting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
             env.put(Context.SECURITY_PRINCIPAL, //"cn=ldap-ro,cn=groups,cn=compat,dc=nieslony,dc=lan"
@@ -250,7 +254,7 @@ public class LdapHelper
             logger.info("LDAP bind without authentication");
         }
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ldapHelperUser.getProviderUrl());
+        env.put(Context.PROVIDER_URL, url);
 
         return new InitialDirContext(env);
     }
@@ -288,5 +292,31 @@ public class LdapHelper
         }
 
         return ok;
+    }
+
+    public String formLdapUrl() {
+        String servername;
+        if (ldapHelperUser.getLdapServereLookupMethod() == LdapSettingsBase.LdapServerLookupMethod.HOSTNAME) {
+            servername = ldapHelperUser.getLdapServer();
+        }
+        else {
+            String dnsDomain = ldapHelperUser.getLdapDnsDomain();
+            try {
+                servername = NetUtils.srvLookup("ldap", dnsDomain);
+            }
+            catch (NamingException | NullPointerException ex) {
+                logger.warning(String.format("Cannot find LDAP SRV record for domain %s: %s",
+                        dnsDomain, ex.getMessage()));
+                servername = "ldap.server.not.found.in.dns";
+            }
+        }
+
+        Integer port = ldapHelperUser.getLdapPort();
+        String baseDn = ldapHelperUser.getLdapBaseDn();
+
+        String url = String.format("ldap://%s:%d/%s", servername, port, baseDn);
+        logger.info(String.format("LDAP url: %s", url));
+
+        return url;
     }
 }

@@ -14,6 +14,11 @@ import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 public interface LdapHelperUser {
     public String getAuthType();
     public String getProviderUrl();
+    public String getLdapServer();
+    public String getLdapBaseDn();
+    public Integer getLdapPort();
+    public String getLdapDnsDomain();
+    public LdapSettingsBase.LdapServerLookupMethod getLdapServereLookupMethod();
     public String getSecurityPrincipal();
     public String getSecurityCredentials();
 
