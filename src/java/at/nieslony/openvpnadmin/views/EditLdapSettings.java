@@ -283,7 +283,6 @@ public class EditLdapSettings
             super.setSecurityCredentials(sc);
     }
 
-    @Override
     public String getProviderUrl() {
         return ldapHelper.formLdapUrl();
     }

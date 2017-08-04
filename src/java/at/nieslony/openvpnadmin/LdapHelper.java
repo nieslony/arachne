@@ -73,11 +73,11 @@ public class LdapHelper
                     dn = String.format("%s,%s,%s",
                             result.getName(),
                             ldapHelperUser.getOuUsers(),
-                            getBaseDn());
+                            ldapHelperUser.getLdapBaseDn());
                 else
                     dn = String.format("%s,%s",
                             result.getName(),
-                            getBaseDn());
+                            ldapHelperUser.getLdapBaseDn());
                 vpnUser.setDn(dn);
 
                 users.add(vpnUser);
@@ -119,12 +119,12 @@ public class LdapHelper
                     )
                 dn = String.format("%s,%s,%s",
                         result.getName(),
-                        ldapHelperUser.getOuUsers(),
-                        getBaseDn());
+                        ldapHelperUser.getLdapBaseDn(),
+                        ldapHelperUser.getOuUsers());
             else
                 dn = String.format("%s,%s",
                         result.getName(),
-                        getBaseDn());
+                        ldapHelperUser.getLdapBaseDn());
             vpnUser.setDn(dn);
         }
         else {
@@ -259,16 +259,6 @@ public class LdapHelper
         return new InitialDirContext(env);
     }
 
-    public String getBaseDn() {
-        String url = ldapHelperUser.getProviderUrl();
-        try {
-            return url.substring(url.lastIndexOf("/") + 1);
-        }
-        catch (ArrayIndexOutOfBoundsException ex) {
-            return "";
-        }
-    }
-
     public boolean auth(String dn, String password)
     {
         Hashtable<String,String> env = new Hashtable<>();
@@ -279,7 +269,7 @@ public class LdapHelper
         env.put(Context.SECURITY_PRINCIPAL, dn);
         env.put(Context.SECURITY_CREDENTIALS, password);
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ldapHelperUser.getProviderUrl());
+        env.put(Context.PROVIDER_URL, formLdapUrl());
 
         try {
             DirContext ctx = new InitialDirContext(env);
