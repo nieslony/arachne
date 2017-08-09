@@ -61,23 +61,29 @@ public class CurrentUser implements Serializable {
     }
 
     private void initWithAjpRemoteUser(HttpServletRequest req) {
-        if (authSettings.getEnableAjpRemoteUser()) {
-            logger.info("AJP remoteUser enabled");
-            if (req.getRemoteUser() != null) {
-                try {
-                    user = ldapSettings.findVpnUser(req.getRemoteUser());
+        try {
+            if (authSettings.getEnableAjpRemoteUser()) {
+                logger.info("AJP remoteUser enabled");
+                if (req.getRemoteUser() != null) {
+                    try {
+                        user = ldapSettings.findVpnUser(req.getRemoteUser());
+                    }
+                    catch (NamingException | NoSuchLdapUser ex) {
+                        logger.info(String.format("Cannot find LDAP user %s: %s",
+                                req.getRemoteUser(), ex.getMessage()));
+                    }
                 }
-                catch (NamingException | NoSuchLdapUser ex) {
-                    logger.info(String.format("Cannot find LDAP user %s: %s",
-                            req.getRemoteUser(), ex.getMessage()));
+                else {
+                    logger.info("No remoteUser supplied");
                 }
             }
             else {
-                logger.info("No remoteUser supplied");
+                logger.info("AJP remoteUser disabled");
             }
         }
-        else {
-            logger.info("AJP remoteUser disabled");
+        catch (Exception ex) {
+            logger.warning(String.format("Cannot initialize AJP remote user: %s",
+                    ex.getMessage()));
         }
     }
 

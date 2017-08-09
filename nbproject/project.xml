@@ -16,13 +16,17 @@
                     <file>${file.reference.primefaces-6.0.jar}</file>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.bcprov.jar}</file>
-                </library>
-                <library dirs="200">
                     <file>${file.reference.myfaces-api-2.2.12.jar}</file>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.myfaces-impl-2.2.12.jar}</file>
+                </library>
+                <library dirs="200">
+                    <file>${file.reference.bcprov.jar}</file>
+                </library>
+                <library dirs="200">
+                    <file>${file.reference.bcpkix.jar}</file>
+                    <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.myfaces-impl-shared-2.2.12.jar}</file>

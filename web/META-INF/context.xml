@@ -20,7 +20,10 @@
         <PostResources base="/usr/share/java/bcprov.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/bcprov.jar"/>
-                
+        <PostResources base="/usr/share/java/bcpkix.jar"
+                className="org.apache.catalina.webresources.FileResourceSet"
+                webAppMount="/WEB-INF/lib/bcpkix.jar"/>
+
         <PostResources base="/usr/share/java/postgresql-jdbc.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/postgresql-jdbc.jar"/>

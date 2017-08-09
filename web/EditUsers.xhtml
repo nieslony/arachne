@@ -127,12 +127,12 @@
                         <p:menuitem value="Download openVPN config"
                                     rendered='${roles.hasUserRole(user, "user")}'
                                     ajax="false">
-                            <p:fileDownload value="#{editUsers.getDownloadOpenVPNConfig(user)}"/>
+                            <p:fileDownload value="#{editUsers.downloadOpenVPNConfig}"/>
                         </p:menuitem>
                         <p:menuitem value="Download NetworkManager installer"
                                    rendered='${roles.hasUserRole(user, "user")}'
                                    ajax="false">
-                            <p:fileDownload value="#{editUsers.getDownloadNetworkManagerInstaller(user)}"/>
+                            <p:fileDownload value="#{editUsers.downloadNetworkManagerInstaller(user)}"/>
                         </p:menuitem>
                     </p:splitButton>
                 </p:column>

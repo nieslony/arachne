@@ -8,19 +8,19 @@ package at.nieslony.openvpnadmin.views;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import java.io.Serializable;
-import java.security.PublicKey;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.DSAPublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
+import org.bouncycastle.cert.X509CertificateHolder;
 
 /**
  *
@@ -29,7 +29,7 @@ import javax.faces.context.FacesContext;
 @ManagedBean
 @ViewScoped
 public class UserCertificates implements Serializable {
-    X509Certificate selectedCert;
+    X509CertificateHolder selectedCert;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{pki}")
@@ -50,11 +50,11 @@ public class UserCertificates implements Serializable {
     public UserCertificates() {
     }
 
-    public void setSelectedCert(X509Certificate cert) {
+    public void setSelectedCert(X509CertificateHolder cert) {
         this.selectedCert = cert;
     }
 
-    public X509Certificate getSelectedCert() {
+    public X509CertificateHolder getSelectedCert() {
         return selectedCert;
     }
 
@@ -71,7 +71,7 @@ public class UserCertificates implements Serializable {
         }
         catch (ClassNotFoundException | SQLException ex) {
             String msgStr = String.format("Cannot remove certificate %s: %s",
-                    selectedCert.getSubjectDN().toString(),
+                    selectedCert.getSubject().toString(),
                     ex.getMessage());
             FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Warning", msgStr));
@@ -87,43 +87,34 @@ public class UserCertificates implements Serializable {
         }
     }
 
-    public String getCertifivcateStatus(X509Certificate cert) {
+    public String getCertifivcateStatus(X509CertificateHolder cert) {
         if (cert == null)
             return "I";
         if (pki.isCertificateRevoked(cert))
             return "R";
 
         String status = "V";
-        try {
-            cert.checkValidity();
-        }
-        catch (CertificateExpiredException ex) {
-            status = "E";
-        }
-        catch (CertificateNotYetValidException ex) {
-            status = "N";
-        }
+
+        status = cert.isValidOn(new Date()) ? "V" : "E";
 
         return status;
     }
 
     public String getSelectedCertPrivKeyDetails() {
-        String keyAlgo = selectedCert.getPublicKey().getAlgorithm();
+        SubjectPublicKeyInfo keyInfo = selectedCert.getSubjectPublicKeyInfo();
+        ASN1ObjectIdentifier aid = keyInfo.getAlgorithm().getAlgorithm();
 
-        PublicKey publicKey = selectedCert.getPublicKey();
-        String keySize = "unknown";
-        if (publicKey instanceof RSAPublicKey) {
-		keySize = String.valueOf(
-                        ((RSAPublicKey)publicKey).getModulus().bitLength()
-                );
-	}
-        else if (publicKey instanceof DSAPublicKey) {
-		keySize = String.valueOf(
-                        ((DSAPublicKey)publicKey).getParams().getP().bitLength()
-                );
-	}
+        String keyAlgo = "unknown";
+        if (X9ObjectIdentifiers.id_dsa.equals(aid))
+            keyAlgo = "DSA";
+        else if (X9ObjectIdentifiers.id_ecPublicKey.equals(aid))
+            keyAlgo = "ECDSA";
+        else if (PKCSObjectIdentifiers.rsaEncryption.equals(aid))
+            keyAlgo = "RSA";
 
-        String keyInfo = String.format("%s %s bit", keyAlgo, keySize);
-        return keyInfo;
+        String keySize = "?";
+
+        String keyInfoStr = String.format("%s %s bit", keyAlgo, keySize);
+        return keyInfoStr;
     }
 }

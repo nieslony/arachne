@@ -14,9 +14,13 @@ import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
+import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.StreamedContent;
 
 /**
@@ -26,6 +30,7 @@ import org.primefaces.model.StreamedContent;
 @ManagedBean
 @SessionScoped
 public class UserWelcome implements Serializable {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{currentUser}")
     CurrentUser currentUser;
@@ -61,14 +66,48 @@ public class UserWelcome implements Serializable {
     public UserWelcome() {
     }
 
-    public StreamedContent getDownloadOpenVpnConfig() throws IOException, CertificateEncodingException {
-        return configBuilder.getDownloadOpenVpnConfig(currentUser.getUsername());
+    public StreamedContent getDownloadOpenVpnConfig()
+            throws IOException, CertificateEncodingException
+    {
+        StreamedContent content = null;
+
+        try {
+            content = configBuilder.getDownloadOpenVpnConfig(currentUser.getUsername());
+        }
+        catch (AbstractMethodError | CertificateEncodingException |
+                IOException | OperatorCreationException ex) {
+            FacesContext fc = FacesContext.getCurrentInstance();
+            fc.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error",
+                            "Cannot get configuration file:"
+                            )
+                    );
+        }
+
+        return content;
     }
 
     public StreamedContent getDownloadNetworkManagerConfig()
             throws IOException, CertificateEncodingException, ClassNotFoundException,
             GeneralSecurityException, SQLException
     {
-        return configBuilder.getDownloadNetworkManagerConfig(currentUser.getUsername());
+        StreamedContent content = null;
+
+        try {
+            content = configBuilder.getDownloadNetworkManagerConfig(currentUser.getUsername());
+        }
+        catch (AbstractMethodError | CertificateEncodingException |
+                IOException | OperatorCreationException ex) {
+            FacesContext fc = FacesContext.getCurrentInstance();
+            fc.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error",
+                            "Cannot get configuration file:"
+                            )
+                    );
+        }
+
+        return content;
     }
 }

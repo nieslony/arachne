@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import org.postgresql.util.PSQLException;
 
 /**
  *
@@ -164,8 +165,8 @@ public class DatabaseSettings
         }
     }
 
-    public Connection getDatabseConnection()
-            throws ClassNotFoundException, SQLException
+    public Connection getDatabaseConnection()
+            throws PSQLException, ClassNotFoundException, SQLException
     {
         if (con == null) {
             try {

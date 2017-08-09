@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
+import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
@@ -14,8 +15,14 @@ import at.nieslony.openvpnadmin.beans.Roles;
 import at.nieslony.openvpnadmin.beans.TaskScheduler;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -24,6 +31,8 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -42,9 +51,15 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
-import javax.security.auth.x500.X500Principal;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Time;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.util.encoders.Hex;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 /**
  *
@@ -53,14 +68,18 @@ import org.primefaces.event.FlowEvent;
 @ManagedBean
 @ViewScoped
 public class SetupWizard implements Serializable {
-    public class KeyAlgoData implements  Serializable{
-    }
-
     private static final long serialVersionUID = 467254444471451527L;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
+    public enum CaType {
+        SELF_SIGNED,
+        REMOTE_SIGNED
+    }
+
     private String adminUserName = "admin";
     private String password;
+
+    private CaType caType = CaType.REMOTE_SIGNED;
 
     private String caTitle = "OpenVPN_Admin_CA";
     private String caCommonName = "OpenVPN Admin self signed CA";
@@ -74,6 +93,21 @@ public class SetupWizard implements Serializable {
     private Date caEndDate = new Date(caStartDate.getTime() + 1000L * 60L * 60L * 24L * 3650L);
     private String caSignatureAlgorithm = "SHA512withRSA";
     private int caKeySize = 2048;
+
+    private String csrTitle = "OpenVPN_Admin_CA";
+    private String csrCommonName = "OpenVPN Admin self signed CA";
+    private String csrOrganization = new String();
+    private String csrOrganizationalUnit = new String();
+    private String csrCity = new String();
+    private String csrState = new String();
+    private String csrCountry = new String();
+    private String[] csrEmail;
+    private Date csrStartDate = new Date();
+    private Date csrEndDate = new Date(csrStartDate.getTime() + 1000L * 60L * 60L * 24L * 3650L);
+    private String csrSignatureAlgorithm = "SHA512withRSA";
+    private int csrKeySize = 2048;
+    private String csrText = new String();
+    private String csrSignedCsr = new String();
 
     private String certTitle = new String();
     private String certCommonName = new String();
@@ -96,6 +130,17 @@ public class SetupWizard implements Serializable {
     private String dbAdminUser = "";
     private String dbAdminPassword = "";
     private int userExistingDb = 0;
+
+    @ManagedProperty(value = "#{folderFactory}")
+    private FolderFactory folderFactory;
+
+    public FolderFactory getFolderFactory() {
+        return folderFactory;
+    }
+
+    public void setFolderFactory(FolderFactory ff) {
+        folderFactory = ff;
+    }
 
     public int getUserExistingDb() {
         return userExistingDb;
@@ -229,6 +274,15 @@ public class SetupWizard implements Serializable {
         return new int[0];
     }
 
+    public int[] getCsrKeySizes() {
+        for (CertificateAuthority.KeySignAlgo ksa : CertificateAuthority.getKeySignAlgos()) {
+            if (ksa.keyAlgo.equals(getCaKeyAlgo()))
+                return ksa.keySizes;
+        }
+
+        return new int[0];
+    }
+
     public String getCertKeyAlgo() {
         return certSignatureAlgorithm.split("with")[1];
     }
@@ -256,6 +310,22 @@ public class SetupWizard implements Serializable {
 
     public void setCaKeySize(int s) {
         caKeySize = s;
+    }
+
+    public String getCsrSignatureAlgorithm() {
+        return csrSignatureAlgorithm;
+    }
+
+    public void setCsrSignatureAlgorithm(String a) {
+        csrSignatureAlgorithm = a;
+    }
+
+    public int getCsrKeySize() {
+        return csrKeySize;
+    }
+
+    public void setCsrKeySize(int s) {
+        csrKeySize = s;
     }
 
     public int getCertKeySize() {
@@ -362,6 +432,103 @@ public class SetupWizard implements Serializable {
         return caEndDate;
     }
 
+    public void setCsrText(String t) {
+        csrText = t;
+    }
+
+    public String getCsrText() {
+        return csrText;
+    }
+
+    public void setCsrSignedCsr(String s) {
+        csrSignedCsr = s;
+    }
+
+    public String getCsrSignedCsr() {
+        return csrSignedCsr;
+    }
+
+    public void setCsrTitle(String csrTitle) {
+        this.csrTitle = csrTitle;
+    }
+
+    public String getCsrTitle() {
+        return csrTitle;
+    }
+
+    public StreamedContent getCsrAsFile() {
+        String csr = "nix";
+        InputStream is = new ByteArrayInputStream(csr.getBytes());
+
+        StreamedContent sc = new DefaultStreamedContent(is, "text/plain", "arachne-ca.scr");
+
+        return sc;
+    }
+
+    public void setCsrCommonName(String csrCommonName) {
+        this.csrCommonName = csrCommonName;
+    }
+
+    public String getCsrCommonName() {
+        return csrCommonName;
+    }
+
+    public void setCsrOrganization(String csrOrganization) {
+        this.csrOrganization = csrOrganization;
+    }
+
+    public String getCsrOrganization() {
+        return csrOrganization;
+    }
+
+    public void setCsrOrganizationalUnit(String csrOrganizationalUnit) {
+        this.csrOrganizationalUnit = csrOrganizationalUnit;
+    }
+
+    public String getCsrOrganizationalUnit() {
+        return csrOrganizationalUnit;
+    }
+
+    public void setCsrCity(String csrCity) {
+        this.csrCity = csrCity;
+    }
+
+    public String getCsrCity() {
+        return csrCity;
+    }
+
+    public void setCsrState(String csrState) {
+        this.csrState = csrState;
+    }
+
+    public String getCsrState() {
+        return csrState;
+    }
+
+    public void setCsrCountry(String csrCountry) {
+        this.csrCountry = csrCountry;
+    }
+
+    public String getCsrCountry() {
+        return csrCountry;
+    }
+
+    public void setCsrStartDate(Date date) {
+        this.csrStartDate = date;
+    }
+
+    public Date getCsrStartDate() {
+        return csrStartDate;
+    }
+
+    public void setCsrEndDate(Date date) {
+        this.csrEndDate = date;
+    }
+
+    public Date getCsrEndDate() {
+        return csrEndDate;
+    }
+
     public void setCertTitle(String certTitle) {
         this.certTitle = certTitle;
     }
@@ -459,17 +626,19 @@ public class SetupWizard implements Serializable {
             sw.append(", ST=" + caState);
         if (!caCountry.isEmpty())
             sw.append(", C=" + caCountry);
-        X500Principal issuerDN = new X500Principal(sw.toString());
-        X500Principal subjectDN = new X500Principal(sw.toString());
+        X500Name issuerDN = new X500Name(sw.toString());
+        X500Name subjectDN = new X500Name(sw.toString());
+
         String keyAlgo = getCaKeyAlgo();
-        pki.createSelfSignedCa(caStartDate, caEndDate, issuerDN, subjectDN,
+        pki.createSelfSignedCa(new Time(caStartDate), new Time(caEndDate), issuerDN, subjectDN,
                 caSignatureAlgorithm,
                 keyAlgo, caKeySize);
         pki.saveCaKeyAndCert();
     }
 
     private void saveServerCert()
-            throws ClassNotFoundException, GeneralSecurityException, SQLException
+        throws ClassNotFoundException, IOException, NoSuchAlgorithmException,
+            SQLException, OperatorCreationException
     {
         StringWriter sw = new StringWriter();
         sw.append("CN=" + certCommonName);
@@ -486,9 +655,11 @@ public class SetupWizard implements Serializable {
         KeyPairGenerator keygen = KeyPairGenerator.getInstance(getCertKeyAlgo());
         keygen.initialize(certKeySize, new SecureRandom());
         KeyPair certKey = keygen.generateKeyPair();
-        X500Principal subjectDN = new X500Principal(sw.toString());
+        X500Name subjectDN = new X500Name(sw.toString());
 
-        java.security.cert.X509Certificate cert = pki.createCertificate(certKey.getPublic(), caStartDate, caEndDate, subjectDN, caSignatureAlgorithm);
+        X509CertificateHolder cert = pki.createCertificate(certKey.getPublic(),
+                new Time(caStartDate), new Time(caEndDate),
+                subjectDN, caSignatureAlgorithm);
         pki.setServerKeyAndCert(certKey.getPrivate(), cert);
     }
 
@@ -690,5 +861,85 @@ public class SetupWizard implements Serializable {
 
     public void setTaskScheduler(TaskScheduler ts) {
         taskScheduler = ts;
+    }
+
+    public CaType getCaType() {
+        return caType;
+    }
+
+    public void setCaType(CaType ct) {
+        caType = ct;
+    }
+
+    public String getSqlCreateDatabase() {
+        FileInputStream fis = null;
+        BufferedReader br;
+        String sql = "";
+
+        String filename = folderFactory.getSqlDir() + "/setup-database.sql";
+        String pwdHash;
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+        }
+        catch (NoSuchAlgorithmException ex) {
+            logger.severe(String.format("Cannot get MD5: %s", ex.getMessage()));
+            return sql;
+        }
+        byte[] md5Sum = digest.digest(String.format("%s%s", databasePassword, databaseUser).getBytes());
+        pwdHash = String.format("md5%s", Hex.toHexString(md5Sum));
+
+        try {
+            fis = new FileInputStream(filename);
+            br = new BufferedReader(new InputStreamReader(fis));
+
+            String line;
+            StringBuilder buf = new StringBuilder();
+            buf.append("-- cat <<EOF | sudo -u postgres psql\n");
+            while( (line = br.readLine()) != null) {
+                buf.append(line.replaceAll("DB_NAME", databaseName)
+                        .replaceAll("DB_USER", databaseUser)
+                        .replaceAll("DB_PASSWORD", pwdHash));
+                buf.append("\n");
+            }
+            buf.append("-- EOF\n");
+            sql = buf.toString();
+        }
+        catch (FileNotFoundException ex) {
+            String msg = String.format("Cannot open %s: %s",
+                    filename, ex.getMessage());
+            logger.warning(msg);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
+        catch (IOException ex) {
+            String msg = String.format("Error reading %s: %s",
+                    filename, ex.getMessage());
+            logger.warning(msg);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
+        finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                }
+                catch (IOException ex) {
+                    logger.warning(String.format("Cannot close %s: %s",
+                            filename, ex.getMessage()));
+                }
+            }
+        }
+
+        return sql;
+    }
+
+    public StreamedContent getSqlCreateDatabaseFile() {
+        String sql = getSqlCreateDatabase();
+
+        InputStream is = new ByteArrayInputStream(sql.getBytes());
+        StreamedContent sc = new DefaultStreamedContent(is, "text/sql", "create-arachne-database.sql");
+
+        return sc;
     }
 }

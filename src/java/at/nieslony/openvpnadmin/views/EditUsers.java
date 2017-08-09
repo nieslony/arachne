@@ -25,6 +25,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.context.RequestContext;
 import org.primefaces.model.StreamedContent;
 
@@ -193,7 +194,8 @@ public class EditUsers implements Serializable {
     }
 
     public StreamedContent getDownloadNetworkManagerInstaller(AbstractUser user)
-            throws ClassNotFoundException, GeneralSecurityException, SQLException
+            throws AbstractMethodError, ClassNotFoundException, GeneralSecurityException,
+            OperatorCreationException, SQLException
     {
         logger.info(String.format("Preparing NetworkManager config of user %s fow download.",
                 user.getUsername()));
@@ -218,12 +220,12 @@ public class EditUsers implements Serializable {
         return sc;
     }
 
-    public StreamedContent getDownloadOpenVPNConfig(AbstractUser user) {
+    public StreamedContent getDownloadOpenVPNConfig() {
         logger.info(String.format("Preparing openVPN config of user %s fow download.",
-                user.getUsername()));
+                selectedUser));
         StreamedContent sc = null;
         try {
-            sc = configBuilder.getDownloadOpenVpnConfig(user.getUsername());
+            sc = configBuilder.getDownloadOpenVpnConfig("claas" /*user.getUsername()*/);
         }
         catch (FileNotFoundException ex) {
             FacesContext fc = FacesContext.getCurrentInstance();
@@ -231,7 +233,8 @@ public class EditUsers implements Serializable {
                     "Not found",
                     "Cannot find user vpn  config"));
         }
-        catch (IOException | CertificateEncodingException ex) {
+        catch (IOException | CertificateEncodingException | AbstractMethodError
+                | OperatorCreationException ex) {
             FacesContext fc = FacesContext.getCurrentInstance();
             fc.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error",
