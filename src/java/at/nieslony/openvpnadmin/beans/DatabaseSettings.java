@@ -205,4 +205,16 @@ public class DatabaseSettings
             logger.info("databaseSettings: not valid");
         return valid;
     }
+
+    public void destroy() {
+        if (con != null) {
+            try {
+                con.close();
+            }
+            catch (SQLException ex) {
+                logger.warning(String.format("Cannot close database connection: %s",
+                        ex.getMessage()));
+            }
+        }
+    }
 }
