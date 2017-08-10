@@ -17,6 +17,7 @@ import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -33,7 +34,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -72,16 +73,30 @@ public class CertificateAuthority
 
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    public CertificateAuthority() {
-        logger.info("Adding new security privider: BouncyCastleProvider");
-
+    public void init() {
         try {
-            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            Provider provs[] = Security.getProviders();
+            boolean found = false;
+            for (Provider p: provs) {
+                if (p.getName().equals(BouncyCastleProvider.PROVIDER_NAME)) {
+                    logger.info("BouncyCastleProvider already added");
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                logger.info("Adding new security privider: BouncyCastleProvider");
+                Security.addProvider(new BouncyCastleProvider());
+            }
         }
         catch (SecurityException ex) {
             logger.severe(String.format("Cannot add security provider: %s",
                     ex.getMessage()));
         }
+    }
+
+    public void destroy() {
+        Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
     }
 
     public static class KeySignAlgo {
@@ -307,8 +322,8 @@ public class CertificateAuthority
         DHParameters params = generator.generateParameters();
         DHParameters realParams = new DHParameters(params.getP(), BigInteger.valueOf(2));
         ASN1EncodableVector seq = new ASN1EncodableVector();
-        seq.add(new DERInteger(realParams.getP()));
-        seq.add(new DERInteger(realParams.getG()));
+        seq.add(new ASN1Integer(realParams.getP()));
+        seq.add(new ASN1Integer(realParams.getG()));
         byte[] encoded = new DERSequence(seq).getEncoded();
         out.println("-----BEGIN DH PARAMETERS-----");
         writeBase64(encoded, out);

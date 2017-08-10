@@ -43,6 +43,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -114,8 +115,11 @@ public class Pki
 
 
     @PostConstruct
+    @Override
     public void init() {
         logger.info("Initializing PKI");
+
+        super.init();
 
         setCaDir(folderFactory.getPkiDir());
 
@@ -134,6 +138,12 @@ public class Pki
             ex.printStackTrace(pw);
             logger.severe(sw.toString());
         }
+    }
+
+    @Override
+    @PreDestroy
+    public void destroy() {
+        super.destroy();
     }
 
     public String getDhFilename() {
