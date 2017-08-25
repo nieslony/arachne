@@ -95,8 +95,12 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem editClientCertSettings = new DefaultMenuItem("Edit client cert defaults");
             editClientCertSettings.setHref("EditClientCertificateSettings.xhtml");
 
+            DefaultMenuItem editServerCertSettings = new DefaultMenuItem("Edit server cert defaults");
+            editServerCertSettings.setHref("EditServerCertificateSettings.xhtml");
+
             certsMenu.addElement(userCerts);
             certsMenu.addElement(editClientCertSettings);
+            certsMenu.addElement(editServerCertSettings);
         menuModel.addElement(certsMenu);
 
         userVpnsMenu = new DefaultSubMenu("User VPNs");
