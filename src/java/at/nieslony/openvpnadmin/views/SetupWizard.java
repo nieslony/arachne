@@ -55,8 +55,10 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.primefaces.context.RequestContext;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -79,10 +81,10 @@ public class SetupWizard implements Serializable {
     private String adminUserName = "admin";
     private String password;
 
-    private CaType caType = CaType.REMOTE_SIGNED;
+    private CaType caType = CaType.SELF_SIGNED;
 
-    private String caTitle = "OpenVPN_Admin_CA";
-    private String caCommonName = "OpenVPN Admin self signed CA";
+    private String caTitle = "Arachne_CA";
+    private String caCommonName = "Arachne self signed CA";
     private String caOrganization = new String();
     private String caOrganizationalUnit = new String();
     private String caCity = new String();
@@ -94,20 +96,19 @@ public class SetupWizard implements Serializable {
     private String caSignatureAlgorithm = "SHA512withRSA";
     private int caKeySize = 2048;
 
-    private String csrTitle = "OpenVPN_Admin_CA";
-    private String csrCommonName = "OpenVPN Admin self signed CA";
+    private String csrTitle = "Arachne_CA";
+    private String csrCommonName = "Arachne signing CA";
     private String csrOrganization = new String();
     private String csrOrganizationalUnit = new String();
     private String csrCity = new String();
     private String csrState = new String();
     private String csrCountry = new String();
     private String[] csrEmail;
-    private Date csrStartDate = new Date();
-    private Date csrEndDate = new Date(csrStartDate.getTime() + 1000L * 60L * 60L * 24L * 3650L);
     private String csrSignatureAlgorithm = "SHA512withRSA";
     private int csrKeySize = 2048;
     private String csrText = new String();
     private String csrSignedCsr = new String();
+    private String csrSigningCa = new String();
 
     private String certTitle = new String();
     private String certCommonName = new String();
@@ -130,6 +131,10 @@ public class SetupWizard implements Serializable {
     private String dbAdminUser = "";
     private String dbAdminPassword = "";
     private int userExistingDb = 0;
+
+    private final String ICO_STEP_OPEN = "fa fa-circle-o";
+    private final String ICO_STEP_WORKING = "fa fa-cog";
+    private final String ICO_STEP_DONE = "fa fa-check-circle-o";
 
     @ManagedProperty(value = "#{folderFactory}")
     private FolderFactory folderFactory;
@@ -432,6 +437,14 @@ public class SetupWizard implements Serializable {
         return caEndDate;
     }
 
+    public String getCsrSigningCa() {
+        return csrSigningCa;
+    }
+
+    public void setCsrSigningCa(String sca) {
+        csrSigningCa = sca;
+    }
+
     public void setCsrText(String t) {
         csrText = t;
     }
@@ -457,12 +470,111 @@ public class SetupWizard implements Serializable {
     }
 
     public StreamedContent getCsrAsFile() {
-        String csr = "nix";
-        InputStream is = new ByteArrayInputStream(csr.getBytes());
+        InputStream is = new ByteArrayInputStream(csrText.getBytes());
 
         StreamedContent sc = new DefaultStreamedContent(is, "text/plain", "arachne-ca.scr");
 
         return sc;
+    }
+
+    public void handleCsrSignedCertUpload(FileUploadEvent event) {
+        InputStream is;
+
+        if (event == null) {
+            logger.warning("Got null event");
+            return;
+        }
+
+        if (event.getFile() == null) {
+            logger.warning("Event has null file");
+            return;
+        }
+
+        try {
+            is = event.getFile().getInputstream();
+        }
+        catch (IOException ex) {
+            String msg = String.format("Upload of signed CSR %s failed: %s",
+                    event.getFile().getFileName(), ex.getMessage());
+            logger.warning(msg);
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", msg)
+                    );
+            return;
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        try {
+            while ( (line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        }
+        catch (IOException ex) {
+            String msg = String.format("Errot reading uploaded file: %s",
+                    ex.getMessage());
+            logger.warning(msg);
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", msg)
+                    );
+        }
+
+        csrSignedCsr = sb.toString();
+    }
+
+    public void handleCsrSigningCaUpload(FileUploadEvent event) {
+        InputStream is;
+
+        if (event == null) {
+            logger.warning("Got null event");
+            return;
+        }
+
+        if (event.getFile() == null) {
+            logger.warning("Event has null file");
+            return;
+        }
+
+        try {
+            is = event.getFile().getInputstream();
+        }
+        catch (IOException ex) {
+            String msg = String.format("Upload of sining CA file %s failed: %s",
+                    event.getFile().getFileName(), ex.getMessage());
+            logger.warning(msg);
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", msg)
+                    );
+            return;
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        try {
+            while ( (line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        }
+        catch (IOException ex) {
+            String msg = String.format("Errot reading uploaded file: %s",
+                    ex.getMessage());
+            logger.warning(msg);
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", msg)
+                    );
+        }
+
+        csrSigningCa = sb.toString();
     }
 
     public void setCsrCommonName(String csrCommonName) {
@@ -511,22 +623,6 @@ public class SetupWizard implements Serializable {
 
     public String getCsrCountry() {
         return csrCountry;
-    }
-
-    public void setCsrStartDate(Date date) {
-        this.csrStartDate = date;
-    }
-
-    public Date getCsrStartDate() {
-        return csrStartDate;
-    }
-
-    public void setCsrEndDate(Date date) {
-        this.csrEndDate = date;
-    }
-
-    public Date getCsrEndDate() {
-        return csrEndDate;
     }
 
     public void setCertTitle(String certTitle) {
@@ -601,38 +697,86 @@ public class SetupWizard implements Serializable {
         return certEndDate;
     }
 
-   public void onSetupCaChanged() {
+    public void onSetupCaChanged() {
 
     }
 
+    private void createCsr()
+            throws IOException, NoSuchAlgorithmException, OperatorCreationException
+    {
+        logger.info("Creating new CSR for CA");
+
+        StringWriter sw = new StringWriter();
+        sw.append("CN=" + csrCommonName);
+        if (!csrOrganizationalUnit.isEmpty())
+            sw.append(", OU=" + csrOrganizationalUnit);
+        if (!csrOrganization.isEmpty())
+            sw.append(", O=" + csrOrganization);
+        if (!csrCity.isEmpty())
+            sw.append(", L=" + csrCity);
+        if (!csrState.isEmpty())
+            sw.append(", ST=" + csrState);
+        if (!csrCountry.isEmpty())
+            sw.append(", C=" + csrCountry);
+
+        PKCS10CertificationRequest csr = pki.createCaCsr(
+                new X500Name(sw.toString()),
+                caSignatureAlgorithm, getCaKeyAlgo(), caKeySize);
+
+        StringWriter writer = new StringWriter();
+        pki.writeCsr(csr, new PrintWriter(writer));
+
+        csrText = writer.toString();
+    }
+
     public String onFlowProcess(FlowEvent event) {
+        try {
+            if (event.getNewStep().equals("createCsr"))
+                createCsr();
+        }
+        catch (IOException | NoSuchAlgorithmException | OperatorCreationException ex) {
+            String msg = String.format("Error when on page switching: %s",
+                    ex.getMessage());
+
+            FacesContext fc = FacesContext.getCurrentInstance();
+            fc.addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Error", msg)
+                    );
+
+            logger.warning(msg);
+        }
+
         return event.getNewStep();
     }
 
     private void saveCA()
             throws GeneralSecurityException, IOException, ClassNotFoundException, SQLException
     {
+        if (caType == CaType.SELF_SIGNED) {
+            StringWriter sw = new StringWriter();
+            sw.append("CN=" + caCommonName);
+            if (!caOrganizationalUnit.isEmpty())
+                sw.append(", OU=" + caOrganizationalUnit);
+            if (!caOrganization.isEmpty())
+                sw.append(", O=" + caOrganization);
+            if (!caCity.isEmpty())
+                sw.append(", L=" + caCity);
+            if (!caState.isEmpty())
+                sw.append(", ST=" + caState);
+            if (!caCountry.isEmpty())
+                sw.append(", C=" + caCountry);
+            X500Name issuerDN = new X500Name(sw.toString());
+            X500Name subjectDN = new X500Name(sw.toString());
 
-
-        StringWriter sw = new StringWriter();
-        sw.append("CN=" + caCommonName);
-        if (!caOrganizationalUnit.isEmpty())
-            sw.append(", OU=" + caOrganizationalUnit);
-        if (!caOrganization.isEmpty())
-            sw.append(", O=" + caOrganization);
-        if (!caCity.isEmpty())
-            sw.append(", L=" + caCity);
-        if (!caState.isEmpty())
-            sw.append(", ST=" + caState);
-        if (!caCountry.isEmpty())
-            sw.append(", C=" + caCountry);
-        X500Name issuerDN = new X500Name(sw.toString());
-        X500Name subjectDN = new X500Name(sw.toString());
-
-        String keyAlgo = getCaKeyAlgo();
-        pki.createSelfSignedCa(new Time(caStartDate), new Time(caEndDate), issuerDN, subjectDN,
-                caSignatureAlgorithm,
-                keyAlgo, caKeySize);
+            String keyAlgo = getCaKeyAlgo();
+            pki.createSelfSignedCa(new Time(caStartDate), new Time(caEndDate), issuerDN, subjectDN,
+                    caSignatureAlgorithm,
+                    keyAlgo, caKeySize);
+        }
+        else {
+            pki.setCaCert(csrSignedCsr);
+        }
         pki.saveCaKeyAndCert();
     }
 
@@ -702,50 +846,87 @@ public class SetupWizard implements Serializable {
 
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
+        RequestContext rc = RequestContext.getCurrentInstance();
 
         logger.info("--- Begin application setup ---");
         try {
             step = "Saving database settings";
             logger.info(step);
+            styleClassSaveDbSettings = ICO_STEP_WORKING;
+            rc.update("form-setup");
             saveDatabaseSettings();
+            styleClassSaveDbSettings = ICO_STEP_DONE;
+            rc.update("form-setup");
 
-            step = "Initializiong properties storage";
+            step = "Initializing properties storage";
             logger.info(step);
+            styleClassInitPropertyStorage = ICO_STEP_WORKING;
+            rc.update("form-setup");
             propertiesStorage.createTables();
+            styleClassInitPropertyStorage = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Initializing local users and roles";
             logger.info(step);
+            styleClassInitLocalUserAndRoles = ICO_STEP_WORKING;
+            rc.update("form-setup");
             localUserFactory.createTables();
+            styleClassInitLocalUserAndRoles = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Creating admin user";
             logger.info(step);
+            styleClassCreateUser = ICO_STEP_WORKING;
+            rc.update("form-setup");
             AbstractUser adminUser = localUserFactory.addUser(adminUserName);
             adminUser.setFullName("Master Administrator");
             adminUser.setPassword(password);
             adminUser.save();
+            styleClassCreateUser = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = String.format("Assigning role admin to user %s", adminUserName);
             logger.info(step);
+            styleClassAssignRoleAdmin = ICO_STEP_WORKING;
+            rc.update("form-setup");
             roles.load();
             roles.addRule("admin", "isUser", "admin");
+            styleClassAssignRoleAdmin = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Creating CA";
+            logger.info(step);
+            styleClassCreateCA = ICO_STEP_WORKING;
+            rc.update("form-setup");
             pki.createTables();
-
             saveCA();
+            styleClassCreateCA = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Creating server certificate";
             logger.info(step);
+            styleClassCreateServerCertitficate = ICO_STEP_WORKING;
+            rc.update("form-setup");
             saveServerCert();
+            styleClassCreateServerCertitficate = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Creating DH parameters";
             logger.info(step);
+            styleClassCreateDhParameters = ICO_STEP_WORKING;
+            rc.update("form-setup");
             saveDhParams();
-
             pki.init();
+            styleClassCreateDhParameters = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             step = "Scheduling tasks";
+            logger.info(step);
+            styleClassScheduleTasks = ICO_STEP_WORKING;
+            rc.update("form-setup");
             setupTaskScheduler();
+            styleClassScheduleTasks = ICO_STEP_DONE;
+            rc.update("form-setup");
 
             performingSetup = false;
 
@@ -772,6 +953,52 @@ public class SetupWizard implements Serializable {
         finally {
             logger.info("--- End application setup ---");
         }
+    }
+
+    private String styleClassSaveDbSettings = "fa fa-circle-o";
+    private String styleClassInitPropertyStorage = "fa fa-circle-o";
+    private String styleClassInitLocalUserAndRoles = "fa fa-circle-o";
+    private String styleClassCreateUser = "fa fa-circle-o";
+    private String styleClassAssignRoleAdmin = "fa fa-circle-o";
+    private String styleClassCreateCA = "fa fa-circle-o";
+    private String styleClassCreateServerCertitficate = "fa fa-circle-o";
+    private String styleClassCreateDhParameters = "fa fa-circle-o";
+    private String styleClassScheduleTasks = "fa fa-circle-o";
+
+    public String getStyleClassInitPropertyStorage() {
+        return styleClassInitPropertyStorage;
+    }
+
+    public String getStyleClassInitLocalUserAndRoles() {
+        return styleClassInitLocalUserAndRoles;
+    }
+
+    public String getStyleClassCreateUser() {
+        return styleClassCreateUser;
+    }
+
+    public String getStyleClassAssignRoleAdmin() {
+        return styleClassAssignRoleAdmin;
+    }
+
+    public String getStyleClassCreateCA() {
+        return styleClassCreateCA;
+    }
+
+    public String getStyleClassCreateServerCertitficate() {
+        return styleClassCreateServerCertitficate;
+    }
+
+    public String getStyleClassCreateDhParameters() {
+        return styleClassCreateDhParameters;
+    }
+
+    public String getStyleClassSaveDbSettings() {
+        return styleClassSaveDbSettings;
+    }
+
+    public String getStyleClassScheduleTasks() {
+        return styleClassScheduleTasks;
     }
 
     public void setPki(Pki pki) {

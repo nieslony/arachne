@@ -8,7 +8,6 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.pki.CertificateAuthority;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -30,7 +29,6 @@ import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -476,10 +474,11 @@ public class Pki
         addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
     }
 
-    public List<X509Certificate> getAllUserCerts()
-            throws CertificateException, ClassNotFoundException, SQLException
+    public List<X509CertificateHolder> getAllUserCerts()
+            throws CertificateException, ClassNotFoundException,
+            IOException, SQLException
     {
-        List<X509Certificate> certs = new LinkedList<>();
+        List<X509CertificateHolder> certs = new LinkedList<>();
 
         Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
@@ -487,9 +486,8 @@ public class Pki
         ResultSet result = stm.executeQuery(sql);
 
         while (result.next()) {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
             byte[] bytes = result.getBytes("certificate");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+            X509CertificateHolder cert = new X509CertificateHolder(bytes);
             if (cert == null) {
                 logger.warning("Cannot load certificate");
             }

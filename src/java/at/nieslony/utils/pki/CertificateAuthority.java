@@ -6,6 +6,7 @@
 package at.nieslony.utils.pki;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,6 +17,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
@@ -58,6 +60,9 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
 /**
  *
@@ -227,6 +232,14 @@ public class CertificateAuthority
         writeCertificate(caCert, out);
     }
 
+    public void writeCsr(PKCS10CertificationRequest csr, PrintWriter out)
+            throws IOException
+    {
+        out.println("-----BEGIN CERTIFICATE REQUEST-----");
+        writeBase64(csr.getEncoded(), out);
+        out.println("-----END CERTIFICATE REQUEST-----");
+    }
+
     private void writeBase64(byte[] data, PrintWriter out) throws IOException {
         final int MAX_LINE = 64;
 
@@ -236,6 +249,17 @@ public class CertificateAuthority
             out.println(base64.substring(i, end));
             //out.write("\n");
         }
+    }
+
+    public void setCaCert(String certAsPem)
+            throws IOException
+    {
+        InputStream is = new ByteArrayInputStream(certAsPem.getBytes());
+
+        byte[] bytes = readPEM(is, "CERTIFICATE");
+
+        X509CertificateHolder cert = new X509CertificateHolder(bytes);
+        setCaCert(cert);
     }
 
     private byte[] readPEM(InputStream in, String expectedBeginEnd)
@@ -419,11 +443,45 @@ public class CertificateAuthority
     }
 
     public boolean isCertificateRevoked(X509CertificateHolder cert) {
+        if (cert == null) {
+            return false;
+        }
+
+        if (cert.getSerialNumber() == null) {
+            logger.warning("Certificate has no serial");
+            return false;
+        }
+
+        if (crl == null)
+            return false;
         return crl.getRevokedCertificate(cert.getSerialNumber()) != null;
     }
 
     public String getCertCn(X509CertificateHolder cert) {
         RDN cn = cert.getSubject().getRDNs(BCStyle.CN)[0];
         return IETFUtils.valueToString(cn.getFirst().getValue());
+    }
+
+    public PKCS10CertificationRequest createCaCsr(X500Name subjectDN,
+            String signatureAlgorithm,
+            String keyAlgorithm, int keySize)
+        throws NoSuchAlgorithmException, OperatorCreationException
+    {
+        KeyPairGenerator keygen = KeyPairGenerator.getInstance(keyAlgorithm);
+        keygen.initialize(keySize, new SecureRandom());
+        KeyPair keyPair = keygen.genKeyPair();
+
+        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(
+            subjectDN, keyPair.getPublic());
+
+        ContentSigner sigGen;
+        sigGen = new JcaContentSignerBuilder(signatureAlgorithm)
+               .setProvider(BouncyCastleProvider.PROVIDER_NAME)
+               .build(keyPair.getPrivate());
+
+        caKey = keyPair.getPrivate();
+        caCert = null;
+
+        return p10Builder.build(sigGen);
     }
 }
