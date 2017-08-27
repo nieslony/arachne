@@ -119,8 +119,8 @@ public class LdapHelper
                     )
                 dn = String.format("%s,%s,%s",
                         result.getName(),
-                        ldapHelperUser.getLdapBaseDn(),
-                        ldapHelperUser.getOuUsers());
+                        ldapHelperUser.getOuUsers(),
+                        ldapHelperUser.getLdapBaseDn());
             else
                 dn = String.format("%s,%s",
                         result.getName(),
