@@ -52,7 +52,7 @@ public class CurrentUser implements Serializable {
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private Map<String, Boolean> cachedRoles = new HashMap<>();
+    transient private Map<String, Boolean> cachedRoles = new HashMap<>();
 
     /**
      * Creates a new instance of CurrentUserBean
@@ -148,6 +148,7 @@ public class CurrentUser implements Serializable {
         ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
         HttpServletRequest req = (HttpServletRequest) ectx.getRequest();
         user = null;
+        cachedRoles.clear();
 
         try {
             initWithAjpRemoteUser(req);
@@ -239,18 +240,35 @@ public class CurrentUser implements Serializable {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
         }
-        else if (cachedRoles.containsKey(rolename)) {
-            return cachedRoles.get(rolename);
-        }
-        else if (!roles.hasUserRole(user, rolename)) {
-            logger.info(String.format("User %s doesn't have role %s",
-            user.getUsername(), rolename));
-            cachedRoles.put(rolename, false);
+        if (rolename == null) {
+            logger.info("There are no empty role names. Don't ask me!");
             return false;
         }
-
-        cachedRoles.put(rolename, true);
-        return true;
+        Boolean hr = null;
+        if (cachedRoles == null) {
+            logger.severe("Role cache == null. Shoukd not occur");
+            cachedRoles = new HashMap<>();
+        }
+        hr = cachedRoles.get(rolename);
+        if (hr != null) {
+            logger.info(String.format("Return from cache: user %s %s role %s",
+                    user.getUsername(),
+                    hr ? "has role" : "doesn't have role",
+                    rolename));
+            return hr;
+        }
+        if (!roles.hasUserRole(user, rolename)) {
+            logger.info(String.format("User %s doesn't have role %s, add entry to cache",
+                user.getUsername(), rolename));
+            cachedRoles.put(rolename, Boolean.FALSE);
+            return false;
+        }
+        else {
+            logger.info(String.format("User %s has role %s, add entry to cache",
+                user.getUsername(), rolename));
+            cachedRoles.put(rolename, Boolean.TRUE);
+            return true;
+        }
     }
 
     public void redirectToWelcomePage(ComponentSystemEvent event)
