@@ -52,9 +52,24 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
             try {
                 Throwable throwable = exceptionQueuedEventContext.getException();
                 Throwable rootCause = getRootCause(throwable);
+                Throwable cause = throwable;
+                while (cause.getCause() != null)
+                    cause = cause.getCause();
 
                 LOG.severe("--- Caught exception ---");
                 LOG.severe(throwable.getMessage());
+                LOG.severe(String.format("Throwable: %s", throwable.getClass().getName()));
+
+                if (rootCause != null)
+                    LOG.severe(String.format("Root cause: %s", rootCause.getClass().getName()));
+                else
+                    LOG.severe("No root cause");
+
+                if (cause != null)
+                    LOG.severe(String.format("Cause: %s", rootCause.getClass().getName()));
+                else
+                    LOG.severe("No cause");
+
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 throwable.printStackTrace(pw);
@@ -70,7 +85,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 String errorPage = "/error/error.xhtml";
                 boolean isFatal = true;
 
-                if (rootCause instanceof PermissionDenied) {
+                if (cause instanceof PermissionDenied) {
                     String message = String.format(
                             "Permission denied: \nPath: %s\nRemote IP: %s",
                             request.getRequestURL(),
@@ -81,15 +96,16 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     extContext.setResponseStatus(403);
                     isFatal = false;
                 }
-                else if (rootCause instanceof ELException) {
+                else if (cause instanceof ELException) {
                     isFatal = true;
                 }
-                if (rootCause instanceof ViewExpiredException) {
+                else if (cause instanceof ViewExpiredException) {
                     LOG.warning("View expired");
                     errorPage = "Login.xhtml";
                     isFatal = false;
                 }
                 else {
+                    LOG.warning("##### Unknown server error");
                     extContext.setResponseStatus(500);
                 }
                 requestMap.put("errorMsg", errorMsg);
@@ -129,7 +145,14 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     LOG.severe(rootCause.toString());
                     LOG.severe("#####  ...---... END #####");
                 }
+            } catch (Exception ex) {
+                LOG.severe("An error occured while handling an error. :-((");
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+                LOG.severe(sw.toString());
             } finally {
+                LOG.info("Removing exception from queue");
                 queue.remove();
             }
         }
