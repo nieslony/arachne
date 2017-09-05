@@ -103,4 +103,19 @@
             value="${bin.dir}"
             />        
     </target>
+
+    <target name="doc">
+        <property name="doc.dir" value="${basedir}/build/work/doc"/>
+        
+        <mkdir dir="${doc.dir}"/>
+        <mkdir dir="${doc.dir}/pics"/>
+        <copy todir="${doc.dir}/pics">
+            <fileset dir="doc/pics"/>
+        </copy>
+        <xslt basedir="${basedir}/doc" 
+            in="${basedir}/doc/arachne.xml" destdir="${doc.dir}"
+                includes="*xml"
+              style="/usr/share/sgml/docbook/xsl-stylesheets/xhtml/chunk.xsl"
+              />
+    </target>
 </project>

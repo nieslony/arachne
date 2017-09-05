@@ -86,6 +86,14 @@
         </listitem>
         <listitem>
             <para>Set name of master adminitrative user and password.</para>
+            <screenshot>
+<screeninfo>Sample screenshot;</screeninfo>
+  <mediaobject>
+    <imageobject>
+      <imagedata fileref="pics/SetupWizard_CreateAdmin.png" format="PNG"/>
+    </imageobject>
+  </mediaobject>
+</screenshot>
         </listitem>
     </orderedlist>
 </chapter>
