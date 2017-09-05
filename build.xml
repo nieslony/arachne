@@ -125,7 +125,7 @@
         <xslt basedir="${basedir}/doc" 
             in="${basedir}/doc/arachne.xml" destdir="${doc.dir}"
                 includes="*xml"
-              style="/usr/share/sgml/docbook/xsl-stylesheets/xhtml/chunk.xsl"
+              style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
               />
     </target>
 </project>

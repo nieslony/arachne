@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V5.0//EN"
  "/usr/share/xml/docbook5/schema/dtd/5.0/docbook.dtd">
 
@@ -85,15 +85,91 @@
             <para>You will see arachne's setup wizard</para>
         </listitem>
         <listitem>
+            <para>Enjoy arachne setups wizard's welcome page</para>
+            <screenshot>
+                <screeninfo>Setup wizard - welcome</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_Welcome.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
             <para>Set name of master adminitrative user and password.</para>
             <screenshot>
-<screeninfo>Sample screenshot;</screeninfo>
-  <mediaobject>
-    <imageobject>
-      <imagedata fileref="pics/SetupWizard_CreateAdmin.png" format="PNG"/>
-    </imageobject>
-  </mediaobject>
-</screenshot>
+                <screeninfo>Setup wizard - create admin user</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_CreateAdmin.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Create a self signed CA, that will create certificates for the 
+                openvpn server and VPN users.
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create self signed CA</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_CreateSelfSignedCa.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Create openvpn server certificate. The common name must be the 
+                full qualified domain name (FQDN) of your openvpn server as 
+                visible from the internet.
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create server certificate</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWozard_CreateServerCertificate.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Arachne stores its settings and certificate in a postgresql 
+                database. Set username etc. here. 
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create self signed CA</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_Database.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+            <para>
+                You can download a SQL file that contains everything to create a database user and an empty database. A hash of the password you entered here is included.
+            </para>
+            <para>
+                To enable md5 authentication on your postgres server, add the following line to /var/lib/pgsql/data/pg_hba.conf:
+            </para>
+            <programlisting>
+                  host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
+            </programlisting>
+            <para>
+                You can test the database connectivity by clicking "Test connection".
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                To finalize setup click "finish" on the last page. Arachne will 
+                create the administrator user, your CA, a server certificate, 
+                DH paramerts and all neccary database tables and initial values.
+            </para>
+            <para>
+                This step takes a coupleof minutes.
+            </para>
         </listitem>
     </orderedlist>
 </chapter>
