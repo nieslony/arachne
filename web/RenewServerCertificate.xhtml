@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<body>
+    <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+        <ui:param name="title" value="Edit user certificate defaults"/>
+
+        <ui:define name="content">
+            <h:form>
+                <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                    <h:outputLabel value="Title:"/>
+                    <p:inputText value="#{editServerCertificateSettings.title}"/>
+                    <h:outputLabel value="Common name:"/>
+                    <p:inputText value="#{editServerCertificateSettings.commonName}"/>
+
+                    <h:outputLabel value="Organizational unit:"/>
+                    <p:inputText value="#{editServerCertificateSettings.organizationalUnit}"/>
+                    <h:outputLabel value="Organization:"/>
+                    <p:inputText value="#{editServerCertificateSettings.organization}"/>
+                    
+                    <h:outputLabel value="City:"/>
+                    <p:inputText value="#{editServerCertificateSettings.city}"/>
+                    <h:outputLabel value="State:"/>
+                    <p:inputText value="#{editServerCertificateSettings.state}"/>
+                    
+                    <h:outputLabel value="Country:"/>
+                    <p:inputText value="#{editServerCertificateSettings.country}"/>
+                    <h:outputText value=" "/>
+                    <h:outputText value=" "/>
+                    
+                    <h:outputLabel value="Validity time:"/>
+                    <h:panelGroup style="vertical-align:baseline">
+                        <p:spinner value="#{editServerCertificateSettings.validTime}"/>
+                        <p:selectOneMenu value="#{editServerCertificateSettings.validTimeUnit}">
+                            <f:selectItems value="#{editServerCertificateSettings.validTimeUnits}"/>
+                        </p:selectOneMenu>
+                    </h:panelGroup>
+                    <h:outputText value=" "/>
+                    <h:outputText value=" "/>
+                    
+                    <h:outputLabel value="Signature algorithm:"/>
+                    <p:selectOneMenu id="signatureAlgorithm" value="#{editServerCertificateSettings.signatureAlgorithm}">
+                        <p:ajax update="keySize"/>
+                        <f:selectItems value="#{editServerCertificateSettings.signatureAlgorithms}"/>
+                    </p:selectOneMenu>
+                    <h:outputLabel value="Key size:"/>
+                    <p:selectOneMenu id="keySize" value="#{editServerCertificateSettings.keySize}">
+                        <f:selectItems value="#{editServerCertificateSettings.keySizes}"/>
+                    </p:selectOneMenu>
+                    
+                    <h:outputLabel value="Auto renew after"/>
+                    <p:outputPanel>
+                        <p:inputNumber value="#{editServerCertificateSettings.autoUpdateLifetime}"
+                                        symbol="%" 
+                                        symbolPosition="s" 
+                                        />
+                        <h:outputText value =" lifetime"/>
+                    </p:outputPanel>
+                </h:panelGrid>
+                
+                <p:commandButton value="Save" action="#{editServerCertificateSettings.onSave}"/>
+                <p:commandButton value="Reset" action="#{editServerCertificateSettings.onReset}"/>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</body>
+</html>
