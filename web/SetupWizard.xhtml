@@ -2,8 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
 
     <f:event listener="#{setupWizard.requireNoSetup}" type="preRenderView"/>
 
@@ -16,13 +16,17 @@
     </h:head>
 
     <h:body>
-        <p:dialog visible="true" closable="false" resizable="false" draggable="false" header="OpenVPN Admin - SetupWizard">
-            <h:form>
-                <p:wizard flowListener="#{setupWizard.onFlowProcess}" >
+        <p:dialog id="dialog-setup" visible="true" closable="false" header="OpenVPN Admin - SetupWizard">
+            <h:form id="form-setup">
+                <p:wizard flowListener="#{setupWizard.onFlowProcess}" 
+                          id="setupWizard">
                     <p:tab title="Welcome">
                         <p>
-                            Welcome to <strong>OpenVPN Admin</strong>!
-                            Before first use some setting hav do be done.
+                            Welcome to <strong>arachne</strong>, an web application
+                            for administering an openVPN server!
+                        </p>
+                        <p>
+                            Before first use some settings have do be done.
                         </p>
                     </p:tab>
                 <p:tab id="adminUser" title="Admin User">
@@ -46,15 +50,102 @@
                                        />
                     </h:panelGrid>
                 </p:tab>
-                <p:tab id="pki" title="PKI">
-                    <p:selectOneRadio columns="1">
-                        <f:selectItem itemLabel="Self signed CA"/>
-                        <f:selectItem itemLabel="Request server certificate from root CA"/>
-                        <f:selectItem itemLabel="Import CA"/>
+<!--                <p:tab id="pki" title="PKI">
+                    <p:selectOneRadio columns="1" value="#{setupWizard.caType}">
+                        <f:selectItem itemLabel="Self signed CA" 
+                                      itemValue="SELF_SIGNED"/>
+                        <f:selectItem itemLabel="Request server certificate from root CA"
+                                      itemValue="REMOTE_SIGNED"/>
+                        <p:ajax update="setupWizard"/>
                     </p:selectOneRadio>
-
                 </p:tab>
-                <p:tab id="createSelfSignedCA" title="Create self signed CA">
+                <p:tab id="prepareSignCA" title="Prepare CSR for CA"
+                       rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="csrLabel"/>
+                        <p:inputText id="csrLabel"
+                                     value="#{setupWizard.csrTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="csrCommonName"/>
+                        <p:inputText id="csrCommonName"
+                                     value="#{setupWizard.csrCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="csrOrganization"/>
+                        <p:inputText id="csrOrganization" value="#{setupWizard.csrOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="csrOrganizationalUnit"/>
+                        <p:inputText id="csrOrganizationalUnit" value="#{setupWizard.csrOrganizationalUnit}"/>
+
+                        <h:outputLabel value="City:" for="csrCity"/>
+                        <p:inputText id="csrCity" value="#{setupWizard.csrCity}"/>
+                        <h:outputLabel value="State:" for="csrState"/>
+                        <p:inputText id="csrState" value="#{setupWizard.csrState}"/>
+
+                        <h:outputLabel value="Country:" for="csrCountry"/>
+                        <p:inputText id="csrCountry" value="#{setupWizard.csrCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Signature algorithm:" for="csrSignatureAlgorithm"/>
+                        <p:selectOneMenu id="csrSignatureAlgorithm" value="#{setupWizard.csrSignatureAlgorithm}">
+                            <p:ajax update="csrKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key size:"/>
+                        <p:selectOneMenu id="csrKeySize" value="#{setupWizard.csrKeySize}">
+                            <f:selectItems value="#{setupWizard.csrKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="createCsr" title="Create CSR" rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <h:outputLabel value="Copy this CSR to you CA…"/>
+                    <br/>
+                    <h:outputText rows="15" cols="80" value="#{setupWizard.csrText}"
+                                     disabled="true" 
+                                     style="font-family: monospace; white-space: pre"/>
+                    <br/>
+                    <h:outputText value="… or download CSR as file: …"/>
+                    <p:commandButton value="Download" ajax="false" icon="ui-icon-arrowthick-1-s">
+                        <p:fileDownload value="#{setupWizard.csrAsFile}" />
+                    </p:commandButton>                    
+                    <h:outputText value="… and sign it with your signing CA"/>
+                </p:tab>
+                <p:tab id="signCsr" title="Set signed CA certificate"
+                       rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <p:panelGrid columns="2" layout="grid">
+                        <h:outputText value="Insert your signed certificate: …"/>
+                        <h:outputText value="Insert your CA chain: …"/>
+
+                        <p:inputTextarea style="font-family: monospace; white-space: pre"
+                                     rows="15" cols="80"
+                                     id="csrSignedCsr"
+                                     value="#{setupWizard.csrSignedCsr}"/>
+                        <p:inputTextarea style="font-family: monospace; white-space: pre"
+                                     rows="15" cols="80"
+                                     id="csrSigningCa"
+                                     value="#{setupWizard.csrSigningCa}"/>
+
+                        <h:outputText value="… or upload certificate file:"/>                                                
+                        <h:outputText value="… or upload CA chain file:"/>
+                        
+                        <p:fileUpload fileUploadListener="#{setupWizard.handleCsrSignedCertUpload}" 
+                                      mode="advanced" dragDropSupport="false"
+                                      update="csrSignedCsr" 
+                                      sizeLimit="100000" 
+                                      fileLimit="1" 
+                                      allowTypes="/(\.|\/)(pem|crt)$/" />                        
+                        <p:fileUpload fileUploadListener="#{setupWizard.handleCsrSigningCaUpload}" 
+                                      mode="advanced" dragDropSupport="false"
+                                      update="csrSigningCa" 
+                                      sizeLimit="100000" 
+                                      fileLimit="1" 
+                                      allowTypes="/(\.|\/)(pem|crt)$/" />                        
+                    </p:panelGrid>
+                </p:tab> -->
+                <p:tab id="createSelfSignedCA" title="Create self signed CA"
+                       rendered='#{setupWizard.caType == "SELF_SIGNED"}'>
                     <h:panelGrid columns="4" columnClasses="label, value, label, value">
                         <h:outputLabel value="Title *:" for="caLabel"/>
                         <p:inputText id="caLabel"
@@ -136,7 +227,7 @@
                             <p:ajax update="certKeySize"/>
                             <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
                         </p:selectOneMenu>
-                        <p:outputLabel value="Key algorithm:" for="certKeySize"/>
+                        <p:outputLabel value="Key size:" for="certKeySize"/>
                         <p:selectOneMenu id="certKeySize" value="#{setupWizard.certKeySize}">
                             <f:selectItems value="#{setupWizard.certKeySizes}"/>
                         </p:selectOneMenu>
@@ -169,13 +260,14 @@
                         <h:outputText id="databaseUrl" value="#{setupWizard.databaseUrl}"/>
                         
                         <h:outputText value=""/>
+                        <!--
                         <p:selectOneRadio value="#{setupWizard.userExistingDb}" columns="1">
                             <f:selectItem itemValue="0" itemLabel="Use existing database and user"/>
                             <f:selectItem itemValue="1" itemLabel="Create database and user"/>
                             <p:ajax event="change" 
                                     update="lblDbAdminUser dbAdminUser lblDbAdminPassword dbAdminPassword"/>
                         </p:selectOneRadio>
-                        
+                        -->
                         <h:outputText id="lblDbAdminUser" value="Admin user name:" disabled="#{setupWizard.userExistingDb == 0}"/>
                         <p:inputText id="dbAdminUser" value="#{setupWizard.dbAdminUser}" disabled="#{setupWizard.userExistingDb == 0}"/>
                         
@@ -183,11 +275,65 @@
                         <p:password id="dbAdminPassword" value="#{setupWizard.dbAdminPassword}" disabled="#{setupWizard.userExistingDb == 0}"/>
                     </h:panelGrid>
                     
+                    <p:commandButton value="Download SQL for database creation" 
+                                     icon="ui-icon-arrowthick-1-s"
+                                     ajax="false">
+                        <p:fileDownload value="#{setupWizard.sqlCreateDatabaseFile}"/>
+                    </p:commandButton>
+                    &nbsp;
                     <p:commandButton value="Test connection" icon="ui-icon-script" actionListener="#{setupWizard.onTestDatabaseConnection()}" />
                 </p:tab>
                 <p:tab id="summary" title="Summary">
                     <p:panel>
                         <p:commandButton value="Finish" action="#{setupWizard.onSave}"/>
+                        
+                        <h:panelGrid columns="2">
+                            <h:outputText value="Save database settings"/>
+                            <h:outputText value="" 
+                                          id="saveDbSettingsIcon"
+                                          styleClass="#{setupWizard.styleClassSaveDbSettings}" 
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Initialize properties storage"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassInitPropertyStorage}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Initialize local users and roles"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassInitLocalUserAndRoles}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Create user #{setupWizard.adminUserName}"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassCreateUser}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Assign role admin to user #{setupWizard.adminUserName}"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassAssignRoleAdmin}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Create CA"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassCreateCA}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Create server certificate"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassCreateServerCertitficate}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Create DH parameters"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassCreateDhParameters}"
+                                          style="font-size: 150%"/>                            
+
+                            <h:outputText value="Schedule tasks"/>
+                            <h:outputText value="" 
+                                          styleClass="#{setupWizard.styleClassScheduleTasks}"
+                                          style="font-size: 150%"/>                            
+                        </h:panelGrid>
                     </p:panel>
                 </p:tab>
 

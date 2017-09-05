@@ -39,6 +39,7 @@ public class ManagementInterface
     private transient BufferedReader miReader;
     private transient PrintWriter miWriter;
     private transient Socket socket;
+    private final transient Object socketLocker = new Object();
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     enum UserStatusField {
@@ -207,7 +208,7 @@ public class ManagementInterface
     }
 
     public void connect(String addr, int port) throws IOException {
-        socket = null;
+        logger.info(String.format("Connecting to %s:%d", addr, port));
         socket = new Socket(addr, port);
         socket.setSoTimeout(2000);
         miReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -219,14 +220,18 @@ public class ManagementInterface
     private String sendCommand(String command)
            throws ManagementInterfaceException, IOException
     {
-        ensureConnected();
-        miWriter.println(command);
         String line = null;
-        do {
-            line = miReader.readLine();
-            if (line == null)
-                throw new ManagementInterfaceException(command, "No answer)");
-        } while (processLogMessage(line));
+
+        ensureConnected();
+        synchronized(socketLocker) {
+            miWriter.println(command);
+            do {
+                line = miReader.readLine();
+                if (line == null)
+                    throw new ManagementInterfaceException(command, "No answer)");
+            } while (processLogMessage(line));
+        }
+
         String[] split = line.split(": ");
         String status = split[0];
         String answer = split[1];
@@ -247,17 +252,20 @@ public class ManagementInterface
         String line = null;
 
         ensureConnected();
-        miWriter.println(command);
-        do {
-            do {
-                logger.info("Reading next line");
-                line = readLine();
-                logger.info(String.format("Read line: %s", line));
-            }
-            while (processLogMessage(line) || processClientMessage(line));
-            lines.add(line);
 
-        } while (line != null && !line.equals("END"));
+        synchronized(socketLocker) {
+            miWriter.println(command);
+            do {
+                do {
+                    logger.info("Reading next line");
+                    line = readLine();
+                    logger.info(String.format("Read line: %s", line));
+                }
+                while (processLogMessage(line) || processClientMessage(line));
+                lines.add(line);
+
+            } while (line != null && !line.equals("END"));
+        }
 
         logger.info(String.format("Read %d lines", lines.size()));
         return lines;
@@ -373,11 +381,19 @@ END
     }
 
     @PreDestroy
-    public void destroy() throws Throwable {
+    public void destroy() {
+        logger.info("Closing socket to management interface");
+
         try {
-            logger.info("Closing socket to management interface");
             sendCommand("quit");
-            socket.close();
+        }
+        catch (IOException | ManagementInterfaceException ex) {
+            logger.warning(String.format("Cannot quit mamagement interface: %s", ex.getMessage()));
+        }
+
+        try {
+            if (socket != null)
+                socket.close();
         }
         catch (IOException ex) {
             logger.warning(String.format("Canot close socket: %s", ex.getMessage()));

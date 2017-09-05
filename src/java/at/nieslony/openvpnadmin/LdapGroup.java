@@ -7,12 +7,15 @@ package at.nieslony.openvpnadmin;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
  * @author claas
  */
 public class LdapGroup {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
     private String name;
     private String description;
     private final List<String> memberUids = new LinkedList<>();
@@ -22,10 +25,12 @@ public class LdapGroup {
         for (String m: memberUids) {
             if (m.equals(user.getUsername()))
                 return true;
+            logger.info(String.format("%s != %s", m, user.getUsername()));
         }
         for (String m: memberDNs) {
             if (m.equals(user.getDn()))
                 return true;
+            logger.info(String.format("%s != %s", m, user.getDn()));
         }
         return false;
     }

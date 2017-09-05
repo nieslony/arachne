@@ -35,6 +35,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
@@ -86,9 +87,9 @@ public class ConfigBuilder implements Serializable {
     {
     }
 
-    public void writeUserVpnClientConfig(Writer wr,
-            String username)
-    throws IOException, CertificateEncodingException {
+    public void writeUserVpnClientConfig(Writer wr, String username)
+        throws IOException, CertificateEncodingException, OperatorCreationException
+    {
         PrintWriter pr = new PrintWriter(wr);
 
         pr.println("# openVPN config for user " + username);
@@ -218,7 +219,8 @@ public class ConfigBuilder implements Serializable {
     }
 
     public void writeUserVpnNetworkManagerConfig(Writer wr, String username)
-        throws IOException, CertificateEncodingException, ClassNotFoundException, GeneralSecurityException, SQLException
+        throws ClassNotFoundException, GeneralSecurityException, IOException,
+            OperatorCreationException, AbstractMethodError, SQLException
     {
         boolean writeUserCert = userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD.USERPWD;
 
@@ -308,7 +310,9 @@ public class ConfigBuilder implements Serializable {
         pr.println("fi");
     }
 
-    public void getOvpnConfig(ComponentSystemEvent event) {
+    public void getOvpnConfig(ComponentSystemEvent event)
+            throws OperatorCreationException
+    {
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
 
@@ -336,7 +340,9 @@ public class ConfigBuilder implements Serializable {
         }
     }
 
-    public void getNetworkManagerConfig(ComponentSystemEvent event) {
+    public void getNetworkManagerConfig(ComponentSystemEvent event)
+            throws AbstractMethodError, OperatorCreationException
+    {
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
 
@@ -365,7 +371,8 @@ public class ConfigBuilder implements Serializable {
     }
 
     public StreamedContent getDownloadNetworkManagerConfig(String username)
-            throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
+        throws AbstractMethodError, ClassNotFoundException, GeneralSecurityException,
+            IOException, OperatorCreationException, SQLException
     {
         InputStream in;
 
@@ -381,7 +388,10 @@ public class ConfigBuilder implements Serializable {
     }
 
     public StreamedContent getDownloadOpenVpnConfig(String username)
-            throws IOException, CertificateEncodingException {
+        throws IOException, CertificateEncodingException, OperatorCreationException,
+            AbstractMethodError
+
+    {
         InputStream in;
 
         StringWriter writer = new StringWriter();

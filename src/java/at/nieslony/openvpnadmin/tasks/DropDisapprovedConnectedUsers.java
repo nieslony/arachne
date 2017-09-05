@@ -5,7 +5,6 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
-import at.nieslony.utils.classfinder.StaticMemberBean;
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
@@ -13,6 +12,7 @@ import at.nieslony.openvpnadmin.beans.ManagementInterface;
 import at.nieslony.openvpnadmin.beans.Roles;
 import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import at.nieslony.utils.classfinder.StaticMemberBean;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,6 +63,11 @@ public class DropDisapprovedConnectedUsers
     @Override
     public void run() {
         List<ManagementInterface.UserStatus> connectedUsers = new LinkedList<>();
+
+        if (managementInterface == null) {
+            logger.severe("ManagementInterface == null");
+            return;
+        }
 
         try {
             managementInterface.getStatus(connectedUsers);

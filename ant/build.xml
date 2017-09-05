@@ -32,12 +32,23 @@
     <property name="sql.dir" value="${web-inf.dir}/sql"/>
     <property name="bin.dir" value="${web-inf.dir}/bin"/>
     <property name="work.dir" value="/var/lib/arachne"/>
+    
+    <property name="theme.src" value="${root}/arachne-theme"/>
+    <property name="theme.dir" value="${build}/web/WEB-INF/resources/primefaces-arachne"/>
  
     <path id="classpath">
         <fileset 
         	dir="/usr/share/java" 
-        	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"/>
-        <fileset dir="lib" includes="*jar"/>
+        	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"
+        />
+        <fileset 
+        	dir="/usr/share/java" 
+        	includes="primefaces.jar jsf-api.jar"
+        />
+        <fileset 
+        	dir="/usr/share/java" 
+        	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar tomcat8-servlet-api.jar"
+        />
         <fileset dir="${build}/generated/java"/>
     </path>
     
@@ -88,11 +99,16 @@
         <copy todir="${build}/web/WEB-INF/classes">
             <fileset dir="${build}/classes"/>
         </copy>
-        <copy todir="${build}/web/WEB-INF/lib">
-            <fileset dir="${lib}"/>
-        </copy>
         <copy todir="${build}/web/WEB-INF/sql">
             <fileset dir="${src}/sql"/>
+        </copy>
+        
+        <mkdir dir="${theme.dir}"/>
+        <copy toDir="${theme.dir}"
+              file="${theme.src}/theme.css"
+              />
+        <copy toDir="${theme.dir}">
+            <fileset dir="${theme.src}/images"/>
         </copy>
         <echo message="--- END copy static ---"/>
     </target>
@@ -134,7 +150,9 @@
     
     <target name="tar">
         <mkdir dir="${export}"/>
-        <tar destfile="${export}/${projectName}-${version}.tar.gz">
+        <tar destfile="${export}/${projectName}-${version}.tar.gz"
+             compression="gzip"
+        >
             <tarfileset dir="${root}" prefix="${tar-prefix}">
                 <include name="COPYING-GPL3"/>
             </tarfileset>
@@ -147,6 +165,9 @@
                         prefix="${tar-prefix}" 
                         excludes="build dist"
             />
+            <tarfileset dir="${theme.src}"
+                        prefix="${tar-prefix}/arachne-theme"
+                        />
             <tarfileset dir="${root}/bin" prefix="${tar-prefix}/bin/"/>
         </tar>
     </target>

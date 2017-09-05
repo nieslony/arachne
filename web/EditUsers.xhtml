@@ -66,9 +66,13 @@
         </h:form>
 
         <h:form id="formUsersList">
-            <p:contextMenu for="tableUsers">
-                <p:menuitem value="Reset password"/>
-                <p:menuitem value="Edit.." />
+            <p:contextMenu for="tableUsers" id="ctxTableUsers" autoUpdate="true">
+                <p:menuitem value="Reset password" autoUpdate="true"
+                            rendered="#{!editUsers.selectedUser.immutable}"
+                            />
+                <p:menuitem value="Edit.." 
+                            rendered="#{not editUsers.selectedUser.immutable}"                            
+                            />
                 <p:menuitem value="Download openVPN config"
                     ajax="false">
                     <p:fileDownload value="#{editUsers.downloadOpenVPNConfig}"/>
@@ -101,20 +105,36 @@
                     <h:outputText value="#{editUsers.getRolesString(user)}"/>
                 </p:column>
                 <p:column headerText="Actions">
-                    <h:panelGroup rendered="${user.userTypeStr == 'Local'}">
-                        <p:commandButton value="Reset password..."
-                                         action="#{editUsers.onResetPassword(user)}"
-                                         update=":formResetPassword:dlgResetPassword"
-                                         />
-                        <p:commandButton value="Remove"
-                                         action="#{editUsers.onRemoveUser(user.username)}"
-                                         update=":formUsersList"
-                                         >
+                    <p:splitButton value="Actions">
+                        <p:menuitem value="Reset password..." 
+                                    rendered="${user.userTypeStr == 'Local'}"
+                                    update=":formResetPassword:dlgResetPassword"
+                                    action="#{editUsers.onResetPassword(user)}"
+                                    />
+                        <p:menuitem value="Edit..." 
+                                    rendered="${user.userTypeStr == 'Local'}"                                    
+                                    action="#{editUsers.onEditUser(user)}"
+                                    />
+                        <p:menuitem value="Remove..." 
+                                    rendered="${user.userTypeStr == 'Local'}"                                    
+                                    update=":formUsersList"
+                                    action="#{editUsers.onRemoveUser(user)}"
+                                    >
                             <p:confirm header="Confirmation"
                                        message="Are you sure?"
                                        icon="ui-icon-alert"/>
-                        </p:commandButton>
-                    </h:panelGroup>
+                        </p:menuitem>
+                        <p:menuitem value="Download openVPN config"
+                                    rendered='${roles.hasUserRole(user, "user")}'
+                                    ajax="false">
+                            <p:fileDownload value="#{editUsers.downloadOpenVPNConfig}"/>
+                        </p:menuitem>
+                        <p:menuitem value="Download NetworkManager installer"
+                                   rendered='${roles.hasUserRole(user, "user")}'
+                                   ajax="false">
+                            <p:fileDownload value="#{editUsers.downloadNetworkManagerInstaller(user)}"/>
+                        </p:menuitem>
+                    </p:splitButton>
                 </p:column>
             </p:dataTable>
             <p:commandButton value="Add local user..." action="#{editUsers.onAddLocalUser}"/>

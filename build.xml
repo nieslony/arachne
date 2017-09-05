@@ -81,9 +81,11 @@
     </target>
     
     <target name="-pre-dist">
-        <property name="work.dir" value="${basedir}/${build.dir}/work"/>
-        <property name="sql.dir"  value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
-        <property name="bin.dir"  value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
+        <property name="work.dir"  value="${basedir}/${build.dir}/work"/>
+        <property name="sql.dir"   value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
+        <property name="bin.dir"   value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
+        <property name="theme.dir" value="${basedir}/${build.web.dir}/WEB-INF/resources/primefaces-arachne"/>
+        <property name="theme.src" value="${basedir}/arachne-theme"/>
         
         <echo message="Creating ${work.dir}..."/>
         <mkdir dir="${work.dir}"/>
@@ -102,6 +104,14 @@
             token="@@BIN-DIR@@" 
             value="${bin.dir}"
             />        
+        
+        <mkdir dir="${theme.dir}"/>
+        <mkdir dir="${theme.dir}/images"/>
+        <copy toDir="${theme.dir}"
+              file="${theme.src}/theme.css"/>
+        <copy toDir="${theme.dir}">
+            <fileset dir="${theme.src}/images"/>
+        </copy>              
     </target>
 
     <target name="doc">

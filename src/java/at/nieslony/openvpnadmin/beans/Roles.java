@@ -63,7 +63,7 @@ public class Roles implements Serializable {
     public Connection getDatabaseConnection()
             throws ClassNotFoundException, SQLException
     {
-        return databaseSettings.getDatabseConnection();
+        return databaseSettings.getDatabaseConnection();
     }
 
     @PostConstruct

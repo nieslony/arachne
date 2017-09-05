@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+export JAVA_HOME=/usr/lib/jvm/default-java
+
+export VERSION=0.3.1
+
+export APP_ROOT=/var/lib/tomcat8/webapps/${NAME}
+export INST_ROOT=${CURDIR}/debian/${NAME}
+
+%:
+	dh $@ --with javahelper
+
+override_dh_auto_clean:
+	# Leave empty to avoid a FTBFS
+
+override_dh_auto_build:
+	ant dist -Droot=/usr/src/packages/BUILD
+
+# add a symlink from javacsv.jar to csv.jar
+override_jh_installlibs:
+	pwd
+	find -name *jar
+	jh_installlibs
+	dh_installdocs COPYING*
+	dh_install dist/arachne.war ${APP_ROOT}
+
+get-orig-source:
+	uscan --force-download --download-current-version --repack --compression xz

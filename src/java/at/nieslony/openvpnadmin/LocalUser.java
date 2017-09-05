@@ -91,7 +91,6 @@ public class LocalUser
 
     public String createSaltedHash(String password) {
         String ret = null;
-        logger.info(String.format("Creating hash for '%s'", password));
 
         try {
             byte[] salt = new byte[16];

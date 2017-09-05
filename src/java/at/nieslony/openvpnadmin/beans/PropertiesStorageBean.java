@@ -20,6 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import org.postgresql.util.PSQLException;
 
 /**
  *
@@ -57,7 +58,7 @@ public class PropertiesStorageBean
     public void init() {
         setCacheTimeout(1000L * 60 * 10);
         try {
-            setConnection(databaseSettings.getDatabseConnection());
+            setConnection(databaseSettings.getDatabaseConnection());
         }
         catch (ClassNotFoundException | SQLException ex) {
             logger.severe(String.format("Cannot set database connection: %s",
@@ -68,10 +69,16 @@ public class PropertiesStorageBean
     }
 
     @Override
-    public Connection getConnection() {
+    public Connection getConnection()
+            throws SQLException
+    {
         try {
-            return databaseSettings.getDatabseConnection();
-        } catch (ClassNotFoundException ex) {
+            return databaseSettings.getDatabaseConnection();
+        }
+        catch (PSQLException ex) {
+            throw ex;
+        }
+        catch (ClassNotFoundException ex) {
             logger.log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -97,7 +104,7 @@ public class PropertiesStorageBean
             if (r == null) {
                 logger.severe(String.format("Cannot open %s as resource", resourceName));
             }
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             if (con == null) {
                 logger.severe("Cannot get database connection");
             }

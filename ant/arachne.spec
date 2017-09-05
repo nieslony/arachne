@@ -23,7 +23,7 @@ Source0:    %{name}-%{version}.tar.gz
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires:  ant bouncycastle tomcat python
+BuildRequires:  ant bouncycastle tomcat python primefaces jsf-api
 
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
@@ -38,7 +38,7 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
 %package server
 Summary:	Arachne server
 BuildArch:	noarch
-Requires:	tomcat bouncycastle openvpn postgresql-jdbc
+Requires:	tomcat bouncycastle openvpn postgresql-jdbc jsf-api primefaces
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
@@ -81,6 +81,8 @@ ant clean
 
 %post server
 ln -sfv \
+	/usr/share/java/primefaces.jar \
+	/usr/share/java/jsf-api.jar \
 	/usr/share/java/bcprov.jar \
 	/usr/share/java/postgresql-jdbc.jar \
 	%{libdir}
