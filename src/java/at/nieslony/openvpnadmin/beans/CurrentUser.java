@@ -165,6 +165,7 @@ public class CurrentUser implements Serializable {
             requestMap.put("errorMsg", "Permission denied");
             String errPage = "/error/error.xhtml";
             try {
+                logger.warning("Forwarting to error page");
                 ectx.dispatch(errPage);
             }
             catch (IOException ex) {

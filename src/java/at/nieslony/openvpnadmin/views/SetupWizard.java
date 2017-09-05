@@ -755,6 +755,8 @@ public class SetupWizard implements Serializable {
     {
         if (caType == CaType.SELF_SIGNED) {
             StringWriter sw = new StringWriter();
+            if (!caTitle.isEmpty())
+                sw.append("T=" + caTitle + ",");
             sw.append("CN=" + caCommonName);
             if (!caOrganizationalUnit.isEmpty())
                 sw.append(", OU=" + caOrganizationalUnit);
@@ -785,6 +787,8 @@ public class SetupWizard implements Serializable {
             SQLException, OperatorCreationException
     {
         StringWriter sw = new StringWriter();
+        if (!certTitle.isEmpty())
+            sw.append("T=" + certTitle + ",");
         sw.append("CN=" + certCommonName);
         if (!certOrganizationalUnit.isEmpty())
             sw.append(", OU=" + certOrganizationalUnit);
@@ -802,8 +806,8 @@ public class SetupWizard implements Serializable {
         X500Name subjectDN = new X500Name(sw.toString());
 
         X509CertificateHolder cert = pki.createCertificate(certKey.getPublic(),
-                new Time(caStartDate), new Time(caEndDate),
-                subjectDN, caSignatureAlgorithm);
+                new Time(certStartDate), new Time(certEndDate),
+                subjectDN, certSignatureAlgorithm);
         pki.setServerKeyAndCert(certKey.getPrivate(), cert);
     }
 

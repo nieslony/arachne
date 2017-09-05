@@ -124,8 +124,12 @@ public class Pki
         try {
             logger.info("Loading CA key and certificate");
             loadCaKeyAndCert();
+            logger.info(String.format("Found CA cert %s", getCaCert().getSubject().toString()));
+
             logger.info("Loading server key and certificate");
             loadServerKeyAndCert();
+            logger.info(String.format("Found server cert %s", getServerCert().getSubject().toString()));
+
             logger.info("Loading CRL");
             loadCrl();
         }
@@ -401,7 +405,7 @@ public class Pki
     private void loadServerKeyAndCert()
             throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
     {
-        KeyAndCert kac = getKeyAndCert(Pki.CertType.CA, null);
+        KeyAndCert kac = getKeyAndCert(Pki.CertType.SERVER, null);
         if (kac != null) {
             serverCert = kac.getCert();
             serverKey = kac.getKey();
@@ -462,6 +466,9 @@ public class Pki
     public void setServerKeyAndCert(PrivateKey key, X509CertificateHolder cert)
             throws ClassNotFoundException, IOException, SQLException
     {
+        logger.info(String.format("Set server certificate: %s",
+                cert.getSubject().toString()));
+
         this.serverKey = key;
         this.serverCert = cert;
 
@@ -471,6 +478,8 @@ public class Pki
     public void saveCaKeyAndCert()
             throws ClassNotFoundException, IOException, SQLException
     {
+        logger.info(String.format("Saving CA cert: %s", getCaCert().getSubject().toString()));
+
         addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
     }
 

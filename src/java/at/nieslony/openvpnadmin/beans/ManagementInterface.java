@@ -373,6 +373,12 @@ END
         sendCommand(String.format("signal %s", s.getSignalName()));
     }
 
+    public void reloadConfig()
+            throws IOException, ManagementInterfaceException
+    {
+        sendSignal(Signal.Hup);
+    }
+
     public void killUser(String username)
             throws IOException, ManagementInterfaceException
     {

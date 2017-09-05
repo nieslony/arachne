@@ -14,8 +14,8 @@
                 <h:panelGrid columns="4" columnClasses="label, value, label, value">
                     <h:outputLabel value="Title:"/>
                     <p:inputText value="#{editServerCertificateSettings.title}"/>
-                    <h:outputText value=" "/>
-                    <h:outputText value=" "/>
+                    <h:outputLabel value="Common name:"/>
+                    <p:inputText value="#{editServerCertificateSettings.commonName}"/>
 
                     <h:outputLabel value="Organizational unit:"/>
                     <p:inputText value="#{editServerCertificateSettings.organizationalUnit}"/>
@@ -24,7 +24,7 @@
                     
                     <h:outputLabel value="City:"/>
                     <p:inputText value="#{editServerCertificateSettings.city}"/>
-                    <h:outputLabel value="Statue:"/>
+                    <h:outputLabel value="State:"/>
                     <p:inputText value="#{editServerCertificateSettings.state}"/>
                     
                     <h:outputLabel value="Country:"/>

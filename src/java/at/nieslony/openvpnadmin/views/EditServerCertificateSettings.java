@@ -1,12 +1,15 @@
 
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.beans.Pki;
+import at.nieslony.openvpnadmin.beans.ServerCertificateEditor;
 import at.nieslony.openvpnadmin.beans.ServerCertificateSettings;
 import at.nieslony.openvpnadmin.views.base.EditServerCertificateSettingsBase;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -20,9 +23,17 @@ import javax.faces.model.SelectItemGroup;
 @ViewScoped
 public class EditServerCertificateSettings
     extends EditServerCertificateSettingsBase
-    implements Serializable
+    implements Serializable, ServerCertificateEditor
 {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private List<SelectItem> signatureAlgorithms;
+
+    @ManagedProperty(value = "#{pki}")
+    private Pki pki;
+
+    public void setPki(Pki pki) {
+        this.pki = pki;
+    }
 
     public EditServerCertificateSettings () {
     }
@@ -48,9 +59,14 @@ public class EditServerCertificateSettings
 
         setBackend(serverCertificateSettings);
         load();
+
+        if (!getValuesAlreadySet()) {
+            serverCertificateSettings.closeServerCertificateSettings(this);
+        }
     }
 
     public void onSave() {
+        setValuesAlreadySet(true);
         save();
         FacesContext.getCurrentInstance().addMessage(
                 null, new FacesMessage(
@@ -93,4 +109,5 @@ public class EditServerCertificateSettings
             "years"
         };
     }
+
 }

@@ -50,7 +50,7 @@
                                        />
                     </h:panelGrid>
                 </p:tab>
-<!--                <p:tab id="pki" title="PKI">
+                <p:tab id="pki" title="PKI">
                     <p:selectOneRadio columns="1" value="#{setupWizard.caType}">
                         <f:selectItem itemLabel="Self signed CA" 
                                       itemValue="SELF_SIGNED"/>
@@ -143,7 +143,7 @@
                                       fileLimit="1" 
                                       allowTypes="/(\.|\/)(pem|crt)$/" />                        
                     </p:panelGrid>
-                </p:tab> -->
+                </p:tab> 
                 <p:tab id="createSelfSignedCA" title="Create self signed CA"
                        rendered='#{setupWizard.caType == "SELF_SIGNED"}'>
                     <h:panelGrid columns="4" columnClasses="label, value, label, value">
