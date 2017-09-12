@@ -11,14 +11,6 @@
     <firstname>Claas</firstname><surname>Nieslony</surname>
   </personname></author>
 </info>
-<dedication>
-<para>This book is dedicated to you.
-</para>
-</dedication>
-<preface><title>Foreword</title>
-<para>Some content is always required.
-</para>
-</preface>
 
 <chapter>
     <title>Installation</title>
@@ -171,7 +163,49 @@
                 This step takes a coupleof minutes.
             </para>
         </listitem>
+        <listitem>
+            <para>
+                When the login screen appears enter username and passwd for 
+                the user you've just created.
+            </para>
+        </listitem>
     </orderedlist>
+</chapter>
+
+<chapter>
+    <title>Usermanagement</title>
+
+    <sect1>
+        <title>Local users</title>
+        <para>
+            TBw
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Roles</title>
+        <para>
+            TBw
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Define LDAP source</title>
+        <para>
+            TBw
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Authtication sources</title>
+        <para>
+            TBw
+        </para>
+    </sect1>
+</chapter>
+
+<chapter>
+    <title>VPN settings</title>
 </chapter>
 
 <appendix><title>Optional Appendix</title>
