@@ -420,6 +420,10 @@ public class CertificateAuthority
     public void addCertificateToCrl(X509CertificateHolder cert)
         throws CertIOException, OperatorCreationException
     {
+        if (cert == null) {
+            logger.warning("Cannot add null certificate to CRL");
+        }
+
         Date now = new Date();
         Date nextUpdate = new Date(now.getTime() + (long) 1000 * 60 * 60 * 24 * 31);
         BcX509ExtensionUtils extUtils = new BcX509ExtensionUtils();
