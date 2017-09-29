@@ -413,10 +413,28 @@ public class Pki
     }
 
     public X509CertificateHolder getServerCert() {
+        try {
+            if (serverCert == null)
+                loadCaKeyAndCert();
+        }
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+            logger.severe(String.format("Cannot load server certificate and key:",
+                    ex.getMessage()));
+        }
+
         return serverCert;
     }
 
     public PrivateKey getServerKey() {
+        try {
+            if (serverKey == null)
+                loadCaKeyAndCert();
+        }
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+            logger.severe(String.format("Cannot load server certificate and key:",
+                    ex.getMessage()));
+        }
+
         return serverKey;
     }
 
@@ -449,11 +467,11 @@ public class Pki
 
         try {
             fis = new FileInputStream(fn);
-            setCrl(readCrl(fis));
+            // setCrl(readCrl(fis));
             updateCrlFromDb();
         }
         catch (FileNotFoundException ex) {
-            logger.info("CRL not found, creating new one");
+            logger.info(String.format("CRL %s does not exist. Creating new file", fn));
             createCrl();
             updateCrlFromDb();
             logger.info("Writing CRL");
