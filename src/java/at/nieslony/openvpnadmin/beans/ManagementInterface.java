@@ -56,7 +56,7 @@ public class ManagementInterface
     public enum Signal {
         // SIGHUP, SIGTERM, SIGUSR1, or SIGUSR2.
 
-        Hup("SIGNUP"),
+        Hup("SIGHUP"),
         Term("SIGTERM"),
         User1("SIGUSR1"),
         User2("SIGUSR2");
