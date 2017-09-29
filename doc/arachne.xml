@@ -141,10 +141,13 @@
                 </mediaobject>
             </screenshot>
             <para>
-                You can download a SQL file that contains everything to create a database user and an empty database. A hash of the password you entered here is included.
+                You can download a SQL file that contains everything to create a 
+                database user and an empty database. A hash of the password you 
+                entered here is also included.
             </para>
             <para>
-                To enable md5 authentication on your postgres server, add the following line to /var/lib/pgsql/data/pg_hba.conf:
+                To enable md5 authentication on your postgres server, add the 
+                following line to /var/lib/pgsql/data/pg_hba.conf:
             </para>
             <programlisting>
                   host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
@@ -157,7 +160,7 @@
             <para>
                 To finalize setup click "finish" on the last page. Arachne will 
                 create the administrator user, your CA, a server certificate, 
-                DH paramerts and all neccary database tables and initial values.
+                DH paramers and all neccasary database tables and initial values.
             </para>
             <para>
                 This step takes a coupleof minutes.
@@ -185,21 +188,38 @@
     <sect1>
         <title>Roles</title>
         <para>
-            TBw
+            There are two roles: admin and user. An admin can modify any 
+            settings, an user is allowed to connect via openvpn. A user ca have 
+            both roles. 
         </para>
     </sect1>
     
     <sect1>
         <title>Define LDAP source</title>
         <para>
-            TBw
+            Arachne can authenticate against a LDAP server. It's also possible 
+            to manage roles with LDAP groups. 
+            <itemizedlist>
+                <listitem>
+                    managing roles with LDAP groups
+                </listitem>
+                <listitem>
+                    authenticating against LDAP server
+                </listitem>
+                <listitem>
+                    getting user attributes for external authentication 
+                    (e.g. Apache HTTP server)
+                </listitem>
+            </itemizedlist>
+            To edit LDAP settings select 
+            <guilabel>Configure LDAP source</guilabel>.
         </para>
     </sect1>
     
     <sect1>
-        <title>Authtication sources</title>
+        <title>Authentication sources</title>
         <para>
-            TBw
+            
         </para>
     </sect1>
 </chapter>
