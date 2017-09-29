@@ -6,7 +6,11 @@
 package at.nieslony.utils.pki;
 
 import java.io.StringWriter;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 
 /**
  *
@@ -45,5 +49,37 @@ public class CaHelper {
             return components[1];
 
         return "unknown";
+    }
+
+    private static String getX500NamePart(ASN1ObjectIdentifier partName, X500Name subject) {
+        RDN[] part = subject.getRDNs(partName);
+
+        return part != null && part.length != 0 ?
+                IETFUtils.valueToString(part[0].getFirst().getValue())
+                : null;
+    }
+
+    public static String getTitle(X500Name subject) {
+        return getX500NamePart(BCStyle.T, subject);
+    }
+
+    public static String getCn(X500Name subject) {
+        return getX500NamePart(BCStyle.CN, subject);
+    }
+
+    public static String getOrganization(X500Name subject) {
+        return getX500NamePart(BCStyle.O, subject);
+    }
+
+    public static String getCity(X500Name subject) {
+        return getX500NamePart(BCStyle.L, subject);
+    }
+
+    public static String getState(X500Name subject) {
+        return getX500NamePart(BCStyle.ST, subject);
+    }
+
+    public static String getCountry(X500Name subject) {
+        return getX500NamePart(BCStyle.C, subject);
     }
 }
