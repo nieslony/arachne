@@ -7,63 +7,58 @@
       xmlns:f="http://xmlns.jcp.org/jsf/core">
 <body>
     <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
-        <ui:param name="title" value="Edit user certificate defaults"/>
+        <ui:param name="title" value="Renew server certificate"/>
 
         <ui:define name="content">
             <h:form>
                 <h:panelGrid columns="4" columnClasses="label, value, label, value">
                     <h:outputLabel value="Title:"/>
-                    <p:inputText value="#{editServerCertificateSettings.title}"/>
+                    <p:inputText value="#{renewServerCertificate.title}"/>
                     <h:outputLabel value="Common name:"/>
-                    <p:inputText value="#{editServerCertificateSettings.commonName}"/>
+                    <p:inputText value="#{renewServerCertificate.commonName}"/>
 
                     <h:outputLabel value="Organizational unit:"/>
-                    <p:inputText value="#{editServerCertificateSettings.organizationalUnit}"/>
+                    <p:inputText value="#{renewServerCertificate.commonName}"/>
                     <h:outputLabel value="Organization:"/>
-                    <p:inputText value="#{editServerCertificateSettings.organization}"/>
+                    <p:inputText value="#{renewServerCertificate.organization}"/>
                     
                     <h:outputLabel value="City:"/>
-                    <p:inputText value="#{editServerCertificateSettings.city}"/>
+                    <p:inputText value="#{renewServerCertificate.city}"/>
                     <h:outputLabel value="State:"/>
-                    <p:inputText value="#{editServerCertificateSettings.state}"/>
+                    <p:inputText value="#{renewServerCertificate.state}"/>
                     
                     <h:outputLabel value="Country:"/>
-                    <p:inputText value="#{editServerCertificateSettings.country}"/>
+                    <p:inputText value="#{renewServerCertificate.country}"/>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
                     <h:outputLabel value="Validity time:"/>
-                    <h:panelGroup style="vertical-align:baseline">
-                        <p:spinner value="#{editServerCertificateSettings.validTime}"/>
-                        <p:selectOneMenu value="#{editServerCertificateSettings.validTimeUnit}">
-                            <f:selectItems value="#{editServerCertificateSettings.validTimeUnits}"/>
+                    <h:panelGroup style="vertical-align:bottom">
+                        <p:spinner value="#{renewServerCertificate.validTime}"/>
+                        <p:selectOneMenu value="#{renewServerCertificate.validTimeUnit}">
+                            <f:selectItems value="#{renewServerCertificate.validTimeUnits}"
+                                           var="timeValue"
+                                           itemLabel="#{timeValue.unitName}"/>
                         </p:selectOneMenu>
                     </h:panelGroup>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
                     <h:outputLabel value="Signature algorithm:"/>
-                    <p:selectOneMenu id="signatureAlgorithm" value="#{editServerCertificateSettings.signatureAlgorithm}">
+                    <p:selectOneMenu id="signatureAlgorithm" value="#{renewServerCertificate.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
                         <f:selectItems value="#{editServerCertificateSettings.signatureAlgorithms}"/>
                     </p:selectOneMenu>
                     <h:outputLabel value="Key size:"/>
-                    <p:selectOneMenu id="keySize" value="#{editServerCertificateSettings.keySize}">
-                        <f:selectItems value="#{editServerCertificateSettings.keySizes}"/>
+                    <p:selectOneMenu id="keySize" value="#{renewServerCertificate.keySize}">
+                        <f:selectItems value="#{editClientCertificateSettings.keySizes}"/>
                     </p:selectOneMenu>
                     
-                    <h:outputLabel value="Auto renew after"/>
-                    <p:outputPanel>
-                        <p:inputNumber value="#{editServerCertificateSettings.autoUpdateLifetime}"
-                                        symbol="%" 
-                                        symbolPosition="s" 
-                                        />
-                        <h:outputText value =" lifetime"/>
-                    </p:outputPanel>
                 </h:panelGrid>
+                <p:commandButton value="renew server certificate" 
+                                 action="#{renewServerCertificate.onRenewServerCertificate}"/>
                 
-                <p:commandButton value="Save" action="#{editServerCertificateSettings.onSave}"/>
-                <p:commandButton value="Reset" action="#{editServerCertificateSettings.onReset}"/>
+                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
             </h:form>
         </ui:define>
     </ui:composition>
