@@ -229,9 +229,14 @@ public class ManagementInterface
                 line = miReader.readLine();
                 if (line == null)
                     throw new ManagementInterfaceException(command, "No answer)");
+                if (line.startsWith(">INFO")) {
+                    logger.info(String.format("Ignoring info: %s", line));
+                    continue;
+                }
             } while (processLogMessage(line));
         }
 
+        logger.info(String.format("Got answer: %s", line));
         String[] split = line.split(": ");
         String status = split[0];
         String answer = split[1];
