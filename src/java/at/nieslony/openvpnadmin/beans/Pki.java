@@ -131,7 +131,8 @@ public class Pki
             logger.info(String.format("Found server cert %s", getServerCert().getSubject().toString()));
 
             logger.info("Loading CRL");
-            loadCrl();
+            createCrl();
+            updateCrlFromDb();
         }
         catch (Exception ex) {
             logger.severe(String.format("Cannot init Pki: %s", ex.toString()));
