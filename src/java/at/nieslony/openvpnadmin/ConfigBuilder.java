@@ -7,7 +7,6 @@ package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
-import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
@@ -54,9 +53,6 @@ public class ConfigBuilder implements Serializable {
     @ManagedProperty(value = "#{currentUser}")
     CurrentUser currentUser;
 
-    @ManagedProperty(value = "#{ldapSettings}")
-    private LdapSettings ldapSettings;
-
     @ManagedProperty(value = "#{folderFactory}")
     FolderFactory folderFactory;
 
@@ -77,10 +73,6 @@ public class ConfigBuilder implements Serializable {
 
     public void setCurrentUser(CurrentUser cub) {
         currentUser = cub;
-    }
-
-    public void setLdapSettings(LdapSettings ls) {
-        ldapSettings = ls;
     }
 
     public ConfigBuilder()
