@@ -43,6 +43,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.Time;
@@ -380,10 +381,10 @@ public class CertificateAuthority
             IOException
     {
         if (caCert == null) {
-            logger.warning("Cannot creatre CRL: There's no ca certificate");
+            logger.warning("Cannot create CRL: There's no ca certificate");
         }
         if (caKey == null) {
-            logger.warning("Cannot creatre CRL: There's no ca private key");
+            logger.warning("Cannot create CRL: There's no ca private key");
         }
 
         Date now = new Date();
@@ -422,6 +423,7 @@ public class CertificateAuthority
     {
         if (cert == null) {
             logger.warning("Cannot add null certificate to CRL");
+            return;
         }
 
         Date now = new Date();
@@ -436,6 +438,7 @@ public class CertificateAuthority
         crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, aki);
 
         crlBuilder.addCRL(crl);
+        crlBuilder.addCRLEntry(cert.getSerialNumber(), now, CRLReason.superseded);
 
         AlgorithmNameFinder algoFinder = new DefaultAlgorithmNameFinder();
         String signAlgoName = algoFinder.getAlgorithmName(caCert.getSignatureAlgorithm());
