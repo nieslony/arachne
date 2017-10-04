@@ -2,7 +2,9 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
+import at.nieslony.openvpnadmin.TimeUnit;
 import at.nieslony.openvpnadmin.beans.base.ServerCertificateSettingsBase;
+import at.nieslony.utils.pki.CaHelper;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Date;
@@ -21,7 +23,7 @@ import org.bouncycastle.cert.X509CertificateHolder;
 @ApplicationScoped
 public class ServerCertificateSettings
     extends ServerCertificateSettingsBase
-    implements Serializable
+    implements Serializable, ServerCertificateEditor
 {
     public ServerCertificateSettings() {
     }
@@ -73,7 +75,7 @@ public class ServerCertificateSettings
         }
    }
 
-     public void closeServerCertificateSettings(ServerCertificateEditor editor) {
+     public void cloneServerCertificateSettings(ServerCertificateEditor editor) {
         X509CertificateHolder cert = pki.getServerCert();
 
         logger.info(String.format("CA: {%s} Server: {%s}",
@@ -95,6 +97,37 @@ public class ServerCertificateSettings
         double validity = validTo.getTime() - validFrom.getTime();
         validity = validity / 1000.0 / 60.0 / 60.0 / 24.0;
         editor.setValidTime((int) Math.round(validity));
-        editor.setValidTimeUnit("days");
+        editor.setValidTimeUnit(TimeUnit.DAY);
     }
- }
+
+    @Override
+    public X500Name getSubjectDn() {
+        return CaHelper.getSubjectDN(getTitle(), getCommonName(),
+                getOrganizationalUnit(), getOrganization(),
+                getCity(), getState(), getCountry());
+    }
+
+    public void renewServerCertificate() {
+
+    }
+
+    @Override
+    public void setValidTime(Integer time) {
+        super.setValidTime(time);
+    }
+
+    @Override
+    public void setValidTimeUnit(TimeUnit unit) {
+        super.setValidTimeUnit(unit);
+    }
+
+    @Override
+    public Integer getKeySize() {
+        return super.getKeySize();
+    }
+
+    @Override
+    public TimeUnit getValidTimeUnit() {
+        return super.getValidTimeUnit();
+    }
+}

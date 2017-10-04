@@ -1,8 +1,8 @@
 
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.TimeUnit;
 import at.nieslony.openvpnadmin.beans.Pki;
-import at.nieslony.openvpnadmin.beans.ServerCertificateEditor;
 import at.nieslony.openvpnadmin.beans.ServerCertificateSettings;
 import at.nieslony.openvpnadmin.views.base.EditServerCertificateSettingsBase;
 import at.nieslony.utils.pki.CertificateAuthority;
@@ -23,7 +23,7 @@ import javax.faces.model.SelectItemGroup;
 @ViewScoped
 public class EditServerCertificateSettings
     extends EditServerCertificateSettingsBase
-    implements Serializable, ServerCertificateEditor
+    implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private List<SelectItem> signatureAlgorithms;
@@ -61,7 +61,7 @@ public class EditServerCertificateSettings
         load();
 
         if (!getValuesAlreadySet()) {
-            serverCertificateSettings.closeServerCertificateSettings(this);
+            //serverCertificateSettings.closeServerCertificateSettings(this);
         }
     }
 
@@ -102,12 +102,7 @@ public class EditServerCertificateSettings
         return new int[0];
     }
 
-    public String[] getValidTimeUnits() {
-        return new String[] {
-            "days",
-            "months",
-            "years"
-        };
+    public TimeUnit[] getValidTimeUnits() {
+        return TimeUnit.values();
     }
-
 }

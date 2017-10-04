@@ -21,12 +21,12 @@ public interface ServerCertificateEditor {
     public void setState(String s);
     public void setCountry(String c);
 
-    public void setValidTime(int time);
+    public void setValidTime(Integer time);
     public void setValidTimeUnit(TimeUnit unit);
 
     public String getSignatureAlgorithm();
-    public int getKeySize();
+    public Integer getKeySize();
     public TimeUnit getValidTimeUnit();
-    public int getValidTime();
+    public Integer getValidTime();
     public X500Name getSubjectDn();
 }

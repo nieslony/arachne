@@ -79,6 +79,7 @@ public class RenewServerCertificate
     private int validTime;
     private TimeUnit validTimeUnit;
 
+    @Override
     public void setTitle(String t) {
         this.title = t;
     }
@@ -87,6 +88,7 @@ public class RenewServerCertificate
         return title;
     }
 
+    @Override
     public void setCommonName(String cn) {
         commonName = cn;
     }
@@ -95,6 +97,7 @@ public class RenewServerCertificate
         return commonName;
     }
 
+    @Override
     public void setOrganization(String o) {
         organization = o;
     }
@@ -103,6 +106,7 @@ public class RenewServerCertificate
         return organization;
     }
 
+    @Override
     public void setOrganizationalUnit(String ou) {
         organizationalUnit = ou;
     }
@@ -111,6 +115,7 @@ public class RenewServerCertificate
         return organizationalUnit;
     }
 
+    @Override
     public void setCity(String l) {
         city = l;
     }
@@ -119,6 +124,7 @@ public class RenewServerCertificate
         return city;
     }
 
+    @Override
     public void setState(String s) {
         state = s;
     }
@@ -127,6 +133,7 @@ public class RenewServerCertificate
         return state;
     }
 
+    @Override
     public void setCountry(String c) {
         country = c;
     }
@@ -135,15 +142,17 @@ public class RenewServerCertificate
         return country;
     }
 
-    public void setValidTime(int time) {
+    @Override
+    public void setValidTime(Integer time) {
         validTime = time;
     }
 
     @Override
-    public int getValidTime() {
+    public Integer getValidTime() {
         return validTime;
     }
 
+    @Override
     public void setValidTimeUnit(TimeUnit unit) {
         validTimeUnit = unit;
     }
@@ -154,11 +163,11 @@ public class RenewServerCertificate
     }
 
     @Override
-    public int getKeySize() {
+    public Integer getKeySize() {
         return keySize;
     }
 
-    public void setKeySize(int ks) {
+    public void setKeySize(Integer ks) {
         keySize = ks;
     }
 
