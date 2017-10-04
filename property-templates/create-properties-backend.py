@@ -168,6 +168,7 @@ package %(package)s.base;
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import java.sql.SQLException;
 import java.util.Base64;
+%(imports)s
 
 public abstract class %(class_name)sBase {
 %(prop_names)s
@@ -185,6 +186,7 @@ public abstract class %(class_name)sBase {
     "getter_setter": print_getter_setter_backend(),
     "enums": print_enums_backend(),
     "ext_enums": print_ext_enums_backend()
+    ,"imports": print_imports()
     }
 
 def print_backend_class():
@@ -283,6 +285,14 @@ def print_load_values():
     }
     return s
 
+def print_imports():
+    s = ""
+    if "imports" in entries:
+        for e in entries["imports"]:
+            s += "import %s;\n" % e
+            
+    return s
+
 def print_import_enums():
     s = ""
     
@@ -323,6 +333,7 @@ package %(package)s.base;
 
 import %(backend_package)s.base.%(class_name)sBase;
 %(import_enums)s
+%(imports)s
 
 public class Edit%(class_name)sBase {
     %(class_name)sBase backend;
@@ -357,6 +368,7 @@ public class Edit%(class_name)sBase {
     "load_values": print_load_values(),
     "import_enums": print_import_enums(),
     "reset_defaults": print_reset_defaults(),
+    "imports": print_imports()
     }
 
 def print_edit_class():
