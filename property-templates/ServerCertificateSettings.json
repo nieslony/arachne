@@ -3,6 +3,9 @@
     "edit_package":     "at.nieslony.openvpnadmin.views",
     "className": "ServerCertificateSettings",
     "propertyGroup": "server-certificate-settings",
+    "imports" : [
+        "at.nieslony.openvpnadmin.TimeUnit"
+    ],
     "properties": 
     [
         { "type": "String", "name": "title",  "default": "" },
@@ -13,7 +16,7 @@
         { "type": "String", "name": "state", "default": "" },
         { "type": "String", "name": "country", "default": "" },
         { "type": "Integer","name": "validTime", "default": "365" },
-        { "type": "String", "name": "validTimeUnit", "default": "days" },
+        { "type": "TimeUnit", "name": "validTimeUnit", "default": "days" },
         { "type": "String", "name": "signatureAlgorithm", "default": "SHA512withRSA" },
         { "type": "Integer","name": "keySize", "default": "2048" },
         { "type": "Integer","name": "autoUpdateLifetime", "default": "90" },
