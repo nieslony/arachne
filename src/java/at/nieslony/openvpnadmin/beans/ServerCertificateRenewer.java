@@ -9,6 +9,7 @@ import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.TimeUnit;
 import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
 import at.nieslony.utils.pki.CaHelper;
+import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,13 +20,18 @@ import java.security.SecureRandom;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
+import javax.faces.model.SelectItemGroup;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -70,10 +76,34 @@ public class ServerCertificateRenewer {
         folderFactory = ff;
     }
 
+    private List<SelectItem> signatureAlgorithms;
+
+    public List<SelectItem> getSignatureAlgorithms() {
+        return signatureAlgorithms;
+    }
+
     /**
      * Creates a new instance of ServerCertificateRenewer
      */
     public ServerCertificateRenewer() {
+    }
+
+    @PostConstruct
+    public void init() {
+        signatureAlgorithms = new ArrayList<>();
+        for (CertificateAuthority.KeySignAlgo ksa : CertificateAuthority.getKeySignAlgos()) {
+            String keyAlgo = ksa.keyAlgo;
+            SelectItemGroup group = new SelectItemGroup(keyAlgo);
+            SelectItem[] items = new SelectItem[ksa.signatureAlgos.length];
+            for (int i = 0; i < ksa.signatureAlgos.length; i++) {
+                String label = ksa.signatureAlgos[i] + " with " + keyAlgo;
+                String value = ksa.signatureAlgos[i] + "with" + keyAlgo;
+                value = value.toUpperCase();
+                items[i] = new SelectItem(value, label);
+            }
+            group.setSelectItems(items);
+            signatureAlgorithms.add(group);
+        }
     }
 
     public void setDefaultValues(ServerCertificateEditor editor) {
@@ -258,3 +288,4 @@ public class ServerCertificateRenewer {
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
     }
 }
+

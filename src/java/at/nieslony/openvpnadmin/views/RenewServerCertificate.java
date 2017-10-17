@@ -10,6 +10,7 @@ import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.ServerCertificateEditor;
 import at.nieslony.openvpnadmin.beans.ServerCertificateRenewer;
 import at.nieslony.utils.pki.CaHelper;
+import at.nieslony.utils.pki.CertificateAuthority;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -180,5 +181,23 @@ public class RenewServerCertificate
 
     public void onRenewServerCertificate() {
         serverCertificateRenewer.renewServerCertificate(this);
+    }
+
+    public String getKeyAlgo() {
+        String[] split = getSignatureAlgorithm().split("WITH");
+
+        if (split.length == 2)
+            return split[1];
+        else
+            return "";
+    }
+
+    public int[] getKeySizes() {
+        for (CertificateAuthority.KeySignAlgo ksa : CertificateAuthority.getKeySignAlgos()) {
+            if (ksa.keyAlgo.equals(getKeyAlgo()))
+                return ksa.keySizes;
+        }
+
+        return new int[0];
     }
 }

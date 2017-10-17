@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -44,6 +45,22 @@ public class ServerCertificateSettings
         this.pki = pki;
     }
 
+    @ManagedProperty(value = "#{serverCertificateRenewer}")
+    ServerCertificateRenewer serverCertificateRenewer;
+
+    public void setServerCertificateRenewer(ServerCertificateRenewer scr) {
+        serverCertificateRenewer = scr;
+    }
+
+    @PostConstruct
+    public void init() {
+        if (!getValuesAlreadySet()) {
+            serverCertificateRenewer.setDefaultValues(this);
+            setValuesAlreadySet(Boolean.TRUE);
+        }
+    }
+
+    @Override
     protected PropertyGroup getPropertyGroup() {
         PropertyGroup  pg = null;
 
@@ -73,9 +90,9 @@ public class ServerCertificateSettings
             logger.info(String.format("{%s} %s", name.toString(), id.toString()));
             return "";
         }
-   }
+    }
 
-     public void cloneServerCertificateSettings(ServerCertificateEditor editor) {
+    public void cloneServerCertificateSettings(ServerCertificateEditor editor) {
         X509CertificateHolder cert = pki.getServerCert();
 
         logger.info(String.format("CA: {%s} Server: {%s}",
