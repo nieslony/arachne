@@ -5,12 +5,19 @@
  */
 package at.nieslony.utils.pki;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.DSAKeyParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 /**
  *
@@ -81,5 +88,26 @@ public class CaHelper {
 
     public static String getCountry(X500Name subject) {
         return getX500NamePart(BCStyle.C, subject);
+    }
+
+    public static int getKeySize(SubjectPublicKeyInfo keyInfo)
+            throws IOException
+    {
+        int keySize;
+
+        AsymmetricKeyParameter keyParam = PublicKeyFactory.createKey(keyInfo);
+        if (keyParam instanceof RSAKeyParameters) {
+            keySize = ((RSAKeyParameters)keyParam).getModulus().bitLength();
+        }
+        else if (keyParam instanceof DSAKeyParameters) {
+            keySize = ((DSAKeyParameters)keyParam).getParameters().getP().bitLength();
+        }
+        else if (keyParam instanceof ECPublicKeyParameters) {
+            keySize = ((ECPublicKeyParameters)keyParam).getParameters().getN().bitLength();
+        }
+        else
+            keySize = 0;
+
+        return keySize;
     }
 }
