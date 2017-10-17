@@ -6,6 +6,7 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.ConfigBuilder;
+import at.nieslony.openvpnadmin.TimeUnit;
 import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
 import at.nieslony.utils.pki.CaHelper;
 import java.io.FileWriter;
@@ -25,8 +26,11 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.operator.AlgorithmNameFinder;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OperatorCreationException;
 
 /**
@@ -70,6 +74,35 @@ public class ServerCertificateRenewer {
      * Creates a new instance of ServerCertificateRenewer
      */
     public ServerCertificateRenewer() {
+    }
+
+    public void setDefaultValues(ServerCertificateEditor editor) {
+        X509CertificateHolder serverCert = pki.getServerCert();
+        X500Name subject = serverCert.getSubject();
+
+        editor.setTitle(CaHelper.getTitle(subject));
+        editor.setCommonName(CaHelper.getCn(subject));
+        editor.setOrganization(CaHelper.getOrganization(subject));
+        editor.setOrganizationalUnit(CaHelper.getOrganization(subject));
+        editor.setCity(CaHelper.getCity(subject));
+        editor.setState(CaHelper.getState(subject));
+        editor.setCountry(CaHelper.getCountry(subject));
+
+        AlgorithmNameFinder algoFinder = new DefaultAlgorithmNameFinder();
+        String signatureAlgorithm = algoFinder.getAlgorithmName(serverCert.getSignatureAlgorithm());
+        editor.setSignatureAlgorithm(signatureAlgorithm);
+        editor.setValidTime(365);
+        editor.setValidTimeUnit(TimeUnit.DAY);
+
+        int keySize = 0;
+        try {
+            keySize = CaHelper.getKeySize(serverCert.getSubjectPublicKeyInfo());
+        }
+        catch (IOException ex) {
+            logger.warning(String.format("Cannot get key size: %s", ex.getMessage()));
+        }
+        logger.info(String.format("Key size: %d", keySize));
+        editor.setKeySize(keySize);
     }
 
     public void renewServerCertificate(ServerCertificateEditor editor) {

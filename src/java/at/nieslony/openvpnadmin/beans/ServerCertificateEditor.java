@@ -21,6 +21,9 @@ public interface ServerCertificateEditor {
     public void setState(String s);
     public void setCountry(String c);
 
+    public void setKeySize(Integer keySize);
+    public void setSignatureAlgorithm(String algoName);
+
     public void setValidTime(Integer time);
     public void setValidTimeUnit(TimeUnit unit);
 

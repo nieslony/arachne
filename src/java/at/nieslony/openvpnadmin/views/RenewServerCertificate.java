@@ -16,7 +16,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.cert.X509CertificateHolder;
 
 /**
  *
@@ -51,20 +50,7 @@ public class RenewServerCertificate
 
     @PostConstruct
     public void init() {
-        X509CertificateHolder serverCert = pki.getServerCert();
-        X500Name subject = serverCert.getSubject();
-
-        title = CaHelper.getTitle(subject);
-        commonName = CaHelper.getCn(subject);
-        organization = CaHelper.getOrganization(subject);
-        organizationalUnit = CaHelper.getOrganization(subject);
-        city = CaHelper.getCity(subject);
-        state = CaHelper.getState(subject);
-        country = CaHelper.getCountry(subject);
-
-        //signatureAlgorithm = serverCert.getSignatureAlgorithm().toString();
-        validTime = 365;
-        validTimeUnit = TimeUnit.DAY;
+        serverCertificateRenewer.setDefaultValues(this);
     }
 
     private String title;
@@ -167,6 +153,7 @@ public class RenewServerCertificate
         return keySize;
     }
 
+    @Override
     public void setKeySize(Integer ks) {
         keySize = ks;
     }
@@ -176,6 +163,7 @@ public class RenewServerCertificate
         return signatureAlgorithm;
     }
 
+    @Override
     public void setSignatureAlgorithm(String sa) {
         signatureAlgorithm = sa;
     }
