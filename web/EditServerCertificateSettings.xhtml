@@ -12,28 +12,28 @@
         <ui:define name="content">
             <h:form>
                 <h:panelGrid columns="4" columnClasses="label, value, label, value">
-                    <h:outputLabel value="Title:"/>
-                    <p:inputText value="#{editServerCertificateSettings.title}"/>
-                    <h:outputLabel value="Common name:"/>
-                    <p:inputText value="#{editServerCertificateSettings.commonName}"/>
+                    <h:outputLabel value="Title:" for="title"/>
+                    <p:inputText id="title" value="#{editServerCertificateSettings.title}"/>
+                    <h:outputLabel value="Common name:" for="commonName"/>
+                    <p:inputText id="commonName" value="#{editServerCertificateSettings.commonName}"/>
 
-                    <h:outputLabel value="Organizational unit:"/>
-                    <p:inputText value="#{editServerCertificateSettings.organizationalUnit}"/>
-                    <h:outputLabel value="Organization:"/>
-                    <p:inputText value="#{editServerCertificateSettings.organization}"/>
+                    <h:outputLabel value="Organizational unit:" for="organizationalUnit"/>
+                    <p:inputText id="organizationalUnit" value="#{editServerCertificateSettings.organizationalUnit}"/>
+                    <h:outputLabel value="Organization:" for="organization"/>
+                    <p:inputText id="organization" value="#{editServerCertificateSettings.organization}"/>
                     
-                    <h:outputLabel value="City:"/>
-                    <p:inputText value="#{editServerCertificateSettings.city}"/>
-                    <h:outputLabel value="State:"/>
-                    <p:inputText value="#{editServerCertificateSettings.state}"/>
+                    <h:outputLabel value="City:" for="city"/>
+                    <p:inputText id="city" value="#{editServerCertificateSettings.city}"/>
+                    <h:outputLabel value="State:" state="state"/>
+                    <p:inputText id="state" value="#{editServerCertificateSettings.state}"/>
                     
-                    <h:outputLabel value="Country:"/>
-                    <p:inputText value="#{editServerCertificateSettings.country}"/>
+                    <h:outputLabel value="Country:" for="country"/>
+                    <p:inputText id="country" value="#{editServerCertificateSettings.country}"/>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
-                    <h:outputLabel value="Validity time:"/>
-                    <h:panelGroup style="vertical-align:baseline">
+                    <h:outputLabel value="Validity time:" for="validTime"/>
+                    <h:panelGroup id="validTime" style="vertical-align:baseline">
                         <p:spinner value="#{editServerCertificateSettings.validTime}"/>
                         <p:selectOneMenu value="#{editServerCertificateSettings.validTimeUnit}">
                             <f:selectItems value="#{editServerCertificateSettings.validTimeUnits}"/>
@@ -42,21 +42,22 @@
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
-                    <h:outputLabel value="Signature algorithm:"/>
+                    <h:outputLabel value="Signature algorithm:" for="signatureAlgorithm"/>
                     <p:selectOneMenu id="signatureAlgorithm" value="#{editServerCertificateSettings.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
                         <f:selectItems value="#{serverCertificateRenewer.signatureAlgorithms}"/>
                     </p:selectOneMenu>
-                    <h:outputLabel value="Key size:"/>
+                    <h:outputLabel value="Key size:" for="keySize"/>
                     <p:selectOneMenu id="keySize" value="#{editServerCertificateSettings.keySize}">
                         <f:selectItems value="#{editServerCertificateSettings.keySizes}"/>
                     </p:selectOneMenu>
                     
-                    <h:outputLabel value="Auto renew after"/>
+                    <h:outputLabel value="Auto renew after" for="autoUpdateLifetime"/>
                     <p:outputPanel>
                         <p:inputNumber value="#{editServerCertificateSettings.autoUpdateLifetime}"
                                         symbol="%" 
                                         symbolPosition="s" 
+                                        id="autoUpdateLifetime"
                                         />
                         <h:outputText value =" lifetime"/>
                     </p:outputPanel>
