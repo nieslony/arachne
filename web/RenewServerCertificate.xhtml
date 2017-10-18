@@ -12,29 +12,29 @@
         <ui:define name="content">
             <h:form>
                 <h:panelGrid columns="4" columnClasses="label, value, label, value">
-                    <h:outputLabel value="Title:"/>
-                    <p:inputText value="#{renewServerCertificate.title}"/>
-                    <h:outputLabel value="Common name:"/>
-                    <p:inputText value="#{renewServerCertificate.commonName}"/>
+                    <h:outputLabel value="Title:" for="title"/>
+                    <p:inputText id="title" value="#{renewServerCertificate.title}"/>
+                    <h:outputLabel value="Common name:" for="commonName"/>
+                    <p:inputText id="commonName" value="#{renewServerCertificate.commonName}"/>
 
-                    <h:outputLabel value="Organizational unit:"/>
-                    <p:inputText value="#{renewServerCertificate.commonName}"/>
-                    <h:outputLabel value="Organization:"/>
-                    <p:inputText value="#{renewServerCertificate.organization}"/>
+                    <h:outputLabel value="Organizational unit:" for="organizationalUnit"/>
+                    <p:inputText id="organizationalUnit" value="#{renewServerCertificate.organizationalUnit}"/>
+                    <h:outputLabel value="Organization:" for="organization"/>
+                    <p:inputText id="organization" value="#{renewServerCertificate.organization}"/>
                     
-                    <h:outputLabel value="City:"/>
-                    <p:inputText value="#{renewServerCertificate.city}"/>
-                    <h:outputLabel value="State:"/>
-                    <p:inputText value="#{renewServerCertificate.state}"/>
+                    <h:outputLabel value="City:" for="city"/>
+                    <p:inputText id="city" value="#{renewServerCertificate.city}"/>
+                    <h:outputLabel value="State:" for="state"/>
+                    <p:inputText id="state" value="#{renewServerCertificate.state}"/>
                     
-                    <h:outputLabel value="Country:"/>
-                    <p:inputText value="#{renewServerCertificate.country}"/>
+                    <h:outputLabel value="Country:" for="country"/>
+                    <p:inputText id="country" value="#{renewServerCertificate.country}"/>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
-                    <h:outputLabel value="Validity time:"/>
+                    <h:outputLabel value="Validity time:" for="validTime"/>
                     <h:panelGroup style="vertical-align:bottom">
-                        <p:spinner value="#{renewServerCertificate.validTime}"/>
+                        <p:spinner id="validTime" value="#{renewServerCertificate.validTime}"/>
                         <p:selectOneMenu value="#{renewServerCertificate.validTimeUnit}">
                             <f:selectItems value="#{renewServerCertificate.validTimeUnits}"
                                            var="timeValue"
@@ -44,12 +44,12 @@
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
                     
-                    <h:outputLabel value="Signature algorithm:"/>
+                    <h:outputLabel value="Signature algorithm:" for="signatureAlgorithm"/>
                     <p:selectOneMenu id="signatureAlgorithm" value="#{renewServerCertificate.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
                         <f:selectItems value="#{serverCertificateRenewer.signatureAlgorithms}"/>
                     </p:selectOneMenu>
-                    <h:outputLabel value="Key size:"/>
+                    <h:outputLabel value="Key size:" for="keySize"/>
                     <p:selectOneMenu id="keySize" value="#{renewServerCertificate.keySize}">
                         <f:selectItems value="#{renewServerCertificate.keySizes}"/>
                     </p:selectOneMenu>

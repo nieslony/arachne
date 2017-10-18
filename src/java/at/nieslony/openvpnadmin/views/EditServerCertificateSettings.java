@@ -66,7 +66,12 @@ public class EditServerCertificateSettings
     }
 
     public String getKeyAlgo() {
-        return getSignatureAlgorithm().split("with")[1];
+        String[] split = getSignatureAlgorithm().split("WITH");
+
+        if (split.length == 2)
+            return split[1];
+        else
+            return "";
     }
 
     public int[] getKeySizes() {

@@ -13,6 +13,7 @@ import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -26,9 +27,9 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
@@ -44,8 +45,10 @@ import org.bouncycastle.operator.OperatorCreationException;
  * @author claas
  */
 @ManagedBean
-@SessionScoped
-public class ServerCertificateRenewer {
+@ApplicationScoped
+public class ServerCertificateRenewer
+        implements Serializable
+{
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{pki}")

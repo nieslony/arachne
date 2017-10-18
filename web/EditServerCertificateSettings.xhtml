@@ -45,7 +45,7 @@
                     <h:outputLabel value="Signature algorithm:"/>
                     <p:selectOneMenu id="signatureAlgorithm" value="#{editServerCertificateSettings.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
-                        <f:selectItems value="#{editServerCertificateSettings.signatureAlgorithms}"/>
+                        <f:selectItems value="#{serverCertificateRenewer.signatureAlgorithms}"/>
                     </p:selectOneMenu>
                     <h:outputLabel value="Key size:"/>
                     <p:selectOneMenu id="keySize" value="#{editServerCertificateSettings.keySize}">

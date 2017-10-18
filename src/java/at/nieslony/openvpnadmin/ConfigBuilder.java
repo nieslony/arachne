@@ -5,7 +5,6 @@
  */
 package at.nieslony.openvpnadmin;
 
-import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.UserVpn;
@@ -28,12 +27,9 @@ import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -43,15 +39,12 @@ import org.primefaces.model.StreamedContent;
  * @author claas
  */
 @ManagedBean
-@SessionScoped
+@ApplicationScoped
 public class ConfigBuilder implements Serializable {
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{pki}")
     private Pki pki;
-
-    @ManagedProperty(value = "#{currentUser}")
-    CurrentUser currentUser;
 
     @ManagedProperty(value = "#{folderFactory}")
     FolderFactory folderFactory;
@@ -69,10 +62,6 @@ public class ConfigBuilder implements Serializable {
 
     public void setPki(Pki pki) {
         this.pki = pki;
-    }
-
-    public void setCurrentUser(CurrentUser cub) {
-        currentUser = cub;
     }
 
     public ConfigBuilder()
@@ -300,66 +289,6 @@ public class ConfigBuilder implements Serializable {
         pr.println("quit");
         pr.println("EOF");
         pr.println("fi");
-    }
-
-    public void getOvpnConfig(ComponentSystemEvent event)
-            throws OperatorCreationException
-    {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-
-        Writer wr = null;
-        try {
-            wr = ec.getResponseOutputWriter();
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-        }
-        catch (IOException ex) {
-            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
-            return;
-        }
-
-        String username = currentUser.getUsername();
-        try {
-            writeUserVpnClientConfig(wr, username);
-        }
-        catch (CertificateEncodingException | IOException ex) {
-            logger.warning(String.format("Error getting openvpn configuration for user %s: %s",
-                    username, ex.getMessage()));
-
-            PrintWriter pw = new PrintWriter(wr);
-            pw.println("# Error getting configuration.");
-        }
-    }
-
-    public void getNetworkManagerConfig(ComponentSystemEvent event)
-            throws AbstractMethodError, OperatorCreationException
-    {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-
-        Writer wr = null;
-        try {
-            wr = ec.getResponseOutputWriter();
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-        }
-        catch (IOException ex) {
-            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
-            return;
-        }
-
-        String username = currentUser.getUsername();
-        try {
-            writeUserVpnNetworkManagerConfig(wr, username);
-        }
-        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
-            logger.warning(String.format("Error getting network manager configuration for user %s: %s",
-                    username, ex.getMessage()));
-
-            PrintWriter pw = new PrintWriter(wr);
-            pw.println("# Error getting configuration.");
-        }
     }
 
     public StreamedContent getDownloadNetworkManagerConfig(String username)
