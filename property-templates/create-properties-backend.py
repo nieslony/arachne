@@ -115,16 +115,18 @@ def print_getter_setter_backend():
             
             s += """
     public %(type)s get%(u_name)s() {
-        String value = %(default)s;
+        String value = null;
         
         try {
             PropertyGroup pg = getPropertyGroup();
             if (pg != null)
-                value = pg.getProperty(%(p_name)s, %(default)s);
+                value = pg.getProperty(%(p_name)s);
         }
         catch (SQLException ex) {
-            value = %(default)s;
         }
+        
+        if (value == null)
+            value = %(default)s;
         
         return %(type)s.valueOf(value);
     }
