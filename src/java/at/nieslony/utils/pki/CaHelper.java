@@ -50,7 +50,7 @@ public class CaHelper {
     }
 
     public static String getKeyAlgo(String s) {
-        String[] components = s.split("with");
+        String[] components = s.split("WITH");
 
         if (components != null && components.length == 2)
             return components[1];
