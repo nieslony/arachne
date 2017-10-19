@@ -5,13 +5,16 @@
  */
 package at.nieslony.openvpnadmin.tasks;
 
-import at.nieslony.openvpnadmin.beans.ManagementInterface;
 import at.nieslony.openvpnadmin.beans.Pki;
+import at.nieslony.openvpnadmin.beans.ServerCertificateRenewer;
 import at.nieslony.openvpnadmin.beans.ServerCertificateSettings;
 import at.nieslony.utils.classfinder.StaticMemberBean;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Date;
 import java.util.logging.Logger;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  *
@@ -27,13 +30,6 @@ public class AutoRenewServerfCertificate
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @StaticMemberBean
-    private static ManagementInterface managementInterface;
-
-    static public void setManagementInterface(ManagementInterface mi) {
-        managementInterface = mi;
-    }
-
-    @StaticMemberBean
     private static Pki pki;
 
     public static void setPki(Pki pki) {
@@ -47,12 +43,43 @@ public class AutoRenewServerfCertificate
         serverCertificateSettings = s;
     }
 
-    private static void renewServerCertificate() {
+    @StaticMemberBean
+    private static ServerCertificateRenewer serverCertificateRenewer;
 
+    public static void setServerCertificateRenewer(ServerCertificateRenewer scr) {
+        serverCertificateRenewer = scr;
+    }
+
+    private static void renewServerCertificate() {
+        serverCertificateRenewer.renewServerCertificate(serverCertificateSettings);
+    }
+
+    public static void registerBouncyCastle() {
+        try {
+            Provider provs[] = Security.getProviders();
+            boolean found = false;
+            for (Provider p: provs) {
+                if (p.getName().equals(BouncyCastleProvider.PROVIDER_NAME)) {
+                    logger.info("BouncyCastleProvider already added");
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                logger.info("Adding new security privider: BouncyCastleProvider");
+                Security.addProvider(new BouncyCastleProvider());
+            }
+        }
+        catch (SecurityException ex) {
+            logger.severe(String.format("Cannot add security provider: %s",
+                    ex.getMessage()));
+        }
     }
 
     @Override
     public void run() {
+        registerBouncyCastle();
+
         X509CertificateHolder serverCert = pki.getServerCert();
 
         if (serverCert == null) {

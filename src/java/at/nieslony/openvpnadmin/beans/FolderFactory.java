@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.beans;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.ExternalContext;
@@ -29,6 +30,13 @@ public class FolderFactory implements Serializable {
      * Creates a new instance of FolderFactory
      */
     public FolderFactory() {
+    }
+
+    @PostConstruct
+    public void init() {
+        getBinDir();
+        getSqlDir();
+        getDynamicDataDir();
     }
 
     private String getDynamicDataDir() {
@@ -62,11 +70,6 @@ public class FolderFactory implements Serializable {
     }
 
     public String getBinDir() {
-        if (binDir == null) {
-            ExternalContext extCtx = FacesContext.getCurrentInstance().getExternalContext();
-            binDir = extCtx.getInitParameter("bin-dir");
-        }
-
         return binDir;
     }
 }

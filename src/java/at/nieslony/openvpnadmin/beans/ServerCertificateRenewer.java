@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
@@ -36,6 +37,7 @@ import javax.faces.model.SelectItemGroup;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.AlgorithmNameFinder;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -145,21 +147,22 @@ public class ServerCertificateRenewer
         logger.info("Starting server certificate renew process...");
         KeyPair keyPair;
         try {
-            logger.info("Generation key pair");
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance(keyAlgo);
+            logger.info(String.format("Generation %s key pair", keyAlgo));
+            KeyPairGenerator keygen = KeyPairGenerator.getInstance(keyAlgo, BouncyCastleProvider.PROVIDER_NAME);
             keygen.initialize(editor.getKeySize(), new SecureRandom());
             keyPair = keygen.generateKeyPair();
         }
-        catch (NoSuchAlgorithmException ex) {
+        catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
             String msg = String.format("Cannot create keyPair: %s", ex.getMessage());
 
             logger.warning(msg);
 
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
 
             return;
         }
@@ -186,10 +189,11 @@ public class ServerCertificateRenewer
             logger.warning(msg);
 
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
 
             return;
         }
@@ -205,10 +209,12 @@ public class ServerCertificateRenewer
             logger.warning(msg);
 
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
+
             return;
         }
 
@@ -224,10 +230,11 @@ public class ServerCertificateRenewer
             String msg = String.format("Cannot add old certificate to CRL: %s", ex.getMessage());
             logger.warning(msg);
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
             return;
         }
         finally {
@@ -251,10 +258,11 @@ public class ServerCertificateRenewer
             String msg = String.format("Cannot write server config: %s", ex.getMessage());
             logger.warning(msg);
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
         }
         finally {
             try {
@@ -278,16 +286,19 @@ public class ServerCertificateRenewer
             logger.warning(msg);
 
             FacesContext ctx = FacesContext.getCurrentInstance();
-            ctx.addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Error", msg)
-                    );
+            if (ctx != null)
+                ctx.addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Error", msg)
+                        );
             return;
         }
 
         String msg = "Server certificate renew process successfully finished.";
         logger.info(msg);
-        FacesContext.getCurrentInstance().addMessage(null,
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        if (ctx != null)
+            ctx.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
     }
 }
