@@ -1,0 +1,22 @@
+body {
+    background-color: #ffffff;
+    color: #000000;  
+}
+
+h1 {
+    color: #045491;
+}
+
+a:link, a:visited {
+  color: #045491;
+  text-decoration: none;
+}
+
+a:link:hover, a:visited:hover  {
+  color: #045491;
+  text-decoration : underline;
+}
+
+pre {
+  background-color: #045491;
+}
