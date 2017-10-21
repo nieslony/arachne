@@ -10,9 +10,7 @@
 <project name="OpenVPN_Admin" default="default" basedir=".">
     <description>Builds, tests, and runs the project OpenVPN_Admin.</description>
     <import file="nbproject/build-impl.xml"/>
-    
-    
-    <include file="ant/ant-include.xml"/>
+        
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -73,30 +71,15 @@
     -->
     
     <property name="version" value="0.3.1git"/>
-            
-    <target name="-pre-compile">
-        <exec executable="property-templates/create-properties-backend.py">
-            <arg value="--input_dir"/>
-            <arg value="property-templates"/>
-            <arg value="--dest_dir"/>
-            <arg value="build/generated-sources/"/>
-        </exec>
-        
-        <mkdir dir="${basedir}/${build.dir}/generated-sources/at/nieslony/openvpnadmin"/>
-        <echo output="${basedir}/${build.dir}/generated-sources/at/nieslony/openvpnadmin/ArachneStatics.java">
-package at.nieslony.openvpnadmin;            
-            
-public class ArachneStatics {
-    private static final String VERSION = "${version}";
-    
-    public String getVersion() {
-        return VERSION;
-    }
-}
-        </echo>
+    <property name="build" value="${basedir}/build"/>
+    <property name="property-templates" value="${basedir}/property-templates"/>
+
+    <include file="ant/ant-include.xml"/>
+
+    <target name="-pre-compile" depends="custom.generate-code">
     </target>
     
-    <target name="-pre-dist">
+    <target name="-pre-dist" depends="doc">
         <property name="work.dir"  value="${basedir}/${build.dir}/work"/>
         <property name="sql.dir"   value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
         <property name="bin.dir"   value="${basedir}/${build.web.dir}/WEB-INF/bin"/>

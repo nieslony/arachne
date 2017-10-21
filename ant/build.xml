@@ -58,7 +58,7 @@
         	dir="/usr/share/java" 
         	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar tomcat8-servlet-api.jar"
         />
-        <fileset dir="${build}/generated/java"/>
+        <fileset dir="${build}/generated-sources"/>
     </path>
     
     <target name="init">
@@ -66,17 +66,7 @@
         <mkdir dir="${build}"/>
     </target>
     
-    <target name="generate-code">
-        <exec executable="python">
-            <arg value="${property-templates}/create-properties-backend.py"/>
-            <arg value="--input_dir"/>
-            <arg value="${property-templates}"/>
-            <arg value="--dest_dir"/>
-            <arg value="${build}/generated/java"/>
-        </exec>        
-    </target>
-
-    <target name="compile" depends="init,generate-code">
+    <target name="compile" depends="init,custom.generate-code">
         <mkdir dir="${build}/classes"/>
         <javac 
                destdir="${build}/classes" 
@@ -85,7 +75,7 @@
                encoding="utf-8"
         >
             <src path="${src}"/>
-            <src path="${build}/generated/java"/>
+            <src path="${build}/generated-sources"/>
         </javac>
     </target>
     

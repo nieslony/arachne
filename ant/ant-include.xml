@@ -1,6 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="custom">
+    <target name="generate-code">
+        <exec executable="python" failonerror="true">
+            <arg value="${property-templates}/create-properties-backend.py"/>
+            <arg value="--input_dir"/>
+            <arg value="${property-templates}"/>
+            <arg value="--dest_dir"/>
+            <arg value="${build}/generated-sources"/>
+        </exec>        
+
+        <mkdir dir="${build}/generated-sources/at/nieslony/openvpnadmin"/>
+        <echo output="${build}/generated-sources/at/nieslony/openvpnadmin/ArachneStatics.java">
+package at.nieslony.openvpnadmin;            
+            
+public class ArachneStatics {
+    private static final String VERSION = "${version}";
+    
+    public String getVersion() {
+        return VERSION;
+    }
+}
+        </echo>
+    </target>
+    
+    <!-- Documentation -->
     <target name="prepare-doc">
         <mkdir dir="${docdst.dir}"/>
         <mkdir dir="${docdst.dir}/pics"/>
@@ -21,6 +45,16 @@
             <param name="html.stylesheet" expression="arachne.css"/>
         </xslt>
     </target>
+
+    <target name="patch-doc">
+        <mkdir dir="${build}/generated-doc"/>
+        <copy file="${docsrc.dir}/arachne.xml" todir="${build}/generated-doc"/>
+        <replace 
+            file="${build}/generated-doc/arachne.xml" 
+            token="@@VERSION@@" 
+            value="${version}"
+            />            
+        </target>
     
     <target name="doc-external" depends="prepare-doc">
         <echo message="Creating doc from ${docsrc.dir} to ${docdst.dir}"/>
@@ -33,10 +67,10 @@
             <arg value="arachne.css"/>
             
             <arg value="${docbook-stylesheet}"/>
-            <arg value="${docsrc.dir}/arachne.xml"/>
+            <arg value="${build}/generated-doc/arachne.xml"/>
         </exec>
     </target>
     
-    <target name="doc" depends="doc-external">
+    <target name="doc" depends="patch-doc,doc-external">
     </target>
 </project>
