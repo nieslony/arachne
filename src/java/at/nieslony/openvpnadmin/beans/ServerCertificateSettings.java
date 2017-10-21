@@ -55,8 +55,8 @@ public class ServerCertificateSettings
     @PostConstruct
     public void init() {
         if (!getValuesAlreadySet()) {
-            serverCertificateRenewer.setDefaultValues(this);
-            setValuesAlreadySet(Boolean.TRUE);
+            if (serverCertificateRenewer.setDefaultValues(this))
+                setValuesAlreadySet(Boolean.TRUE);
         }
     }
 

@@ -111,8 +111,10 @@ public class ServerCertificateRenewer
         }
     }
 
-    public void setDefaultValues(ServerCertificateEditor editor) {
+    public boolean setDefaultValues(ServerCertificateEditor editor) {
         X509CertificateHolder serverCert = pki.getServerCert();
+        if (serverCert == null)
+            return false;
         X500Name subject = serverCert.getSubject();
 
         editor.setTitle(CaHelper.getTitle(subject));
@@ -138,6 +140,8 @@ public class ServerCertificateRenewer
         }
         logger.info(String.format("Key size: %d", keySize));
         editor.setKeySize(keySize);
+
+        return true;
     }
 
     public void renewServerCertificate(ServerCertificateEditor editor) {
