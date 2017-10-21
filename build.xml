@@ -80,7 +80,7 @@
         </exec>
     </target>
     
-    <target name="-pre-dist">
+    <target name="-pre-dist" depends="doc">
         <property name="work.dir"  value="${basedir}/${build.dir}/work"/>
         <property name="sql.dir"   value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
         <property name="bin.dir"   value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
@@ -112,5 +112,25 @@
         <copy toDir="${theme.dir}">
             <fileset dir="${theme.src}/images"/>
         </copy>              
+    </target>
+
+    <target name="doc">
+        <property name="doc.dir" value="${basedir}/build/web/doc"/>
+        
+        <mkdir dir="${doc.dir}"/>
+        <mkdir dir="${doc.dir}/pics"/>
+        <copy todir="${doc.dir}/pics">
+            <fileset dir="doc/pics"/>
+        </copy>
+        <copy todir="${doc.dir}"
+              file="${basedir}/doc/arachne.css"
+              />
+        <xslt basedir="${basedir}/doc" 
+            in="${basedir}/doc/arachne.xml" destdir="${doc.dir}"
+                includes="*xml"
+              style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
+              >
+            <param name="html.stylesheet" type="STRING" expression="arachne.css"/>
+            </xslt>
     </target>
 </project>

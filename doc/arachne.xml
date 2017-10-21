@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//Norman Walsh//DTD DocBk XML V5.0//EN"
  "/usr/share/xml/docbook5/schema/dtd/5.0/docbook.dtd">
 
@@ -11,42 +11,221 @@
     <firstname>Claas</firstname><surname>Nieslony</surname>
   </personname></author>
 </info>
-<dedication>
-<para>This book is dedicated to you.
-</para>
-</dedication>
-<preface><title>Foreword</title>
-<para>Some content is always required.
-</para>
-</preface>
 
-<chapter><title>Installation</title>
+<chapter>
+    <title>Installation</title>
     <section>
         <title>CentOS 7</title>
         <orderedlist>
             <listitem>
                 <para>Add arache repository</para>
                 <programlisting>
-                    wget http://... -C /etc/yum.re
+                    wget http://download.opensuse.org/repositories/home:/nieslony/CentOS_7/home:nieslony.repo -C /etc/yum.repos.d
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Add EPEL repository</para>
+                <programlisting>
+                    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
                 </programlisting>
             </listitem>
             <listitem>
                 <para>Install packages</para>
                 <programlisting>
-                    yum -y install epel.repo
-                </programlisting>
-            </listitem>
-            <listitem>
-                <para>Install packages</para>
-                <programlisting>
-                    yum install arachne-server arachne-doc postgres-server
+                    yum install arachne-server arachne postgres-server
                 </programlisting>
             </listitem>
         </orderedlist>
     </section>
     <section>
         <title>openSUSE</title>
+        <orderedlist>
+            <listitem>
+                <para>Add arachne repository</para>
+                <programlisting>
+                    zypper ar http://download.opensuse.org/repositories/home:/nieslony/openSUSE_Leap_42.2/
+                </programlisting>
+            </listitem>
+            <listitem>
+                <para>Install packages</para>
+                <programlisting>
+                    zypper install arachne-server postgresql-server
+                </programlisting>
+            </listitem>
+        </orderedlist>
     </section>
+</chapter>
+
+<chapter>
+    <title>Initial setup</title>
+    <para>
+        In the following steps replace arachne.example.com with your arachne server's full
+        qualified domain name.
+    </para>
+    <orderedlist>
+        <listitem>
+            <para>Start Tomcat server</para>
+            <programlisting>
+                systemctl start tomcat
+            </programlisting>
+        </listitem>
+        <listitem>
+            <para>Open arachne in Mozilla Firefox or in your favorite web browser.</para>
+            <programlisting>
+                firefox http://arachne.example.com:8080/arachne
+            </programlisting>
+            <para>You will see arachne's setup wizard</para>
+        </listitem>
+        <listitem>
+            <para>Enjoy arachne setups wizard's welcome page</para>
+            <screenshot>
+                <screeninfo>Setup wizard - welcome</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_Welcome.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>Set name of master adminitrative user and password.</para>
+            <screenshot>
+                <screeninfo>Setup wizard - create admin user</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_CreateAdmin.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Create a self signed CA, that will create certificates for the 
+                openvpn server and VPN users.
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create self signed CA</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_CreateSelfSignedCa.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Create openvpn server certificate. The common name must be the 
+                full qualified domain name (FQDN) of your openvpn server as 
+                visible from the internet.
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create server certificate</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWozard_CreateServerCertificate.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </listitem>
+        <listitem>
+            <para>
+                Arachne stores its settings and certificate in a postgresql 
+                database. Set username etc. here. 
+            </para>
+            <screenshot>
+                <screeninfo>Setup wizard - create self signed CA</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/SetupWizard_Database.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+            <para>
+                You can download a SQL file that contains everything to create a 
+                database user and an empty database. A hash of the password you 
+                entered here is also included.
+            </para>
+            <para>
+                To enable md5 authentication on your postgres server, add the 
+                following line to /var/lib/pgsql/data/pg_hba.conf:
+            </para>
+            <programlisting>
+                  host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
+            </programlisting>
+            <para>
+                You can test the database connectivity by clicking "Test connection".
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                To finalize setup click "finish" on the last page. Arachne will 
+                create the administrator user, your CA, a server certificate, 
+                DH paramers and all neccasary database tables and initial values.
+            </para>
+            <para>
+                This step takes a coupleof minutes.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                When the login screen appears enter username and passwd for 
+                the user you've just created.
+            </para>
+        </listitem>
+    </orderedlist>
+</chapter>
+
+<chapter>
+    <title>Usermanagement</title>
+
+    <sect1>
+        <title>Local users</title>
+        <para>
+            TBw
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Roles</title>
+        <para>
+            There are two roles: admin and user. An admin can modify any 
+            settings, an user is allowed to connect via openvpn. A user ca have 
+            both roles. 
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Define LDAP source</title>
+        <para>
+            Arachne can authenticate against a LDAP server. It's also possible 
+            to manage roles with LDAP groups. 
+            <itemizedlist>
+                <listitem>
+                    managing roles with LDAP groups
+                </listitem>
+                <listitem>
+                    authenticating against LDAP server
+                </listitem>
+                <listitem>
+                    getting user attributes for external authentication 
+                    (e.g. Apache HTTP server)
+                </listitem>
+            </itemizedlist>
+            To edit LDAP settings select 
+            <guilabel>Configure LDAP source</guilabel>.
+        </para>
+    </sect1>
+    
+    <sect1>
+        <title>Authentication sources</title>
+        <para>
+            
+        </para>
+    </sect1>
+</chapter>
+
+<chapter>
+    <title>VPN settings</title>
 </chapter>
 
 <appendix><title>Optional Appendix</title>

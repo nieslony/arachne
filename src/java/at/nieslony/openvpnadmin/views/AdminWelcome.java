@@ -176,4 +176,8 @@ public class AdminWelcome implements Serializable {
         logger.info("Navigating to Login");
         nav.performNavigation("Login");
     }
+    
+    public void onAbout() {
+        
+    }
 }
