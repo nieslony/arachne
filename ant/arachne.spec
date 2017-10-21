@@ -75,7 +75,6 @@ ant custom.doc -Droot=%{_builddir}/%{name}-%{version}
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
 mkdir -vp %{buildroot}/%_defaultdocdir
 mv -v %{buildroot}/%{webappsdir}/%{name}/doc %{buildroot}/%_defaultdocdir/%{name}-doc
-# mv -v %{buildroot}/%_defaultdocdir/doc %{buildroot}/%_defaultdocdir/%{name}-doc
 
 mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
