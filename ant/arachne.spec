@@ -13,7 +13,7 @@
 %define debug_package %{nil}
 
 Name:       arachne
-Version:    0.3.1
+Version:    @@VERSION@@
 Release:    1
 Summary:    Web application for administering openVPN
 
@@ -23,7 +23,8 @@ Source0:    %{name}-%{version}.tar.gz
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires:  ant bouncycastle tomcat python primefaces jsf-api
+BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core 
+BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc docbook5-style-xsl docbook5-schemas
 
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
@@ -38,7 +39,7 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
 %package server
 Summary:	Arachne server
 BuildArch:	noarch
-Requires:	tomcat bouncycastle openvpn postgresql-jdbc jsf-api primefaces
+Requires:	tomcat bouncycastle openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
@@ -46,6 +47,13 @@ Summary:	Arachne downloader for NetworkManager config
 BuildArch:	noarch
 Requires:	curl NetworkManager NetworkManager-openvpn
 Obsoletes:      OpenVPN_Admin-config-downloader
+
+%package doc
+Summary:	Documentation for Arachne
+BuildArch:	noarch
+
+%description doc
+HTML documentation for arachne
 
 %description server
 Tomcat Web application for administering openVPN
@@ -56,15 +64,18 @@ Command line tool for downloading configuration file from arachne
 %description
 Tomcat Web application for administering openVPN
 
-
 %prep
 %setup 
 
 %build
-ant dist -Droot=%{_builddir}/%{name}-%{version}
+ant dist       -Droot=%{_builddir}/%{name}-%{version}
+ant custom.doc -Droot=%{_builddir}/%{name}-%{version}
 
 %install 
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
+mkdir -vp %{buildroot}/%_defaultdocdir
+mv -v %{buildroot}/%{webappsdir}/%{name}/doc %{buildroot}/%_defaultdocdir/%{name}-doc
+# mv -v %{buildroot}/%_defaultdocdir/doc %{buildroot}/%_defaultdocdir/%{name}-doc
 
 mkdir -pv %{buildroot}/usr/bin %{buildroot}/%_defaultdocdir/%{name}
 install bin/download-vpn-config.sh %{buildroot}/usr/bin
@@ -76,8 +87,9 @@ install apache/arachne-redhat.conf %{buildroot}/%_defaultdocdir/%{name}/arachne.
 install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 mkdir -pv %{buildroot}/var/lib/arachne
+
 %clean
-ant clean 
+[ %{buildroot} != "/" ] && rm -rf %{buildroot}
 
 %post server
 ln -sfv \
@@ -103,6 +115,9 @@ fi
 %attr(755, root, root)    %_defaultdocdir/%{name}
 %attr(664, root, root)    %_defaultdocdir/%{name}/*
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
+
+%files doc
+%_defaultdocdir/%{name}-doc
 
 %files config-downloader
 /usr/bin/download-vpn-config.sh

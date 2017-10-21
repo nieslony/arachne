@@ -1,10 +1,12 @@
 <project name="ProjectName" default="dist" basedir=".">
+    <include file="ant-include.xml"/>
+    
     <description>
         Project Description
     </description>
     
     <property name="projectName" value="arachne"/>
-    <property name="version" value="0.3.1"/>
+    <property name="version" value="0.3.1git"/>
     <property name="tar-prefix" value="${projectName}-${version}"/>
 
     <property name="root"  location=".."/>
@@ -14,9 +16,11 @@
     <property name="web"   location="${root}/web"/>
     <property name="build" location="${root}/build"/>
     <property name="export" location="${root}/ant/dist"/>
-    <property name="doc-src" location="${root}/doc"/>
-    <property name="doc-dest" location="${build}/doc"/>
-    <property name="doc-style" value="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"/>
+    <property name="tar-patch" location="${root}/ant/tar-patch"/>
+
+        <property name="docsrc.dir" value="${root}/doc"/>
+        <property name="docdst.dir" value="${build}/web/doc"/>
+
     
     <property name="build.webxml" location="${build}/web/WEB-INF/web.xml"/>
 
@@ -39,11 +43,15 @@
     <path id="classpath">
         <fileset 
         	dir="/usr/share/java" 
-        	includes="servlet.jar bcprov.jar jakarta-taglibs-core.jar tomcat-el-api.jar"
+        	includes="servlet.jar jakarta-taglibs-core.jar tomcat-el-api.jar"
+        />
+        <fileset
+                dir="/usr/share/java" 
+                includes="bcprov.jar bcpkix.jar postgresql-jdbc.jar"
         />
         <fileset 
         	dir="/usr/share/java" 
-        	includes="primefaces.jar jsf-api.jar"
+        	includes="primefaces.jar myfaces-api.jar myfaces-impl.jar myfaces-impl-shared.jar"
         />
         <fileset 
         	dir="/usr/share/java" 
@@ -57,15 +65,6 @@
         <mkdir dir="${build}"/>
     </target>
     
-    <target name="doc">
-        <mkdir dir="${doc-dest}"/>
-        <xslt
-            basedir="${doc-src}"
-            destdir="${doc-dest}"
-            style="${doc-style}"
-            />
-    </target>
-    
     <target name="generate-code">
         <exec executable="python">
             <arg value="${property-templates}/create-properties-backend.py"/>
@@ -75,9 +74,7 @@
             <arg value="${build}/generated/java"/>
         </exec>        
     </target>
-<!--
-                srcdir="${src}" 
-    -->    
+
     <target name="compile" depends="init,generate-code">
         <mkdir dir="${build}/classes"/>
         <javac 
@@ -96,9 +93,11 @@
         <copy todir="${build}/web">
             <fileset dir="${web}"/>
         </copy>
+        
         <copy todir="${build}/web/WEB-INF/classes">
             <fileset dir="${build}/classes"/>
         </copy>
+        
         <copy todir="${build}/web/WEB-INF/sql">
             <fileset dir="${src}/sql"/>
         </copy>
@@ -106,11 +105,12 @@
         <mkdir dir="${theme.dir}"/>
         <copy toDir="${theme.dir}"
               file="${theme.src}/theme.css"
+              verbose="true"
               />
         <copy toDir="${theme.dir}">
             <fileset dir="${theme.src}/images"/>
         </copy>
-        <echo message="--- END copy static ---"/>
+        <echo message="--- END copy static ---"/>        
     </target>
     
     <target name="dist" depends="compile,copystatic,patch-webxml">
@@ -134,11 +134,6 @@
     <target name="patch-webxml">
         <replace 
             file="${build.webxml}" 
-            token="@@DYNAMIC-DATA-DIR@@" 
-            value="${work.dir}"
-            />
-        <replace 
-            file="${build.webxml}" 
             token="@@SQL-DIR@@" 
             value="${sql.dir}"
             />        
@@ -150,6 +145,13 @@
     
     <target name="tar">
         <mkdir dir="${export}"/>
+        <mkdir dir="${tar-patch}"/>
+        <copy todir="${tar-patch}" file="arachne.spec"/>
+        <replace 
+            file="${tar-patch}/arachne.spec" 
+            token="@@VERSION@@" 
+            value="${version}"
+            />        
         <tar destfile="${export}/${projectName}-${version}.tar.gz"
              compression="gzip"
         >
@@ -161,14 +163,14 @@
             <tarfileset dir="${db-props-src}" prefix="${tar-prefix}/src"/>
             <tarfileset dir="${web}" prefix="${tar-prefix}/web"/>
             <tarfileset dir="${property-templates}" prefix="${tar-prefix}/property-templates"/>
-            <tarfileset dir="${root}/ant" 
-                        prefix="${tar-prefix}" 
-                        excludes="build dist"
-            />
+            <tarfileset dir="${root}/ant" prefix="${tar-prefix}">
+                <include name="*xml"/>
+            </tarfileset>
             <tarfileset dir="${theme.src}"
                         prefix="${tar-prefix}/arachne-theme"
                         />
             <tarfileset dir="${root}/bin" prefix="${tar-prefix}/bin/"/>
+            <tarfileset dir="${root}/doc" prefix="${tar-prefix}/doc/"/>
         </tar>
     </target>
     
