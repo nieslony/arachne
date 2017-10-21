@@ -2,10 +2,12 @@
 %define webappsdir /srv/tomcat/webapps
 %define webappuser root
 %define webappgroup root
+%define docbookstylesheet /usr/share/xml/docbook/stylesheet/nwalsh5/1.78.1/xhtml5/chunk.xsl
 %else 
 %define webappsdir /var/lib/tomcat/webapps
 %define webappuser tomcat
 %define webappgroup tomcat
+%define docbookstylesheet /usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl
 %endif
 
 %define destdir %{webappsdir}/arachne
@@ -24,16 +26,16 @@ Source0:    %{name}-%{version}.tar.gz
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core 
-BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc docbook5-style-xsl docbook5-schemas
+BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc 
 
 %if 0%{?fedora}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas
 %endif
 %if 0%{?centos_version}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api docbook5-style-xsl docbook5-schemas
 %endif
 %if 0%{?suse_version}
-BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
+BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xsl-stylesheets
 %endif
  
 %package server
@@ -69,7 +71,7 @@ Tomcat Web application for administering openVPN
 
 %build
 ant dist       -Droot=%{_builddir}/%{name}-%{version}
-ant custom.doc -Droot=%{_builddir}/%{name}-%{version}
+ant custom.doc -Droot=%{_builddir}/%{name}-%{version} -Ddocbook-stylesheet=%{docbookstylesheet}
 
 %install 
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}

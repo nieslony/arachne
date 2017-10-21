@@ -20,6 +20,7 @@
 
         <property name="docsrc.dir" value="${root}/doc"/>
         <property name="docdst.dir" value="${build}/web/doc"/>
+        <property name="docbook-stylesheet" value="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"/>
 
     
     <property name="build.webxml" location="${build}/web/WEB-INF/web.xml"/>

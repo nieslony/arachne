@@ -24,7 +24,7 @@
     
     <target name="doc-external" depends="prepare-doc">
         <echo message="Creating doc from ${docsrc.dir} to ${docdst.dir}"/>
-        <exec executable="/usr/bin/xsltproc">
+        <exec executable="/usr/bin/xsltproc" failonerror="true">
             <arg value="--output"/> 
             <arg value="${docdst.dir}/"/>
             
@@ -32,7 +32,7 @@
             <arg value="html.stylesheet"/> 
             <arg value="arachne.css"/>
             
-            <arg value="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"/>
+            <arg value="${docbook-stylesheet}"/>
             <arg value="${docsrc.dir}/arachne.xml"/>
         </exec>
     </target>
