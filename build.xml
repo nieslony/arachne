@@ -10,6 +10,9 @@
 <project name="OpenVPN_Admin" default="default" basedir=".">
     <description>Builds, tests, and runs the project OpenVPN_Admin.</description>
     <import file="nbproject/build-impl.xml"/>
+    
+    
+    <include file="ant/ant-include.xml"/>
     <!--
 
     There exist several targets which are by default empty and which can be 
@@ -69,8 +72,8 @@
 
     -->
     
-    
-    
+    <property name="version" value="0.3.1git"/>
+            
     <target name="-pre-compile">
         <exec executable="property-templates/create-properties-backend.py">
             <arg value="--input_dir"/>
@@ -78,9 +81,22 @@
             <arg value="--dest_dir"/>
             <arg value="build/generated-sources/"/>
         </exec>
+        
+        <mkdir dir="${basedir}/${build.dir}/generated-sources/at/nieslony/openvpnadmin"/>
+        <echo output="${basedir}/${build.dir}/generated-sources/at/nieslony/openvpnadmin/ArachneStatics.java">
+package at.nieslony.openvpnadmin;            
+            
+public class ArachneStatics {
+    private static final String VERSION = "${version}";
+    
+    public String getVersion() {
+        return VERSION;
+    }
+}
+        </echo>
     </target>
     
-    <target name="-pre-dist" depends="doc">
+    <target name="-pre-dist">
         <property name="work.dir"  value="${basedir}/${build.dir}/work"/>
         <property name="sql.dir"   value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
         <property name="bin.dir"   value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
@@ -113,24 +129,10 @@
             <fileset dir="${theme.src}/images"/>
         </copy>              
     </target>
-
-    <target name="doc">
-        <property name="doc.dir" value="${basedir}/build/web/doc"/>
-        
-        <mkdir dir="${doc.dir}"/>
-        <mkdir dir="${doc.dir}/pics"/>
-        <copy todir="${doc.dir}/pics">
-            <fileset dir="doc/pics"/>
-        </copy>
-        <copy todir="${doc.dir}"
-              file="${basedir}/doc/arachne.css"
-              />
-        <xslt basedir="${basedir}/doc" 
-            in="${basedir}/doc/arachne.xml" destdir="${doc.dir}"
-                includes="*xml"
-              style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
-              >
-            <param name="html.stylesheet" type="STRING" expression="arachne.css"/>
-            </xslt>
+    
+    <property name="docbook-stylesheet" value="/usr/share/xml/docbook/stylesheet/nwalsh5/1.78.1/xhtml5/chunk.xsl"/>
+    <property name="docdst.dir" value="${basedir}/build/web/doc"/>
+    <property name="docsrc.dir" value="${basedir}/doc"/>
+    <target name="doc" depends="custom.doc">
     </target>
 </project>
