@@ -4,19 +4,23 @@ body {
 }
 
 h1 {
-    color: #045491;
+    color: #338833;
+}
+
+h2 {
+    color: #338833;
 }
 
 a:link, a:visited {
-  color: #045491;
+    color: #338833;
   text-decoration: none;
 }
 
 a:link:hover, a:visited:hover  {
-  color: #045491;
   text-decoration : underline;
+    color: #338833;    
 }
 
 pre {
-  background-color: #045491;
+  background-color: #eeeeee;
 }
