@@ -70,6 +70,11 @@ public class FolderFactory implements Serializable {
     }
 
     public String getBinDir() {
+        if (binDir == null) {
+            ExternalContext extCtx = FacesContext.getCurrentInstance().getExternalContext();
+            binDir = extCtx.getInitParameter("bin-dir");
+        }
+
         return binDir;
     }
 }
