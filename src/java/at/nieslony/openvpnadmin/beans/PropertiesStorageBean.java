@@ -5,12 +5,6 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.utils.DbUtils;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -85,40 +79,5 @@ public class PropertiesStorageBean
         }
 
         return null;
-    }
-
-    public void createTables()
-            throws ClassNotFoundException, IOException, SQLException
-    {
-        logger.info("Creating tables for propertiesStorage...");
-        String resourceName = "create-properties-storage.sql";
-        Reader r = null;
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
-            if (is != null)
-                r = new InputStreamReader(is);
-            else {
-                r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
-            }
-
-            if (r == null) {
-                logger.severe(String.format("Cannot open %s as resource", resourceName));
-            }
-            Connection con = databaseSettings.getDatabaseConnection();
-            if (con == null) {
-                logger.severe("Cannot get database connection");
-            }
-            DbUtils.executeSql(con, r);
-        }
-        finally {
-            if (r != null) {
-                try {
-                    r.close();
-                }
-                catch (IOException ex) {
-                    logger.severe(String.format("Cannot close reader: %s", ex.getMessage()));
-                }
-            }
-        }
     }
 }
