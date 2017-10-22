@@ -1,6 +1,6 @@
 #!/bin/bash
 
-THEME_FILE=Download/jquery-ui-1.12.1.custom.zip
+THEME_FILE=~/Download/jquery-ui-1.12.1.custom.zip
 THEME_ORG=tmp
 THEME_OUT_DIR=META-INF/resources/primefaces-arachne
 THEME_OUT_IMAGES=$THEME_OUT_DIR/images
@@ -8,7 +8,7 @@ THEME_OUT_IMAGES=$THEME_OUT_DIR/images
 mkdir -v tmp
 unzip $THEME_FILE -d tmp
 mkdir -pv $THEME_OUT_IMAGES
-THEME_CSS=$( find -name jquery-ui-*.custom.css )
+THEME_CSS=$( find -name jquery-ui.theme.css )
 
 if [ -z "$THEME_CSS" ]; then
     echo There\'s no theme.css
@@ -16,7 +16,8 @@ if [ -z "$THEME_CSS" ]; then
 fi
 
 echo Editing $THEME_CSS...
-cat $THEME_CSS | sed -e 's/url("images\(.*\)\.png/url("#{resource['\''primefaces-arachne:images\1.png'\'']}/g' > $THEME_OUT_DIR/theme.css
+# http://localhost:8180/arachne/javax.faces.resource/images/ui-bg_flat_75_ffffff_40x100.png.xhtml?ln=primefaces-arachne
+cat $THEME_CSS | sed -e 's/url("images\(.*\)\.png/url("images\1.png.xhtml?ln=primefaces-arachne/g' > $THEME_OUT_DIR/theme.css
 find $THEME_ORG -name *png -exec cp -v {} $THEME_OUT_IMAGES \;
 
 echo Creating jar...
