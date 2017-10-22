@@ -41,7 +41,8 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xs
 %package server
 Summary:	Arachne server
 BuildArch:	noarch
-Requires:	tomcat bouncycastle openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
+Requires:	tomcat bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
+Requires:       apache-commons-digester apache-commons-codec
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
@@ -93,13 +94,17 @@ mkdir -pv %{buildroot}/var/lib/arachne
 [ %{buildroot} != "/" ] && rm -rf %{buildroot}
 
 %post server
-ln -sfv \
-	/usr/share/java/primefaces.jar \
-	/usr/share/java/jsf-api.jar \
-	/usr/share/java/bcprov.jar \
-	/usr/share/java/postgresql-jdbc.jar \
-	%{libdir}
-
+%if 0%{?centos_version}
+ln -svf \
+    /usr/share/java/{bcpkix.jar,bcprov.jar} \
+    /usr/share/java/{commons-beanutils.jar,commons-codec.jar,commons-collections.jar}  \
+    /usr/share/java/{commons-digester.jar,commons-logging.jar} \
+    /usr/share/java/{myfaces-api.jar,myfaces-impl.jar,myfaces-impl-shared.jar} \
+    /usr/share/java/postgresql-jdbc.jar \
+    /usr/share/java/primefaces.jar \
+    %{libdir}
+%endif
+    
 %preun server
 if [ $1 = 0 ] ; then
 	rm -vf %{libdir}/bcprov.jar

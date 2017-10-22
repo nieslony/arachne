@@ -132,7 +132,13 @@
             file="${build.webxml}" 
             token="@@BIN-DIR@@" 
             value="${bin.dir}"
-            />         </target>
+            />         
+        <replace 
+            file="${build.webxml}" 
+            token="@@DYNAMIC-DATA-DIR@@" 
+            value="${work.dir}"
+            />
+    </target>
     
     <target name="tar">
         <mkdir dir="${export}"/>
