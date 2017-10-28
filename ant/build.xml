@@ -27,8 +27,6 @@
 
     <property name="property-templates" location="${root}/property-templates"/>
 
-    <property name="db-props-src" location="../../DatabasePropertiesStorage/src/"/>
-        
     <property name="install-root" value=""/>
     
     <property name="webapps.dir" value="/usr/share/tomcat/webapps"/>
@@ -58,6 +56,10 @@
         	dir="/usr/share/java" 
         	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar tomcat8-servlet-api.jar"
         />
+        <fileset 
+        	dir="/usr/share/java" 
+                includes="databasepropertiesstorage.jar"
+            />
         <fileset dir="${build}/generated-sources"/>
     </path>
     
@@ -98,7 +100,8 @@
               file="${theme.src}/theme.css"
               verbose="true"
               />
-        <copy toDir="${theme.dir}">
+        <mkdir dir="${theme.dir}/images"/>
+        <copy toDir="${theme.dir}/images">
             <fileset dir="${theme.src}/images"/>
         </copy>
         <echo message="--- END copy static ---"/>        
@@ -157,7 +160,6 @@
             </tarfileset>
             <tarfileset dir="${root}/apache" prefix="${tar-prefix}/apache"/>
             <tarfileset dir="${src}" prefix="${tar-prefix}/src"/>
-            <tarfileset dir="${db-props-src}" prefix="${tar-prefix}/src"/>
             <tarfileset dir="${web}" prefix="${tar-prefix}/web"/>
             <tarfileset dir="${property-templates}" prefix="${tar-prefix}/property-templates"/>
             <tarfileset dir="${root}/ant" prefix="${tar-prefix}">

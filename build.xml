@@ -108,7 +108,7 @@
         <mkdir dir="${theme.dir}/images"/>
         <copy toDir="${theme.dir}"
               file="${theme.src}/theme.css"/>
-        <copy toDir="${theme.dir}">
+        <copy toDir="${theme.dir}/images">
             <fileset dir="${theme.src}/images"/>
         </copy>              
     </target>
