@@ -17,6 +17,7 @@ import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -933,6 +934,13 @@ public class SetupWizard implements Serializable {
             rc.update("form-setup");
 
             performingSetup = false;
+
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ExternalContext eCtx = ctx.getExternalContext();
+            String fileName = eCtx.getRealPath("/SetupWizard.xhtml");
+            logger.info(String.format("Removing %s", fileName));
+            File setupWizardXhtml = new File(fileName);
+            setupWizardXhtml.delete();
 
             logger.info("Setup successful, redirecting to login page");
             ec.redirect("Login.xhtml");

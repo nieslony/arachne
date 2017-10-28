@@ -27,6 +27,7 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
 BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core 
 BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc 
+BuildRequires:  databasepropertiesstorage
 
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas
@@ -42,7 +43,7 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xs
 Summary:	Arachne server
 BuildArch:	noarch
 Requires:	tomcat bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
-Requires:       apache-commons-digester apache-commons-codec
+Requires:       apache-commons-digester apache-commons-codec databasepropertiesstorage
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
@@ -90,11 +91,10 @@ install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 mkdir -pv %{buildroot}/var/lib/arachne
 
-%clean
-[ %{buildroot} != "/" ] && rm -rf %{buildroot}
 
 %post server
 %if 0%{?centos_version}
+mkdir -v %{libdir}
 ln -svf \
     /usr/share/java/{bcpkix.jar,bcprov.jar} \
     /usr/share/java/{commons-beanutils.jar,commons-codec.jar,commons-collections.jar}  \
@@ -102,15 +102,19 @@ ln -svf \
     /usr/share/java/{myfaces-api.jar,myfaces-impl.jar,myfaces-impl-shared.jar} \
     /usr/share/java/postgresql-jdbc.jar \
     /usr/share/java/primefaces.jar \
+    /usr/share/java/databasepropertiesstorage.jar \
     %{libdir}
 %endif
-    
-%preun server
-if [ $1 = 0 ] ; then
-	rm -vf %{libdir}/bcprov.jar
-	rm -vf %{libdir}/postgresql-jdbc.jar
-else
-	echo Do not remove %{libdir}/bcprov.jar, still needed.
+
+if [ $1 = 1 ]; then
+    pushd %{webappsdir}/%{name}
+    ln -vs WEB-INF/SetupWizard.xhtml .
+    popd
+fi
+
+%preun
+if [ "$1" = 0 ]; then
+    rm -f %{webappsdir}/%{name}/web/SetupWizard.xhtml
 fi
 
 %files server
