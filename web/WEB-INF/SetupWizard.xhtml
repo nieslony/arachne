@@ -235,26 +235,26 @@
                 </p:tab>
                 <p:tab id="databaseSettings" title="Database">
                     <h:panelGrid columns="2" columnClasses="label, value">
-                        <h:outputLabel value="Database name:"/>
+                        <h:outputLabel value="Database name:" for="databaseName"/>
                         <p:inputText id="databaseName" value="#{setupWizard.databaseName}">
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>                            
                         
-                        <h:outputLabel value="Databse host:"/>
-                        <p:inputText value="#{setupWizard.databaseHost}">
+                        <h:outputLabel value="Databse host:" for="databaseHost"/>
+                        <p:inputText value="#{setupWizard.databaseHost}" id="dabaseHost">
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>                            
 
-                        <h:outputLabel value="Databse port:"/>
-                        <p:inputText value="#{setupWizard.databasePort}">
+                        <h:outputLabel value="Databse port:" for="databasePort"/>
+                        <p:inputText value="#{setupWizard.databasePort}" id="databasePort">
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>                            
                         
-                        <h:outputLabel value="Databse user:"/>
-                        <p:inputText value="#{setupWizard.databaseUser}"/>
+                        <h:outputLabel value="Databse user:" for="databaseUser"/>
+                        <p:inputText value="#{setupWizard.databaseUser}" id="databaseUser"/>
 
-                        <h:outputLabel value="Databse password:"/>
-                        <p:password value="#{setupWizard.databasePassword}"/>
+                        <h:outputLabel value="Databse password:" for="databasePassword"/>
+                        <p:password value="#{setupWizard.databasePassword}" id="databasePassword"/>
                         
                         <h:outputText value="Database URL:"/>
                         <h:outputText id="databaseUrl" value="#{setupWizard.databaseUrl}"/>
@@ -267,12 +267,13 @@
                             <p:ajax event="change" 
                                     update="lblDbAdminUser dbAdminUser lblDbAdminPassword dbAdminPassword"/>
                         </p:selectOneRadio>
-                        -->
+                        
                         <h:outputText id="lblDbAdminUser" value="Admin user name:" disabled="#{setupWizard.userExistingDb == 0}"/>
                         <p:inputText id="dbAdminUser" value="#{setupWizard.dbAdminUser}" disabled="#{setupWizard.userExistingDb == 0}"/>
                         
                         <h:outputLabel id="lblDbAdminPassword" value="Admin user password:" disabled="#{setupWizard.userExistingDb == 0}"/>
                         <p:password id="dbAdminPassword" value="#{setupWizard.dbAdminPassword}" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        -->
                     </h:panelGrid>
                     
                     <p:commandButton value="Download SQL for database creation" 
@@ -284,53 +285,63 @@
                     <p:commandButton value="Test connection" icon="ui-icon-script" actionListener="#{setupWizard.onTestDatabaseConnection()}" />
                 </p:tab>
                 <p:tab id="summary" title="Summary">
-                    <p:panel>
-                        <p:commandButton value="Finish" action="#{setupWizard.onSave}"/>
+                    <p:panel id="finishPanel">
+                        <p:commandButton value="Finish" action="#{setupWizard.onSave}" ajax="true"
+                                         id="finishButton"
+                                         />
                         
                         <h:panelGrid columns="2">
                             <h:outputText value="Save database settings"/>
-                            <h:outputText value="" 
+                            <h:outputText value="#{setupWizard.styleClassSaveDbSettings}" 
                                           id="saveDbSettingsIcon"
                                           styleClass="#{setupWizard.styleClassSaveDbSettings}" 
                                           style="font-size: 150%"/>
 
                             <h:outputText value="Initialize properties storage"/>
-                            <h:outputText value="" 
+                            <h:outputText value="#{setupWizard.styleClassInitPropertyStorage}" 
+                                          id="initPropertyStorageIcon"
                                           styleClass="#{setupWizard.styleClassInitPropertyStorage}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Initialize local users and roles"/>
-                            <h:outputText value="" 
+                            <h:outputText value="initLocalUserAndRolesIcon" 
+                                          id="initLocalUserAndRolesIcon"
                                           styleClass="#{setupWizard.styleClassInitLocalUserAndRoles}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Create user #{setupWizard.adminUserName}"/>
                             <h:outputText value="" 
+                                          id="createUserIcon"
                                           styleClass="#{setupWizard.styleClassCreateUser}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Assign role admin to user #{setupWizard.adminUserName}"/>
                             <h:outputText value="" 
+                                          id="assignRoleAdminIcon"
                                           styleClass="#{setupWizard.styleClassAssignRoleAdmin}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Create CA"/>
-                            <h:outputText value="" 
+                            <h:outputText value=""
+                                          id="createCAIcon"
                                           styleClass="#{setupWizard.styleClassCreateCA}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Create server certificate"/>
                             <h:outputText value="" 
+                                          id="createServerCertitficateIcon"
                                           styleClass="#{setupWizard.styleClassCreateServerCertitficate}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Create DH parameters"/>
                             <h:outputText value="" 
+                                          id="createDhParametersIcon"
                                           styleClass="#{setupWizard.styleClassCreateDhParameters}"
                                           style="font-size: 150%"/>                            
 
                             <h:outputText value="Schedule tasks"/>
                             <h:outputText value="" 
+                                          id="scheduleTasksIcon"
                                           styleClass="#{setupWizard.styleClassScheduleTasks}"
                                           style="font-size: 150%"/>                            
                         </h:panelGrid>
