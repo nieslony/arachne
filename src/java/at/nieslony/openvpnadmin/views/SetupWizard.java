@@ -858,80 +858,80 @@ public class SetupWizard implements Serializable {
             step = "Saving database settings";
             logger.info(step);
             styleClassSaveDbSettings = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:saveDbSettingsIcon");
             saveDatabaseSettings();
             styleClassSaveDbSettings = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:saveDbSettingsIcon");
 
             step = "Initializing properties storage";
             logger.info(step);
             styleClassInitPropertyStorage = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:initPropertyStorageIcon");
             propertiesStorage.createTables();
             styleClassInitPropertyStorage = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:initPropertyStorageIcon");
 
             step = "Initializing local users and roles";
             logger.info(step);
             styleClassInitLocalUserAndRoles = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:initLocalUserAndRolesIcon");
             localUserFactory.createTables();
             styleClassInitLocalUserAndRoles = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:initLocalUserAndRolesIcon");
 
             step = "Creating admin user";
             logger.info(step);
             styleClassCreateUser = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:createUserIcon");
             AbstractUser adminUser = localUserFactory.addUser(adminUserName);
             adminUser.setFullName("Master Administrator");
             adminUser.setPassword(password);
             adminUser.save();
             styleClassCreateUser = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:createUserIcon");
 
             step = String.format("Assigning role admin to user %s", adminUserName);
             logger.info(step);
             styleClassAssignRoleAdmin = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:assignRoleAdminIcon");
             roles.load();
             roles.addRule("admin", "isUser", "admin");
             styleClassAssignRoleAdmin = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:assignRoleAdminIcon");
 
             step = "Creating CA";
             logger.info(step);
             styleClassCreateCA = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:createCAIcon");
             pki.createTables();
             saveCA();
             styleClassCreateCA = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:createCAIcon");
 
             step = "Creating server certificate";
             logger.info(step);
             styleClassCreateServerCertitficate = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:createServerCertitficateIcon");
             saveServerCert();
             styleClassCreateServerCertitficate = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:createServerCertitficateIcon");
 
             step = "Creating DH parameters";
             logger.info(step);
             styleClassCreateDhParameters = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:createDhParametersIcon");
             saveDhParams();
             pki.init();
             styleClassCreateDhParameters = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:createDhParametersIcon");
 
             step = "Scheduling tasks";
             logger.info(step);
             styleClassScheduleTasks = ICO_STEP_WORKING;
-            rc.update("form-setup");
+            rc.update("form-setup:scheduleTasksIcon");
             setupTaskScheduler();
             styleClassScheduleTasks = ICO_STEP_DONE;
-            rc.update("form-setup");
+            rc.update("form-setup:scheduleTasksIcon");
 
             performingSetup = false;
 
