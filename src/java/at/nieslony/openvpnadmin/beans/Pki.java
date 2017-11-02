@@ -46,9 +46,18 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.bc.BcX509ExtensionUtils;
+import org.bouncycastle.operator.AlgorithmNameFinder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.postgresql.util.PSQLException;
 
 /**
@@ -131,7 +140,6 @@ public class Pki
             logger.info(String.format("Found server cert %s", getServerCert().getSubject().toString()));
 
             logger.info("Loading CRL");
-            createCrl();
             updateCrlFromDb();
         }
         catch (Exception ex) {
@@ -213,7 +221,9 @@ public class Pki
                 "UPDATE certificates SET isRevoked = true WHERE serial = '%s';",
                 cert.getSerialNumber().toString()
         );
-        stm.executeUpdate(sql);
+        logger.info(String.format("Executing %s", sql));
+        int noRecords = stm.executeUpdate(sql);
+        logger.info(String.format("%d records updated", noRecords));
 
         addCertificateToCrl(cert);
         writeCrl();
@@ -443,6 +453,18 @@ public class Pki
         throws CertificateException, ClassNotFoundException, IOException,
             OperatorCreationException, SQLException
     {
+        logger.info("Loading CRL from database");
+        Date now = new Date();
+        Date nextUpdate = new Date(now.getTime() + (long) 1000 * 60 * 60 * 24 * 31);
+        BcX509ExtensionUtils extUtils = new BcX509ExtensionUtils();
+        X500Name crlName = new X500Name("cn=CRL");
+
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(crlName, now);
+        crlBuilder.setNextUpdate(nextUpdate);
+
+        AuthorityKeyIdentifier aki = extUtils.createAuthorityKeyIdentifier(getCaCert());
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, aki);
+
         Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = "SELECT certificate FROM certificates WHERE isRevoked = true;";
@@ -451,9 +473,18 @@ public class Pki
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             byte[] bytes = result.getBytes("certificate");
             X509CertificateHolder cert = new X509CertificateHolder(bytes);
-            if (!isCertificateRevoked(cert))
-                addCertificateToCrl(cert);
+
+            logger.info(String.format("Adding certificate with serial %s...", cert.getSerialNumber().toString()));
+            crlBuilder.addCRLEntry(cert.getSerialNumber(), now, CRLReason.superseded);
         }
+
+        AlgorithmNameFinder algoFinder = new DefaultAlgorithmNameFinder();
+        String signAlgoName = algoFinder.getAlgorithmName(getCaCert().getSignatureAlgorithm());
+
+        ContentSigner sigGen = new JcaContentSignerBuilder(signAlgoName)
+                    .setProvider("BC")
+                    .build(getCaKey());
+        setCrl(crlBuilder.build(sigGen));
     }
 
     public void loadCrl()
