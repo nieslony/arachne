@@ -15,7 +15,6 @@
 
     <ui:define name="content">
         <h:form id="formAddLocalUser">
-            <p:growl id="growl" showDetail="true" sticky="true"/>
             <p:dialog id="dlgAddLocalUser" widgetVar="dlgAddLocalUser" header="Add local user">
                 <h:panelGrid columns="2">
                     <p:outputLabel value="Username:" for="username"/>
@@ -77,23 +76,7 @@
         </h:form>
 
         <h:form id="formUsersList">
-            <p:contextMenu for="tableUsers" id="ctxTableUsers" autoUpdate="true">
-                <p:menuitem value="Reset password" autoUpdate="true"
-                            rendered="#{!editUsers.selectedUser.immutable}"
-                            />
-                <p:menuitem value="Edit.." 
-                            rendered="#{not editUsers.selectedUser.immutable}"                            
-                            />
-                <p:menuitem value="Download openVPN config"
-                    ajax="false">
-                    <p:fileDownload value="#{editUsers.downloadOpenVPNConfig}"/>
-                </p:menuitem>
-                <p:menuitem value="Download NetworkManger installer"
-                            ajax="false">
-                    <p:fileDownload value="#{editUsers.downloadNetworkManagerInstaller}"/>
-                </p:menuitem>
-            </p:contextMenu>
-
+            <p:messages showDetail="true" autoUpdate="true"/>
             <p:dataTable value="#{editUsers.allUsers}" var="user"
                          id="tableUsers"
                          selection="#{editUsers.selectedUser}"
@@ -129,7 +112,7 @@
                         <p:menuitem value="Remove..." 
                                     rendered="${user.userTypeStr == 'Local'}"                                    
                                     update=":formUsersList"
-                                    action="#{editUsers.onRemoveUser(user)}"
+                                    action="#{editUsers.onRemoveUser(user.username)}"
                                     >
                             <p:confirm header="Confirmation"
                                        message="Are you sure?"

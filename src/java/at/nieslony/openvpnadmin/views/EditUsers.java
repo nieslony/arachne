@@ -197,26 +197,28 @@ public class EditUsers implements Serializable {
     }
 
     public void onRemoveUser(String username) {
+        logger.info(String.format("Removing local user %s..", username));
         try {
             if (!localUserFactory.removeUser(username)) {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning", "No user removed"));
+                        FacesMessage.SEVERITY_WARN, "Warning", 
+                            String.format("User %s not removed", username)));
             }
             else {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning",
+                        FacesMessage.SEVERITY_INFO, "Info",
                             String.format("User %s removed.", username)));
             }
         }
         catch (Exception ex) {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning",
+                        FacesMessage.SEVERITY_ERROR, "Error",
                             String.format("Cannot remove user %s: %s",
                                     username, ex.getMessage())));
-        }
+        }        
     }
 
     public StreamedContent getDownloadNetworkManagerInstaller(AbstractUser user)
