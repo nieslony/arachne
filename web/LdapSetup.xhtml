@@ -27,7 +27,6 @@
                                                id="ldapServerLookupMethodHostname"/>
                                 <p:outputLabel value="Hostname:"
                                                style="padding-left: 1em"
-                                               update="providerUrl"
                                                for="ldapServerLookupMethodHostname"/>
                             </p:outputPanel>
                             
@@ -56,7 +55,6 @@
                             <p:outputLabel value="Port:"/>
                             <p:spinner value="#{editLdapSettings.ldapPort}"
                                        size="5"
-                                       update="providerUrl"
                                        min="1"
                                        max="65535">                                
                                 <p:ajax process="@this" update="providerUrl" />
