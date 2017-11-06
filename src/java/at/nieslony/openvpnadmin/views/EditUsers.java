@@ -8,6 +8,7 @@ package at.nieslony.openvpnadmin.views;
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.Role;
+import at.nieslony.openvpnadmin.RoleRuleIsUser;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Roles;
@@ -58,10 +59,29 @@ public class EditUsers implements Serializable {
 
     private String addLocalUserUsername;
     private String addLocalUserPassword;
+    private boolean addLocalUserHasRoleUser;
+    private boolean addLocalUserHasRoleAdmin;
+    
     private String passwordResetUserName;
     private String passwordReset;
     private AbstractUser selectedUser;
 
+    public void setAddLocalUserHasRoleUser(boolean b) {
+        addLocalUserHasRoleUser = b;
+    }
+    
+    public boolean getAddLocalUserHasRoleUser() {
+        return addLocalUserHasRoleUser;
+    }
+    
+    public void setAddLocalUserHasRoleAdmin(boolean b) {
+        addLocalUserHasRoleAdmin = b;
+    }
+    
+    public boolean getAddLocalUserHasRoleAdmin() {
+        return addLocalUserHasRoleAdmin;
+    }
+    
     public void setConfigBuilder(ConfigBuilder cb) {
         configBuilder = cb;
     }
@@ -129,7 +149,13 @@ public class EditUsers implements Serializable {
             logger.warning(String.format("Cannot save user %s: %s",
                     passwordResetUserName, ex.getMessage()));
         }
-
+        if (addLocalUserHasRoleAdmin) {
+            roles.addRule("admin", "isUser", user.getUsername());
+        }
+        if (addLocalUserHasRoleUser) {
+            roles.addRule("user", "isUser", user.getUsername());
+        }
+        
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').hide();");
     }
 

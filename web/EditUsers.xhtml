@@ -30,7 +30,18 @@
 
                     <p:outputLabel value="Retype password:" for="retypePassword"/>
                     <p:password id="retypePassword" value="#{editUsers.addLocalUserPassword}"/>
-
+                    
+                    <p:outputLabel value="Has role user:" for="hasRoleUser"/>
+                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                                   value="#{editUsers.addLocalUserHasRoleUser}"
+                                   id="hasRoleUser"
+                                   />
+                                   
+                    <p:outputLabel value="Has role admin:" for="hasRoleAdmin"/>
+                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                                   value="#{editUsers.addLocalUserHasRoleAdmin}"
+                                   id="hasRoleAdmin"
+                                   />
                     <!-- empty cell -->
                     <h:panelGroup>
                         <p:commandButton value="OK" action="#{editUsers.onAddLocalUserOk}"
