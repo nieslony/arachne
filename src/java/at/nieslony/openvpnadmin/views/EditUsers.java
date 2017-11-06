@@ -180,6 +180,11 @@ public class EditUsers implements Serializable {
         
         try {
             editUser.save();
+            
+            String msg = String.format("Uer %s updated", editUser.getUsername());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
+            logger.info(msg);
         }
         catch (Exception ex) {
             String msg = String.format("Cannot save user %s: %s",
@@ -247,10 +252,17 @@ public class EditUsers implements Serializable {
         user.setPassword(passwordReset);
         try {
             user.save();
+            String msg = String.format("Password for user %s resetted.", user.getUsername());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
+            logger.info(msg);
         }
         catch (Exception ex) {
-            logger.warning(String.format("Cannot save user %s: %s",
-                    passwordResetUserName, ex.getMessage()));
+            String msg = String.format("Cannot save user %s: %s",
+                    passwordResetUserName, ex.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+            logger.warning(msg);
         }
         RequestContext.getCurrentInstance().execute("PF('dlgResetPassword').hide();");
     }
