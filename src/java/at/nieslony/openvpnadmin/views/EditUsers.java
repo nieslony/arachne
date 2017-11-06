@@ -62,10 +62,39 @@ public class EditUsers implements Serializable {
     private boolean addLocalUserHasRoleUser;
     private boolean addLocalUserHasRoleAdmin;
     
+    private String editUserUsername;
+    private String editUserFullName;
+    private String editUserEmail;
+    private AbstractUser editUser;
+    
     private String passwordResetUserName;
     private String passwordReset;
     private AbstractUser selectedUser;
 
+    public void setEditUserEmail(String email) {
+        editUserEmail = email;
+    }
+    
+    public String getEditUserEmail() {
+        return editUserEmail;
+    }
+    
+    public void setEditUserFullName(String fn) {
+        editUserFullName = fn;
+    }
+    
+    public String getEditUserFullName() {
+        return editUserFullName;
+    }
+    
+    public void setEditUserUsername(String un) {
+        editUserUsername = un;
+    }
+    
+    public String getEditUserUsername() {
+        return editUserUsername;
+    }
+    
     public void setAddLocalUserHasRoleUser(boolean b) {
         addLocalUserHasRoleUser = b;
     }
@@ -133,6 +162,36 @@ public class EditUsers implements Serializable {
     public EditUsers() {
     }
 
+    public void onEditUser(AbstractUser user) {
+        logger.info(String.format("Editing user %s", user.getUsername()));
+        editUserUsername = user.getUsername();
+        editUserFullName = user.getFullName();
+        editUserEmail = user.getEmail();
+        
+        editUser = user;
+        
+        RequestContext.getCurrentInstance().execute("PF('dlgEditUser').show();");
+    }
+    
+    public void onEditUserOk() {
+        logger.info(String.format("Writing properties for user %s", editUser.getUsername()));
+        editUser.setEmail(editUserEmail);
+        editUser.setFullName(editUserFullName);
+        
+        try {
+            editUser.save();
+        }
+        catch (Exception ex) {
+            String msg = String.format("Cannot save user %s: %s",
+                    editUser.getUsername(), ex.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+            logger.warning(msg);            
+        }
+
+        RequestContext.getCurrentInstance().execute("PF('dlgEditUser').hide();");
+    }
+    
     public void onAddLocalUser() {
         logger.info("Open dialog dlgAddLocalUser");
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').show();");

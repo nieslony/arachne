@@ -52,6 +52,29 @@
             </p:dialog>
         </h:form>
 
+        <h:form id="formEditUser">
+            <p:dialog id="dlgEditUser" widgetVar="dlgEditUser" header="Edit user">
+                <h:panelGrid columns="2">
+                    <h:outputText value="Username:"/>
+                    <h:outputText value="#{editUsers.editUserUsername}"/>
+                    
+                    <p:outputLabel value="Full name:" for="editUserFullName"/>
+                    <p:inputText value="#{editUsers.editUserFullName}" id="editUserFullName"/>
+
+                    <p:outputLabel value="E-mail:" for="editUserEmail"/>
+                    <p:inputText value="#{editUsers.editUserEmail}" id="editUserEmail"/>
+
+                    <!-- empty cell -->
+                    <h:panelGroup>
+                        <p:commandButton value="OK" action="#{editUsers.onEditUserOk}"
+                                         update=":formUsersList:tableUsers"/>
+                        <p:commandButton value="Cancel" process="@this"
+                                         oncomplete="PF('dlgEditUser').hide();" />
+                    </h:panelGroup>
+                </h:panelGrid>
+            </p:dialog>
+        </h:form>
+
         <h:form id="formResetPassword">
             <p:dialog id="dlgResetPassword" widgetVar="dlgResetPassword"
                       header="Reset password for user #{editUsers.passwordResetUsername}">
@@ -107,6 +130,7 @@
                                     />
                         <p:menuitem value="Edit..." 
                                     rendered="${user.userTypeStr == 'Local'}"                                    
+                                    update=":formEditUser:dlgEditUser"
                                     action="#{editUsers.onEditUser(user)}"
                                     />
                         <p:menuitem value="Remove..." 
@@ -115,7 +139,7 @@
                                     action="#{editUsers.onRemoveUser(user.username)}"
                                     >
                             <p:confirm header="Confirmation"
-                                       message="Are you sure?"
+                                       message="Do you really want to remove user #{user.username}?"
                                        icon="ui-icon-alert"/>
                         </p:menuitem>
                         <p:menuitem value="Download openVPN config"
