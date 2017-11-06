@@ -36,11 +36,13 @@ public class ArachneStatics {
               />
     </target>
     
+<!--               style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
+    -->
     <target name="doc-internal" depends="prepare-doc">        
         <xslt basedir="${docsrc.dir}"
             in="${docsrc.dir}/arachne.xml" destdir="${docdst.dir}"
                 includes="*xml"
-              style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
+              style="/usr/share/sgml/docbook/xsl-ns-stylesheets-1.79.2/xhtml5/chunk.xsl"
               >
             <param name="html.stylesheet" expression="arachne.css"/>
         </xslt>

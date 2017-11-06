@@ -113,7 +113,7 @@
         </copy>              
     </target>
     
-    <property name="docbook-stylesheet" value="/usr/share/xml/docbook/stylesheet/nwalsh5/1.78.1/xhtml5/chunk.xsl"/>
+    <property name="docbook-stylesheet" value="/usr/share/sgml/docbook/xsl-ns-stylesheets-1.79.2/xhtml5/chunk.xsl"/>
     <property name="docdst.dir" value="${basedir}/build/web/doc"/>
     <property name="docsrc.dir" value="${basedir}/doc"/>
     <target name="doc" depends="custom.doc">
