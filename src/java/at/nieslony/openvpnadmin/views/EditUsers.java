@@ -290,6 +290,8 @@ public class EditUsers implements Serializable {
                             String.format("Cannot remove user %s: %s",
                                     username, ex.getMessage())));
         }        
+        roles.removeRuleFromRole("admin", "isUser", username);
+        roles.removeRuleFromRole("user", "isUser", username);
     }
 
     public StreamedContent getDownloadNetworkManagerInstaller(AbstractUser user)
