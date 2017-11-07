@@ -246,8 +246,7 @@ public class ServerCertificateRenewer
                 wr.close();
         }
 
-        String serverConfigFile =
-                String.format("%s/clientvpn.conf", folderFactory.getServerConfDir());
+        String serverConfigFile = folderFactory.getUserVpnFileName();
         logger.info(String.format(
                 "Writing server configuration with new certificate to %s",
                 serverConfigFile));
