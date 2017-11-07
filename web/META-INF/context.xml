@@ -24,6 +24,10 @@
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/bcpkix.jar"/>
 
+        <PostResources base="/usr/share/java/databasepropertiesstorage.jar"
+                className="org.apache.catalina.webresources.FileResourceSet"
+                webAppMount="/WEB-INF/lib/databasepropertiesstorage.jar"/>        
+        
         <PostResources base="/usr/share/java/postgresql-jdbc.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/postgresql-jdbc.jar"/>
