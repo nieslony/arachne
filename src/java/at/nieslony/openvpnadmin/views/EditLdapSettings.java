@@ -422,4 +422,8 @@ public class EditLdapSettings
 
         return dom;
     }
+
+    public LdapSettingsBase.LdapAuthType[] getAuthTypes() {
+        return LdapSettingsBase.LdapAuthType.values();
+    }
 }

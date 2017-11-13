@@ -237,11 +237,13 @@ public class LdapHelper
 
     public DirContext getLdapContext() throws NamingException {
         Hashtable<String,String> env = new Hashtable<>();
-        env.put(Context.SECURITY_AUTHENTICATION, ldapHelperUser.getAuthType());
+        String authType = ldapHelperUser.getAuthType().getDescription();
+        logger.info(String.format("Auth type: %s", authType));
+        env.put(Context.SECURITY_AUTHENTICATION, authType);
 
         String url = formLdapUrl();
         logger.info(String.format("LDAP bind to %s", url));
-        if (ldapHelperUser.getAuthType().equals("simple")) {
+        if (authType.equals("simple")) {
             logger.info(String.format("bind type simple => getting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
             env.put(Context.SECURITY_PRINCIPAL, //"cn=ldap-ro,cn=groups,cn=compat,dc=nieslony,dc=lan"
                     ldapHelperUser.getSecurityPrincipal()

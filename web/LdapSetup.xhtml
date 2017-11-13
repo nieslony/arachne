@@ -20,30 +20,30 @@
                             <f:selectItem itemValue="DNS"/>
                             <p:ajax process="@this" update="@form" />
                         </p:selectOneRadio>
-                        <h:panelGrid columns="2">                            
+                        <h:panelGrid columns="2">
                             <p:outputPanel>
-                                <p:radioButton for="ldapServerLookupMethod" 
+                                <p:radioButton for="ldapServerLookupMethod"
                                                itemIndex="0"
                                                id="ldapServerLookupMethodHostname"/>
                                 <p:outputLabel value="Hostname:"
                                                style="padding-left: 1em"
                                                for="ldapServerLookupMethodHostname"/>
                             </p:outputPanel>
-                            
+
                             <p:inputText value="#{editLdapSettings.ldapServer}"
                                          size="50"
                                          disabled='#{editLdapSettings.ldapServereLookupMethod != "HOSTNAME"}'
                                          >
                                 <p:ajax event="keyup" update="providerUrl" />
                             </p:inputText>
-                            
+
                             <p:outputPanel>
-                                <p:radioButton for="ldapServerLookupMethod" 
+                                <p:radioButton for="ldapServerLookupMethod"
                                                itemIndex="1"
                                                id="ldapServerLookupMethodDns"/>
                                 <p:outputLabel value="SRV record for domain:"
                                                style="padding-left: 1em"
-                                               for="ldapServerLookupMethodDns"/>                               
+                                               for="ldapServerLookupMethodDns"/>
                             </p:outputPanel>
                             <p:inputText value="#{editLdapSettings.ldapDnsDomain}"
                                          disabled='#{editLdapSettings.ldapServereLookupMethod != "DNS"}'
@@ -51,48 +51,52 @@
                                          >
                                 <p:ajax event="keyup" update="providerUrl" />
                             </p:inputText>
-                            
+
                             <p:outputLabel value="Port:"/>
                             <p:spinner value="#{editLdapSettings.ldapPort}"
                                        size="5"
                                        min="1"
-                                       max="65535">                                
+                                       max="65535">
                                 <p:ajax process="@this" update="providerUrl" />
                             </p:spinner>
-                            
+
                             <p:outputLabel value="Base DN:"/>
                             <p:inputText value="#{editLdapSettings.ldapBaseDn}"
                                          size="50">
                                 <p:ajax event="keyup" update="providerUrl" />
                             </p:inputText>
-                            
+
                             <h:outputText value="Resulting provider URL:"/>
                             <h:outputText value="#{editLdapSettings.providerUrl}"
                                          id="providerUrl"/>
 
                             <p:outputLabel value="Auth type:" for="authType"/>
-                            <p:selectOneMenu id="authType" immediate="true" value="#{editLdapSettings.authType}">
+                            <p:selectOneMenu id="authType" immediate="true"
+                                             value="#{editLdapSettings.authType}"
+                                             >
+                                <f:selectItems value="#{editLdapSettings.authTypes}"
+                                               var="authType"
+                                               itemValue="#{authType}"
+                                               itemLabel="#{authType.description}"/>
                                 <f:ajax render="@form"/>
-                                <f:selectItem itemLabel="none" itemValue="none"/>
-                                <f:selectItem itemLabel="simple" itemValue="simple"/>
                             </p:selectOneMenu>
 
                             <p:outputLabel value="Bind DN:"
-                                           rendered="#{editLdapSettings.authType == 'simple'}"
+                                           rendered="#{editLdapSettings.authType.description == 'simple'}"
                                            for="securityPrincipal"/>
                             <p:inputText value="#{editLdapSettings.securityPrincipal}"
                                          size="50"
                                          id="securityPrincipal"
-                                         rendered="#{editLdapSettings.authType == 'simple'}"
+                                         rendered="#{editLdapSettings.authType.description == 'simple'}"
                                          />
 
                             <p:outputLabel value="Credentials:"
-                                           rendered="#{editLdapSettings.authType == 'simple'}"
+                                           rendered="#{editLdapSettings.authType.description == 'simple'}"
                                            for="credentials"/>
                             <p:password value="#{editLdapSettings.securityCredentials}"
                                         id="credentials"
                                         size="50"
-                                        rendered="#{editLdapSettings.authType == 'simple'}"
+                                        rendered="#{editLdapSettings.authType.description == 'simple'}"
                                         />
                         </h:panelGrid>
                     </p:tab>
@@ -116,50 +120,50 @@
                         </p:dialog>
                         <h:panelGrid columns="2">
                             <p:outputLabel value="Object class users:" for="objectClassUsers"/>
-                            <p:inputText value="#{editLdapSettings.objectClassUser}" 
+                            <p:inputText value="#{editLdapSettings.objectClassUser}"
                                          size="50"
                                          id="objectClassUsers">
                                 <p:ajax event="keyup" update="defaultUserSearchFilter" />
                             </p:inputText>
 
                             <p:outputLabel value="OU with users:" for="ouUsers"/>
-                            <p:inputText value="#{editLdapSettings.ouUsers}" 
+                            <p:inputText value="#{editLdapSettings.ouUsers}"
                                          size="50"
                                          id="ouUsers"/>
 
                             <p:outputLabel value="Attribute for username:" for="attrUsername"/>
-                            <p:inputText value="#{editLdapSettings.attrUsername}" 
+                            <p:inputText value="#{editLdapSettings.attrUsername}"
                                          id="attrUsername"
                                          size="50">
                                 <p:ajax event="keyup" update="defaultUserSearchFilter" />
                             </p:inputText>
 
                             <p:outputLabel value="Attribute for full name:" for="attrFullName"/>
-                            <p:inputText value="#{editLdapSettings.attrFullName}" 
+                            <p:inputText value="#{editLdapSettings.attrFullName}"
                                          id="attrFullName"
                                          size="50"/>
 
                             <p:outputLabel value="Attribute for given name:" for="attrGivenName"/>
-                            <p:inputText value="#{editLdapSettings.attrGivenName}" 
+                            <p:inputText value="#{editLdapSettings.attrGivenName}"
                                          id="attrGivenName"
                                          size="50"/>
 
                             <p:outputLabel value="Attribute for surname:" for="attrSurame"/>
-                            <p:inputText value="#{editLdapSettings.attrSurname}" 
+                            <p:inputText value="#{editLdapSettings.attrSurname}"
                                          size="50"
                                          id="attrSurame"/>
 
                             <p:outputLabel value="Use custom user search filter:"/>
-                            <p:inputSwitch id="useCustomUserSearchFilter" 
+                            <p:inputSwitch id="useCustomUserSearchFilter"
                                            onLabel="yes" offLabel="no"
                                            value="#{editLdapSettings.useCustomUserSearchFilter}">
                                 <p:ajax update="userSearchFilterPanel customUserSearchFilter"
                                         listener="#{editLdapSettings.onDefaultUserSearchFilter}"/>
                             </p:inputSwitch>
-                            
+
                             <h:outputText value="User search filter:"/>
                             <p:outputPanel id="userSearchFilterPanel">
-                                <h:outputText id="defaultUserSearchFilter" 
+                                <h:outputText id="defaultUserSearchFilter"
                                               value="#{editLdapSettings.defaultUserSearchFilter}"
                                               rendered="#{!editLdapSettings.useCustomUserSearchFilter}"/>
                                 <p:inputText id="customUserSearchFilter"
@@ -167,7 +171,7 @@
                                              value="#{editLdapSettings.customUserSearchFilter}"
                                              rendered="#{editLdapSettings.useCustomUserSearchFilter}"/>
                             </p:outputPanel>
-                            
+
                             <p:commandButton value="Test connection and search user:"
                                              action="#{editLdapSettings.onTestConnectionUser}"
                                              update="resultFullName resultUsername resultGivenName resultSurname"
@@ -202,26 +206,26 @@
                         </p:selectOneRadio>
                         <h:panelGrid columns="2">
                             <p:outputLabel value="Object class groups:" for="objectClassGroup"/>
-                            <p:inputText id="objectClassGroup" 
+                            <p:inputText id="objectClassGroup"
                                          size="50"
                                          value="#{editLdapSettings.objectClassGroup}">
                                 <p:ajax event="keyup" update="defaultGroupSearchFilter" />
                             </p:inputText>
 
                             <p:outputLabel value="OU with groups:" for="ouGroups"/>
-                            <p:inputText id="ouGroups" 
+                            <p:inputText id="ouGroups"
                                          size="50"
                                          value="#{editLdapSettings.ouGroups}"/>
 
                             <p:outputLabel value="Attribute for group name:" for="attrGroupName"/>
-                            <p:inputText id="attrGroupName" 
+                            <p:inputText id="attrGroupName"
                                          size="50"
                                          value="#{editLdapSettings.attrGroupName}">
                                 <p:ajax event="keyup" update="defaultGroupSearchFilter" />
                             </p:inputText>
-                                
+
                             <p:outputLabel value="Attribute for group description:" for="attrGroupDescription"/>
-                            <p:inputText id="attrGroupDescription" 
+                            <p:inputText id="attrGroupDescription"
                                          size="50"
                                          value="#{editLdapSettings.attrGroupDescription}"/>
 
@@ -252,17 +256,17 @@
                                            value="#{editLdapSettings.useCustomGroupSearchFilter}">
                                 <p:ajax update="groupSearchFilterPanel"/>
                             </p:inputSwitch>
-                            
+
                             <h:outputText value="Group search filter:"/>
                             <p:outputPanel id="groupSearchFilterPanel">
-                                <h:outputText id="defaultGroupSearchFilter" 
+                                <h:outputText id="defaultGroupSearchFilter"
                                               value="#{editLdapSettings.defaultGroupSearchFilter}"
                                               rendered="#{!editLdapSettings.useCustomGroupSearchFilter}"/>
                                 <p:inputText value="#{editLdapSettings.customGroupSearchFilter}"
                                              id="customGroupSearchFilter"
                                              rendered="#{editLdapSettings.useCustomGroupSearchFilter}"/>
                             </p:outputPanel>
-                            
+
                             <p:commandButton value="Test connection and search group:"
                                              action="#{editLdapSettings.onTestConnectionGroup}"
                                              update="useCustomGroupSearchFilter customGroupSearchFilter resultGroupname resultGroupDescription resultGroupMembers"
@@ -274,7 +278,7 @@
 
                 <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
                 <p:commandButton value="Save" action="#{editLdapSettings.onSave()}"/>
-                <p:splitButton value="Reset to defaults" 
+                <p:splitButton value="Reset to defaults"
                                actionListener="#{editLdapSettings.onResetToDefaults}"
                                update="ldapForm"
                                >
@@ -290,7 +294,7 @@
                 </p:splitButton>
                 <p:commandButton value="Reset to saved"
                                  action="#{editLdapSettings.onReset()}"
-                                 update="ldapForm"/>                                                 
+                                 update="ldapForm"/>
             </h:form>
         </ui:define>
     </ui:composition>
