@@ -10,30 +10,30 @@
 <project name="OpenVPN_Admin" default="default" basedir=".">
     <description>Builds, tests, and runs the project OpenVPN_Admin.</description>
     <import file="nbproject/build-impl.xml"/>
-        
+
     <!--
 
-    There exist several targets which are by default empty and which can be 
-    used for execution of your tasks. These targets are usually executed 
-    before and after some main targets. They are: 
+    There exist several targets which are by default empty and which can be
+    used for execution of your tasks. These targets are usually executed
+    before and after some main targets. They are:
 
-      -pre-init:                 called before initialization of project properties 
-      -post-init:                called after initialization of project properties 
-      -pre-compile:              called before javac compilation 
-      -post-compile:             called after javac compilation 
+      -pre-init:                 called before initialization of project properties
+      -post-init:                called after initialization of project properties
+      -pre-compile:              called before javac compilation
+      -post-compile:             called after javac compilation
       -pre-compile-single:       called before javac compilation of single file
       -post-compile-single:      called after javac compilation of single file
       -pre-compile-test:         called before javac compilation of JUnit tests
       -post-compile-test:        called after javac compilation of JUnit tests
       -pre-compile-test-single:  called before javac compilation of single JUnit test
       -post-compile-test-single: called after javac compilation of single JUunit test
-      -pre-dist:                 called before archive building 
-      -post-dist:                called after archive building 
-      -post-clean:               called after cleaning build products 
+      -pre-dist:                 called before archive building
+      -post-dist:                called after archive building
+      -post-clean:               called after cleaning build products
       -pre-run-deploy:           called before deploying
       -post-run-deploy:          called after deploying
 
-    Example of pluging an obfuscator after the compilation could look like 
+    Example of pluging an obfuscator after the compilation could look like
 
         <target name="-post-compile">
             <obfuscate>
@@ -41,21 +41,21 @@
             </obfuscate>
         </target>
 
-    For list of available properties check the imported 
-    nbproject/build-impl.xml file. 
+    For list of available properties check the imported
+    nbproject/build-impl.xml file.
 
 
     Other way how to customize the build is by overriding existing main targets.
-    The target of interest are: 
+    The target of interest are:
 
       init-macrodef-javac:    defines macro for javac compilation
       init-macrodef-junit:   defines macro for junit execution
       init-macrodef-debug:    defines macro for class debugging
       do-dist:                archive building
-      run:                    execution of project 
-      javadoc-build:          javadoc generation 
+      run:                    execution of project
+      javadoc-build:          javadoc generation
 
-    Example of overriding the target for project execution could look like 
+    Example of overriding the target for project execution could look like
 
         <target name="run" depends="<PROJNAME>-impl.jar">
             <exec dir="bin" executable="launcher.exe">
@@ -63,13 +63,13 @@
             </exec>
         </target>
 
-    Notice that overridden target depends on jar target and not only on 
-    compile target as regular run target does. Again, for list of available 
-    properties which you can use check the target you are overriding in 
-    nbproject/build-impl.xml file. 
+    Notice that overridden target depends on jar target and not only on
+    compile target as regular run target does. Again, for list of available
+    properties which you can use check the target you are overriding in
+    nbproject/build-impl.xml file.
 
     -->
-    
+
     <property name="version" value="0.3.1git"/>
     <property name="build" value="${basedir}/build"/>
     <property name="property-templates" value="${basedir}/property-templates"/>
@@ -78,41 +78,45 @@
 
     <target name="-pre-compile" depends="custom.generate-code">
     </target>
-    
+
     <target name="-pre-dist" depends="doc">
         <property name="work.dir"  value="${basedir}/${build.dir}/work"/>
         <property name="sql.dir"   value="${basedir}/${build.web.dir}/WEB-INF/sql"/>
         <property name="bin.dir"   value="${basedir}/${build.web.dir}/WEB-INF/bin"/>
         <property name="theme.dir" value="${basedir}/${build.web.dir}/WEB-INF/resources/primefaces-arachne"/>
         <property name="theme.src" value="${basedir}/arachne-theme"/>
-        
+
         <echo message="Creating ${work.dir}..."/>
         <mkdir dir="${work.dir}"/>
-        <replace 
-            file="${build.web.dir}/WEB-INF/web.xml" 
-            token="@@DYNAMIC-DATA-DIR@@" 
+        <replace
+            file="${build.web.dir}/WEB-INF/web.xml"
+            token="@@DYNAMIC-DATA-DIR@@"
             value="${work.dir}"
             />
-        <replace 
-            file="${build.web.dir}/WEB-INF/web.xml" 
-            token="@@SQL-DIR@@" 
+        <replace
+            file="${build.web.dir}/WEB-INF/web.xml"
+            token="@@SQL-DIR@@"
             value="${sql.dir}"
-            />        
-        <replace 
-            file="${build.web.dir}/WEB-INF/web.xml" 
-            token="@@BIN-DIR@@" 
+            />
+        <replace
+            file="${build.web.dir}/WEB-INF/web.xml"
+            token="@@BIN-DIR@@"
             value="${bin.dir}"
-            />        
-        
+            />
+
         <mkdir dir="${theme.dir}"/>
         <mkdir dir="${theme.dir}/images"/>
         <copy toDir="${theme.dir}"
               file="${theme.src}/theme.css"/>
         <copy toDir="${theme.dir}/images">
             <fileset dir="${theme.src}/images"/>
-        </copy>              
+        </copy>
+
+        <symlink link="${basedir}/${build.web.dir}/SetupWizard.xhtml"
+                 overwrite="true"
+                 resource="${basedir}/${build.web.dir}/WEB-INF/SetupWizard.xhtml"/>
     </target>
-    
+
     <property name="docbook-stylesheet" value="/usr/share/sgml/docbook/xsl-ns-stylesheets-1.79.2/xhtml5/chunk.xsl"/>
     <property name="docdst.dir" value="${basedir}/build/web/doc"/>
     <property name="docsrc.dir" value="${basedir}/doc"/>
