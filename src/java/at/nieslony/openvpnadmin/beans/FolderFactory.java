@@ -24,6 +24,8 @@ public class FolderFactory implements Serializable {
     private String sqlDir = null;
     private String binDir = null;
 
+    private final String FN_USER_VPN = "arachne-uservpn.conf";
+    
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     /**
@@ -70,6 +72,15 @@ public class FolderFactory implements Serializable {
     }
 
     public String getBinDir() {
+        if (binDir == null) {
+            ExternalContext extCtx = FacesContext.getCurrentInstance().getExternalContext();
+            binDir = extCtx.getInitParameter("bin-dir");
+        }
+
         return binDir;
+    }
+    
+    public String getUserVpnFileName() {
+        return String.format("%s/%s", getServerConfDir(), FN_USER_VPN);
     }
 }

@@ -140,9 +140,24 @@ public class Roles implements Serializable {
             logger.warning(ex.getMessage());
         }
     }
+    
+    public void removeRuleFromRole(String roleName, String ruleName, String value) {
+        Role role = roles.get(roleName);
+        
+        if (role == null) {
+            logger.severe(String.format("Cannot remove rule from non existing role %s",
+                    roleName));
+            return;
+        }
+        role.removeRule(ruleName, value);        
+    }
 
     public void removeRuleFromRole(Role role, RoleRule rule) {
-        role.removeRole(rule);
+        role.removeRule(rule);
+        removeRuleFromDatabase(role, rule);        
+    }
+    
+    private void removeRuleFromDatabase(Role role, RoleRule rule) {
         try {
             Connection con = getDatabaseConnection();
             Statement stm = con.createStatement();
@@ -153,6 +168,6 @@ public class Roles implements Serializable {
         }
         catch (ClassNotFoundException | SQLException ex) {
             logger.warning(String.format("Cannot remove rule from role: %s", ex.getMessage()));
-        }
+        }        
     }
 }

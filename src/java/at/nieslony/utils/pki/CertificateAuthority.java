@@ -43,6 +43,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -172,6 +173,15 @@ public class CertificateAuthority
                 startDate, endDate,
                 subjectDN,
                 subPubKeyInfo);
+        try {
+            certBuilder.addExtension(Extension.basicConstraints, true, 
+                    new BasicConstraints(0));                    
+        }
+        catch (CertIOException ex) {
+            logger.severe(String.format("Cannot add certificate extension: %s", 
+                    ex.getMessage()));
+            return;
+        }
 
         logger.info(String.format("Creating new content signer: %s", signatureAlgorithm));
         ContentSigner sigGen;

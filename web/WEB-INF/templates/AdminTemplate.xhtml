@@ -10,9 +10,7 @@
 
     <h:head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <h:outputStylesheet library="css" name="default.css"/>
-        <h:outputStylesheet library="css" name="cssLayout.css"/>
-        <title>OpenVPN Admin - ${title}</title>
+        <title>Arachne - ${title}</title>
         <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
     </h:head>
 
@@ -27,13 +25,13 @@
             <br/>
             <p:button value="Close" onclick="PF('dlgAboutArachne').hide();"/>
         </p:dialog>
-        
+
         <p:layout fullPage="true">
             <p:layoutUnit position="north" >
                 <h:form>
                     <p:toolbar id="toolbar">
                         <f:facet name="left">
-                            <h:outputText value="OpenVPN Admin - You are logged in as
+                            <h:outputText value="Arachne, an administration too for OpenVPN - You are logged in as
                     #{currentUser.username} (#{currentUser.visibleName})"/>
                         </f:facet>
                         <f:facet name="right">
@@ -50,7 +48,7 @@
                     </p:toolbar>
                 </h:form>
                 <!--<h:head>
-                    OpenVPN Admin - You are logged in as
+                    Arachne, an adminsitration tool for openVPN - You are logged in as
                     #{currentUser.username} (#{currentUser.visibleName}).
                 </h:head>-->
             </p:layoutUnit>

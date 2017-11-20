@@ -1,14 +1,21 @@
-/*! jQuery UI - v1.10.4 - 2017-07-17
-* http://jqueryui.com
-* Includes: jquery.ui.theme.css
-* To view and modify this theme, visit http://jqueryui.com/themeroller/?ffDefault=Arial%2CHelvetica%2Csans-serif&fsDefault=1em&fwDefault=normal&cornerRadius=3px&bgColorHeader=%2344aa44&bgTextureHeader=flat&borderColorHeader=%23338833&fcHeader=%23eeeeee&iconColorHeader=%23eeeeee&bgColorContent=%23000000&bgTextureContent=flat&borderColorContent=%23338833&fcContent=%23eeeeee&iconColorContent=%23eeeeee&bgColorDefault=%23333333&bgTextureDefault=flat&borderColorDefault=%23338833&fcDefault=%23eeeeee&iconColorDefault=%23eeeeee&bgColorHover=%23333333&bgTextureHover=flat&borderColorHover=%23338833&fcHover=%2344aa44&iconColorHover=%2344aa44&bgColorActive=%23338833&bgTextureActive=flat&borderColorActive=%23338833&fcActive=%23eeeeee&iconColorActive=%23eeeeee&bgColorHighlight=%2344aa44&bgTextureHighlight=flat&borderColorHighlight=%23338833&fcHighlight=%23eeeeee&iconColorHighlight=%23eeeeee&bgColorError=%23fddfdf&bgTextureError=flat&borderColorError=%23f1a899&fcError=%235f3f3f&iconColorError=%23cc0000&bgColorOverlay=%23aaaaaa&bgTextureOverlay=flat&bgImgOpacityOverlay=0&opacityOverlay=30&bgColorShadow=%23666666&bgTextureShadow=flat&bgImgOpacityShadow=0&opacityShadow=30&thicknessShadow=5px&offsetTopShadow=0px&offsetLeftShadow=0px&cornerRadiusShadow=8px&bgImgOpacityHeader=&bgImgOpacityContent=&bgImgOpacityDefault=&bgImgOpacityHover=&bgImgOpacityActive=&bgImgOpacityHighlight=&bgImgOpacityError=
-* Copyright jQuery Foundation and other contributors; Licensed MIT */
+/*!
+ * jQuery UI CSS Framework 1.12.1
+ * http://jqueryui.com
+ *
+ * Copyright jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/category/theming/
+ *
+ * To view and modify this theme, visit http://jqueryui.com/themeroller/?scope=&folderName=custom-theme&bgImgOpacityError=&bgImgOpacityHighlight=&bgImgOpacityActive=&bgImgOpacityHover=&bgImgOpacityDefault=&bgImgOpacityContent=&bgImgOpacityHeader=&cornerRadiusShadow=8px&offsetLeftShadow=0px&offsetTopShadow=0px&thicknessShadow=5px&opacityShadow=30&bgImgOpacityShadow=0&bgTextureShadow=flat&bgColorShadow=%23777777&opacityOverlay=30&bgImgOpacityOverlay=0&bgTextureOverlay=flat&bgColorOverlay=%23aaaaaa&iconColorError=%23cc0000&fcError=%235f3f3f&borderColorError=%23f1a899&bgTextureError=flat&bgColorError=%23fddfdf&iconColorHighlight=%23eeeeee&fcHighlight=%23eeeeee&borderColorHighlight=%2344aa44&bgTextureHighlight=flat&bgColorHighlight=%2344aa44&iconColorActive=%23eeeeee&fcActive=%23eeeeee&borderColorActive=%2344aa44&bgTextureActive=flat&bgColorActive=%2344aa44&iconColorHover=%23eeeeee&fcHover=%23eeeeee&borderColorHover=%2344aa44&bgTextureHover=flat&bgColorHover=%23666666&iconColorDefault=%23eeeeee&fcDefault=%23eeeeee&borderColorDefault=%2344aa44&bgTextureDefault=flat&bgColorDefault=%23333333&iconColorContent=%23eeeeee&fcContent=%23eeeeee&borderColorContent=%2344aa44&bgTextureContent=flat&bgColorContent=%23000000&iconColorHeader=%23eeeeee&fcHeader=%23eeeeee&borderColorHeader=%2344aa44&bgTextureHeader=flat&bgColorHeader=%2344aa44&cornerRadius=3px&fwDefault=normal&fsDefault=1em&ffDefault=Verdana%2CLucida%2CArial%2CHelvetica%2Csans-serif
+ */
 
 
 /* Component containers
 ----------------------------------*/
 .ui-widget {
-	font-family: Arial,Helvetica,sans-serif;
+	font-family: Verdana,Lucida,Arial,Helvetica,sans-serif;
 	font-size: 1em;
 }
 .ui-widget .ui-widget {
@@ -18,11 +25,14 @@
 .ui-widget select,
 .ui-widget textarea,
 .ui-widget button {
-	font-family: Arial,Helvetica,sans-serif;
+	font-family: Verdana,Lucida,Arial,Helvetica,sans-serif;
 	font-size: 1em;
 }
+.ui-widget.ui-widget-content {
+	border: 1px solid #44aa44;
+}
 .ui-widget-content {
-	border: 1px solid #338833;
+	border: 1px solid #44aa44;
 	background: #000000;
 	color: #eeeeee;
 }
@@ -30,7 +40,7 @@
 	color: #eeeeee;
 }
 .ui-widget-header {
-	border: 1px solid #338833;
+	border: 1px solid #44aa44;
 	background: #44aa44;
 	color: #eeeeee;
 	font-weight: bold;
@@ -43,15 +53,25 @@
 ----------------------------------*/
 .ui-state-default,
 .ui-widget-content .ui-state-default,
-.ui-widget-header .ui-state-default {
-	border: 1px solid #338833;
+.ui-widget-header .ui-state-default,
+.ui-button,
+
+/* We use html here because we need a greater specificity to make sure disabled
+works properly when clicked or hovered */
+html .ui-button.ui-state-disabled:hover,
+html .ui-button.ui-state-disabled:active {
+	border: 1px solid #44aa44;
 	background: #333333;
 	font-weight: normal;
 	color: #eeeeee;
 }
 .ui-state-default a,
 .ui-state-default a:link,
-.ui-state-default a:visited {
+.ui-state-default a:visited,
+a.ui-button,
+a:link.ui-button,
+a:visited.ui-button,
+.ui-button {
 	color: #eeeeee;
 	text-decoration: none;
 }
@@ -60,11 +80,13 @@
 .ui-widget-header .ui-state-hover,
 .ui-state-focus,
 .ui-widget-content .ui-state-focus,
-.ui-widget-header .ui-state-focus {
-	border: 1px solid #338833;
-	background: #333333;
+.ui-widget-header .ui-state-focus,
+.ui-button:hover,
+.ui-button:focus {
+	border: 1px solid #44aa44;
+	background: #666666;
 	font-weight: normal;
-	color: #44aa44;
+	color: #eeeeee;
 }
 .ui-state-hover a,
 .ui-state-hover a:hover,
@@ -73,17 +95,31 @@
 .ui-state-focus a,
 .ui-state-focus a:hover,
 .ui-state-focus a:link,
-.ui-state-focus a:visited {
-	color: #44aa44;
+.ui-state-focus a:visited,
+a.ui-button:hover,
+a.ui-button:focus {
+	color: #eeeeee;
 	text-decoration: none;
+}
+
+.ui-visual-focus {
+	box-shadow: 0 0 3px 1px rgb(94, 158, 214);
 }
 .ui-state-active,
 .ui-widget-content .ui-state-active,
-.ui-widget-header .ui-state-active {
-	border: 1px solid #338833;
-	background: #338833;
+.ui-widget-header .ui-state-active,
+a.ui-button:active,
+.ui-button:active,
+.ui-button.ui-state-active:hover {
+	border: 1px solid #44aa44;
+	background: #44aa44;
 	font-weight: normal;
 	color: #eeeeee;
+}
+.ui-icon-background,
+.ui-state-active .ui-icon-background {
+	border: #44aa44;
+	background-color: #eeeeee;
 }
 .ui-state-active a,
 .ui-state-active a:link,
@@ -97,9 +133,13 @@
 .ui-state-highlight,
 .ui-widget-content .ui-state-highlight,
 .ui-widget-header .ui-state-highlight {
-	border: 1px solid #338833;
+	border: 1px solid #44aa44;
 	background: #44aa44;
 	color: #eeeeee;
+}
+.ui-state-checked {
+	border: 1px solid #44aa44;
+	background: #44aa44;
 }
 .ui-state-highlight a,
 .ui-widget-content .ui-state-highlight a,
@@ -132,18 +172,18 @@
 .ui-widget-content .ui-priority-secondary,
 .ui-widget-header .ui-priority-secondary {
 	opacity: .7;
-	filter:Alpha(Opacity=70);
+	filter:Alpha(Opacity=70); /* support: IE8 */
 	font-weight: normal;
 }
 .ui-state-disabled,
 .ui-widget-content .ui-state-disabled,
 .ui-widget-header .ui-state-disabled {
 	opacity: .35;
-	filter:Alpha(Opacity=35);
+	filter:Alpha(Opacity=35); /* support: IE8 */
 	background-image: none;
 }
 .ui-state-disabled .ui-icon {
-	filter:Alpha(Opacity=35); /* For IE8 - See #6059 */
+	filter:Alpha(Opacity=35); /* support: IE8 - See #6059 */
 }
 
 /* Icons
@@ -156,46 +196,50 @@
 }
 .ui-icon,
 .ui-widget-content .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_eeeeee_256x240.png']}");
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-widget-header .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_eeeeee_256x240.png']}");
-}
-.ui-state-default .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_eeeeee_256x240.png']}");
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-state-hover .ui-icon,
-.ui-state-focus .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_44aa44_256x240.png']}");
+.ui-state-focus .ui-icon,
+.ui-button:hover .ui-icon,
+.ui-button:focus .ui-icon {
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
-.ui-state-active .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_eeeeee_256x240.png']}");
+.ui-state-active .ui-icon,
+.ui-button:active .ui-icon {
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
-.ui-state-highlight .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_eeeeee_256x240.png']}");
+.ui-state-highlight .ui-icon,
+.ui-button .ui-state-highlight.ui-icon {
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-	background-image: url("#{resource['primefaces-arachne:images/ui-icons_cc0000_256x240.png']}");
+	background-image: url("images/ui-icons_cc0000_256x240.png.xhtml?ln=primefaces-arachne");
+}
+.ui-button .ui-icon {
+	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
 
 /* positioning */
 .ui-icon-blank { background-position: 16px 16px; }
-.ui-icon-carat-1-n { background-position: 0 0; }
-.ui-icon-carat-1-ne { background-position: -16px 0; }
-.ui-icon-carat-1-e { background-position: -32px 0; }
-.ui-icon-carat-1-se { background-position: -48px 0; }
-.ui-icon-carat-1-s { background-position: -64px 0; }
-.ui-icon-carat-1-sw { background-position: -80px 0; }
-.ui-icon-carat-1-w { background-position: -96px 0; }
-.ui-icon-carat-1-nw { background-position: -112px 0; }
-.ui-icon-carat-2-n-s { background-position: -128px 0; }
-.ui-icon-carat-2-e-w { background-position: -144px 0; }
+.ui-icon-caret-1-n { background-position: 0 0; }
+.ui-icon-caret-1-ne { background-position: -16px 0; }
+.ui-icon-caret-1-e { background-position: -32px 0; }
+.ui-icon-caret-1-se { background-position: -48px 0; }
+.ui-icon-caret-1-s { background-position: -65px 0; }
+.ui-icon-caret-1-sw { background-position: -80px 0; }
+.ui-icon-caret-1-w { background-position: -96px 0; }
+.ui-icon-caret-1-nw { background-position: -112px 0; }
+.ui-icon-caret-2-n-s { background-position: -128px 0; }
+.ui-icon-caret-2-e-w { background-position: -144px 0; }
 .ui-icon-triangle-1-n { background-position: 0 -16px; }
 .ui-icon-triangle-1-ne { background-position: -16px -16px; }
 .ui-icon-triangle-1-e { background-position: -32px -16px; }
 .ui-icon-triangle-1-se { background-position: -48px -16px; }
-.ui-icon-triangle-1-s { background-position: -64px -16px; }
+.ui-icon-triangle-1-s { background-position: -65px -16px; }
 .ui-icon-triangle-1-sw { background-position: -80px -16px; }
 .ui-icon-triangle-1-w { background-position: -96px -16px; }
 .ui-icon-triangle-1-nw { background-position: -112px -16px; }
@@ -205,7 +249,7 @@
 .ui-icon-arrow-1-ne { background-position: -16px -32px; }
 .ui-icon-arrow-1-e { background-position: -32px -32px; }
 .ui-icon-arrow-1-se { background-position: -48px -32px; }
-.ui-icon-arrow-1-s { background-position: -64px -32px; }
+.ui-icon-arrow-1-s { background-position: -65px -32px; }
 .ui-icon-arrow-1-sw { background-position: -80px -32px; }
 .ui-icon-arrow-1-w { background-position: -96px -32px; }
 .ui-icon-arrow-1-nw { background-position: -112px -32px; }
@@ -217,7 +261,7 @@
 .ui-icon-arrowstop-1-e { background-position: -208px -32px; }
 .ui-icon-arrowstop-1-s { background-position: -224px -32px; }
 .ui-icon-arrowstop-1-w { background-position: -240px -32px; }
-.ui-icon-arrowthick-1-n { background-position: 0 -48px; }
+.ui-icon-arrowthick-1-n { background-position: 1px -48px; }
 .ui-icon-arrowthick-1-ne { background-position: -16px -48px; }
 .ui-icon-arrowthick-1-e { background-position: -32px -48px; }
 .ui-icon-arrowthick-1-se { background-position: -48px -48px; }
@@ -391,13 +435,9 @@
 .ui-widget-overlay {
 	background: #aaaaaa;
 	opacity: .3;
-	filter: Alpha(Opacity=30);
+	filter: Alpha(Opacity=30); /* support: IE8 */
 }
 .ui-widget-shadow {
-	margin: 0px 0 0 0px;
-	padding: 5px;
-	background: #666666;
-	opacity: .3;
-	filter: Alpha(Opacity=30);
-	border-radius: 8px;
+	-webkit-box-shadow: 0px 0px 5px #777777;
+	box-shadow: 0px 0px 5px #777777;
 }

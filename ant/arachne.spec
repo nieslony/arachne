@@ -3,7 +3,7 @@
 %define webappuser root
 %define webappgroup root
 %define docbookstylesheet /usr/share/xml/docbook/stylesheet/nwalsh5/1.78.1/xhtml5/chunk.xsl
-%else 
+%else
 %define webappsdir /var/lib/tomcat/webapps
 %define webappuser tomcat
 %define webappgroup tomcat
@@ -25,8 +25,9 @@ Source0:    %{name}-%{version}.tar.gz
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core 
-BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc 
+BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core
+BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc
+BuildRequires:  databasepropertiesstorage
 
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas
@@ -37,11 +38,12 @@ BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api docbook5-style-xsl do
 %if 0%{?suse_version}
 BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xsl-stylesheets
 %endif
- 
+
 %package server
 Summary:	Arachne server
 BuildArch:	noarch
-Requires:	tomcat bouncycastle openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
+Requires:	tomcat bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
+Requires:       apache-commons-digester apache-commons-codec databasepropertiesstorage
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader
@@ -67,13 +69,13 @@ Command line tool for downloading configuration file from arachne
 Tomcat Web application for administering openVPN
 
 %prep
-%setup 
+%setup
 
 %build
 ant dist       -Droot=%{_builddir}/%{name}-%{version}
 ant custom.doc -Droot=%{_builddir}/%{name}-%{version} -Ddocbook-stylesheet=%{docbookstylesheet}
 
-%install 
+%install
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
 mkdir -vp %{buildroot}/%_defaultdocdir
 mv -v %{buildroot}/%{webappsdir}/%{name}/doc %{buildroot}/%_defaultdocdir/%{name}-doc
@@ -89,23 +91,36 @@ install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 mkdir -pv %{buildroot}/var/lib/arachne
 
-%clean
-[ %{buildroot} != "/" ] && rm -rf %{buildroot}
+pushd %{buildroot}/%{webappsdir}/%{name}/
+ln -sv /usr/share/doc/arachne-doc doc
+popd
 
 %post server
-ln -sfv \
-	/usr/share/java/primefaces.jar \
-	/usr/share/java/jsf-api.jar \
-	/usr/share/java/bcprov.jar \
-	/usr/share/java/postgresql-jdbc.jar \
-	%{libdir}
+%if 0%{?centos_version}
+mkdir -v %{libdir}
+ln -svf \
+    /usr/share/java/{bcpkix.jar,bcprov.jar} \
+    /usr/share/java/{commons-beanutils.jar,commons-codec.jar,commons-collections.jar}  \
+    /usr/share/java/{commons-digester.jar,commons-logging.jar} \
+    /usr/share/java/{myfaces-api.jar,myfaces-impl.jar,myfaces-impl-shared.jar} \
+    /usr/share/java/postgresql-jdbc.jar \
+    /usr/share/java/primefaces.jar \
+    /usr/share/java/databasepropertiesstorage.jar \
+    %{libdir}
+%endif
 
-%preun server
-if [ $1 = 0 ] ; then
-	rm -vf %{libdir}/bcprov.jar
-	rm -vf %{libdir}/postgresql-jdbc.jar
-else
-	echo Do not remove %{libdir}/bcprov.jar, still needed.
+# rm /var/lib/tomcat/webapps/arachne/WEB-INF/lib/jsf-api.jar
+
+
+if [ $1 = 1 ]; then
+    pushd %{webappsdir}/%{name}
+    ln -vs WEB-INF/SetupWizard.xhtml .
+    popd
+fi
+
+%preun
+if [ "$1" = 0 ]; then
+    rm -f %{webappsdir}/%{name}/web/SetupWizard.xhtml
 fi
 
 %files server
@@ -116,6 +131,8 @@ fi
 %attr(755, root, root)    %_defaultdocdir/%{name}
 %attr(664, root, root)    %_defaultdocdir/%{name}/*
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
+
+%webappsdir/%{name}/doc
 
 %files doc
 %_defaultdocdir/%{name}-doc

@@ -15,7 +15,6 @@
 
     <ui:define name="content">
         <h:form id="formAddLocalUser">
-            <p:growl id="growl" showDetail="true" sticky="true"/>
             <p:dialog id="dlgAddLocalUser" widgetVar="dlgAddLocalUser" header="Add local user">
                 <h:panelGrid columns="2">
                     <p:outputLabel value="Username:" for="username"/>
@@ -30,13 +29,47 @@
 
                     <p:outputLabel value="Retype password:" for="retypePassword"/>
                     <p:password id="retypePassword" value="#{editUsers.addLocalUserPassword}"/>
-
+                    
+                    <p:outputLabel value="Has role user:" for="hasRoleUser"/>
+                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                                   value="#{editUsers.addLocalUserHasRoleUser}"
+                                   id="hasRoleUser"
+                                   />
+                                   
+                    <p:outputLabel value="Has role admin:" for="hasRoleAdmin"/>
+                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                                   value="#{editUsers.addLocalUserHasRoleAdmin}"
+                                   id="hasRoleAdmin"
+                                   />
                     <!-- empty cell -->
                     <h:panelGroup>
                         <p:commandButton value="OK" action="#{editUsers.onAddLocalUserOk}"
                                          update=":formUsersList:tableUsers"/>
                         <p:commandButton value="Cancel" process="@this"
                                          oncomplete="PF('dlgAddLocalUser').hide();" />
+                    </h:panelGroup>
+                </h:panelGrid>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="formEditUser">
+            <p:dialog id="dlgEditUser" widgetVar="dlgEditUser" header="Edit user">
+                <h:panelGrid columns="2">
+                    <h:outputText value="Username:"/>
+                    <h:outputText value="#{editUsers.editUserUsername}"/>
+                    
+                    <p:outputLabel value="Full name:" for="editUserFullName"/>
+                    <p:inputText value="#{editUsers.editUserFullName}" id="editUserFullName"/>
+
+                    <p:outputLabel value="E-mail:" for="editUserEmail"/>
+                    <p:inputText value="#{editUsers.editUserEmail}" id="editUserEmail"/>
+
+                    <!-- empty cell -->
+                    <h:panelGroup>
+                        <p:commandButton value="OK" action="#{editUsers.onEditUserOk}"
+                                         update=":formUsersList:tableUsers"/>
+                        <p:commandButton value="Cancel" process="@this"
+                                         oncomplete="PF('dlgEditUser').hide();" />
                     </h:panelGroup>
                 </h:panelGrid>
             </p:dialog>
@@ -66,23 +99,7 @@
         </h:form>
 
         <h:form id="formUsersList">
-            <p:contextMenu for="tableUsers" id="ctxTableUsers" autoUpdate="true">
-                <p:menuitem value="Reset password" autoUpdate="true"
-                            rendered="#{!editUsers.selectedUser.immutable}"
-                            />
-                <p:menuitem value="Edit.." 
-                            rendered="#{not editUsers.selectedUser.immutable}"                            
-                            />
-                <p:menuitem value="Download openVPN config"
-                    ajax="false">
-                    <p:fileDownload value="#{editUsers.downloadOpenVPNConfig}"/>
-                </p:menuitem>
-                <p:menuitem value="Download NetworkManger installer"
-                            ajax="false">
-                    <p:fileDownload value="#{editUsers.downloadNetworkManagerInstaller}"/>
-                </p:menuitem>
-            </p:contextMenu>
-
+            <p:messages showDetail="true" autoUpdate="true"/>
             <p:dataTable value="#{editUsers.allUsers}" var="user"
                          id="tableUsers"
                          selection="#{editUsers.selectedUser}"
@@ -113,15 +130,16 @@
                                     />
                         <p:menuitem value="Edit..." 
                                     rendered="${user.userTypeStr == 'Local'}"                                    
+                                    update=":formEditUser:dlgEditUser"
                                     action="#{editUsers.onEditUser(user)}"
                                     />
                         <p:menuitem value="Remove..." 
                                     rendered="${user.userTypeStr == 'Local'}"                                    
                                     update=":formUsersList"
-                                    action="#{editUsers.onRemoveUser(user)}"
+                                    action="#{editUsers.onRemoveUser(user.username)}"
                                     >
                             <p:confirm header="Confirmation"
-                                       message="Are you sure?"
+                                       message="Do you really want to remove user #{user.username}?"
                                        icon="ui-icon-alert"/>
                         </p:menuitem>
                         <p:menuitem value="Download openVPN config"

@@ -75,8 +75,7 @@ public class EditUserVpn
         setIsEnabled(true);
         save();
 
-        String serverConfigFile =
-                String.format("%s/clientvpn.conf", folderFactory.getServerConfDir());
+        String serverConfigFile = folderFactory.getUserVpnFileName();
         logger.info("Writing server config to " + serverConfigFile);
         FileWriter fwr = null;
         try {
@@ -303,8 +302,7 @@ public class EditUserVpn
         adminWelcome.loadUserVpns();
         RequestContext.getCurrentInstance().update("menuForm:mainMenu");
 
-        String serverConfigFile =
-                String.format("%s/clientvpn.conf", folderFactory.getServerConfDir());
+        String serverConfigFile = folderFactory.getUserVpnFileName();
         logger.info(String.format("Removing %s", serverConfigFile));
         File f = new File(serverConfigFile);
         f.delete();

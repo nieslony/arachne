@@ -225,15 +225,17 @@ public class ManagementInterface
         ensureConnected();
         synchronized(socketLocker) {
             miWriter.println(command);
+            boolean ignore_line;
             do {
+                ignore_line = false;
                 line = miReader.readLine();
                 if (line == null)
                     throw new ManagementInterfaceException(command, "No answer)");
                 if (line.startsWith(">INFO")) {
                     logger.info(String.format("Ignoring info: %s", line));
-                    continue;
+                    ignore_line = true;
                 }
-            } while (processLogMessage(line));
+            } while (ignore_line || processLogMessage(line));
         }
 
         logger.info(String.format("Got answer: %s", line));

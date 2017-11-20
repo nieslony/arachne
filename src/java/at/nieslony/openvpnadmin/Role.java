@@ -127,7 +127,18 @@ public class Role
         }
     }
 
-    public void removeRole(RoleRule rule) {
+    public void removeRule(String ruleName, String value) {
+        for (RoleRule rule: getRules()) {
+            if (rule.getRoleType().equals(ruleName) && rule.getValue().equals(value)) {
+                removeRule(rule);
+                break;
+            }
+        }
+    }
+    
+    public void removeRule(RoleRule rule) {
         rules.remove(rule);
+        
+        
     }
 }

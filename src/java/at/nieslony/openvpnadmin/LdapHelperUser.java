@@ -12,7 +12,7 @@ import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
  * @author claas
  */
 public interface LdapHelperUser {
-    public String getAuthType();
+    public LdapSettingsBase.LdapAuthType getAuthType();
     public String getLdapServer();
     public String getLdapBaseDn();
     public Integer getLdapPort();

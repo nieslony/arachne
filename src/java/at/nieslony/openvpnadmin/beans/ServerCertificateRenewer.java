@@ -225,12 +225,12 @@ public class ServerCertificateRenewer
         PrintWriter wr = null;
         try {
             logger.info("Adding old server certificate to CRL");
-            pki.addCertificateToCrl(oldServerCert);
+            pki.revoveCert(oldServerCert);
 
             wr = new PrintWriter(new FileWriter(pki.getCrlFilename()));
             pki.writeCrl(wr);
         }
-        catch (IOException | OperatorCreationException | CRLException ex) {
+        catch (IOException | OperatorCreationException | CRLException | ClassNotFoundException | SQLException ex) {
             String msg = String.format("Cannot add old certificate to CRL: %s", ex.getMessage());
             logger.warning(msg);
             FacesContext ctx = FacesContext.getCurrentInstance();
@@ -246,8 +246,7 @@ public class ServerCertificateRenewer
                 wr.close();
         }
 
-        String serverConfigFile =
-                String.format("%s/clientvpn.conf", folderFactory.getServerConfDir());
+        String serverConfigFile = folderFactory.getUserVpnFileName();
         logger.info(String.format(
                 "Writing server configuration with new certificate to %s",
                 serverConfigFile));

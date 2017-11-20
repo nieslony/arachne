@@ -8,6 +8,7 @@ package at.nieslony.openvpnadmin.views;
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.Role;
+import at.nieslony.openvpnadmin.RoleRuleIsUser;
 import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Roles;
@@ -58,10 +59,58 @@ public class EditUsers implements Serializable {
 
     private String addLocalUserUsername;
     private String addLocalUserPassword;
+    private boolean addLocalUserHasRoleUser;
+    private boolean addLocalUserHasRoleAdmin;
+    
+    private String editUserUsername;
+    private String editUserFullName;
+    private String editUserEmail;
+    private AbstractUser editUser;
+    
     private String passwordResetUserName;
     private String passwordReset;
     private AbstractUser selectedUser;
 
+    public void setEditUserEmail(String email) {
+        editUserEmail = email;
+    }
+    
+    public String getEditUserEmail() {
+        return editUserEmail;
+    }
+    
+    public void setEditUserFullName(String fn) {
+        editUserFullName = fn;
+    }
+    
+    public String getEditUserFullName() {
+        return editUserFullName;
+    }
+    
+    public void setEditUserUsername(String un) {
+        editUserUsername = un;
+    }
+    
+    public String getEditUserUsername() {
+        return editUserUsername;
+    }
+    
+    public void setAddLocalUserHasRoleUser(boolean b) {
+        addLocalUserHasRoleUser = b;
+    }
+    
+    public boolean getAddLocalUserHasRoleUser() {
+        return addLocalUserHasRoleUser;
+    }
+    
+    public void setAddLocalUserHasRoleAdmin(boolean b) {
+        addLocalUserHasRoleAdmin = b;
+    }
+    
+    public boolean getAddLocalUserHasRoleAdmin() {
+        return addLocalUserHasRoleAdmin;
+    }
+    
     public void setConfigBuilder(ConfigBuilder cb) {
         configBuilder = cb;
     }
@@ -113,6 +162,41 @@ public class EditUsers implements Serializable {
     public EditUsers() {
     }
 
+    public void onEditUser(AbstractUser user) {
+        logger.info(String.format("Editing user %s", user.getUsername()));
+        editUserUsername = user.getUsername();
+        editUserFullName = user.getFullName();
+        editUserEmail = user.getEmail();
+        
+        editUser = user;
+        
+        RequestContext.getCurrentInstance().execute("PF('dlgEditUser').show();");
+    }
+    
+    public void onEditUserOk() {
+        logger.info(String.format("Writing properties for user %s", editUser.getUsername()));
+        editUser.setEmail(editUserEmail);
+        editUser.setFullName(editUserFullName);
+        
+        try {
+            editUser.save();
+            
+            String msg = String.format("Uer %s updated", editUser.getUsername());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
+            logger.info(msg);
+        }
+        catch (Exception ex) {
+            String msg = String.format("Cannot save user %s: %s",
+                    editUser.getUsername(), ex.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+            logger.warning(msg);            
+        }
+
+        RequestContext.getCurrentInstance().execute("PF('dlgEditUser').hide();");
+    }
+    
     public void onAddLocalUser() {
         logger.info("Open dialog dlgAddLocalUser");
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').show();");
@@ -129,7 +213,13 @@ public class EditUsers implements Serializable {
             logger.warning(String.format("Cannot save user %s: %s",
                     passwordResetUserName, ex.getMessage()));
         }
-
+        if (addLocalUserHasRoleAdmin) {
+            roles.addRule("admin", "isUser", user.getUsername());
+        }
+        if (addLocalUserHasRoleUser) {
+            roles.addRule("user", "isUser", user.getUsername());
+        }
+        
         RequestContext.getCurrentInstance().execute("PF('dlgAddLocalUser').hide();");
     }
 
@@ -162,35 +252,46 @@ public class EditUsers implements Serializable {
         user.setPassword(passwordReset);
         try {
             user.save();
+            String msg = String.format("Password for user %s resetted.", user.getUsername());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", msg));
+            logger.info(msg);
         }
         catch (Exception ex) {
-            logger.warning(String.format("Cannot save user %s: %s",
-                    passwordResetUserName, ex.getMessage()));
+            String msg = String.format("Cannot save user %s: %s",
+                    passwordResetUserName, ex.getMessage());
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+            logger.warning(msg);
         }
         RequestContext.getCurrentInstance().execute("PF('dlgResetPassword').hide();");
     }
 
     public void onRemoveUser(String username) {
+        logger.info(String.format("Removing local user %s..", username));
         try {
             if (!localUserFactory.removeUser(username)) {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning", "No user removed"));
+                        FacesMessage.SEVERITY_WARN, "Warning", 
+                            String.format("User %s not removed", username)));
             }
             else {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning",
+                        FacesMessage.SEVERITY_INFO, "Info",
                             String.format("User %s removed.", username)));
             }
         }
         catch (Exception ex) {
                 FacesContext.getCurrentInstance().addMessage(
                     null, new FacesMessage(
-                        FacesMessage.SEVERITY_INFO, "Warning",
+                        FacesMessage.SEVERITY_ERROR, "Error",
                             String.format("Cannot remove user %s: %s",
                                     username, ex.getMessage())));
-        }
+        }        
+        roles.removeRuleFromRole("admin", "isUser", username);
+        roles.removeRuleFromRole("user", "isUser", username);
     }
 
     public StreamedContent getDownloadNetworkManagerInstaller(AbstractUser user)
