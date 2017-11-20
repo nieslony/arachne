@@ -100,7 +100,7 @@
         </listitem>
         <listitem>
             <para>
-                Create a self signed CA, that will create certificates for the 
+                Create a self signed CA, that will create certificates for the
                 openvpn server and VPN users.
             </para>
             <screenshot>
@@ -114,8 +114,8 @@
         </listitem>
         <listitem>
             <para>
-                Create openvpn server certificate. The common name must be the 
-                full qualified domain name (FQDN) of your openvpn server as 
+                Create openvpn server certificate. The common name must be the
+                full qualified domain name (FQDN) of your openvpn server as
                 visible from the internet.
             </para>
             <screenshot>
@@ -129,8 +129,8 @@
         </listitem>
         <listitem>
             <para>
-                Arachne stores its settings and certificate in a postgresql 
-                database. Set username etc. here. 
+                Arachne stores its settings and certificate in a postgresql
+                database. Set username etc. here.
             </para>
             <screenshot>
                 <screeninfo>Setup wizard - create self signed CA</screeninfo>
@@ -141,12 +141,12 @@
                 </mediaobject>
             </screenshot>
             <para>
-                You can download a SQL file that contains everything to create a 
-                database user and an empty database. A hash of the password you 
+                You can download a SQL file that contains everything to create a
+                database user and an empty database. A hash of the password you
                 entered here is also included.
             </para>
             <para>
-                To enable md5 authentication on your postgres server, add the 
+                To enable md5 authentication on your postgres server, add the
                 following line to /var/lib/pgsql/data/pg_hba.conf:
             </para>
             <programlisting>
@@ -158,8 +158,8 @@
         </listitem>
         <listitem>
             <para>
-                To finalize setup click "finish" on the last page. Arachne will 
-                create the administrator user, your CA, a server certificate, 
+                To finalize setup click "finish" on the last page. Arachne will
+                create the administrator user, your CA, a server certificate,
                 DH paramers and all neccasary database tables and initial values.
             </para>
             <para>
@@ -168,7 +168,7 @@
         </listitem>
         <listitem>
             <para>
-                When the login screen appears enter username and passwd for 
+                When the login screen appears enter username and passwd for
                 the user you've just created.
             </para>
         </listitem>
@@ -184,21 +184,21 @@
             TBw
         </para>
     </sect1>
-    
+
     <sect1>
         <title>Roles</title>
         <para>
-            There are two roles: admin and user. An admin can modify any 
-            settings, an user is allowed to connect via openvpn. A user ca have 
-            both roles. 
+            There are two roles: admin and user. An admin can modify any
+            settings, an user is allowed to connect via openvpn. A user ca have
+            both roles.
         </para>
     </sect1>
-    
+
     <sect1>
         <title>Define LDAP source</title>
         <para>
-            Arachne can authenticate against a LDAP server. It's also possible 
-            to manage roles with LDAP groups. 
+            Arachne can authenticate against a LDAP server. It's also possible
+            to manage roles with LDAP groups.
             <itemizedlist>
                 <listitem>
                     managing roles with LDAP groups
@@ -207,25 +207,52 @@
                     authenticating against LDAP server
                 </listitem>
                 <listitem>
-                    getting user attributes for external authentication 
+                    getting user attributes for external authentication
                     (e.g. Apache HTTP server)
                 </listitem>
             </itemizedlist>
-            To edit LDAP settings select 
+            To edit LDAP settings select
             <guilabel>Configure LDAP source</guilabel>.
         </para>
     </sect1>
-    
+
     <sect1>
         <title>Authentication sources</title>
-        <para>
-            
-        </para>
     </sect1>
 </chapter>
 
 <chapter>
     <title>VPN settings</title>
+    <sec1>
+        <title>Starting openVPN for the first time</title>
+        <para>
+            <orderedlist>
+                <listitem>
+                    <para>
+                        Create symbolik ink to archne server configuration
+                    </pare>
+                    <programlisting>
+                        sudo ln -s
+                    </programlisting>
+                </listitem>
+                <listitem>
+                    <para>
+                        disable selinux
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        enable openvpn with arachne configuration
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        start opevpn with arachne configuration
+                    </para>
+                </listitem>
+            </orderedlist>
+        </para>
+    </sec1>
 </chapter>
 
 <appendix><title>Optional Appendix</title>
