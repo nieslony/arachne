@@ -109,6 +109,9 @@ ln -svf \
     %{libdir}
 %endif
 
+# rm /var/lib/tomcat/webapps/arachne/WEB-INF/lib/jsf-api.jar
+
+
 if [ $1 = 1 ]; then
     pushd %{webappsdir}/%{name}
     ln -vs WEB-INF/SetupWizard.xhtml .
