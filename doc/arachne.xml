@@ -153,7 +153,8 @@
                   host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
             </programlisting>
             <para>
-                You can test the database connectivity by clicking "Test connection".
+                You can test the database connectivity by clicking
+                <guibutton>Test connection</guibutton>.
             </para>
         </listitem>
         <listitem>
@@ -178,23 +179,23 @@
 <chapter>
     <title>Usermanagement</title>
 
-    <sect1>
+    <section>
         <title>Local users</title>
         <para>
             TBw
         </para>
-    </sect1>
+    </section>
 
-    <sect1>
+    <section>
         <title>Roles</title>
         <para>
             There are two roles: admin and user. An admin can modify any
             settings, an user is allowed to connect via openvpn. A user ca have
             both roles.
         </para>
-    </sect1>
+    </section>
 
-    <sect1>
+    <section>
         <title>Define LDAP source</title>
         <para>
             Arachne can authenticate against a LDAP server. It's also possible
@@ -214,23 +215,33 @@
             To edit LDAP settings select
             <guilabel>Configure LDAP source</guilabel>.
         </para>
-    </sect1>
+    </section>
 
-    <sect1>
+    <section>
         <title>Authentication sources</title>
-    </sect1>
+        <para>
+            <screenshot>
+                <screeninfo>Setup wizard - create self signed CA</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/AuthenticationSettings.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+        </para>
+    </section>
 </chapter>
 
 <chapter>
     <title>VPN settings</title>
-    <sec1>
+    <section>
         <title>Starting openVPN for the first time</title>
         <para>
             <orderedlist>
                 <listitem>
                     <para>
                         Create symbolik ink to archne server configuration
-                    </pare>
+                    </para>
                     <programlisting>
                         sudo ln -s
                     </programlisting>
@@ -252,7 +263,104 @@
                 </listitem>
             </orderedlist>
         </para>
-    </sec1>
+    </section>
+</chapter>
+
+<chapter>
+    <title>Get client configuration</title>
+
+    <para>
+        Arachne provides two types of client configuration:
+        <itemizedlist>
+            <listitem>classic openVPN configuration file (.pvpn)</listitem>
+            <listitem>
+                Shell script that adds or modifies a NetworkManager
+                configuration
+            </listitem>
+        </itemizedlist>
+        Both configuration types can be retrieved in several ways. To add a
+        configuration to NetworkManager save the file, make it executable und
+        execute it.
+    </para>
+
+    <section>
+        <title>Download from administration page</title>
+
+        <para>
+            A user with admin role can download client configurations for any
+            user.
+            <orderedlist>
+                <listitem>
+                    Login as user with role admin and navigate to
+                    <guilabel>View/Edit users</guilabel>
+                </listitem>
+                <listitem>
+                    Find the user you want to download the configuration for
+                </listitem>
+                <listitem>
+                    Click <guilabel>Actions</guilabel> and select the
+                    prefered download option
+                </listitem>
+            </orderedlist>
+        </para>
+    </section>
+
+    <section>
+        <title>Download from user welcopme page</title>
+        <para>
+            A user without admin role can download his/her personal from user
+            welcome page.
+
+            <orderedlist>
+                <listitem>
+                    Login as user wuth user role
+                </listitem>
+                <listitem>
+                    Click on the crow web to download tzhe NetworkManager
+                    installer or on the openVPN icon to download .ovpn file
+                </listitem>
+            </orderedlist>
+        </para>
+    </section>
+
+    <section>
+        <title>Direct download from download URL</title>
+        <para>
+            A user with user role can download his/her personal configuration
+            direct from download url.
+            <itemizedlist>
+                <listitem>
+                    NetworkManager installer:
+                    http(s)://arachne.example.com:8080/arachne/download/add-vpn-to-networkmanager.sh
+                </listitem>
+                <listitem>
+                    .ovpn file:
+                    http(s)://arachne.example.com:8080/arachne/download/client-config.ovpn
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+    <section>
+        <title>Automatic download with configuration downloader (Linux only)</title>
+        <para>
+            For Linux users there's a small system tray application that can download and update a configuration automatically.
+        </para>
+        <para>
+            To install the configuration downloader
+            <orderedlist>
+                <listitem>
+                    Add repositorý
+                </listitem>
+                <listitem>
+                    install package
+                </listitem>
+            </orderedlist>
+        </para>
+        <para>
+
+        </para>
+    </section>
 </chapter>
 
 <appendix><title>Optional Appendix</title>
@@ -260,3 +368,9 @@
 </para>
 </appendix>
 </book>
+
+
+<!--
+<guilabel> </guilabel>
+<guibutton> </guibutton>
+-->

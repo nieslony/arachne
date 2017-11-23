@@ -1,6 +1,6 @@
 body {
     background-color: #ffffff;
-    color: #000000;  
+    color: #000000;
 }
 
 h1 {
@@ -18,9 +18,17 @@ a:link, a:visited {
 
 a:link:hover, a:visited:hover  {
   text-decoration : underline;
-    color: #338833;    
+    color: #338833;
 }
 
 pre {
   background-color: #eeeeee;
+}
+
+.guibutton {
+    border-width: 1px;
+}
+
+.guilabel {
+    font-style: italic;
 }
