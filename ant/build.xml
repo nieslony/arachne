@@ -1,10 +1,10 @@
 <project name="ProjectName" default="dist" basedir=".">
     <include file="ant-include.xml"/>
-    
+
     <description>
         Project Description
     </description>
-    
+
     <property name="projectName" value="arachne"/>
     <property name="version" value="0.3.2"/>
     <property name="tar-prefix" value="${projectName}-${version}"/>
@@ -22,57 +22,57 @@
         <property name="docdst.dir" value="${build}/web/doc"/>
         <property name="docbook-stylesheet" value="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"/>
 
-    
+
     <property name="build.webxml" location="${build}/web/WEB-INF/web.xml"/>
 
     <property name="property-templates" location="${root}/property-templates"/>
 
     <property name="install-root" value=""/>
-    
+
     <property name="webapps.dir" value="/usr/share/tomcat/webapps"/>
     <property name="app-root" value="${webapps.dir}/arachne"/>
     <property name="web-inf.dir" value="${app-root}/WEB-INF"/>
     <property name="sql.dir" value="${web-inf.dir}/sql"/>
     <property name="bin.dir" value="${web-inf.dir}/bin"/>
     <property name="work.dir" value="/var/lib/arachne"/>
-    
+
     <property name="theme.src" value="${root}/arachne-theme"/>
     <property name="theme.dir" value="${build}/web/WEB-INF/resources/primefaces-arachne"/>
- 
+
     <path id="classpath">
-        <fileset 
-        	dir="/usr/share/java" 
-        	includes="servlet.jar jakarta-taglibs-core.jar tomcat-el-api.jar"
+        <fileset
+        	dir="/usr/share/java"
+        	includes="servlet.jar jakarta-taglibs-core.jar tomcat-el-api.jar postgresql.jar"
         />
         <fileset
-                dir="/usr/share/java" 
+                dir="/usr/share/java"
                 includes="bcprov.jar bcpkix.jar postgresql-jdbc.jar"
         />
-        <fileset 
-        	dir="/usr/share/java" 
+        <fileset
+        	dir="/usr/share/java"
         	includes="primefaces.jar myfaces-api.jar myfaces-impl.jar myfaces-impl-shared.jar"
         />
-        <fileset 
-        	dir="/usr/share/java" 
+        <fileset
+        	dir="/usr/share/java"
         	includes="tomcat-servlet-api-3.0.jar tomcat8-el-api.jar tomcat8-servlet-api.jar"
         />
-        <fileset 
-        	dir="/usr/share/java" 
+        <fileset
+        	dir="/usr/share/java"
                 includes="databasepropertiesstorage.jar"
             />
         <fileset dir="${build}/generated-sources"/>
     </path>
-    
+
     <target name="init">
         <tstamp/>
         <mkdir dir="${build}"/>
     </target>
-    
+
     <target name="compile" depends="init,custom.generate-code">
         <mkdir dir="${build}/classes"/>
-        <javac 
-               destdir="${build}/classes" 
-               includeantruntime="false" 
+        <javac
+               destdir="${build}/classes"
+               includeantruntime="false"
                classpathref="classpath"
                encoding="utf-8"
         >
@@ -80,21 +80,21 @@
             <src path="${build}/generated-sources"/>
         </javac>
     </target>
-    
+
     <target name="copystatic">
         <echo message="--- BEGIN copy static ---"/>
         <copy todir="${build}/web">
             <fileset dir="${web}"/>
         </copy>
-        
+
         <copy todir="${build}/web/WEB-INF/classes">
             <fileset dir="${build}/classes"/>
         </copy>
-        
+
         <copy todir="${build}/web/WEB-INF/sql">
             <fileset dir="${src}/sql"/>
         </copy>
-        
+
         <mkdir dir="${theme.dir}"/>
         <copy toDir="${theme.dir}"
               file="${theme.src}/theme.css"
@@ -104,19 +104,19 @@
         <copy toDir="${theme.dir}/images">
             <fileset dir="${theme.src}/images"/>
         </copy>
-        <echo message="--- END copy static ---"/>        
+        <echo message="--- END copy static ---"/>
     </target>
-    
+
     <target name="dist" depends="compile,copystatic,patch-webxml">
-        <jar jarfile="${dist}/${projectName}.war" basedir="${build}/web"/>    
+        <jar jarfile="${dist}/${projectName}.war" basedir="${build}/web"/>
     </target>
-    
+
     <target name="clean">
         <delete dir="${build}"/>
         <delete dir="${dist}"/>
         <delete dir="${export}"/>
     </target>
-    
+
     <target name="install">
         <mkdir dir="${install-root}/${app-root}"/>
         <mkdir dir="${install-root}/${work.dir}"/>
@@ -124,34 +124,34 @@
             <fileset dir="${build}/web"/>
         </copy>
     </target>
-    
+
     <target name="patch-webxml">
-        <replace 
-            file="${build.webxml}" 
-            token="@@SQL-DIR@@" 
+        <replace
+            file="${build.webxml}"
+            token="@@SQL-DIR@@"
             value="${sql.dir}"
-            />        
-        <replace 
-            file="${build.webxml}" 
-            token="@@BIN-DIR@@" 
+            />
+        <replace
+            file="${build.webxml}"
+            token="@@BIN-DIR@@"
             value="${bin.dir}"
-            />         
-        <replace 
-            file="${build.webxml}" 
-            token="@@DYNAMIC-DATA-DIR@@" 
+            />
+        <replace
+            file="${build.webxml}"
+            token="@@DYNAMIC-DATA-DIR@@"
             value="${work.dir}"
             />
     </target>
-    
+
     <target name="tar">
         <mkdir dir="${export}"/>
         <mkdir dir="${tar-patch}"/>
         <copy todir="${tar-patch}" file="arachne.spec"/>
-        <replace 
-            file="${tar-patch}/arachne.spec" 
-            token="@@VERSION@@" 
+        <replace
+            file="${tar-patch}/arachne.spec"
+            token="@@VERSION@@"
             value="${version}"
-            />        
+            />
         <tar destfile="${export}/${projectName}-${version}.tar.gz"
              compression="gzip"
         >
@@ -172,5 +172,5 @@
             <tarfileset dir="${root}/doc" prefix="${tar-prefix}/doc/"/>
         </tar>
     </target>
-    
+
 </project>

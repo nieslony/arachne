@@ -30,7 +30,7 @@ BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc
 BuildRequires:  databasepropertiesstorage
 
 %if 0%{?fedora}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas libxslt
 %endif
 %if 0%{?centos_version}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api docbook5-style-xsl docbook5-schemas
@@ -92,7 +92,7 @@ install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 mkdir -pv %{buildroot}/var/lib/arachne
 
 pushd %{buildroot}/%{webappsdir}/%{name}/
-ln -sv /usr/share/doc/arachne-doc doc
+ln -sv %_defaultdocdir/%{name}-doc doc
 popd
 
 %post server
@@ -108,9 +108,6 @@ ln -svf \
     /usr/share/java/databasepropertiesstorage.jar \
     %{libdir}
 %endif
-
-# rm /var/lib/tomcat/webapps/arachne/WEB-INF/lib/jsf-api.jar
-
 
 if [ $1 = 1 ]; then
     pushd %{webappsdir}/%{name}
@@ -133,7 +130,6 @@ fi
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %webappsdir/%{name}/doc
-
 %files doc
 %_defaultdocdir/%{name}-doc
 
