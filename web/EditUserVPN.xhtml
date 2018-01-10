@@ -21,8 +21,8 @@
                 <p:outputLabel value="NetworkManager connection name template:" for="nmConnectionTemplate"/>
                 <p:inputText id="nmConnectionTemplate" value="#{editUserVpn.nmConnectionTemplate}"/>
             </h:panelGrid>
-            <p:accordionPanel multiple="true" activeIndex="0,1">
-                <p:tab title="Basics">
+            <p:accordionPanel multiple="true" activeIndex="0,1,2">
+                <p:tab title="Connection">
                     <h:panelGrid  columns="4">
                         <p:outputLabel value="Hostname:" for="hostname"/>
                         <p:inputText value="#{editUserVpn.host}" size="25"
@@ -50,6 +50,21 @@
                             <f:selectItem itemLabel="TAP" itemValue="TAP"/>
                         </p:selectOneMenu>
 
+                        <p:outputLabel value="Keepalive ping:" for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{editUserVpn.ping}" id="ping"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                        <p:outputLabel value="Restart after " for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{editUserVpn.pingRestart}" id="pingRestart"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                    </h:panelGrid>
+                </p:tab>
+
+                <p:tab title="DNS and Routes">
+                    <h:panelGrid columns="2">
                         <h:panelGroup>
                             <p:outputLabel value="DNS servers:" for="dnsServers"/>
                             <p:selectOneListbox style="height: 50pt" id="dnsServers" value="#{editUserVpn.selDnsServer}">
@@ -67,6 +82,7 @@
                             <br/>
                             <p:commandButton action="#{editUserVpn.onRemoveDnsServer}" value="Remove" update="dnsServers"/>
                         </h:panelGroup>
+
                         <h:panelGroup>
                             <p:outputLabel value="Push routes:" for="pushRoutes"/>
                             <p:selectOneListbox style="height: 50pt" id="pushRoutes" value="#{editUserVpn.selPushRoute}">
@@ -84,17 +100,6 @@
                             <p:commandButton action="#{editUserVpn.onModifyRoute}" value="Modify" update="pushRoutes"/>
                             <br/>
                             <p:commandButton action="#{editUserVpn.onRemoveRoute}" value="Remove" update="pushRoutes"/>
-                        </h:panelGroup>
-
-                        <p:outputLabel value="Keepalive ping:" for="ping"/>
-                        <h:panelGroup>
-                            <p:spinner value="#{editUserVpn.ping}" id="ping"/>
-                            <h:outputText value=" secs"/>
-                        </h:panelGroup>
-                        <p:outputLabel value="Restart after " for="ping"/>
-                        <h:panelGroup>
-                            <p:spinner value="#{editUserVpn.pingRestart}" id="pingRestart"/>
-                            <h:outputText value=" secs"/>
                         </h:panelGroup>
                     </h:panelGrid>
                 </p:tab>
