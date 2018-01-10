@@ -40,6 +40,7 @@ public class EditUserVpn
     private String selPushRoute;
     private String editPushRouteNetwork;
     private String editPushRouteMask;
+    private String authWebserverProtocol = "http";
 
     public EditUserVpn () {
     }
@@ -278,6 +279,12 @@ public class EditUserVpn
                 getAuthType() != UserVpnBase.VpnAuthType.CERTIFICATE;
     }
 
+    public Boolean getRenderSslSettings() {
+        return getUserPasswordMode() == UserVpnBase.UserPasswordMode.HTTP &&
+                getAuthType() != UserVpnBase.VpnAuthType.CERTIFICATE &&
+                authWebserverProtocol.equals("https");
+    }
+
     public Boolean getRenderAuthUrl() {
         return getUserPasswordMode() == UserVpnBase.UserPasswordMode.HTTP &&
                 getAuthType() != UserVpnBase.VpnAuthType.CERTIFICATE;
@@ -294,6 +301,14 @@ public class EditUserVpn
     public UserVpnBase.UserPasswordMode[] getUserPasswordModes() {
 
         return UserVpnBase.UserPasswordMode.values();
+    }
+
+    public String getAuthWebserverProtocol() {
+        return authWebserverProtocol;
+    }
+
+    public void setAuthWebserverProtocol(String protocol) {
+        authWebserverProtocol = protocol;
     }
 
     public void onRemove() {

@@ -133,13 +133,11 @@ public class ConfigBuilder implements Serializable {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("\"")
-                .append(authScript)
-                .append(" ")
-                .append(userVpn.getAuthScriptUrl())
-                .append("/AuthOpenVPN.xhtml")
-                .append("\"");
-        String authCmd = sb.toString();
+        sb.append("plugin ")
+                .append(folderFactory.getPluginDir())
+                .append("/arachne.so")
+                .append(" url=").append(userVpn.getAuthScriptUrl()).append("/AuthOpenVPN.xhtml");
+        String authPlugin = sb.toString();
         PrintWriter pr = new PrintWriter(wr);
 
         pr.println("port " + userVpn.getPort());
@@ -165,12 +163,12 @@ public class ConfigBuilder implements Serializable {
             case USERPWD_CERTIFICATE:
                 if (scriptSecurity < 2)
                     scriptSecurity = 2;
-                pr.println("auth-user-pass-verify " + authCmd + " via-file");
+                pr.println(authPlugin);
                 break;
             case USERPWD:
                 if (scriptSecurity < 2)
                     scriptSecurity = 2;
-                pr.println("auth-user-pass-verify " + authCmd + " via-file");
+                pr.println(authPlugin);
                 pr.println("client-cert-not-required");
                 pr.println("username-as-common-name");
         }

@@ -73,6 +73,7 @@
     <property name="version" value="0.3.1git"/>
     <property name="build" value="${basedir}/build"/>
     <property name="property-templates" value="${basedir}/property-templates"/>
+    <property name="plugin.dir" value="${basedir}/external"/>
 
     <include file="ant/ant-include.xml"/>
 
@@ -88,6 +89,8 @@
 
         <echo message="Creating ${work.dir}..."/>
         <mkdir dir="${work.dir}"/>
+        <mkdir dir="${work.dir}/vpnconfig"/>
+        <mkdir dir="${work.dir}/appconfig"/>
         <replace
             file="${build.web.dir}/WEB-INF/web.xml"
             token="@@DYNAMIC-DATA-DIR@@"
@@ -102,6 +105,11 @@
             file="${build.web.dir}/WEB-INF/web.xml"
             token="@@BIN-DIR@@"
             value="${bin.dir}"
+            />
+        <replace
+            file="${build.web.dir}/WEB-INF/web.xml"
+            token="@@PLUGIN-DIR@@"
+            value="${plugin.dir}"
             />
 
         <mkdir dir="${theme.dir}"/>

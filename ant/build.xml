@@ -35,6 +35,7 @@
     <property name="sql.dir" value="${web-inf.dir}/sql"/>
     <property name="bin.dir" value="${web-inf.dir}/bin"/>
     <property name="work.dir" value="/var/lib/arachne"/>
+    <property name="plugin.dir" value="/usr/lib64/openvpn/plugins/"/>
 
     <property name="theme.src" value="${root}/arachne-theme"/>
     <property name="theme.dir" value="${build}/web/WEB-INF/resources/primefaces-arachne"/>
@@ -140,6 +141,11 @@
             file="${build.webxml}"
             token="@@DYNAMIC-DATA-DIR@@"
             value="${work.dir}"
+            />
+        <replace
+            file="${build.webxml}"
+            token="@@PLUGIN-DIR@@"
+            value="${plugin.dir}"
             />
     </target>
 

@@ -17,7 +17,7 @@
             <h:panelGrid columns="2">
                 <p:outputLabel value="Connection Name:" for="name"/>
                 <p:inputText size="75" value="#{editUserVpn.connectionName}" id="name" required="true"/>
-                
+
                 <p:outputLabel value="NetworkManager connection name template:" for="nmConnectionTemplate"/>
                 <p:inputText id="nmConnectionTemplate" value="#{editUserVpn.nmConnectionTemplate}"/>
             </h:panelGrid>
@@ -61,7 +61,7 @@
                         <h:panelGroup>
                             <p:commandButton action="#{editUserVpn.onAddDnsServer}" value="Add" update="dnsServers">
                                 <p:ajax update="dnsServers"/>
-                            </p:commandButton>                                
+                            </p:commandButton>
                             <br/>
                             <p:commandButton action="#{editUserVpn.onModifyDnsServer}" value="Modify" update="dnsServers"/>
                             <br/>
@@ -103,43 +103,76 @@
                     <h:panelGrid columns="2">
                         <p:outputLabel value="Authentication type:" for="authType"/>
                         <p:selectOneMenu id="authType" value="#{editUserVpn.authType}">
-                            <f:ajax render="@form"/>                                
+                            <f:ajax render="@form"/>
                             <f:selectItems value="#{editUserVpn.authTypes}"
                                            var="authType"
                                            itemValue="#{authType}"
                                            itemLabel="#{authType.description}"/>
                         </p:selectOneMenu>
 
-                        <p:outputLabel value="Username/password via:" 
+                        <p:outputLabel value="Username/password via:"
                                        rendered="#{editUserVpn.renderUserPasswordMode}"
                                        for="pamUrl"
                                        />
-                        <p:selectOneMenu id="pamUrl" 
+                        <p:selectOneMenu id="pamUrl"
                                          value="#{editUserVpn.userPasswordMode}"
                                          rendered="#{editUserVpn.renderUserPasswordMode}"
                                          immediate="true" >
-                            <f:ajax render="@form"/>                                
+                            <f:ajax render="@form"/>
                             <f:selectItems value="#{editUserVpn.userPasswordModes}"
                                            var="userPasswordMode"
                                            itemValue="#{userPasswordMode}"
                                            itemLabel="#{userPasswordMode.description}"/>
                         </p:selectOneMenu>
 
-                        <p:outputLabel value="PAM service:" 
-                                       rendered="#{editUserVpn.renderPamService}"  
+                        <p:outputLabel value="PAM service:"
+                                       rendered="#{editUserVpn.renderPamService}"
                                        for="pamService"/>
-                        <p:inputText id="pamService" 
+                        <p:inputText id="pamService"
                                      value="#{editUserVpn.authPamService}"
                                      rendered="#{editUserVpn.renderPamService}"
                                      />
 
-                        <p:outputLabel value="Authentication Url:" 
-                                       rendered="#{editUserVpn.renderAuthUrl}"
-                                       for="authUrl"/>
+                        <p:outputLabel value="Authentication Url:"
+                                        rendered="#{editUserVpn.renderAuthUrl}"
+                                        for="authUrl"/>
                         <h:panelGroup rendered="#{editUserVpn.renderAuthUrl}">
+                            <p:selectOneMenu value="#{editUserVpn.authWebserverProtocol}">
+                                <f:selectItem itemLabel="http" itemValue="http"/>
+                                <f:selectItem itemLabel="https" itemValue="https"/>
+                                <f:ajax render="@form"/>
+                            </p:selectOneMenu>
+                            <h:outputText value="://"/>
                             <p:inputText size="50" id="authUrl" value="#{editUserVpn.authScriptUrl}"/>
                             <h:outputText value="/AuthOpenVPN.xhtml"/>
                         </h:panelGroup>
+
+                        <p:outputLabel value="Use system CA for web server:"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       for="authCaDefault"/>
+                        <p:inputSwitch onLabel="yes" offLabel="no"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       value="#{userVpn.authCaDefault}"
+                                       id="authCaDefault"
+                                       >
+                            <f:ajax render="@form"/>
+                        </p:inputSwitch>
+
+                        <p:outputLabel value="Web server CA file:"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       for="webServerCaFile"/>
+                        <p:inputText id="webServerCaFile"
+                                     rendered="#{editUserVpn.renderSslSettings}"
+                                     value="#{userVpn.authCaFile}"
+                                     />
+
+                        <p:outputLabel value="Ignore SSL errors"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       for="ignoreSslErrors"/>
+                        <p:inputSwitch value="#{userVpn.ignoreSslErrors}"
+                                       onLabel="yes" offLabel="no"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       id="ignoreSslErrors"/>
                     </h:panelGrid>
                 </p:tab>
             </p:accordionPanel>

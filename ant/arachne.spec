@@ -43,7 +43,7 @@ BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xs
 Summary:	Arachne server
 BuildArch:	noarch
 Requires:	tomcat bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
-Requires:       apache-commons-digester apache-commons-codec databasepropertiesstorage
+Requires:       apache-commons-digester apache-commons-codec databasepropertiesstorage openvpn-arachne-plugin
 Obsoletes:      OpenVPN_Admin-server
 
 %package config-downloader

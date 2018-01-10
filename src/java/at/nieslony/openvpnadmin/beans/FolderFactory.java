@@ -23,9 +23,10 @@ public class FolderFactory implements Serializable {
     private String dynamicDataDir = null;
     private String sqlDir = null;
     private String binDir = null;
+    private String pluginDir = null;
 
     private final String FN_USER_VPN = "arachne-uservpn.conf";
-    
+
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     /**
@@ -59,16 +60,25 @@ public class FolderFactory implements Serializable {
         return sqlDir;
     }
 
+    public String getPluginDir() {
+        if (pluginDir == null) {
+            ExternalContext extCtx = FacesContext.getCurrentInstance().getExternalContext();
+            pluginDir = extCtx.getInitParameter("plugin-dir");
+        }
+
+        return pluginDir;
+    }
+
     public String getServerConfDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/vpnconfig";
     }
 
     public String getConfigDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/appconfig";
     }
 
     public String getPkiDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/vpnconfig";
     }
 
     public String getBinDir() {
@@ -79,7 +89,7 @@ public class FolderFactory implements Serializable {
 
         return binDir;
     }
-    
+
     public String getUserVpnFileName() {
         return String.format("%s/%s", getServerConfDir(), FN_USER_VPN);
     }

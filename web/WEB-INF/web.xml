@@ -17,6 +17,10 @@
         <param-value>@@BIN-DIR@@</param-value>
     </context-param>
     <context-param>
+        <param-name>plugin-dir</param-name>
+        <param-value>@@PLUGIN-DIR@@</param-value>
+    </context-param>
+    <context-param>
         <param-name>
         javax.faces.WEBAPP_RESOURCES_DIRECTORY
         </param-name>
@@ -26,7 +30,7 @@
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
-    </servlet>    
+    </servlet>
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>*.xhtml</url-pattern>
@@ -48,7 +52,7 @@
         <servlet-name>ConfigOvpn</servlet-name>
         <url-pattern>/download/client-config.ovpn</url-pattern>
     </servlet-mapping>
-    
+
     <session-config>
         <session-timeout>
             30
