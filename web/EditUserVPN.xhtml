@@ -143,7 +143,7 @@
                                 <f:ajax render="@form"/>
                             </p:selectOneMenu>
                             <h:outputText value="://"/>
-                            <p:inputText size="50" id="authUrl" value="#{editUserVpn.authScriptUrl}"/>
+                            <p:inputText size="50" id="authUrl" value="#{editUserVpn.authWebserverHostPath}"/>
                             <h:outputText value="/AuthOpenVPN.xhtml"/>
                         </h:panelGroup>
 
@@ -152,24 +152,24 @@
                                        for="authCaDefault"/>
                         <p:inputSwitch onLabel="yes" offLabel="no"
                                        rendered="#{editUserVpn.renderSslSettings}"
-                                       value="#{userVpn.authCaDefault}"
+                                       value="#{editUserVpn.authCaDefault}"
                                        id="authCaDefault"
                                        >
                             <f:ajax render="@form"/>
                         </p:inputSwitch>
 
                         <p:outputLabel value="Web server CA file:"
-                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       rendered="#{editUserVpn.renderWebserverCaFile}"
                                        for="webServerCaFile"/>
                         <p:inputText id="webServerCaFile"
-                                     rendered="#{editUserVpn.renderSslSettings}"
-                                     value="#{userVpn.authCaFile}"
+                                     rendered="#{editUserVpn.renderWebserverCaFile}"
+                                     value="#{editUserVpn.authCaFile}"
                                      />
 
                         <p:outputLabel value="Ignore SSL errors"
                                        rendered="#{editUserVpn.renderSslSettings}"
                                        for="ignoreSslErrors"/>
-                        <p:inputSwitch value="#{userVpn.ignoreSslErrors}"
+                        <p:inputSwitch value="#{editUserVpn.ignoreSslErrors}"
                                        onLabel="yes" offLabel="no"
                                        rendered="#{editUserVpn.renderSslSettings}"
                                        id="ignoreSslErrors"/>

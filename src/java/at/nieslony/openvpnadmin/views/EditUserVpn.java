@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +35,15 @@ public class EditUserVpn
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private final List<String> pushRoutes = new ArrayList<String>();
-    private final List<String> dnsServers = new ArrayList<String>();
+    private final List<String> pushRoutes = new ArrayList<>();
+    private final List<String> dnsServers = new ArrayList<>();
     private String selDnsServer;
     private String editDnsServer;
     private String selPushRoute;
     private String editPushRouteNetwork;
     private String editPushRouteMask;
     private String authWebserverProtocol = "http";
+    private String authWebserverHostPath = "localhost";
 
     public EditUserVpn () {
     }
@@ -64,6 +67,32 @@ public class EditUserVpn
     public void init() {
         setBackend(userVpn);
         load();
+        URL url;
+        try {
+            url = new URL(getAuthScriptUrl());
+        }
+        catch (MalformedURLException ex) {
+            url = null;
+        }
+        if (url == null) {
+            authWebserverProtocol = "http";
+            authWebserverHostPath = "localhost/arachne";
+        }
+        else {
+            authWebserverProtocol = url.getProtocol();
+            StringBuilder sb = new StringBuilder();
+            sb.append(url.getHost());
+            if (
+                    (url.getProtocol().equals("http") && url.getPort() != 80)
+                    |
+                    (url.getProtocol().equals("https") && url.getPort() != 443)
+                    ) {
+                sb.append(":").append(url.getPort());
+            }
+            sb.append(url.getPath());
+            authWebserverHostPath = sb.toString();
+        }
+
         updatePushRoutesList();
         updateDnsServersList();
     }
@@ -74,6 +103,11 @@ public class EditUserVpn
         joinDnsServers();
         joinPushRoutes();
         setIsEnabled(true);
+
+        URL url;
+        StringBuilder sb = new StringBuilder();
+        sb.append(authWebserverProtocol).append("://").append(authWebserverHostPath);
+        setAuthScriptUrl(sb.toString());
         save();
 
         String serverConfigFile = folderFactory.getUserVpnFileName();
@@ -224,6 +258,14 @@ public class EditUserVpn
             return "???";
     }
 
+    public void setAuthWebserverHostPath(String hp) {
+        authWebserverHostPath = hp;
+    }
+
+    public String getAuthWebserverHostPath() {
+        return authWebserverHostPath;
+    }
+
     public void onAddRoute() {
         String routeStr = editPushRouteNetwork + "/" + editPushRouteMask;
         logger.info(String.format("Adding route %s", routeStr));
@@ -288,6 +330,10 @@ public class EditUserVpn
     public Boolean getRenderAuthUrl() {
         return getUserPasswordMode() == UserVpnBase.UserPasswordMode.HTTP &&
                 getAuthType() != UserVpnBase.VpnAuthType.CERTIFICATE;
+    }
+
+    public Boolean getRenderWebserverCaFile() {
+        return getRenderSslSettings() && !getAuthCaDefault();
     }
 
     public Boolean getRenderUserPasswordMode() {
