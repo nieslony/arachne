@@ -90,6 +90,9 @@ install apache/arachne-redhat.conf %{buildroot}/%_defaultdocdir/%{name}/arachne.
 install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 
 mkdir -pv %{buildroot}/var/lib/arachne
+mkdir -pv %{buildroot}/var/lib/arachne/vpnconfig
+mkdir -pv %{buildroot}/var/lib/arachne/appconfig
+ln -s /var/lib/arachne/vpnconfig/arachne-uservpn.conf %{buildroot}/etc/openvpn/server
 
 pushd %{buildroot}/%{webappsdir}/%{name}/
 ln -sv %_defaultdocdir/%{name}-doc doc
@@ -130,6 +133,8 @@ fi
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %webappsdir/%{name}/doc
+/etc/openvpn/server
+
 %files doc
 %_defaultdocdir/%{name}-doc
 
