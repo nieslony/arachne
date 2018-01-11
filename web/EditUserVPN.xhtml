@@ -63,7 +63,7 @@
                     </h:panelGrid>
                 </p:tab>
 
-                <p:tab title="DNS and Routes">
+                <p:tab title="Networking">
                     <h:panelGrid columns="2">
                         <h:panelGroup>
                             <p:outputLabel value="DNS servers:" for="dnsServers"/>
@@ -142,7 +142,9 @@
                                         rendered="#{editUserVpn.renderAuthUrl}"
                                         for="authUrl"/>
                         <h:panelGroup rendered="#{editUserVpn.renderAuthUrl}">
-                            <p:selectOneMenu value="#{editUserVpn.authWebserverProtocol}">
+                            <p:selectOneMenu value="#{editUserVpn.authWebserverProtocol}"
+                                         style="vertical-align: top"
+                                             >
                                 <f:selectItem itemLabel="http" itemValue="http"/>
                                 <f:selectItem itemLabel="https" itemValue="https"/>
                                 <f:ajax render="@form"/>
