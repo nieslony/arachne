@@ -114,7 +114,6 @@ public class ConfigBuilder implements Serializable {
     public void writeUserVpnServerConfig(Writer wr)
             throws CertificateEncodingException, IOException
     {
-        int scriptSecurity = 1;
         String authScript = folderFactory.getBinDir() + "/auth.sh";
 
         Path path = Paths.get(authScript);
@@ -161,13 +160,9 @@ public class ConfigBuilder implements Serializable {
         pr.println("management 127.0.0.1 9544");
         switch (userVpn.getAuthType()) {
             case USERPWD_CERTIFICATE:
-                if (scriptSecurity < 2)
-                    scriptSecurity = 2;
                 pr.println(authPlugin);
                 break;
             case USERPWD:
-                if (scriptSecurity < 2)
-                    scriptSecurity = 2;
                 pr.println(authPlugin);
                 pr.println("client-cert-not-required");
                 pr.println("username-as-common-name");
@@ -190,10 +185,6 @@ public class ConfigBuilder implements Serializable {
                     pr.println("push \"route " + ip + " " + mask + "\"");
                 }
             }
-        }
-
-        if (scriptSecurity != 1) {
-            pr.println("script-security " + String.valueOf(scriptSecurity));
         }
     }
 
