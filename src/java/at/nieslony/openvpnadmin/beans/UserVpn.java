@@ -3,6 +3,7 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
+import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
 import java.net.Inet4Address;
 import java.net.InterfaceAddress;
@@ -101,8 +102,11 @@ public class UserVpn
                 if (!nic.isLoopback()) {
                     for (InterfaceAddress ia : nic.getInterfaceAddresses()) {
                         if (ia.getAddress() instanceof Inet4Address) {
+                            Inet4Address addr = (Inet4Address) ia.getAddress();
+                            addr = NetUtils.maskInet4Address(addr, ia.getNetworkPrefixLength());
+
                             String route = String.format("%s/%s",
-                                    ia.getAddress().toString().substring(1),
+                                    addr.toString().substring(1),
                                     ia.getNetworkPrefixLength());
 
                             routes.add(route);
