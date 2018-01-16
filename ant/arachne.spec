@@ -92,7 +92,8 @@ install COPYING-GPL3        %{buildroot}/%_defaultdocdir/%{name}
 mkdir -pv %{buildroot}/var/lib/arachne
 mkdir -pv %{buildroot}/var/lib/arachne/vpnconfig
 mkdir -pv %{buildroot}/var/lib/arachne/appconfig
-ln -s /var/lib/arachne/vpnconfig/arachne-uservpn.conf %{buildroot}/etc/openvpn/server
+mkdir -pv %{buildroot}/etc/openvpn/server
+ln -s /var/lib/arachne/vpnconfig/arachne_uservpn.conf %{buildroot}/etc/openvpn/server
 
 pushd %{buildroot}/%{webappsdir}/%{name}/
 ln -sv %_defaultdocdir/%{name}-doc doc
@@ -133,7 +134,7 @@ fi
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %webappsdir/%{name}/doc
-/etc/openvpn/server
+/etc/openvpn/server/arachne_uservpn.conf
 
 %files doc
 %_defaultdocdir/%{name}-doc

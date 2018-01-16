@@ -25,7 +25,7 @@ public class FolderFactory implements Serializable {
     private String binDir = null;
     private String pluginDir = null;
 
-    private final String FN_USER_VPN = "arachne-uservpn.conf";
+    private final String FN_USER_VPN = "arachne_uservpn.conf";
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
