@@ -83,9 +83,9 @@ public class EditUserVpn
             StringBuilder sb = new StringBuilder();
             sb.append(url.getHost());
             if (
-                    (url.getProtocol().equals("http") && url.getPort() != 80)
+                    (url.getProtocol().equals("http") && url.getPort() != 80 && url.getPort() != -1)
                     |
-                    (url.getProtocol().equals("https") && url.getPort() != 443)
+                    (url.getProtocol().equals("https") && url.getPort() != 443 && url.getPort() != -1)
                     ) {
                 sb.append(":").append(url.getPort());
             }
@@ -104,7 +104,6 @@ public class EditUserVpn
         joinPushRoutes();
         setIsEnabled(true);
 
-        URL url;
         StringBuilder sb = new StringBuilder();
         sb.append(authWebserverProtocol).append("://").append(authWebserverHostPath);
         setAuthScriptUrl(sb.toString());
