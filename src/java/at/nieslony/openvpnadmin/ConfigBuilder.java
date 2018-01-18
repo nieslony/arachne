@@ -136,6 +136,12 @@ public class ConfigBuilder implements Serializable {
                 .append(folderFactory.getPluginDir())
                 .append("/arachne.so")
                 .append(" url=").append(userVpn.getAuthScriptUrl()).append("/AuthOpenVPN.xhtml");
+        if (userVpn.getIgnoreSslErrors()) {
+            sb.append(" ignoressl=true");
+        }
+        if (!userVpn.getAuthCaDefault()) {
+            sb.append(" cafile=").append(userVpn.getAuthCaFile());
+        }
         String authPlugin = sb.toString();
         PrintWriter pr = new PrintWriter(wr);
 
