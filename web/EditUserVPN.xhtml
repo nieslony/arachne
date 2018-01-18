@@ -157,7 +157,7 @@
                             </p:selectOneMenu>
                             <h:outputText value="://"/>
                             <p:inputText size="50" id="authUrl" value="#{editUserVpn.authWebserverHostPath}">
-                                <f:validateRegex pattern="^[a-z0-9\-]+(:[1-9][0-9]{0,4})?/[a-zA-Z0-9_/%\-]+$"/>
+                                <f:validateRegex pattern="^[a-z0-9\-]+(\.[a-z0-9\-]+)*(:[1-9][0-9]{0,4})?/[a-zA-Z0-9_/%\-]+$"/>
                             </p:inputText>
                             <h:outputText value="/AuthOpenVPN.xhtml"/>
                         </h:panelGroup>
