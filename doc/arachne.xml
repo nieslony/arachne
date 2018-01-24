@@ -6,10 +6,10 @@
 <title>Arachne @@VERSION@@ - Administrator's Guide</title>
 <titleabbrev>Arachne</titleabbrev>
 <info>
-  <legalnotice><para>No notice is required.</para></legalnotice>
-  <author><personname>
-    <firstname>Claas</firstname><surname>Nieslony</surname>
-  </personname></author>
+    <copyright>
+        <year>2018</year>
+        <holder>Claas Nieslony</holder>
+    </copyright>
 </info>
 
 <chapter>
@@ -32,7 +32,7 @@
             <listitem>
                 <para>Install packages</para>
                 <programlisting>
-                    yum install arachne-server arachne postgres-server
+                    yum install arachne-server postgres-server
                 </programlisting>
             </listitem>
         </orderedlist>
@@ -153,6 +153,13 @@
                   host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
             </programlisting>
             <para>
+                To appay changes in /var/lib/pgsql/data/pg_hba.conf restart
+                postgres server
+            </para>
+            <programlisting>
+                systemctl restart postgresql
+            </programlisting>
+            <para>
                 You can test the database connectivity by clicking
                 <guibutton>Test connection</guibutton>.
             </para>
@@ -164,7 +171,7 @@
                 DH paramers and all neccasary database tables and initial values.
             </para>
             <para>
-                This step takes a coupleof minutes.
+                This step takes a couple of minutes.
             </para>
         </listitem>
         <listitem>
@@ -231,7 +238,7 @@
         </para>
     </section>
 
-    <sectiopn>
+    <section>
         <title>Authentication by remote user</title>
         <para>
             A tomcat server can be run behind an Apache HTTP server. The Apache
@@ -251,23 +258,26 @@
                 tomcatAuthentication="false" . To make the change active restart Tomcat.
             </listitem>
         </orderedlist>
-    </sectiopn>
+    </section>
 </chapter>
 
 <chapter>
     <title>VPN settings</title>
     <section>
+        <title>Setup user VPN</title>
+            <screenshot>
+                <screeninfo>Setup wizard - create admin user</screeninfo>
+                <mediaobject>
+                    <imageobject>
+                    <imagedata fileref="pics/Setup_UserVPN.png" format="PNG"/>
+                    </imageobject>
+                </mediaobject>
+            </screenshot>
+    </section>
+    <section>
         <title>Starting openVPN for the first time</title>
         <para>
             <orderedlist>
-                <listitem>
-                    <para>
-                        Create symbolik ink to archne server configuration
-                    </para>
-                    <programlisting>
-                        sudo ln -s
-                    </programlisting>
-                </listitem>
                 <listitem>
                     <para>
                         disable selinux
@@ -275,13 +285,13 @@
                 </listitem>
                 <listitem>
                     <para>
-                        enable openvpn with arachne configuration
+                        start openvpn with arachne configuration and enable
+                        start on system boot
                     </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        start opevpn with arachne configuration
-                    </para>
+                    <programlisting>
+                        systemctl start openvpn-server@arachne_uservpn
+                        systemctl enable openvpn-server@arachne_uservpn
+                    </programlisting>
                 </listitem>
             </orderedlist>
         </para>
@@ -395,11 +405,6 @@
         </para>
     </section>
 </chapter>
-
-<appendix><title>Optional Appendix</title>
-<para>Appendixes are optional.
-</para>
-</appendix>
 </book>
 
 
