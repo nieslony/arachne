@@ -93,7 +93,11 @@ mkdir -pv %{buildroot}/var/lib/arachne
 mkdir -pv %{buildroot}/var/lib/arachne/vpnconfig
 mkdir -pv %{buildroot}/var/lib/arachne/appconfig
 mkdir -pv %{buildroot}/etc/openvpn/server
-ln -s /var/lib/arachne/vpnconfig/arachne_uservpn.conf %{buildroot}/etc/openvpn/server
+
+%if ! 0%{?suse_version}
+ln -vs /var/lib/arachne/vpnconfig/arachne_uservpn.conf %{buildroot}/etc/openvpn/server
+%endif
+
 
 pushd %{buildroot}/%{webappsdir}/%{name}/
 ln -sv %_defaultdocdir/%{name}-doc doc
@@ -134,7 +138,10 @@ fi
 %attr(770, %{webappuser}, %{webappgroup}) /var/lib/arachne
 
 %webappsdir/%{name}/doc
+
+%if ! 0%{?suse_version}
 /etc/openvpn/server/arachne_uservpn.conf
+%endif
 
 %files doc
 %_defaultdocdir/%{name}-doc
