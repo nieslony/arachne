@@ -20,20 +20,17 @@
             <listitem>
                 <para>Add arache repository</para>
                 <programlisting>
-                    wget http://download.opensuse.org/repositories/home:/nieslony/CentOS_7/home:nieslony.repo -C /etc/yum.repos.d
-                </programlisting>
+wget http://download.opensuse.org/repositories/home:/nieslony/CentOS_7/home:nieslony.repo -C /etc/yum.repos.d</programlisting>
             </listitem>
             <listitem>
                 <para>Add EPEL repository</para>
                 <programlisting>
-                    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-                </programlisting>
+yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm</programlisting>
             </listitem>
             <listitem>
                 <para>Install packages</para>
                 <programlisting>
-                    yum install arachne-server postgres-server
-                </programlisting>
+yum install arachne-server postgres-server</programlisting>
             </listitem>
         </orderedlist>
     </section>
@@ -43,14 +40,12 @@
             <listitem>
                 <para>Add arachne repository</para>
                 <programlisting>
-                    zypper ar http://download.opensuse.org/repositories/home:/nieslony/openSUSE_Leap_42.2/
-                </programlisting>
+zypper ar http://download.opensuse.org/repositories/home:/nieslony/openSUSE_Leap_42.2/</programlisting>
             </listitem>
             <listitem>
                 <para>Install packages</para>
                 <programlisting>
-                    zypper install arachne-server postgresql-server
-                </programlisting>
+zypper install arachne-server postgresql-server</programlisting>
             </listitem>
         </orderedlist>
     </section>
@@ -66,14 +61,12 @@
         <listitem>
             <para>Start Tomcat server</para>
             <programlisting>
-                systemctl start tomcat
-            </programlisting>
+systemctl start tomcat            </programlisting>
         </listitem>
         <listitem>
             <para>Open arachne in Mozilla Firefox or in your favorite web browser.</para>
             <programlisting>
-                firefox http://arachne.example.com:8080/arachne
-            </programlisting>
+firefox http://arachne.example.com:8080/arachne</programlisting>
             <para>You will see arachne's setup wizard</para>
         </listitem>
         <listitem>
@@ -150,15 +143,13 @@
                 following line to /var/lib/pgsql/data/pg_hba.conf:
             </para>
             <programlisting>
-                  host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5
-            </programlisting>
+host    openvpnadmin     openvpnadmin     127.0.0.1/32    md5</programlisting>
             <para>
                 To appay changes in /var/lib/pgsql/data/pg_hba.conf restart
                 postgres server
             </para>
             <programlisting>
-                systemctl restart postgresql
-            </programlisting>
+systemctl restart postgresql</programlisting>
             <para>
                 You can test the database connectivity by clicking
                 <guibutton>Test connection</guibutton>.
@@ -239,23 +230,100 @@
     </section>
 
     <section>
-        <title>Authentication by remote user</title>
+        <title>Authentication by remote user with Kerberos</title>
         <para>
-            A tomcat server can be run behind an Apache HTTP server. The Apache
-            server is responsible for SSL and authentication e.g. LDAP, Kerberos,
-            … . This is an security advantage because Apache HTTP server is more
-            frequently patches than Tomcat.
+            The following examplme describes how to setup Apache HTTP server
+            on CentOS assuming the host is member of a
+            <ulink url="https://www.freeipa.org/page/Main_Page">
+                        <citetitle>FreeIPA</citetitle>
+            </ulink> domain. Microsoft ActiveDirectory may also work, the way
+            howto get the keytab and SSL certificate is different. Other
+            authentication mechanisms like SAML may also work.
+        </para>
+        <para>
+            Apache HTTP server and Tomcat are connected with AJP. AJP
+            is a binary protocol that can proxy inbound requests from a web
+            server through to an application server that sits behind the web
+            server.
+        </para>
+        <para>
+            We assume, that server's FQDN is openvpn.example.com.
         </para>
         <orderedlist>
             <listitem>
-                Configure Apache
+                <para>
+                    Configure Apache
+                </para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install packages</para>
+                        <programlisting>
+sudo yum install httpd mod_nss mod_auth_kerb</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Copy sample configuration to HTTP configuration folder</para>
+                        <programlisting>
+sudo cp /usr/share/doc/arachne/arachne.conf /etc/httpd/conf.d</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Create service on FreeIPA server and install keytab
+                        </para>
+                        <programlisting>
+ipa service-add HTTP/$HOSTNAME
+ipa-getkeytab -k /tmp/httpd.keytab -p HTTP/$HOSTNAME
+sudo mv -v /tmp/httpd.keytab /etc/httpd/krb5.keytab
+sudo chown -v apache /etc/httpd/krb5.keytab</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Create and install SSL certificate</para>
+                        <programlisting>
+sudo certutil -d /etc/httpd/alias/ -D -n Server-Cert
+sudo ipa-getcert request -d /etc/httpd/alias/ -n Server-Cert -K HTTP/$HOSTNAME -N "CN=$HOSTNAME"
+sudo getcert resubmit -n Server-Cert  -d /etc/httpd/alias/</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Make HTTPD server listen on port 443 enstead of 8443.
+                        </para>
+                        <programlisting>sudo sed -i 's/8443/443/' /etc/httpd/conf.d/nss.conf</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Restore selinux context
+                        </para>
+                        <programlisting>sudo restorecon -Rv /etc/httpd</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Restart and enable HTTP server</para>
+                        <programlisting>
+sudo systemctl start httpd
+sudo systemctl enable httpd</programlisting>
+                    </listitem>
+                </orderedlist>
             </listitem>
             <listitem>
-                Disable authentication in Tomcat. If you don't do this, Tomcat
-                will ignore the remote user supplied by Apache. Edit server.xml
-                in Tomcat's conf folder. Find the tag "Connector" with attribute
-                protocol="AJP/1.3" and add attribute
-                tomcatAuthentication="false" . To make the change active restart Tomcat.
+                <para>
+                    Configure Tomcat
+                </para>
+                <orderedlist>
+                    <listitem>
+                        <para>
+                            Disable authentication in Tomcat. If authenticatian
+                            is enabled - which is the default -, Tomcat will
+                            ignore the remote user supplied by Apache.
+                        </para>
+                        <programlisting>
+sudo sed -i \
+    's/Connector port="8009" protocol="AJP\\/1.3"/\Connector port="8009" protocol="AJP\\/1.3" tomcatAuthentication="false"/' \
+    /etc/tomcat/server.xml</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Restart Tomcat</para>
+                        <programlisting>
+sudo systemctl start tomcat</programlisting>
+                    </listitem>
+                </orderedlist>
             </listitem>
         </orderedlist>
     </section>
@@ -405,6 +473,50 @@
         </para>
     </section>
 </chapter>
+
+<appendix>
+    <title>Links</title>
+    <itemizedlist>
+        <listitem>
+            <ulink url="http://download.opensuse.org/repositories/home:/nieslony/">
+                <citetitle>Precompiled packages</citetitle>
+            </ulink>
+        </listitem>
+        <listitem>
+            <para>Arachne's sources and dependencies</para>
+            <para>
+            <itemizedlist>
+                <listitem>
+                    <ulink url="https://github.com/nieslony/arachne">
+                        <citetitle>Arachne</citetitle>
+                    </ulink>
+                </listitem>
+                <listitem>
+                    <ulink url="https://github.com/nieslony/openvpn-arachne-plugin">
+                        <citetitle>Arachne plugin for openVPN</citetitle>
+                    </ulink>
+                </listitem>
+                <listitem>
+                    <ulink url="https://github.com/nieslony/databasepropertiesstorage">
+                        <citetitle>Databaseproperties</citetitle>
+                    </ulink>
+                        Java library to store
+                        grouped key/value pairs in a postgresql database
+                </listitem>
+
+                https://www.nieslony.at/arachne-doc/
+            </itemizedlist>
+            </para>
+        </listitem>
+        <listitem>
+            <ulink url="http://download.opensuse.org/repositories/home:/nieslony/">
+                <citetitle>Administrator's guide</citetitle>
+            </ulink>
+            The documentation you are currently reading
+        </listitem>
+    </itemizedlist>
+</appendix>
+
 </book>
 
 
