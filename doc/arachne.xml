@@ -357,9 +357,8 @@ sudo systemctl start tomcat</programlisting>
                         start on system boot
                     </para>
                     <programlisting>
-                        systemctl start openvpn-server@arachne_uservpn
-                        systemctl enable openvpn-server@arachne_uservpn
-                    </programlisting>
+systemctl start openvpn-server@arachne_uservpn
+systemctl enable openvpn-server@arachne_uservpn</programlisting>
                 </listitem>
             </orderedlist>
         </para>
