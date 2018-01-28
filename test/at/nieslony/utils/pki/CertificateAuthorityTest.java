@@ -12,7 +12,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import javax.security.auth.x500.X500Principal;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Time;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -89,10 +91,10 @@ public class CertificateAuthorityTest {
         };
 
         System.out.println("createSelfSignedCa");
-        Date startDate = new Date();
-        Date endDate = new Date(startDate.getTime() + 1000L * 60L * 60L * 24L * 3650L);
-        X500Principal issuerDN = new X500Principal("cn=Test Issuer");
-        X500Principal subjectDN = new X500Principal("cn=Test CA");
+        Time startDate = new Time(new Date());
+        Time endDate = new Time(new Date(startDate.getTime() + 1000L * 60L * 60L * 24L * 3650L));
+        X500Name issuerDN = new X500Name("cn=Test Issuer");
+        X500Name subjectDN = new X500Name("cn=Test CA");
         for (CertificateAuthority.KeySignAlgo ksa : CertificateAuthority.getKeySignAlgos()) {
             CertificateAuthority instance = new CertificateAuthority();
             for (String sa : ksa.signatureAlgos) {
@@ -127,12 +129,13 @@ public class CertificateAuthorityTest {
     public void testCreateCertificate() throws Exception {
         System.out.println("createCertificate");
         PublicKey publicKey = null;
-        Date startDate = null;
-        Date endData = null;
-        X500Principal subjectDN = null;
+        Time startDate = null;
+        Time endData = null;
+        X500Name subjectDN = null;
         CertificateAuthority instance = new CertificateAuthority();
-        X509Certificate expResult = null;
-        X509Certificate result = instance.createCertificate(publicKey, startDate, endData, subjectDN);
+        X509CertificateHolder expResult = null;
+        X509CertificateHolder result = instance.createCertificate(publicKey, startDate, endData, subjectDN,
+                "SHA256withRSA");
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
@@ -145,7 +148,7 @@ public class CertificateAuthorityTest {
     @Test
     public void testWriteCertificate() throws Exception {
         System.out.println("writeCertificate");
-        X509Certificate cert = null;
+        X509CertificateHolder cert = null;
         PrintWriter out = null;
         CertificateAuthority instance = new CertificateAuthority();
         instance.writeCertificate(cert, out);
@@ -249,7 +252,7 @@ public class CertificateAuthorityTest {
     @Test
     public void testSetCaCert() {
         System.out.println("setCaCert");
-        X509Certificate cert = null;
+        X509CertificateHolder cert = null;
         CertificateAuthority instance = new CertificateAuthority();
         instance.setCaCert(cert);
         // TODO review the generated test code and remove the default call to fail.
@@ -264,8 +267,8 @@ public class CertificateAuthorityTest {
     public void testGetCaCert() {
         System.out.println("getCaCert");
         CertificateAuthority instance = new CertificateAuthority();
-        X509Certificate expResult = null;
-        X509Certificate result = instance.getCaCert();
+        X509CertificateHolder expResult = null;
+        X509CertificateHolder result = instance.getCaCert();
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");

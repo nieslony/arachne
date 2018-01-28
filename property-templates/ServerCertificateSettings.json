@@ -1,0 +1,25 @@
+{
+    "backend_package":  "at.nieslony.openvpnadmin.beans",
+    "edit_package":     "at.nieslony.openvpnadmin.views",
+    "className": "ServerCertificateSettings",
+    "propertyGroup": "server-certificate-settings",
+    "imports" : [
+        "at.nieslony.openvpnadmin.TimeUnit"
+    ],
+    "properties": 
+    [
+        { "type": "String", "name": "title",  "default": "" },
+        { "type": "String", "name": "commonName", "default": "" },
+        { "type": "String", "name": "organization", "default": "" },
+        { "type": "String", "name": "organizationalUnit", "default": "" },
+        { "type": "String", "name": "city", "default": "" },
+        { "type": "String", "name": "state", "default": "" },
+        { "type": "String", "name": "country", "default": "" },
+        { "type": "Integer","name": "validTime", "default": "365" },
+        { "type": "TimeUnit", "name": "validTimeUnit", "default": "DAY" },
+        { "type": "String", "name": "signatureAlgorithm", "default": "SHA512withRSA" },
+        { "type": "Integer","name": "keySize", "default": "2048" },
+        { "type": "Integer","name": "autoUpdateLifetime", "default": "90" },
+        { "type": "Boolean","name": "valuesAlreadySet", "default": "false" }
+    ]
+}

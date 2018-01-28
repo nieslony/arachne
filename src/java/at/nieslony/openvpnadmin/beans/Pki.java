@@ -8,7 +8,6 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.pki.CertificateAuthority;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -28,11 +27,8 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,12 +41,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.security.auth.x500.X500Principal;
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.PrincipalUtil;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Time;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.bc.BcX509ExtensionUtils;
+import org.bouncycastle.operator.AlgorithmNameFinder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.postgresql.util.PSQLException;
 
 /**
  *
@@ -58,9 +66,12 @@ import org.bouncycastle.jce.PrincipalUtil;
  */
 @ManagedBean(name = "pki")
 @ApplicationScoped
-public class Pki extends CertificateAuthority implements Serializable {
-    private X509Certificate serverCert;
-    private PrivateKey serverKey;
+public class Pki
+        extends CertificateAuthority
+        implements Serializable
+{
+    transient private X509CertificateHolder serverCert;
+    transient private PrivateKey serverKey;
 
     private static final String FN_DH = "/dh.pem";
     private static final String FN_CRL = "/ca.crl";
@@ -73,14 +84,14 @@ public class Pki extends CertificateAuthority implements Serializable {
 
     public class KeyAndCert {
         private PrivateKey key;
-        private X509Certificate cert;
+        private X509CertificateHolder cert;
 
-        public KeyAndCert(PrivateKey key, X509Certificate cert) {
+        public KeyAndCert(PrivateKey key, X509CertificateHolder cert) {
             this.key = key;
             this.cert = cert;
         }
 
-        public X509Certificate getCert() {
+        public X509CertificateHolder getCert() {
             return cert;
         }
 
@@ -111,18 +122,25 @@ public class Pki extends CertificateAuthority implements Serializable {
 
 
     @PostConstruct
+    @Override
     public void init() {
         logger.info("Initializing PKI");
+
+        super.init();
 
         setCaDir(folderFactory.getPkiDir());
 
         try {
             logger.info("Loading CA key and certificate");
             loadCaKeyAndCert();
+            logger.info(String.format("Found CA cert %s", getCaCert().getSubject().toString()));
+
             logger.info("Loading server key and certificate");
             loadServerKeyAndCert();
+            logger.info(String.format("Found server cert %s", getServerCert().getSubject().toString()));
+
             logger.info("Loading CRL");
-            loadCrl();
+            updateCrlFromDb();
         }
         catch (Exception ex) {
             logger.severe(String.format("Cannot init Pki: %s", ex.toString()));
@@ -131,6 +149,12 @@ public class Pki extends CertificateAuthority implements Serializable {
             ex.printStackTrace(pw);
             logger.severe(sw.toString());
         }
+    }
+
+    @Override
+    @PreDestroy
+    public void destroy() {
+        super.destroy();
     }
 
     public String getDhFilename() {
@@ -153,7 +177,7 @@ public class Pki extends CertificateAuthority implements Serializable {
             if (r == null) {
                 logger.severe(String.format("Cannot open %s as resource", resourceName));
             }
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             if (con == null) {
                 logger.severe("Cannot get database connection");
             }
@@ -171,7 +195,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
     }
 
-    public void removeKeyAndCert(X509Certificate cert)
+    public void removeKeyAndCert(X509CertificateHolder cert)
             throws ClassNotFoundException, SQLException
     {
         if (cert == null) {
@@ -179,7 +203,7 @@ public class Pki extends CertificateAuthority implements Serializable {
             return;
         }
 
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = String.format(
                 "DELETE FROM certificates WHERE serial ='%s';",
@@ -187,18 +211,19 @@ public class Pki extends CertificateAuthority implements Serializable {
         stm.executeUpdate(sql);
     }
 
-    public void revoveCert(X509Certificate cert)
-            throws ClassNotFoundException, SQLException,
-            CRLException, CertificateParsingException, IOException, InvalidKeyException,
-            NoSuchAlgorithmException, NoSuchProviderException, SignatureException
+    public void revoveCert(X509CertificateHolder cert)
+        throws CRLException, ClassNotFoundException, IOException,
+            OperatorCreationException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = String.format(
                 "UPDATE certificates SET isRevoked = true WHERE serial = '%s';",
                 cert.getSerialNumber().toString()
         );
-        stm.executeUpdate(sql);
+        logger.info(String.format("Executing %s", sql));
+        int noRecords = stm.executeUpdate(sql);
+        logger.info(String.format("%d records updated", noRecords));
 
         addCertificateToCrl(cert);
         writeCrl();
@@ -212,34 +237,42 @@ public class Pki extends CertificateAuthority implements Serializable {
         pr.close();
     }
 
-    private void addKeyAndCert(CertType type, PrivateKey key, X509Certificate cert)
-            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    private void addKeyAndCert(CertType type, PrivateKey key, X509CertificateHolder cert)
+            throws ClassNotFoundException, IOException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        if (cert == null || key == null) {
+            logger.severe("Certificate and key must not be null");
+            return;
+        }
+
+        Connection con = databaseSettings.getDatabaseConnection();
         String sql = "INSERT INTO certificates " +
                 "(serial, commonName, validFrom, validTo, certificate, privateKey, certtype)" +
                 "VALUES (?, ?, ?, ?, ?, ?, ?::certtype);";
         PreparedStatement stm = con.prepareStatement(sql);
         int pos = 1;
         stm.setString(pos++, cert.getSerialNumber().toString(10));
-        stm.setString(pos++, (String) PrincipalUtil.getSubjectX509Principal(cert).getValues(X509Name.CN).get(0));
+
+        String cnStr = getCertCn(cert);
+
+        stm.setString(pos++, cnStr);
         stm.setDate(pos++, new java.sql.Date(cert.getNotBefore().getTime()));
         stm.setDate(pos++, new java.sql.Date(cert.getNotAfter().getTime()));
         stm.setBytes(pos++, cert.getEncoded());
         stm.setBytes(pos++, key.getEncoded());
         stm.setString(pos++, type.toString());
         if (stm.executeUpdate() != 1) {
-            logger.warning(String.format("Cannot add certificate %s", cert.getSubjectDN().getName()));
+            logger.warning(String.format("Cannot add certificate %s", cert.getSubject().toString()));
         }
         else {
-            logger.info(String.format("Successfully added certificate %s", cert.getSubjectDN().getName()));
+            logger.info(String.format("Successfully added certificate %s", cert.getSubject().toString()));
         }
     }
 
     private KeyAndCert createUserKeyAndCert(String username)
-            throws GeneralSecurityException, IOException
+            throws NoSuchAlgorithmException, OperatorCreationException
     {
-        X509Certificate cert;
+        X509CertificateHolder cert;
 
         if (clientCertificateSettings == null) {
             logger.severe("clientCertificateSettings must not be null");
@@ -273,7 +306,7 @@ public class Pki extends CertificateAuthority implements Serializable {
         if (!clientCertificateSettings.getCountry().isEmpty())
             sw.append(", C=" + clientCertificateSettings.getCountry());
 
-        X500Principal subject = new X500Principal(sw.toString());
+        X500Name subject = new X500Name(sw.toString());
         Date fromDate = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(fromDate);
@@ -296,7 +329,9 @@ public class Pki extends CertificateAuthority implements Serializable {
                 "  signature algorothm: %s",
                 subject, fromDate.toString(), toDate.toString(),
                 clientCertificateSettings.getSignatureAlgorithm()));
-        cert = createCertificate(certKey.getPublic(), fromDate, toDate, subject,
+        cert = createCertificate(certKey.getPublic(),
+                new Time(fromDate), new Time(toDate),
+                subject,
                 clientCertificateSettings.getSignatureAlgorithm());
 
         if (cert == null) {
@@ -307,7 +342,8 @@ public class Pki extends CertificateAuthority implements Serializable {
     }
 
     public KeyAndCert getUserKeyAndCert(String username)
-        throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
+        throws ClassNotFoundException, GeneralSecurityException,
+            IOException, SQLException, OperatorCreationException
     {
         KeyAndCert kac = getKeyAndCert(CertType.CLIENT, username);
 
@@ -320,13 +356,13 @@ public class Pki extends CertificateAuthority implements Serializable {
     }
 
     private KeyAndCert getKeyAndCert(CertType type, String cn)
-            throws ClassNotFoundException, SQLException, GeneralSecurityException, IOException
+            throws ClassNotFoundException, PSQLException, SQLException, GeneralSecurityException, IOException
     {
         KeyAndCert ret = null;
-        X509Certificate cert = null;
+        X509CertificateHolder cert = null;
         PrivateKey key = null;
 
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql;
         if (cn == null)
@@ -345,7 +381,7 @@ public class Pki extends CertificateAuthority implements Serializable {
 
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             bytes = result.getBytes("certificate");
-            cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+            cert = new X509CertificateHolder(bytes);
 
             KeyFactory kf = KeyFactory.getInstance("RSA");
             bytes = result.getBytes("privateKey");
@@ -368,7 +404,7 @@ public class Pki extends CertificateAuthority implements Serializable {
     }
 
     private void loadCaKeyAndCert()
-            throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
+            throws ClassNotFoundException, PSQLException, SQLException, CertificateException, IOException, GeneralSecurityException
     {
         KeyAndCert kac = getKeyAndCert(Pki.CertType.CA, null);
         if (kac != null) {
@@ -380,44 +416,82 @@ public class Pki extends CertificateAuthority implements Serializable {
     private void loadServerKeyAndCert()
             throws ClassNotFoundException, SQLException, CertificateException, IOException, GeneralSecurityException
     {
-        KeyAndCert kac = getKeyAndCert(Pki.CertType.CA, null);
+        KeyAndCert kac = getKeyAndCert(Pki.CertType.SERVER, null);
         if (kac != null) {
             serverCert = kac.getCert();
             serverKey = kac.getKey();
         }
     }
 
-    public X509Certificate getServerCert() {
+    public X509CertificateHolder getServerCert() {
+        try {
+            if (serverCert == null)
+                loadCaKeyAndCert();
+        }
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+            logger.severe(String.format("Cannot load server certificate and key:",
+                    ex.getMessage()));
+        }
+
         return serverCert;
     }
 
     public PrivateKey getServerKey() {
+        try {
+            if (serverKey == null)
+                loadCaKeyAndCert();
+        }
+        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
+            logger.severe(String.format("Cannot load server certificate and key:",
+                    ex.getMessage()));
+        }
+
         return serverKey;
     }
 
     public void updateCrlFromDb()
-            throws ClassNotFoundException, SQLException, CertificateException,
-            CRLException, InvalidKeyException, NoSuchAlgorithmException,
-            NoSuchProviderException, SignatureException
+        throws CertificateException, ClassNotFoundException, IOException,
+            OperatorCreationException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        logger.info("Loading CRL from database");
+        Date now = new Date();
+        Date nextUpdate = new Date(now.getTime() + (long) 1000 * 60 * 60 * 24 * 31);
+        BcX509ExtensionUtils extUtils = new BcX509ExtensionUtils();
+        X500Name crlName = new X500Name("cn=CRL");
+
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(crlName, now);
+        crlBuilder.setNextUpdate(nextUpdate);
+
+        AuthorityKeyIdentifier aki = extUtils.createAuthorityKeyIdentifier(getCaCert());
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, aki);
+
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = "SELECT certificate FROM certificates WHERE isRevoked = true;";
         ResultSet result = stm.executeQuery(sql);
         while (result.next()) {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             byte[] bytes = result.getBytes("certificate");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
-            if (!isCertificateRevoked(cert))
-                addCertificateToCrl(cert);
+            X509CertificateHolder cert = new X509CertificateHolder(bytes);
+
+            logger.info(String.format("Adding certificate with serial %s...", cert.getSerialNumber().toString()));
+            crlBuilder.addCRLEntry(cert.getSerialNumber(), now, CRLReason.superseded);
         }
+
+        AlgorithmNameFinder algoFinder = new DefaultAlgorithmNameFinder();
+        String signAlgoName = algoFinder.getAlgorithmName(getCaCert().getSignatureAlgorithm());
+
+        ContentSigner sigGen = new JcaContentSignerBuilder(signAlgoName)
+                    .setProvider("BC")
+                    .build(getCaKey());
+        setCrl(crlBuilder.build(sigGen));
     }
 
     public void loadCrl()
             throws CRLException, IOException, CertificateException,
             NoSuchAlgorithmException, InvalidKeyException,
             NoSuchProviderException, SignatureException,
-            ClassNotFoundException, SQLException
+            ClassNotFoundException, SQLException, OperatorCreationException
     {
         FileInputStream fis;
         String fn = folderFactory.getPkiDir() + FN_CRL;
@@ -425,11 +499,11 @@ public class Pki extends CertificateAuthority implements Serializable {
 
         try {
             fis = new FileInputStream(fn);
-            setCrl(readCrl(fis));
+            // setCrl(readCrl(fis));
             updateCrlFromDb();
         }
         catch (FileNotFoundException ex) {
-            logger.info("CRL not found, creating new one");
+            logger.info(String.format("CRL %s does not exist. Creating new file", fn));
             createCrl();
             updateCrlFromDb();
             logger.info("Writing CRL");
@@ -439,9 +513,12 @@ public class Pki extends CertificateAuthority implements Serializable {
         }
     }
 
-    public void setServerKeyAndCert(PrivateKey key, X509Certificate cert)
-            throws ClassNotFoundException, SQLException, CertificateEncodingException
+    public void setServerKeyAndCert(PrivateKey key, X509CertificateHolder cert)
+            throws ClassNotFoundException, IOException, SQLException
     {
+        logger.info(String.format("Set server certificate: %s",
+                cert.getSubject().toString()));
+
         this.serverKey = key;
         this.serverCert = cert;
 
@@ -449,25 +526,27 @@ public class Pki extends CertificateAuthority implements Serializable {
     }
 
     public void saveCaKeyAndCert()
-            throws CertificateEncodingException, ClassNotFoundException, SQLException
+            throws ClassNotFoundException, IOException, SQLException
     {
+        logger.info(String.format("Saving CA cert: %s", getCaCert().getSubject().toString()));
+
         addKeyAndCert(CertType.CA, getCaKey(), getCaCert());
     }
 
-    public List<X509Certificate> getAllUserCerts()
-            throws CertificateException, ClassNotFoundException, SQLException
+    public List<X509CertificateHolder> getAllUserCerts()
+            throws CertificateException, ClassNotFoundException,
+            IOException, SQLException
     {
-        List<X509Certificate> certs = new LinkedList<>();
+        List<X509CertificateHolder> certs = new LinkedList<>();
 
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = "SELECT certificate FROM certificates WHERE certtype = 'CLIENT';";
         ResultSet result = stm.executeQuery(sql);
 
         while (result.next()) {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
             byte[] bytes = result.getBytes("certificate");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(bytes));
+            X509CertificateHolder cert = new X509CertificateHolder(bytes);
             if (cert == null) {
                 logger.warning("Cannot load certificate");
             }

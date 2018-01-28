@@ -95,8 +95,16 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem editClientCertSettings = new DefaultMenuItem("Edit client cert defaults");
             editClientCertSettings.setHref("EditClientCertificateSettings.xhtml");
 
+            DefaultMenuItem editServerCertSettings = new DefaultMenuItem("Edit server cert defaults");
+            editServerCertSettings.setHref("EditServerCertificateSettings.xhtml");
+
+            DefaultMenuItem renewServerCertificate = new DefaultMenuItem("Renew server certificate");
+            renewServerCertificate.setHref("RenewServerCertificate.xhtml");
+
             certsMenu.addElement(userCerts);
             certsMenu.addElement(editClientCertSettings);
+            certsMenu.addElement(editServerCertSettings);
+            certsMenu.addElement(renewServerCertificate);
         menuModel.addElement(certsMenu);
 
         userVpnsMenu = new DefaultSubMenu("User VPNs");
@@ -167,5 +175,9 @@ public class AdminWelcome implements Serializable {
 
         logger.info("Navigating to Login");
         nav.performNavigation("Login");
+    }
+    
+    public void onAbout() {
+        
     }
 }

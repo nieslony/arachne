@@ -87,15 +87,21 @@ public class RoleRuleIsLdapUserFactory
             SearchControls sc = new SearchControls();
             sc.setCountLimit(10);
             sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            results = ctx.search(getLdapSettings().getOuUsers(), pattern.toString(), sc);
+            results = ctx.search(getLdapSettings().getOuGroups(), pattern.toString(), sc);
+            if (!results.hasMore())
+                logger.info("Nothing found");
             while (results.hasMore()) {
                 SearchResult result = (SearchResult) results.next();
                 Attributes attrs = result.getAttributes();
-                if (attrs == null)
+                if (attrs == null) {
+                    logger.info(String.format("Group %s has no attributes", result.getNameInNamespace()));
                     continue;
+                }
                 Attribute attr = attrs.get(getLdapSettings().getAttrGroupName());
-                if (attr == null)
+                if (attr == null) {
+                    logger.info(String.format("Group %s has no name", result.getNameInNamespace()));
                     continue;
+                }
                 String gid = (String) attr.get();
                 String description = (String) attr.get();
                 StringBuilder group = new StringBuilder();
@@ -103,6 +109,7 @@ public class RoleRuleIsLdapUserFactory
                 if (description != null && !description.isEmpty()) {
                     group.append(" (").append(description).append(")");
                 }
+                logger.info(String.format("Found group %s", group.toString()));
                 groups.add(group.toString());
             }
         }

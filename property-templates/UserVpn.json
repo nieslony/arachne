@@ -8,15 +8,15 @@
         { "type": "Interface",   "values": [ "TUN", "TAP" ] }
     ],
     "ext_enums": [
-        { "type": "VpnAuthType", 
-          "values": [ 
+        { "type": "VpnAuthType",
+          "values": [
               { "const": "USERPWD",             "description": "Username / password" },
               { "const": "CERTIFICATE",         "description": "Client certificate" },
               { "const": "USERPWD_CERTIFICATE", "description": "Username / pwd. + client cert." }
-            ] 
+            ]
         },
-        { "type": "UserPasswordMode", 
-          "values": [ 
+        { "type": "UserPasswordMode",
+          "values": [
             { "const": "PAM",  "description": "PAM" },
             { "const": "HTTP", "description": "HTTP url" }
         ]
@@ -28,7 +28,7 @@
         { "type": "String",      "name": "nmConnectionTemplate", "default": "%n - %u@%h" },
         { "type": "String",      "name": "host" ,                "default": "getDefaultHost()"},
         { "type": "Protocol",    "name": "protocol",             "default": "TCP" },
-        { "type": "String",      "name": "clientNetwork",        "default": "192.168.1.0" }, 
+        { "type": "String",      "name": "clientNetwork",        "default": "192.168.1.0" },
         { "type": "Integer",     "name": "clientNetmask",        "default": "24" },
         { "type": "VpnAuthType", "name": "authType",             "default": "USERPWD_CERTIFICATE" } ,
         { "type": "Interface",   "name": "deviceType",           "default": "TUN" },
@@ -39,6 +39,9 @@
         { "type": "Integer",     "name": "pingRestart",          "default": "60" },
         { "type": "String",      "name": "authPamService",       "default": "openvpn" },
         { "type": "String",      "name": "authScriptUrl",        "default": "getDefaultAuthScriptUrl()" },
+        { "type": "String",      "name": "authCaFile",           "default": "/etc/pki/tls/cert.pem" },
+        { "type": "Boolean",     "name": "authCaDefault",        "default": "true" },
+        { "type": "Boolean",     "name": "ignoreSslErrors",      "default": "false" },
         { "type": "UserPasswordMode", "name": "userPasswordMode","default": "HTTP" }
     ]
 }

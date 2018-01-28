@@ -5,12 +5,6 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
-import at.nieslony.utils.DbUtils;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,6 +14,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import org.postgresql.util.PSQLException;
 
 /**
  *
@@ -55,8 +50,9 @@ public class PropertiesStorageBean
 
     @PostConstruct
     public void init() {
+        setCacheTimeout(1000L * 60 * 10);
         try {
-            setConnection(databaseSettings.getDatabseConnection());
+            setConnection(databaseSettings.getDatabaseConnection());
         }
         catch (ClassNotFoundException | SQLException ex) {
             logger.severe(String.format("Cannot set database connection: %s",
@@ -67,50 +63,21 @@ public class PropertiesStorageBean
     }
 
     @Override
-    public Connection getConnection() {
+    public Connection getConnection()
+            throws SQLException
+    {
         try {
-            return databaseSettings.getDatabseConnection();
-        } catch (ClassNotFoundException ex) {
+            return databaseSettings.getDatabaseConnection();
+        }
+        catch (PSQLException ex) {
+            throw ex;
+        }
+        catch (ClassNotFoundException ex) {
             logger.log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
 
         return null;
-    }
-
-    public void createTables()
-            throws ClassNotFoundException, IOException, SQLException
-    {
-        logger.info("Creating tables for propertiesStorage...");
-        String resourceName = "create-properties-storage.sql";
-        Reader r = null;
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
-            if (is != null)
-                r = new InputStreamReader(is);
-            else {
-                r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
-            }
-
-            if (r == null) {
-                logger.severe(String.format("Cannot open %s as resource", resourceName));
-            }
-            Connection con = databaseSettings.getDatabseConnection();
-            if (con == null) {
-                logger.severe("Cannot get database connection");
-            }
-            DbUtils.executeSql(con, r);
-        }
-        finally {
-            if (r != null) {
-                try {
-                    r.close();
-                }
-                catch (IOException ex) {
-                    logger.severe(String.format("Cannot close reader: %s", ex.getMessage()));
-                }
-            }
-        }
     }
 }

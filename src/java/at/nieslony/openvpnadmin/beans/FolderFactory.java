@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.beans;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.ExternalContext;
@@ -22,6 +23,9 @@ public class FolderFactory implements Serializable {
     private String dynamicDataDir = null;
     private String sqlDir = null;
     private String binDir = null;
+    private String pluginDir = null;
+
+    private final String FN_USER_VPN = "arachne_uservpn.conf";
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -29,6 +33,13 @@ public class FolderFactory implements Serializable {
      * Creates a new instance of FolderFactory
      */
     public FolderFactory() {
+    }
+
+    @PostConstruct
+    public void init() {
+        getBinDir();
+        getSqlDir();
+        getDynamicDataDir();
     }
 
     private String getDynamicDataDir() {
@@ -49,16 +60,25 @@ public class FolderFactory implements Serializable {
         return sqlDir;
     }
 
+    public String getPluginDir() {
+        if (pluginDir == null) {
+            ExternalContext extCtx = FacesContext.getCurrentInstance().getExternalContext();
+            pluginDir = extCtx.getInitParameter("plugin-dir");
+        }
+
+        return pluginDir;
+    }
+
     public String getServerConfDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/vpnconfig";
     }
 
     public String getConfigDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/appconfig";
     }
 
     public String getPkiDir() {
-        return getDynamicDataDir();
+        return getDynamicDataDir() + "/vpnconfig";
     }
 
     public String getBinDir() {
@@ -68,5 +88,9 @@ public class FolderFactory implements Serializable {
         }
 
         return binDir;
+    }
+
+    public String getUserVpnFileName() {
+        return String.format("%s/%s", getServerConfDir(), FN_USER_VPN);
     }
 }

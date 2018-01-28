@@ -12,8 +12,12 @@ import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
  * @author claas
  */
 public interface LdapHelperUser {
-    public String getAuthType();
-    public String getProviderUrl();
+    public LdapSettingsBase.LdapAuthType getAuthType();
+    public String getLdapServer();
+    public String getLdapBaseDn();
+    public Integer getLdapPort();
+    public String getLdapDnsDomain();
+    public LdapSettingsBase.LdapServerLookupMethod getLdapServereLookupMethod();
     public String getSecurityPrincipal();
     public String getSecurityCredentials();
 
@@ -35,5 +39,8 @@ public interface LdapHelperUser {
     public String getAttrGroupMemberUid();
     public String getCustomGroupSearchFilter();
     public Boolean getUseCustomGroupSearchFilter();
+    public String getGroupSearchFilter(String group);
     public LdapSettingsBase.MemberAttrType getMemberAttrType();
+
+    public boolean auth(String dn, String password);
 }

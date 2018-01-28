@@ -136,13 +136,12 @@ public class TaskScheduler
     public void destroy() {
         logger.info("Destroying task scheduler");
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         scheduler.shutdownNow();
     }
 
     private void reloadTasks() {
         try {
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             Statement stm = con.createStatement();
             String sql = "SELECT * FROM scheduledTasks";
             ResultSet result = stm.executeQuery(sql);
@@ -186,7 +185,7 @@ public class TaskScheduler
             if (r == null) {
                 logger.severe(String.format("Cannot open %s as resource", resourceName));
             }
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             if (con == null) {
                 logger.severe("Cannot get database connection");
             }
@@ -215,7 +214,7 @@ public class TaskScheduler
     public void removeTask(TaskListEntry tle)
             throws ClassNotFoundException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         String sql = "DELETE FROM scheduledTasks WHERE id = ?;";
         PreparedStatement stm = con.prepareStatement(sql);
         int pos = 1;
@@ -231,7 +230,7 @@ public class TaskScheduler
     public void addTask(TaskListEntry tle)
             throws ClassNotFoundException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         String sql = "INSERT INTO scheduledTasks " +
                 "(taskClass, startupDelay, interval, isEnabled, comment) " +
                 "VALUES (?, ?, ?, ?, ?);";
@@ -268,7 +267,7 @@ public class TaskScheduler
             entry.setStartupDelay(tle.getStartupDelay());
             entry.setEnabled(tle.isEnabled());
 
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             String sql = "UPDATE scheduledTasks " +
                     "SET taskClass = ?, startupDelay = ?, interval = ?, isEnabled = ?, comment = ? " +
                     "WHERE id = ?;";

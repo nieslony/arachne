@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="custom">
+    <target name="generate-code">
+        <exec executable="python" failonerror="true">
+            <arg value="${property-templates}/create-properties-backend.py"/>
+            <arg value="--input_dir"/>
+            <arg value="${property-templates}"/>
+            <arg value="--dest_dir"/>
+            <arg value="${build}/generated-sources"/>
+        </exec>
+
+        <mkdir dir="${build}/generated-sources/at/nieslony/openvpnadmin"/>
+        <echo output="${build}/generated-sources/at/nieslony/openvpnadmin/ArachneStatics.java">
+package at.nieslony.openvpnadmin;
+
+public class ArachneStatics {
+    private static final String VERSION = "${version}";
+
+    public String getVersion() {
+        return VERSION;
+    }
+}
+        </echo>
+    </target>
+
+    <!-- Documentation -->
+    <target name="prepare-doc">
+        <mkdir dir="${docdst.dir}"/>
+        <mkdir dir="${docdst.dir}/pics"/>
+        <copy todir="${docdst.dir}/pics">
+            <fileset dir="${docsrc.dir}/pics"/>
+        </copy>
+        <copy todir="${docdst.dir}"
+              file="${docsrc.dir}/arachne.css"
+              />
+    </target>
+
+<!--               style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
+    -->
+    <target name="doc-internal" depends="prepare-doc">
+        <xslt basedir="${docsrc.dir}"
+            in="${docsrc.dir}/arachne.xml" destdir="${docdst.dir}"
+                includes="*xml"
+              style="/usr/share/sgml/docbook/xsl-ns-stylesheets-1.79.2/xhtml5/chunk.xsl"
+              >
+            <param name="html.stylesheet" expression="arachne.css"/>
+        </xslt>
+    </target>
+
+    <target name="patch-doc">
+        <mkdir dir="${build}/generated-doc"/>
+        <copy file="${docsrc.dir}/arachne.xml" todir="${build}/generated-doc"/>
+        <replace
+            file="${build}/generated-doc/arachne.xml"
+            token="@@VERSION@@"
+            value="${version}"
+            />
+        </target>
+
+    <target name="doc-external" depends="prepare-doc">
+        <echo message="Creating doc from ${docsrc.dir} to ${docdst.dir}"/>
+        <exec executable="/usr/bin/xsltproc" failonerror="true">
+            <arg value="--output"/>
+            <arg value="${docdst.dir}/"/>
+
+            <arg value="--stringparam"/>
+            <arg value="html.stylesheet"/>
+            <arg value="arachne.css"/>
+
+            <arg value="${docbook-stylesheet}"/>
+            <arg value="${build}/generated-doc/arachne.xml"/>
+        </exec>
+    </target>
+
+    <target name="doc" depends="patch-doc,doc-external">
+    </target>
+</project>

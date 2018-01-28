@@ -21,39 +21,39 @@ abstract public class AbstractUser {
     }
 
     public String getGivenName() {
-        return givenName;
+        return givenName == null ? "" : givenName;
     }
 
     public String getSurName() {
-        return surName;
+        return surName == null ? "" : surName;
     }
 
     public String getFullName() {
-        return fullName;
+        return fullName == null ? "" : fullName;
     }
 
     public String getEmail() {
-        return email;
+        return email == null ? "" : email;
     }
 
     public void setUsername(String un) {
-        username = un;
+        username = un == null ? "" : un;
     }
 
     public void setGivenName(String gn) {
-        givenName = gn;
+        givenName = gn == null ? "" : gn;
     }
 
     public void setFullName(String fn) {
-        fullName = fn;
+        fullName = fn == null ? "" : fn;
     }
 
     public void setEmail(String em) {
-        email = em;
+        email = em == null ? "" : em;
     }
 
     public void setSurName(String sn) {
-        surName = sn;
+        surName = sn == null ? "" : sn;
     }
 
     public void setPassword(String pwd) {

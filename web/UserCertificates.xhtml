@@ -31,12 +31,12 @@
                      selectionMode="single"
                      rowKey="#{cert.serialNumber}">
             <p:column headerText="Status">                
-                <h:outputText value="#{userCertificates.getCertifivcateStatus(cert)}"/>
+                <h:outputText value="#{userCertificates.getCertificateStatus(cert)}"/>
             </p:column>                      
             <p:column headerText="Subject" 
                       sortBy="#{cert.subjectDN}"
-                      filterBy="#{cert.subjectDN}">
-                <h:outputText value="#{cert.subjectDN}"/>
+                      filterBy="#{cert.subject}">
+                <h:outputText value="#{cert.subject}"/>
             </p:column>
             <p:column headerText="Valid from" sortBy="#{cert.notBefore}">
                 <h:outputText value="#{cert.notBefore}"/>

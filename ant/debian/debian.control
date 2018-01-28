@@ -1,0 +1,20 @@
+Source: arachne
+Section: devel
+Priority: optional
+Maintainer: Claas Nieslony <osc@nieslony.at>
+Build-Depends: debhelper (>= 9),
+    ant,
+    python,
+    openjdk-8-jdk, libpostgresql-jdbc-java,
+    tomcat8-common, libservlet3.0-java, libtomcat8-java,
+    default-jdk, default-jdk-doc, javahelper,
+    primefaces, myfaces, databasepropertiesstorage,
+    bouncycastle, bouncycastle-pg, bouncycastle-pkix
+Standards-Version: 0.3.2
+
+Package: arachne
+Architecture: all
+Depends: tomcat8, libpostgresql-jdbc-java, openvpn-arachne-plugin, openvpn,
+    primefaces, myfaces, databasepropertiesstorage,
+    bouncycastle, bouncycastle-pg, bouncycastle-pkix
+Description: Web application for administering openvpn

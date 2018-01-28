@@ -11,7 +11,8 @@ import at.nieslony.openvpnadmin.views.base.EditLdapSettingsBase;
 import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.net.InetAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -160,9 +161,6 @@ public class EditLdapSettings
             }
             testGroupDesciption = ldapGroup.getDescription();
 
-            rctx.update("resultGroupDescription");
-            rctx.update("resultGroupname");
-            rctx.update("resultGroupMembers");
             rctx.execute("PF('testLdapGroup').show();");
         }
         catch (NoSuchLdapGroup nslg) {
@@ -225,10 +223,6 @@ public class EditLdapSettings
                 setTestSurname(attr != null ? (String) attr.get() : "");
 
                 RequestContext rctx = RequestContext.getCurrentInstance();
-                rctx.update("resultUserame");
-                rctx.update("resultFullName");
-                rctx.update("resultGivenName");
-                rctx.update("resultSurame");
                 rctx.execute("PF('testLdapUser').show();");
 
             }
@@ -289,49 +283,8 @@ public class EditLdapSettings
             super.setSecurityCredentials(sc);
     }
 
-    @Override
     public String getProviderUrl() {
-        String pu = super.getProviderUrl();
-
-        if (pu == null || pu.isEmpty())
-            return getDefaultProviderUrl();
-        else
-            return pu;
-    }
-
-    public String getDefaultProviderUrl() {
-        String myDomain = NetUtils.myDomain();
-        String defaultHost = null;
-        logger.info(String.format("DNS lookupup"
-                + " for my domain %s", myDomain));
-        try {
-            logger.info("DNS lookup LDAP srv record");
-            defaultHost = NetUtils.srvLookup("ldap");
-            logger.info(String.format("Found: %s", defaultHost));
-        }
-        catch (NamingException ex) {
-            logger.info(String.format("No entry founnd: %s", ex.getMessage()));
-        }
-        if (defaultHost == null) {
-            defaultHost = "ldap." + myDomain;
-            try {
-                logger.info(String.format("DNS lookup %s", defaultHost));
-                InetAddress addr = InetAddress.getByName(defaultHost);
-                logger.info(String.format("Found: %s", addr.getHostAddress()));
-            }
-            catch (Exception e) {
-                logger.info(String.format("No entry foind: %s", e.getMessage()));
-                defaultHost = "ldap.example.com";
-            }
-        }
-
-        String myDomSplit[] = myDomain.split("\\.");
-        for (int i = 0; i < myDomSplit.length; i++) {
-            myDomSplit[i] = "dc=" + myDomSplit[i];
-        }
-        String defaultDn = String.join(",", myDomSplit);
-
-        return String.format("ldap://%s/%s", defaultHost, defaultDn);
+        return ldapHelper.formLdapUrl();
     }
 
     public String getDefaultUserSearchFilter() {
@@ -406,5 +359,71 @@ public class EditLdapSettings
         setAttrGroupMemberDn("memberUid");
 
         setUseCustomUserSearchFilter(Boolean.FALSE);
+    }
+
+    @Override
+    public boolean auth(String dn, String password) {
+        return ldapHelper.auth(dn, password);
+    }
+
+    @Override
+    public String getGroupSearchFilter(String group) {
+        return ldapHelper.getGroupSearchString(group);
+    }
+
+    @Override
+    public String getLdapBaseDn() {
+        String dn = super.getLdapBaseDn();
+
+        if (dn == null || dn.isEmpty()) {
+            String myDomain = NetUtils.myDomain();
+            logger.info(String.format("Forming base DN from %s", myDomain));
+            String[] comp = myDomain.split("\\.");
+            List<String> dnComp = new LinkedList<>();
+            for (int i = 0; i < comp.length; i++)  {
+                dnComp.add("dc=" + comp[i]);
+            }
+
+            return String.join(",", dnComp);
+        }
+        else {
+            return dn;
+        }
+    }
+
+    @Override
+    public String getLdapServer() {
+        String sn = super.getLdapServer();
+
+        if (sn == null || sn.isEmpty()) {
+            String dnsLookup = "";
+
+            try {
+                dnsLookup = NetUtils.srvLookup("ldap");
+            }
+            catch (NamingException ex) {
+                logger.info("DNS lookup for LDAP SRV failed");
+            }
+            if (dnsLookup == null || dnsLookup.isEmpty())
+                return "ldap." + NetUtils.myDomain();
+            return dnsLookup;
+        }
+        else {
+            return sn;
+        }
+    }
+
+    @Override
+    public String getLdapDnsDomain() {
+        String dom = super.getLdapDnsDomain();
+
+        if (dom == null || dom.isEmpty())
+            dom = NetUtils.myDomain();
+
+        return dom;
+    }
+
+    public LdapSettingsBase.LdapAuthType[] getAuthTypes() {
+        return LdapSettingsBase.LdapAuthType.values();
     }
 }

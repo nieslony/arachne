@@ -9,14 +9,11 @@ import at.nieslony.utils.classfinder.StaticMemberBean;
 import at.nieslony.openvpnadmin.beans.Pki;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+import org.bouncycastle.operator.OperatorCreationException;
 
 /**
  *
@@ -52,8 +49,7 @@ public class UpdateCrl
                 pki.writeCrl(pw);
             }
         } catch (CRLException | CertificateException | ClassNotFoundException
-                | IOException | InvalidKeyException | NoSuchAlgorithmException
-                | NoSuchProviderException | SQLException | SignatureException ex) {
+                | IOException | OperatorCreationException | SQLException ex) {
 
             logger.warning(String.format("Cannot reload CRL: %s", ex.getMessage()));
         }

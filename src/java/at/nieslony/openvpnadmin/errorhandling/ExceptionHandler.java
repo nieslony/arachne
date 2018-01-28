@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.el.ELException;
 import javax.faces.FacesException;
+import javax.faces.application.ViewExpiredException;
 import javax.faces.context.ExceptionHandlerWrapper;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -51,9 +52,24 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
             try {
                 Throwable throwable = exceptionQueuedEventContext.getException();
                 Throwable rootCause = getRootCause(throwable);
+                Throwable cause = throwable;
+                while (cause.getCause() != null)
+                    cause = cause.getCause();
 
                 LOG.severe("--- Caught exception ---");
                 LOG.severe(throwable.getMessage());
+                LOG.severe(String.format("Throwable: %s", throwable.getClass().getName()));
+
+                if (rootCause != null)
+                    LOG.severe(String.format("Root cause: %s", rootCause.getClass().getName()));
+                else
+                    LOG.severe("No root cause");
+
+                if (cause != null)
+                    LOG.severe(String.format("Cause: %s", rootCause.getClass().getName()));
+                else
+                    LOG.severe("No cause");
+
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 throwable.printStackTrace(pw);
@@ -66,9 +82,10 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 HttpServletRequest request = (HttpServletRequest) extContext.getRequest();
 
                 String errorMsg = "Unhandled Exception";
-                boolean isFatal = false;
+                String errorPage = "/error/error.xhtml";
+                boolean isFatal = true;
 
-                if (rootCause instanceof PermissionDenied) {
+                if (cause instanceof PermissionDenied) {
                     String message = String.format(
                             "Permission denied: \nPath: %s\nRemote IP: %s",
                             request.getRequestURL(),
@@ -77,11 +94,18 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     LOG.warning(message);
                     errorMsg = "Access denied";
                     extContext.setResponseStatus(403);
+                    isFatal = false;
                 }
-                else if (rootCause instanceof ELException) {
+                else if (cause instanceof ELException) {
                     isFatal = true;
                 }
+                else if (cause instanceof ViewExpiredException) {
+                    LOG.warning("View expired");
+                    errorPage = "Login.xhtml";
+                    isFatal = false;
+                }
                 else {
+                    LOG.warning("##### Unknown server error");
                     extContext.setResponseStatus(500);
                 }
                 requestMap.put("errorMsg", errorMsg);
@@ -89,10 +113,9 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 if (!isFatal) {
                     try {
                         context.responseComplete();
-                        String errPage = "/error/error.xhtml";
-                        LOG.info(String.format("Going to %s", errPage));
+                        LOG.info(String.format("Going to %s", errorPage));
                         try {
-                            extContext.dispatch(errPage);
+                            extContext.dispatch(errorPage);
                         }
                         catch (IOException ex) {
                             LOG.severe(String.format("Cannot go to error page: %s",
@@ -109,11 +132,27 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     context.renderResponse();
                 }
                 else {
+                    context.responseComplete();
+                    LOG.info(String.format("Going to %s", errorPage));
+                    try {
+                        extContext.dispatch("/error/error.html");
+                    }
+                    catch (IOException ex) {
+                        LOG.severe(String.format("Cannot go to error page: %s",
+                        ex.getMessage()));
+                    }
                     LOG.severe("#####  BEGIN ...---... #####");
                     LOG.severe(rootCause.toString());
                     LOG.severe("#####  ...---... END #####");
                 }
+            } catch (Exception ex) {
+                LOG.severe("An error occured while handling an error. :-((");
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+                LOG.severe(sw.toString());
             } finally {
+                LOG.info("Removing exception from queue");
                 queue.remove();
             }
         }

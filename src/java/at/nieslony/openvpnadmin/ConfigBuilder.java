@@ -5,9 +5,7 @@
  */
 package at.nieslony.openvpnadmin;
 
-import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
-import at.nieslony.openvpnadmin.beans.LdapSettings;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
@@ -29,12 +27,10 @@ import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
@@ -43,18 +39,12 @@ import org.primefaces.model.StreamedContent;
  * @author claas
  */
 @ManagedBean
-@SessionScoped
+@ApplicationScoped
 public class ConfigBuilder implements Serializable {
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{pki}")
     private Pki pki;
-
-    @ManagedProperty(value = "#{currentUser}")
-    CurrentUser currentUser;
-
-    @ManagedProperty(value = "#{ldapSettings}")
-    private LdapSettings ldapSettings;
 
     @ManagedProperty(value = "#{folderFactory}")
     FolderFactory folderFactory;
@@ -74,21 +64,13 @@ public class ConfigBuilder implements Serializable {
         this.pki = pki;
     }
 
-    public void setCurrentUser(CurrentUser cub) {
-        currentUser = cub;
-    }
-
-    public void setLdapSettings(LdapSettings ls) {
-        ldapSettings = ls;
-    }
-
     public ConfigBuilder()
     {
     }
 
-    public void writeUserVpnClientConfig(Writer wr,
-            String username)
-    throws IOException, CertificateEncodingException {
+    public void writeUserVpnClientConfig(Writer wr, String username)
+        throws IOException, CertificateEncodingException, OperatorCreationException
+    {
         PrintWriter pr = new PrintWriter(wr);
 
         pr.println("# openVPN config for user " + username);
@@ -132,7 +114,6 @@ public class ConfigBuilder implements Serializable {
     public void writeUserVpnServerConfig(Writer wr)
             throws CertificateEncodingException, IOException
     {
-        int scriptSecurity = 1;
         String authScript = folderFactory.getBinDir() + "/auth.sh";
 
         Path path = Paths.get(authScript);
@@ -151,13 +132,17 @@ public class ConfigBuilder implements Serializable {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("\"")
-                .append(authScript)
-                .append(" ")
-                .append(userVpn.getAuthScriptUrl())
-                .append("/AuthOpenVPN.xhtml")
-                .append("\"");
-        String authCmd = sb.toString();
+        sb.append("plugin ")
+                .append(folderFactory.getPluginDir())
+                .append("/arachne.so")
+                .append(" url=").append(userVpn.getAuthScriptUrl()).append("/AuthOpenVPN.xhtml");
+        if (userVpn.getIgnoreSslErrors()) {
+            sb.append(" ignoressl=true");
+        }
+        if (!userVpn.getAuthCaDefault()) {
+            sb.append(" cafile=").append(userVpn.getAuthCaFile());
+        }
+        String authPlugin = sb.toString();
         PrintWriter pr = new PrintWriter(wr);
 
         pr.println("port " + userVpn.getPort());
@@ -181,14 +166,10 @@ public class ConfigBuilder implements Serializable {
         pr.println("management 127.0.0.1 9544");
         switch (userVpn.getAuthType()) {
             case USERPWD_CERTIFICATE:
-                if (scriptSecurity < 2)
-                    scriptSecurity = 2;
-                pr.println("auth-user-pass-verify " + authCmd + " via-file");
+                pr.println(authPlugin);
                 break;
             case USERPWD:
-                if (scriptSecurity < 2)
-                    scriptSecurity = 2;
-                pr.println("auth-user-pass-verify " + authCmd + " via-file");
+                pr.println(authPlugin);
                 pr.println("client-cert-not-required");
                 pr.println("username-as-common-name");
         }
@@ -211,14 +192,11 @@ public class ConfigBuilder implements Serializable {
                 }
             }
         }
-
-        if (scriptSecurity != 1) {
-            pr.println("script-security " + String.valueOf(scriptSecurity));
-        }
     }
 
     public void writeUserVpnNetworkManagerConfig(Writer wr, String username)
-        throws IOException, CertificateEncodingException, ClassNotFoundException, GeneralSecurityException, SQLException
+        throws ClassNotFoundException, GeneralSecurityException, IOException,
+            OperatorCreationException, AbstractMethodError, SQLException
     {
         boolean writeUserCert = userVpn.getAuthType() != UserVpnBase.VpnAuthType.USERPWD.USERPWD;
 
@@ -308,64 +286,9 @@ public class ConfigBuilder implements Serializable {
         pr.println("fi");
     }
 
-    public void getOvpnConfig(ComponentSystemEvent event) {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-
-        Writer wr = null;
-        try {
-            wr = ec.getResponseOutputWriter();
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-        }
-        catch (IOException ex) {
-            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
-            return;
-        }
-
-        String username = currentUser.getUsername();
-        try {
-            writeUserVpnClientConfig(wr, username);
-        }
-        catch (CertificateEncodingException | IOException ex) {
-            logger.warning(String.format("Error getting openvpn configuration for user %s: %s",
-                    username, ex.getMessage()));
-
-            PrintWriter pw = new PrintWriter(wr);
-            pw.println("# Error getting configuration.");
-        }
-    }
-
-    public void getNetworkManagerConfig(ComponentSystemEvent event) {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        ExternalContext ec = fc.getExternalContext();
-
-        Writer wr = null;
-        try {
-            wr = ec.getResponseOutputWriter();
-            ec.setResponseContentType("text/plain");
-            ec.setResponseCharacterEncoding("UTF-8");
-        }
-        catch (IOException ex) {
-            logger.warning(String.format("Cannot get response writer: %s", ex.getMessage()));
-            return;
-        }
-
-        String username = currentUser.getUsername();
-        try {
-            writeUserVpnNetworkManagerConfig(wr, username);
-        }
-        catch (ClassNotFoundException | GeneralSecurityException | IOException | SQLException ex) {
-            logger.warning(String.format("Error getting network manager configuration for user %s: %s",
-                    username, ex.getMessage()));
-
-            PrintWriter pw = new PrintWriter(wr);
-            pw.println("# Error getting configuration.");
-        }
-    }
-
     public StreamedContent getDownloadNetworkManagerConfig(String username)
-            throws ClassNotFoundException, GeneralSecurityException, IOException, SQLException
+        throws AbstractMethodError, ClassNotFoundException, GeneralSecurityException,
+            IOException, OperatorCreationException, SQLException
     {
         InputStream in;
 
@@ -381,7 +304,10 @@ public class ConfigBuilder implements Serializable {
     }
 
     public StreamedContent getDownloadOpenVpnConfig(String username)
-            throws IOException, CertificateEncodingException {
+        throws IOException, CertificateEncodingException, OperatorCreationException,
+            AbstractMethodError
+
+    {
         InputStream in;
 
         StringWriter writer = new StringWriter();

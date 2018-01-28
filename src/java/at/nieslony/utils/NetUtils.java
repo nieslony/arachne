@@ -5,14 +5,16 @@
  */
 package at.nieslony.utils;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Hashtable;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.Attribute;
-import javax.naming.NamingEnumeration;
-import java.net.InetAddress;
-import javax.naming.NamingException;
 
 /**
  *
@@ -28,6 +30,25 @@ public class NetUtils {
             .append((mask >>  8) & 0xff).append(".")
             .append( mask        & 0xff);
         return sb.toString();
+    }
+
+    public static Inet4Address maskInet4Address(Inet4Address inet4Addr, int len) {
+        byte[] addr = inet4Addr.getAddress();
+
+        int mask = 0xffffffff << (32 - len);
+        addr[0] &= (byte) ((mask >> 24) & 0xff);
+        addr[1] &= (byte) ((mask >> 16) & 0xff);
+        addr[2] &= (byte) ((mask >>  8) & 0xff);
+        addr[3] &= (byte) ( mask        & 0xff);
+
+        Inet4Address ret = null;
+        try {
+            ret = (Inet4Address) Inet4Address.getByAddress(addr);
+        }
+        catch (UnknownHostException ex) {
+        }
+
+        return ret;
     }
 
     public static String srvLookup(String srvType) throws NamingException {

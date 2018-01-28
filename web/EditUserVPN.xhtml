@@ -17,12 +17,18 @@
             <h:panelGrid columns="2">
                 <p:outputLabel value="Connection Name:" for="name"/>
                 <p:inputText size="75" value="#{editUserVpn.connectionName}" id="name" required="true"/>
-                
+
                 <p:outputLabel value="NetworkManager connection name template:" for="nmConnectionTemplate"/>
                 <p:inputText id="nmConnectionTemplate" value="#{editUserVpn.nmConnectionTemplate}"/>
+                <p:tooltip for="nmConnectionTemplate">
+                    Use placeholders:<br/>
+                    %n - connection name<br/>
+                    %u - username<br/>
+                    %h - openvpn server name<br/>
+                </p:tooltip>
             </h:panelGrid>
-            <p:accordionPanel multiple="true" activeIndex="0,1">
-                <p:tab title="Basics">
+            <p:accordionPanel multiple="true" activeIndex="0,1,2">
+                <p:tab title="Connection">
                     <h:panelGrid  columns="4">
                         <p:outputLabel value="Hostname:" for="hostname"/>
                         <p:inputText value="#{editUserVpn.host}" size="25"
@@ -50,6 +56,21 @@
                             <f:selectItem itemLabel="TAP" itemValue="TAP"/>
                         </p:selectOneMenu>
 
+                        <p:outputLabel value="Keepalive ping:" for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{editUserVpn.ping}" id="ping"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                        <p:outputLabel value="Restart after " for="ping"/>
+                        <h:panelGroup>
+                            <p:spinner value="#{editUserVpn.pingRestart}" id="pingRestart"/>
+                            <h:outputText value=" secs"/>
+                        </h:panelGroup>
+                    </h:panelGrid>
+                </p:tab>
+
+                <p:tab title="Networking">
+                    <h:panelGrid columns="2">
                         <h:panelGroup>
                             <p:outputLabel value="DNS servers:" for="dnsServers"/>
                             <p:selectOneListbox style="height: 50pt" id="dnsServers" value="#{editUserVpn.selDnsServer}">
@@ -61,12 +82,13 @@
                         <h:panelGroup>
                             <p:commandButton action="#{editUserVpn.onAddDnsServer}" value="Add" update="dnsServers">
                                 <p:ajax update="dnsServers"/>
-                            </p:commandButton>                                
+                            </p:commandButton>
                             <br/>
                             <p:commandButton action="#{editUserVpn.onModifyDnsServer}" value="Modify" update="dnsServers"/>
                             <br/>
                             <p:commandButton action="#{editUserVpn.onRemoveDnsServer}" value="Remove" update="dnsServers"/>
                         </h:panelGroup>
+
                         <h:panelGroup>
                             <p:outputLabel value="Push routes:" for="pushRoutes"/>
                             <p:selectOneListbox style="height: 50pt" id="pushRoutes" value="#{editUserVpn.selPushRoute}">
@@ -85,17 +107,6 @@
                             <br/>
                             <p:commandButton action="#{editUserVpn.onRemoveRoute}" value="Remove" update="pushRoutes"/>
                         </h:panelGroup>
-
-                        <p:outputLabel value="Keepalive ping:" for="ping"/>
-                        <h:panelGroup>
-                            <p:spinner value="#{editUserVpn.ping}" id="ping"/>
-                            <h:outputText value=" secs"/>
-                        </h:panelGroup>
-                        <p:outputLabel value="Restart after " for="ping"/>
-                        <h:panelGroup>
-                            <p:spinner value="#{editUserVpn.pingRestart}" id="pingRestart"/>
-                            <h:outputText value=" secs"/>
-                        </h:panelGroup>
                     </h:panelGrid>
                 </p:tab>
 
@@ -103,43 +114,80 @@
                     <h:panelGrid columns="2">
                         <p:outputLabel value="Authentication type:" for="authType"/>
                         <p:selectOneMenu id="authType" value="#{editUserVpn.authType}">
-                            <f:ajax render="@form"/>                                
+                            <f:ajax render="@form"/>
                             <f:selectItems value="#{editUserVpn.authTypes}"
                                            var="authType"
                                            itemValue="#{authType}"
                                            itemLabel="#{authType.description}"/>
                         </p:selectOneMenu>
 
-                        <p:outputLabel value="Username/password via:" 
+                        <p:outputLabel value="Username/password via:"
                                        rendered="#{editUserVpn.renderUserPasswordMode}"
                                        for="pamUrl"
                                        />
-                        <p:selectOneMenu id="pamUrl" 
+                        <p:selectOneMenu id="pamUrl"
                                          value="#{editUserVpn.userPasswordMode}"
                                          rendered="#{editUserVpn.renderUserPasswordMode}"
                                          immediate="true" >
-                            <f:ajax render="@form"/>                                
+                            <f:ajax render="@form"/>
                             <f:selectItems value="#{editUserVpn.userPasswordModes}"
                                            var="userPasswordMode"
                                            itemValue="#{userPasswordMode}"
                                            itemLabel="#{userPasswordMode.description}"/>
                         </p:selectOneMenu>
 
-                        <p:outputLabel value="PAM service:" 
-                                       rendered="#{editUserVpn.renderPamService}"  
+                        <p:outputLabel value="PAM service:"
+                                       rendered="#{editUserVpn.renderPamService}"
                                        for="pamService"/>
-                        <p:inputText id="pamService" 
+                        <p:inputText id="pamService"
                                      value="#{editUserVpn.authPamService}"
                                      rendered="#{editUserVpn.renderPamService}"
                                      />
 
-                        <p:outputLabel value="Authentication Url:" 
-                                       rendered="#{editUserVpn.renderAuthUrl}"
-                                       for="authUrl"/>
+                        <p:outputLabel value="Authentication Url:"
+                                        rendered="#{editUserVpn.renderAuthUrl}"
+                                        for="authUrl"/>
                         <h:panelGroup rendered="#{editUserVpn.renderAuthUrl}">
-                            <p:inputText size="50" id="authUrl" value="#{editUserVpn.authScriptUrl}"/>
+                            <p:selectOneMenu value="#{editUserVpn.authWebserverProtocol}"
+                                         style="vertical-align: top"
+                                             >
+                                <f:selectItem itemLabel="http" itemValue="http"/>
+                                <f:selectItem itemLabel="https" itemValue="https"/>
+                                <f:ajax render="@form"/>
+                            </p:selectOneMenu>
+                            <h:outputText value="://"/>
+                            <p:inputText size="50" id="authUrl" value="#{editUserVpn.authWebserverHostPath}">
+                                <f:validateRegex pattern="^[a-z0-9\-]+(\.[a-z0-9\-]+)*(:[1-9][0-9]{0,4})?/[a-zA-Z0-9_/%\-]+$"/>
+                            </p:inputText>
                             <h:outputText value="/AuthOpenVPN.xhtml"/>
                         </h:panelGroup>
+
+                        <p:outputLabel value="Use system CA for web server:"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       for="authCaDefault"/>
+                        <p:inputSwitch onLabel="yes" offLabel="no"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       value="#{editUserVpn.authCaDefault}"
+                                       id="authCaDefault"
+                                       >
+                            <f:ajax render="@form"/>
+                        </p:inputSwitch>
+
+                        <p:outputLabel value="Web server CA file:"
+                                       rendered="#{editUserVpn.renderWebserverCaFile}"
+                                       for="webServerCaFile"/>
+                        <p:inputText id="webServerCaFile"
+                                     rendered="#{editUserVpn.renderWebserverCaFile}"
+                                     value="#{editUserVpn.authCaFile}"
+                                     />
+
+                        <p:outputLabel value="Ignore SSL errors"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       for="ignoreSslErrors"/>
+                        <p:inputSwitch value="#{editUserVpn.ignoreSslErrors}"
+                                       onLabel="yes" offLabel="no"
+                                       rendered="#{editUserVpn.renderSslSettings}"
+                                       id="ignoreSslErrors"/>
                     </h:panelGrid>
                 </p:tab>
             </p:accordionPanel>

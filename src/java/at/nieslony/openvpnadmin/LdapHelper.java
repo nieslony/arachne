@@ -5,8 +5,10 @@
  */
 package at.nieslony.openvpnadmin;
 
+import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -62,23 +64,21 @@ public class LdapHelper
                     logger.warning("Ignoring user with no username");
                     continue;
                 }
-                attr = attrs.get(ldapHelperUser.getAttrFullName());
-                if (attr != null)
-                    vpnUser.setFullName((String) attr.get());
 
-                attr = attrs.get(ldapHelperUser.getAttrGivenName());
-                if (attr != null)
-                    vpnUser.setGivenName((String) attr.get());
-
-                attr = attrs.get(ldapHelperUser.getAttrSurname());
-                if (attr != null)
-                    vpnUser.setSurName((String) attr.get());
-
-                attr = attrs.get(ldapHelperUser.getAttrEmail());
-                if (attr !=  null)
-                    vpnUser.setEmail((String) attr.get());
-
-                vpnUser.setDn(result.getName() + "," + getBaseDn());
+                vpnUser.setLdapAttributes(attrs);
+                String dn;
+                if (ldapHelperUser.getOuUsers() != null &
+                        !ldapHelperUser.getOuUsers().isEmpty()
+                        )
+                    dn = String.format("%s,%s,%s",
+                            result.getName(),
+                            ldapHelperUser.getOuUsers(),
+                            ldapHelperUser.getLdapBaseDn());
+                else
+                    dn = String.format("%s,%s",
+                            result.getName(),
+                            ldapHelperUser.getLdapBaseDn());
+                vpnUser.setDn(dn);
 
                 users.add(vpnUser);
             }
@@ -111,20 +111,21 @@ public class LdapHelper
             vpnUser = new LdapUser(ldapHelperUser, username);
             SearchResult result = (SearchResult) results.next();
             Attributes attrs = result.getAttributes();
-            Attribute attr;
-            attr = attrs.get(ldapHelperUser.getAttrFullName());
-            if (attr != null)
-                vpnUser.setFullName((String) attr.get());
 
-            attr = attrs.get(ldapHelperUser.getAttrGivenName());
-            if (attr != null)
-                vpnUser.setGivenName((String) attr.get());
-
-            attr = attrs.get(ldapHelperUser.getAttrSurname());
-            if (attr != null)
-                vpnUser.setSurName((String) attr.get());
-
-            vpnUser.setDn(result.getName() + "," + getBaseDn());
+            vpnUser.setLdapAttributes(attrs);
+            String dn;
+            if (ldapHelperUser.getOuUsers() != null &
+                    !ldapHelperUser.getOuUsers().isEmpty()
+                    )
+                dn = String.format("%s,%s,%s",
+                        result.getName(),
+                        ldapHelperUser.getOuUsers(),
+                        ldapHelperUser.getLdapBaseDn());
+            else
+                dn = String.format("%s,%s",
+                        result.getName(),
+                        ldapHelperUser.getLdapBaseDn());
+            vpnUser.setDn(dn);
         }
         else {
             throw new NoSuchLdapUser(String.format("LDAP user %s not found", username));
@@ -236,9 +237,13 @@ public class LdapHelper
 
     public DirContext getLdapContext() throws NamingException {
         Hashtable<String,String> env = new Hashtable<>();
-        env.put(Context.SECURITY_AUTHENTICATION, ldapHelperUser.getAuthType());
-        logger.info(String.format("LDAP bind to %s", ldapHelperUser.getProviderUrl()));
-        if (ldapHelperUser.getAuthType().equals("simple")) {
+        String authType = ldapHelperUser.getAuthType().getDescription();
+        logger.info(String.format("Auth type: %s", authType));
+        env.put(Context.SECURITY_AUTHENTICATION, authType);
+
+        String url = formLdapUrl();
+        logger.info(String.format("LDAP bind to %s", url));
+        if (authType.equals("simple")) {
             logger.info(String.format("bind type simple => getting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
             env.put(Context.SECURITY_PRINCIPAL, //"cn=ldap-ro,cn=groups,cn=compat,dc=nieslony,dc=lan"
                     ldapHelperUser.getSecurityPrincipal()
@@ -251,18 +256,59 @@ public class LdapHelper
             logger.info("LDAP bind without authentication");
         }
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ldapHelperUser.getProviderUrl());
+        env.put(Context.PROVIDER_URL, url);
 
         return new InitialDirContext(env);
     }
 
-    public String getBaseDn() {
-        String url = ldapHelperUser.getProviderUrl();
+    public boolean auth(String dn, String password)
+    {
+        Hashtable<String,String> env = new Hashtable<>();
+
+        boolean ok = true;
+
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, dn);
+        env.put(Context.SECURITY_CREDENTIALS, password);
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, formLdapUrl());
+
         try {
-            return url.substring(url.lastIndexOf("/") + 1);
+            DirContext ctx = new InitialDirContext(env);
         }
-        catch (ArrayIndexOutOfBoundsException ex) {
-            return "";
+        catch (NamingException ex) {
+            logger.warning(String.format("Cannot authticate DN %s: %s",
+                    dn, ex.getMessage()));
+
+            ok = false;
         }
+
+        return ok;
+    }
+
+    public String formLdapUrl() {
+        String servername;
+        if (ldapHelperUser.getLdapServereLookupMethod() == LdapSettingsBase.LdapServerLookupMethod.HOSTNAME) {
+            servername = ldapHelperUser.getLdapServer();
+        }
+        else {
+            String dnsDomain = ldapHelperUser.getLdapDnsDomain();
+            try {
+                servername = NetUtils.srvLookup("ldap", dnsDomain);
+            }
+            catch (NamingException | NullPointerException ex) {
+                logger.warning(String.format("Cannot find LDAP SRV record for domain %s: %s",
+                        dnsDomain, ex.getMessage()));
+                servername = "ldap.server.not.found.in.dns";
+            }
+        }
+
+        Integer port = ldapHelperUser.getLdapPort();
+        String baseDn = ldapHelperUser.getLdapBaseDn();
+
+        String url = String.format("ldap://%s:%d/%s", servername, port, baseDn);
+        logger.info(String.format("LDAP url: %s", url));
+
+        return url;
     }
 }

@@ -28,5 +28,10 @@ INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES
         0,
         60 * 2,
         true
+    ),
+    ( 'at.nieslony.openvpnadmin.tasks.AutoRenewServerfCertificate',
+        60,
+        60 * 60 * 24,
+        true
     )
 ;;

@@ -8,66 +8,66 @@ import argparse
 import glob
 
 entries = {}
-    
+
 def print_variables():
     s = ""
-    
+
     for e in entries["properties"]:
         s += "    private %s %s;\n" % (e["type"], e["name"])
-        
+
     return s
-    
+
 def print_enums_backend():
     s = ""
-    
+
     if "enums" in entries:
         for e in entries["enums"]:
             s += """      public enum %(enum_type)s {
       %(values)s
       }
-"""         % { 
+"""         % {
                 "enum_type": e["type"],
                 "values": ", ".join(e["values"])
             }
-    
+
     return s
 
 def print_ext_enums_backend():
     s = ""
-    
+
     if "ext_enums" in entries:
         for e in entries["ext_enums"]:
             consts = e["values"]
-            
+
             s += """  public enum %(enum_type)s {
         %(values)s;
 
         final private String description;
-    
+
         private %(enum_type)s(String description) {
             this.description = description;
         }
-        
+
         public String getDescription() {
             return description;
         }
     }
 """ % {
-       "enum_type": e["type"],    
+       "enum_type": e["type"],
        "values": ",\n        ".join("%s(\"%s\")" % (ent["const"], ent["description"]) for ent in consts)
     }
 
     return s
-    
+
 def print_getter_setter_backend():
     s = ""
-    
+
     for e in entries["properties"]:
         if "storeBase64" in e:
             s += """
     public %(type)s get%(u_name)s() {
         String value = %(default)s;
-        
+
         try {
             PropertyGroup pg = getPropertyGroup();
             if (pg != null) {
@@ -79,22 +79,23 @@ def print_getter_setter_backend():
         catch (SQLException ex) {
             value = %(default)s;
         }
-        
+
         return %(type)s.valueOf(value);
     }
-    
+
     public void set%(u_name)s(%(type)s %(name)s) {
         if (%(name)s != null && !%(name)s.isEmpty()) {
             %(name)s = new String(Base64.getEncoder().encode(%(name)s.getBytes()));
         }
-    
+
         try {
             getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
         }
         catch (SQLException ex) {
+            logger.warning(ex.getMessage());
         }
-    }    
-    
+    }
+
 """ %  {
         "u_name": e["name"][0].upper() + e["name"][1:],
         "p_name": prop_name(e["name"]),
@@ -104,39 +105,43 @@ def print_getter_setter_backend():
     }
         else:
             default = e["default"]
-            
+
             if default.endswith("()"):
                 s += """
-    abstract public %(type)s %(func)s;                
+    abstract public %(type)s %(func)s;
 """ % {
         "type": e["type"],
         "func": default
     }
-            
+
             s += """
     public %(type)s get%(u_name)s() {
-        String value = %(default)s;
-        
+        String value = null;
+
         try {
             PropertyGroup pg = getPropertyGroup();
             if (pg != null)
-                value = pg.getProperty(%(p_name)s, %(default)s);
+                value = pg.getProperty(%(p_name)s);
         }
         catch (SQLException ex) {
-            value = %(default)s;
+            logger.warning(ex.getMessage());
         }
-        
+
+        if (value == null)
+            value = %(default)s;
+
         return %(type)s.valueOf(value);
     }
-    
+
     public void set%(u_name)s(%(type)s %(name)s) {
         try {
             getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
         }
         catch (SQLException ex) {
+            logger.warning(ex.getMessage());
         }
-    }    
-    
+    }
+
 """ %  {
         "u_name": e["name"][0].upper() + e["name"][1:],
         "p_name": prop_name(e["name"]),
@@ -144,7 +149,7 @@ def print_getter_setter_backend():
         "type": e["type"],
         "default": default if default.endswith("()") else "\"%s\"" % e["default"]
     }
-    
+
     return s
 
 def prop_name(n):
@@ -152,24 +157,27 @@ def prop_name(n):
 
 def print_prop_names():
     s = ""
-    
+
     for e in entries["properties"]:
         s += "    static final String %s = \"%s\";\n" % (
             prop_name(e["name"]),
              e["name"]
              )
-        
+
     return s
 
-def print_backend_class_base():    
+def print_backend_class_base():
     return """
 package %(package)s.base;
 
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.logging.Logger;
+%(imports)s
 
 public abstract class %(class_name)sBase {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 %(prop_names)s
     abstract protected PropertyGroup getPropertyGroup();
 
@@ -185,6 +193,7 @@ public abstract class %(class_name)sBase {
     "getter_setter": print_getter_setter_backend(),
     "enums": print_enums_backend(),
     "ext_enums": print_ext_enums_backend()
+    ,"imports": print_imports()
     }
 
 def print_backend_class():
@@ -206,7 +215,7 @@ import at.nieslony.databasepropertiesstorage.PropertyGroup;
 @ApplicationScoped
 public class %(class_name)s
     extends %(class_name)sBase
-    implements Serializable    
+    implements Serializable
 {
     public %(class_name)s() {
     }
@@ -222,18 +231,18 @@ public class %(class_name)s
 
     protected PropertyGroup getPropertyGroup() {
         PropertyGroup  pg = null;
-    
+
         try {
             return propertiesStorage.getGroup("%(prop_group)s", true);
         }
         catch (SQLException ex) {
             logger.severe(String.format("Cannot get property group %(prop_group)s: %%s",
-                ex.getMessage()));                
-            if (ex.getNextException() != null) 
+                ex.getMessage()));
+            if (ex.getNextException() != null)
             logger.severe(String.format("Cannot get property group %(prop_group)s: %%s",
-                ex.getNextException().getMessage()));                
+                ex.getNextException().getMessage()));
         }
-        
+
         return null;
     }
 }
@@ -250,12 +259,12 @@ def print_getter_setter_edit():
     public %(type)s get%(u_name)s() {
         return %(name)s;
     }
-    
+
     public void set%(u_name)s(%(type)s value) {
         %(name)s = value;
     }
 """  % {
-        "u_name": e["name"][0].upper() + e["name"][1:],    
+        "u_name": e["name"][0].upper() + e["name"][1:],
         "name": e["name"],
         "type": e["type"],
     }
@@ -267,7 +276,7 @@ def print_save_values():
     for e in entries["properties"]:
         s += """      backend.set%(name)s(%(value)s);
 """ % {
-        "value": e["name"],        
+        "value": e["name"],
         "name": e["name"][0].upper() + e["name"][1:],
     }
 
@@ -278,14 +287,22 @@ def print_load_values():
     for e in entries["properties"]:
         s += """      %(name)s = backend.get%(u_name)s();
 """ % {
-        "u_name": e["name"][0].upper() + e["name"][1:],    
+        "u_name": e["name"][0].upper() + e["name"][1:],
         "name": e["name"],
     }
     return s
 
+def print_imports():
+    s = ""
+    if "imports" in entries:
+        for e in entries["imports"]:
+            s += "import %s;\n" % e
+
+    return s
+
 def print_import_enums():
     s = ""
-    
+
     if "enums" in entries:
         for e in entries["enums"]:
             s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;\n" % {
@@ -293,20 +310,20 @@ def print_import_enums():
                     "enum_name": e["type"],
                     "class_name": entries["className"]
                 }
-            
+
     if "ext_enums" in entries:
         for e in entries["ext_enums"]:
             s += "import %(backend_package)s.base.%(class_name)sBase.%(enum_name)s;\n" % {
                     "backend_package": entries["backend_package"],
                     "enum_name": e["type"],
-                    "class_name": entries["className"]        
+                    "class_name": entries["className"]
                     }
-    
+
     return s
 
 def print_reset_defaults():
     s = ""
-    
+
     for e in entries["properties"]:
         s += """      %(name)s = %(type)s.valueOf("%(defaults)s");
 """ % {
@@ -314,7 +331,7 @@ def print_reset_defaults():
                 "defaults": e["default"],
                 "type": e["type"],
             }
-    
+
     return s
 
 def print_edit_class_base():
@@ -323,12 +340,13 @@ package %(package)s.base;
 
 import %(backend_package)s.base.%(class_name)sBase;
 %(import_enums)s
+%(imports)s
 
 public class Edit%(class_name)sBase {
     %(class_name)sBase backend;
-    
+
 %(variables)s
-%(getter_setter)s    
+%(getter_setter)s
 
     protected void setBackend(%(class_name)sBase backend) {
         this.backend = backend;
@@ -337,13 +355,13 @@ public class Edit%(class_name)sBase {
     protected void save() {
 %(save_values)s
     }
-    
+
     protected void load() {
-%(load_values)s    
+%(load_values)s
     }
-    
+
     protected void resetDefaults() {
-%(reset_defaults)s    
+%(reset_defaults)s
     }
 }
 
@@ -357,6 +375,7 @@ public class Edit%(class_name)sBase {
     "load_values": print_load_values(),
     "import_enums": print_import_enums(),
     "reset_defaults": print_reset_defaults(),
+    "imports": print_imports()
     }
 
 def print_edit_class():
@@ -375,7 +394,7 @@ import javax.faces.context.FacesContext;
 
 @ManagedBean
 @ViewScoped
-public class Edit%(class_name)s 
+public class Edit%(class_name)s
     extends Edit%(class_name)sBase
     implements Serializable
 {
@@ -390,22 +409,22 @@ public class Edit%(class_name)s
         setBackend(%(l_class_name)s);
         load();
     }
-    
+
     public void onSave() {
         save();
         FacesContext.getCurrentInstance().addMessage(
                 null, new FacesMessage(
                         FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
     }
-    
+
     public void onReset() {
         load();
     }
-    
+
     public void onResetToDefaults() {
         resetDefaults();
     }
-    
+
     public void set%(class_name)s(%(class_name)s v) {
         %(l_class_name)s = v;
     }
@@ -419,7 +438,7 @@ public class Edit%(class_name)s
 
 def read_file(f):
     global entries
-    
+
     entries = json.load(f)
 
 def main():
@@ -430,7 +449,7 @@ def main():
     parser.add_argument("--dest_dir", default=".")
     parser.add_argument("--create_skel", action='store_true')
     args = parser.parse_args(sys.argv[1:])
-    
+
     for fn in glob.glob("%s/*json" % args.input_dir):
         print("Processing %s..." % fn)
         inf = open(fn)
@@ -450,7 +469,7 @@ def main():
         f = open(out_fn, "w")
         f.write(print_backend_class_base())
         f.close()
-        
+
         # Create backend bean
         if args.create_skel:
             outdir = "%s/%s" % (
@@ -496,4 +515,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
+

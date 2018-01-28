@@ -57,7 +57,7 @@ public class LocalUserFactory
         LocalUser user = null;
 
         try {
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
 
             user = new LocalUser(this, username);
             Statement stm = con.createStatement();
@@ -92,7 +92,7 @@ public class LocalUserFactory
     public Connection getDatabaseConnection()
             throws ClassNotFoundException, SQLException
     {
-        return databaseSettings.getDatabseConnection();
+        return databaseSettings.getDatabaseConnection();
     }
 
     @Override
@@ -100,7 +100,7 @@ public class LocalUserFactory
         LocalUser user = null;
 
         try {
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             Statement stm = con.createStatement();
 
             String sql = String.format("SELECT * FROM %s WHERE username = '%s';",
@@ -135,7 +135,7 @@ public class LocalUserFactory
     public boolean removeUser(String username)
             throws ClassNotFoundException, SQLException
     {
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = String.format("DELETE FROM %s WHERE username = '%s';",
                 USERS_TABLE, username);
@@ -148,7 +148,7 @@ public class LocalUserFactory
     {
         List<AbstractUser> users = new LinkedList<>();
 
-        Connection con = databaseSettings.getDatabseConnection();
+        Connection con = databaseSettings.getDatabaseConnection();
         Statement stm = con.createStatement();
         String sql = String.format("SELECT * FROM %s", USERS_TABLE);
         logger.info(String.format("Exec uting: %s", sql));
@@ -173,7 +173,7 @@ public class LocalUserFactory
             if (r == null) {
                 logger.severe(String.format("Cannot open %s as resource", resourceName));
             }
-            Connection con = databaseSettings.getDatabseConnection();
+            Connection con = databaseSettings.getDatabaseConnection();
             if (con == null) {
                 logger.severe("Cannot get database connection");
             }
