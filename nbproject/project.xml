@@ -20,11 +20,11 @@
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
-                    <file>${reference.DatabasePropertiesStorage.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
+                    <file>${libs.PostgreSQLDriver.classpath}</file>
                 </library>
                 <library dirs="200">
-                    <file>${libs.PostgreSQLDriver.classpath}</file>
+                    <file>${reference.DatabasePropertiesStorage.jar}</file>
+                    <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.myfaces-api.jar}</file>
@@ -54,10 +54,6 @@
             <web-module-additional-libraries>
                 <library dirs="200">
                     <file>${file.reference.src-sql}</file>
-                    <path-in-war>/WEB-INF/sql</path-in-war>
-                </library>
-                <library dirs="200">
-                    <file>${file.reference.src-sql-1}</file>
                     <path-in-war>/WEB-INF/sql</path-in-war>
                 </library>
             </web-module-additional-libraries>
