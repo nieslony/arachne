@@ -101,14 +101,18 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem renewServerCertificate = new DefaultMenuItem("Renew server certificate");
             renewServerCertificate.setHref("RenewServerCertificate.xhtml");
 
+            DefaultMenuItem editFirewallZone = new DefaultMenuItem("Edit firewall zone");
+            editFirewallZone.setHref("EditFirewallZone.xhtml");
+
             certsMenu.addElement(userCerts);
             certsMenu.addElement(editClientCertSettings);
             certsMenu.addElement(editServerCertSettings);
             certsMenu.addElement(renewServerCertificate);
+            certsMenu.addElement(editFirewallZone);
         menuModel.addElement(certsMenu);
 
         userVpnsMenu = new DefaultSubMenu("User VPNs");
-        loadUserVpns();
+            loadUserVpns();
         menuModel.addElement(userVpnsMenu);
 
         /*
@@ -176,8 +180,8 @@ public class AdminWelcome implements Serializable {
         logger.info("Navigating to Login");
         nav.performNavigation("Login");
     }
-    
+
     public void onAbout() {
-        
+
     }
 }
