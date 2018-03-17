@@ -27,7 +27,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 @ManagedBean
 @ViewScoped
@@ -139,14 +139,14 @@ public class EditLdapSettings
         if (testGroup == null || testGroup.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", "Please enter groupname to search for.");
-            RequestContext.getCurrentInstance().showMessageInDialog(msg);
+
+            PrimeFaces.current().dialog().showMessageDynamic(msg);
             return;
         }
 
         LdapGroup ldapGroup;
         try {
             ldapGroup = findLdapGroup(testGroup);
-            RequestContext rctx = RequestContext.getCurrentInstance();
 
             if (!ldapGroup.getMemberDNs().isEmpty()) {
                 testGroupMembers = String.join("<br/>", ldapGroup.getMemberDNs());
@@ -161,13 +161,13 @@ public class EditLdapSettings
             }
             testGroupDesciption = ldapGroup.getDescription();
 
-            rctx.execute("PF('testLdapGroup').show();");
+            PrimeFaces.current().executeScript("PF('testLdapGroup').show();");
         }
         catch (NoSuchLdapGroup nslg) {
                 FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                         "Error",
                         "LDAP connection seems to work, but no result found.");
-                RequestContext.getCurrentInstance().showMessageInDialog(msg);
+                PrimeFaces.current().dialog().showMessageDynamic(msg);
         }
         catch (NamingException ne) {
             logger.warning(String.format("Error testing LDAP connection: %s",
@@ -187,7 +187,7 @@ public class EditLdapSettings
 
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", wr.toString());
-            RequestContext.getCurrentInstance().showMessageInDialog(msg);
+            PrimeFaces.current().dialog().showMessageDynamic(msg);
         }
     }
 
@@ -195,7 +195,7 @@ public class EditLdapSettings
         if (testUser == null || testUser.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", "Please enter username to search for.");
-            RequestContext.getCurrentInstance().showMessageInDialog(msg);
+            PrimeFaces.current().dialog().showMessageDynamic(msg);
             return;
         }
 
@@ -222,15 +222,14 @@ public class EditLdapSettings
                 attr = attrs.get(getAttrSurname());
                 setTestSurname(attr != null ? (String) attr.get() : "");
 
-                RequestContext rctx = RequestContext.getCurrentInstance();
-                rctx.execute("PF('testLdapUser').show();");
+                PrimeFaces.current().executeScript("PF('testLdapUser').show();");
 
             }
             else {
                 FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                         "Error",
                         "LDAP connection seems to work, but no result found.");
-                RequestContext.getCurrentInstance().showMessageInDialog(msg);
+                PrimeFaces.current().dialog().showMessageDynamic(msg);
             }
         }
         catch (NamingException ex) {
@@ -251,7 +250,7 @@ public class EditLdapSettings
 
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", wr.toString());
-            RequestContext.getCurrentInstance().showMessageInDialog(msg);
+            PrimeFaces.current().dialog().showMessageDynamic(msg);
         }
     }
 

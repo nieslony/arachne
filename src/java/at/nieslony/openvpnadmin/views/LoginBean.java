@@ -27,7 +27,7 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.naming.NamingException;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 /**
  *
@@ -91,7 +91,7 @@ public class LoginBean implements Serializable {
             "Login incorrect",
             "The username/password combination you entered is invalid. Please try again."
         );
-        RequestContext.getCurrentInstance().showMessageInDialog(msg);
+        PrimeFaces.current().dialog().showMessageDynamic(msg);
     }
 
     public String getUsername() {

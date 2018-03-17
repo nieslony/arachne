@@ -58,7 +58,7 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -852,7 +852,6 @@ public class SetupWizard implements Serializable {
 
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
-        RequestContext rc = RequestContext.getCurrentInstance();
 
         logger.info("--- Begin application setup ---");
         try {
@@ -1092,7 +1091,7 @@ public class SetupWizard implements Serializable {
                 message
         );
 
-        RequestContext.getCurrentInstance().showMessageInDialog(facesMessage);
+        PrimeFaces.current().dialog().showMessageDynamic(facesMessage);
     }
 
     public void setRoles(Roles roles) {

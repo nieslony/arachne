@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 /**
  *
@@ -94,7 +94,7 @@ public class EditRoles implements Serializable {
     public void onAddRule(Role role) {
         addRuleToRole = role.getName();
 
-        RequestContext.getCurrentInstance().execute("PF('dlgAddRule').show();");
+        PrimeFaces.current().executeScript("PF('dlgAddRule').show();");
     }
 
     public void onRemoveRuleFromRole(Role role, RoleRule rule) {
@@ -112,6 +112,6 @@ public class EditRoles implements Serializable {
         else
             logger.warning("Unable to create rule");
 
-        RequestContext.getCurrentInstance().execute("PF('dlgAddRule').hide();");
+        PrimeFaces.current().executeScript("PF('dlgAddRule').hide();");
     }
 }
