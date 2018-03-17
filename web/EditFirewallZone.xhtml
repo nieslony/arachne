@@ -6,74 +6,17 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://xmlns.jcp.org/jsf/core">
 <body>
+    <p:importEnum type="at.nieslony.openvpnadmin.beans.firewallzone.Target.TargetType"/>
+
     <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
         <ui:param name="title" value="Edit firewall zone"/>
+
+        <ui:include  src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
 
         <ui:define name="content">
             <h:form id="formEditFirewallEntry">
                 <p:fragment autoUpdate="true">
-                    <p:dialog header="#{editFirewallSettings.editingMode} #{editFirewallSettings.editingChain} chain"
-                              id="dlgEditFirewallEntry"
-                              widgetVar="dlgEditFirewallEntry">
-                        <h:panelGrid columns="2">
-                                <p:outputLabel value="Label:" for="label"/>
-                                <p:inputText value="#{editFirewallSettings.editingEntry.label}"
-                                             id="label"/>
-
-                                <p:outputLabel value="Description:"/>
-                                <p:inputText value="#{editFirewallSettings.editingEntry.description}"
-                                             id="description"/>
-
-                                <p:outputLabel value="Is active:" for="isActive"/>
-                                <p:inputSwitch offLabel="no" onLabel="yes"
-                                               value="#{editFirewallSettings.editingEntry.isActive}"
-                                               id="isActive"/>
-                        </h:panelGrid>
-
-                        <p:panelGrid>
-                            <p:row>
-                                <p:column>
-                                    <p:dataList var="who" value="#{editFirewallSettings.editingEntry.whos}">
-                                        <f:facet name="who">
-                                            Who
-                                        </f:facet>
-                                        <h:outputText value="#{who}"/>
-                                    </p:dataList>
-                                </p:column>
-                                <p:column>
-                                    <p:dataTable var="target" value="#{editFirewallSettings.editingEntry.targets}">
-                                        <p:column headerText="Network" width="15em">
-                                            <h:outputText value="#{target.network}"/>
-                                        </p:column>
-                                        <p:column headerText="Ports" width="11em">
-                                            <h:outputText value="#{target.ports}"/>
-                                        </p:column>
-                                        <p:column headerText="Protocol" width="3em">
-                                            <h:outputText value="#{targer.protocol}"/>
-                                        </p:column>
-                                    </p:dataTable>
-                                </p:column>
-                            </p:row>
-                            <p:row>
-                                <p:column>
-                                    <p:commandButton value="New"/>
-                                    <p:commandButton value="Edit"/>
-                                    <p:commandButton value="Delete"/>
-                                </p:column>
-                                <p:column>
-                                    <p:commandButton value="New"/>
-                                    <p:commandButton value="Edit"/>
-                                    <p:commandButton value="Delete"/>
-                                </p:column>
-                            </p:row>
-                        </p:panelGrid>
-
-                        <p:commandButton value="OK"
-                                         action="#{editFirewallSettings.onEditEntryOk}"
-                                         />
-                        <p:commandButton value="Cancel"
-                                         action="#{editFirewallSettings.onEditEntryCancel}"/>
-                    </p:dialog>
+                    <ui:include src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
                 </p:fragment>
             </h:form>
 
@@ -89,10 +32,13 @@
                                 <h:outputText value="#{entry.isActive}"/>
                             </p:column>
                             <p:column headerText="Who">
-                                <h:outputText value="#{entry.who}"/>
+                                <h:outputText value="#{entry.whoStr}"/>
                             </p:column>
-                            <p:column headerText="Target">
-                                <h:outputText value="#{entry.target}"/>
+                            <p:column headerText="Where">
+                                <h:outputText value="#{entry.whereStr}"/>
+                            </p:column>
+                            <p:column headerText="What">
+                                <h:outputText value="#{entry.whatStr}"/>
                             </p:column>
                             <p:column headerText="Description">
                                 <h:outputText value="#{entry.description}"/>
@@ -108,16 +54,16 @@
                         <p:commandButton
                             action="#{editFirewallSettings.onCloneIncomingEntry}"
                             value="Clone..."
-                            disabled="#{editFirewallSettings.sekectedIncomingEntry == null}"
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
                             />
                         <p:commandButton
                             action="#{editFirewallSettings.onEditIncomingEntry}"
-                            disabled="#{editFirewallSettings.sekectedIncomingEntry == null}"
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
                             value="Edit..."
                             />
                         <p:commandButton
                             action="#{editFirewallSettings.onRemoveIncomingEntry}"
-                            disabled="#{editFirewallSettings.sekectedIncomingEntry == null}"
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
                             value="Remove"/>
                     </p:tab>
 

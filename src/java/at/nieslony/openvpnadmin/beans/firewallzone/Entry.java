@@ -16,7 +16,8 @@ public class Entry {
     private String label = "NewEntry";
     private String description = "";
     private boolean isActive = false;
-    List<Target> targets = new LinkedList<>();
+    List<Where> where = new LinkedList<>();
+    List<What> what = new LinkedList<>();
     List<String> who = new LinkedList<>();
 
     public String getLabel() {
@@ -35,12 +36,22 @@ public class Entry {
         description = d;
     }
 
-    public String getWho() {
-        return "";
+    public String getWhoStr() {
+        return "TBD";
     }
 
-    public String getTarget() {
-        return "";
+    public String getWhereStr() {
+        List<String> whereStr = new LinkedList<>();
+        where.forEach(w -> whereStr.add(w.toString()));
+
+        return String.join(", ", whereStr);
+    }
+
+    public String getWhatStr() {
+        List<String> whatStr = new LinkedList<>();
+        what.forEach(w -> whatStr.add(w.toString()));
+
+        return String.join(", ", whatStr);
     }
 
     public boolean getIsActive() {
@@ -57,11 +68,23 @@ public class Entry {
         return cloned;
     }
 
-    public List<Target> getTargets() {
-        return targets;
+    public List<Where> getWheres() {
+        return where;
+    }
+
+    public List<What> getWhats() {
+        return what;
     }
 
     public List<String> getWhos() {
         return who;
+    }
+
+    public void addWhere(Where w) {
+        where.add(w);
+    }
+
+    public void removeWhere(Where w) {
+        where.remove(w);
     }
 }

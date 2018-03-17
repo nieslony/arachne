@@ -9,8 +9,9 @@ import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 /**
  *
@@ -23,6 +24,17 @@ public class EditFirewallSettings implements Serializable {
 
     final static String CHAIN_INCOMING = "incoming";
     final static String CHAIN_OUTGOING = "outgoing";
+
+    @ManagedProperty(value = "#{editFirewallEntry}")
+    private EditFirewallEntry editFirewallEntry;
+
+    public EditFirewallEntry getEditFirewallEntry() {
+        return editFirewallEntry;
+    }
+
+    public void setEditFirewallEntry(EditFirewallEntry efe) {
+        editFirewallEntry = efe;
+    }
 
     enum EditMode {
         EM_NEW("New"),
@@ -43,8 +55,8 @@ public class EditFirewallSettings implements Serializable {
 
     String editingChain;
     EditMode editingMode;
-    Entry editingEntry;
     Entry selectedIncomingEntry;
+    Entry editingEntry;
 
     public EditFirewallSettings() {
     }
@@ -56,46 +68,40 @@ public class EditFirewallSettings implements Serializable {
         editingMode = EditMode.EM_NEW;
 
         editingEntry = new Entry();
-        editingEntry.setLabel("NewEntry");
 
-        RequestContext rctx = RequestContext.getCurrentInstance();
-        rctx.execute("PF('dlgEditFirewallEntry').show();");
+        editFirewallEntry.setFirewallEntry(editingEntry);
+
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').show();");
     }
 
     public void onCloneIncomingEntry() {
         editingChain = CHAIN_INCOMING;
         editingMode = EditMode.EM_CLONE;
 
-        RequestContext rctx = RequestContext.getCurrentInstance();
-        rctx.execute("PF('dlgEditFirewallEntry').show();");
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').show();");
     }
 
     public void onEditIncomingEntry() {
         editingChain = CHAIN_INCOMING;
         editingMode = EditMode.EM_EDIT;
 
-        RequestContext rctx = RequestContext.getCurrentInstance();
-        rctx.execute("PF('dlgEditFirewallEntry').show();");
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').show();");
     }
 
     public void onRemoveIncomingEntry() {
     }
 
     public void onEditEntryOk() {
-        RequestContext rctx = RequestContext.getCurrentInstance();
-
         editingEntry = null;
 
-        rctx.update(":formEditFirewallEntry");
-        rctx.execute("PF('dlgEditFirewallEntry').hide();");
+        PrimeFaces.current().ajax().update(":formEditFirewallEntry");
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
     }
 
     public void onEditEntryCancel() {
-        RequestContext rctx = RequestContext.getCurrentInstance();
-
         editingEntry = null;
 
-        rctx.execute("PF('dlgEditFirewallEntry').hide();");
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
     }
 
     public String getEditingChain() {
@@ -128,7 +134,7 @@ public class EditFirewallSettings implements Serializable {
         selectedIncomingEntry = e;
     }
 
-    public Entry getSekectedIncomingEntry() {
+    public Entry getSelectedIncomingEntry() {
         return selectedIncomingEntry;
     }
 }

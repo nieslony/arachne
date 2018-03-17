@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<ui:composition
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+    <p:dialog header="Access what"
+        id="dlgEditWhat"
+        widgetVar="dlgEditWhat"
+        >
+        <p:selectOneRadio value="#{editFirewallEntry.editWhat.whatType}"
+                          layout="custom"
+                          id="whatType">
+            <f:selectItem itemLabel="Everything" itemValue="Everything" />
+            <f:selectItem itemLabel="Service" itemValue="Service"/>
+            <f:selectItem itemLabel="Port and protocol" itemValue="PortProtocol"/>
+            <f:selectItem itemLabel="Port range and protocol" itemValue="PortRangeProtocol"/>
+            <f:selectItem itemLabel="Port list and rotocol" itemValue="PortListProtocol"/>
+        </p:selectOneRadio>
+
+        <h:panelGrid columns="2">
+            <p:radioButton for="whatType" itemIndex="0"/>
+            <p:radioButton for="whatType" itemIndex="1"/>
+            <p:radioButton for="whatType" itemIndex="2"/>
+            <p:radioButton for="whatType" itemIndex="3"/>
+            <p:radioButton for="whatType" itemIndex="4"/>
+        </h:panelGrid>
+    </p:dialog>
+
+    <p:dialog header="#{editFirewallSettings.editingMode} #{editFirewallSettings.editingChain} chain"
+              id="dlgEditFirewallEntry"
+              widgetVar="dlgEditFirewallEntry">
+        <h:panelGrid columns="2">
+                <p:outputLabel value="Label:" for="label"/>
+                <p:inputText value="#{editFirewallEntry.label}"
+                             id="label"/>
+
+                <p:outputLabel value="Description:"/>
+                <p:inputText value="#{editFirewallEntry.description}"
+                             id="description"/>
+
+                <p:outputLabel value="Is active:" for="isActive"/>
+                <p:inputSwitch offLabel="no" onLabel="yes"
+                               value="#{editFirewallEntry.isActive}"
+                               id="isActive"/>
+        </h:panelGrid>
+
+        <p:panelGrid>
+            <p:row>
+                <p:column style="width: 25em">
+                    <p:dataList var="who" id="who" value="#{editFirewallSettings.editingEntry.whos}">
+                        <f:facet name="header">
+                            Who
+                        </f:facet>
+                        <h:outputText value="#{who}"/>
+                    </p:dataList>
+                </p:column>
+                <p:column style="width: 25em">
+                    <p:dataList var="target" id="where" value="#{editFirewallEntry.wheres}">
+                        <f:facet name="header">
+                            Where
+                        </f:facet>
+                    </p:dataList>
+                </p:column>
+                <p:column style="width: 25em">
+                    <p:dataList var="what" id="what" value="#{editFirewallEntry.whats}">
+                        <f:facet name="header">
+                            What
+                        </f:facet>
+                        <h:outputText value="#{what.toString}"/>
+                    </p:dataList>
+                </p:column>
+            </p:row>
+            <p:row>
+                <p:column>
+                    <p:commandButton value="New"/>
+                    <p:commandButton value="Edit"/>
+                    <p:commandButton value="Delete"/>
+                </p:column>
+                <p:column>
+                    <p:commandButton value="New"
+                                     action="#{editFirewallEntry.onAddWhere}"
+                                     update="where"
+                                     />
+                    <p:commandButton value="Edit"/>
+                    <p:commandButton value="Delete"/>
+                </p:column>
+                <p:column>
+                    <p:commandButton value="New"
+                                     action="#{editFirewallEntry.onAddWhat}"
+                                     update="what"
+                                     />
+                    <p:commandButton value="Edit"/>
+                    <p:commandButton value="Delete"/>
+                </p:column>
+            </p:row>
+        </p:panelGrid>
+
+        <p:messages/>
+        <p:growl showDetail="true"/>
+
+        <p:commandButton value="OK"
+                         action="#{editFirewallSettings.onEditEntryOk}"
+                         />
+        <p:commandButton value="Cancel"
+                         action="#{editFirewallSettings.onEditEntryCancel}"/>
+    </p:dialog>
+
+</ui:composition>
