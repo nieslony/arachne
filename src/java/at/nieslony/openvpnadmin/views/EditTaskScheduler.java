@@ -15,7 +15,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 /**
  *
@@ -127,8 +127,7 @@ public class EditTaskScheduler
         else {
             logger.info(String.format("There's no task class, don't create task"));
         }
-
-        RequestContext.getCurrentInstance().execute("PF('dlgAddTask').hide();");
+        PrimeFaces.current().dialog().closeDynamic("dlgAddTask");
     }
 
     public void onAddTask() {
@@ -145,7 +144,7 @@ public class EditTaskScheduler
         dlgAddTask_taskType = null;
         dlgTaskMode = DlgTaskMode.ADD;
 
-        RequestContext.getCurrentInstance().execute("PF('dlgAddTask').show();");
+        PrimeFaces.current().dialog().openDynamic("dlgAddTask");
     }
 
     public void onEditTask() {
@@ -163,7 +162,7 @@ public class EditTaskScheduler
 
         dlgTaskMode = DlgTaskMode.EDIT;
 
-        RequestContext.getCurrentInstance().execute("PF('dlgAddTask').show();");
+        PrimeFaces.current().dialog().openDynamic("dlgAddTask");
     }
 
     public void onRemoveTask() {

@@ -25,7 +25,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import org.primefaces.context.RequestContext;
+import org.primefaces.PrimeFaces;
 
 @ManagedBean
 @ViewScoped
@@ -138,7 +138,8 @@ public class EditUserVpn
             logger.warning(String.format("Cannot trigger reload of VPN configuration: %s",
                     ex.getMessage()));
         }
-        RequestContext.getCurrentInstance().update("menuForm:mainMenu");
+
+        PrimeFaces.current().ajax().update("menuForm:mainMenu");
     }
 
     private void updatePushRoutesList() {
@@ -360,7 +361,7 @@ public class EditUserVpn
         setIsEnabled(false);
         save();
         adminWelcome.loadUserVpns();
-        RequestContext.getCurrentInstance().update("menuForm:mainMenu");
+        PrimeFaces.current().ajax().update("menuForm:mainMenu");
 
         String serverConfigFile = folderFactory.getUserVpnFileName();
         logger.info(String.format("Removing %s", serverConfigFile));
