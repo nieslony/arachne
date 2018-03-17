@@ -94,7 +94,7 @@ public class EditRoles implements Serializable {
     public void onAddRule(Role role) {
         addRuleToRole = role.getName();
 
-        PrimeFaces.current().dialog().openDynamic("dlgAddRule");
+        PrimeFaces.current().executeScript("PF('dlgAddRule').show();");
     }
 
     public void onRemoveRuleFromRole(Role role, RoleRule rule) {
@@ -112,6 +112,6 @@ public class EditRoles implements Serializable {
         else
             logger.warning("Unable to create rule");
 
-        PrimeFaces.current().dialog().closeDynamic("dlgAddRule");
+        PrimeFaces.current().executeScript("PF('dlgAddRule').hide();");
     }
 }

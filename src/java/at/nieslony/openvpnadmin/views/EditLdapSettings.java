@@ -161,7 +161,7 @@ public class EditLdapSettings
             }
             testGroupDesciption = ldapGroup.getDescription();
 
-            PrimeFaces.current().dialog().openDynamic("testLdapGroup");
+            PrimeFaces.current().executeScript("PF('testLdapGroup').show();");
         }
         catch (NoSuchLdapGroup nslg) {
                 FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -222,7 +222,7 @@ public class EditLdapSettings
                 attr = attrs.get(getAttrSurname());
                 setTestSurname(attr != null ? (String) attr.get() : "");
 
-                PrimeFaces.current().dialog().openDynamic("testLdapUser");
+                PrimeFaces.current().executeScript("PF('testLdapUser').show();");
 
             }
             else {

@@ -169,7 +169,7 @@ public class EditUsers implements Serializable {
 
         editUser = user;
 
-        PrimeFaces.current().dialog().openDynamic("dlgEditUser");
+        PrimeFaces.current().executeScript("PF('dlgEditUser').show();");
     }
 
     public void onEditUserOk() {
@@ -193,12 +193,12 @@ public class EditUsers implements Serializable {
             logger.warning(msg);
         }
 
-        PrimeFaces.current().dialog().closeDynamic("dlgEditUser");
+        PrimeFaces.current().executeScript("PF('dlgEditUser').hide();");
     }
 
     public void onAddLocalUser() {
         logger.info("Open dialog dlgAddLocalUser");
-        PrimeFaces.current().dialog().openDynamic("dlgAddLocalUser");
+        PrimeFaces.current().executeScript("PF('dlgAddLocalUser').show();");
     }
 
     public void onAddLocalUserOk()
@@ -219,7 +219,7 @@ public class EditUsers implements Serializable {
             roles.addRule("user", "isUser", user.getUsername());
         }
 
-        PrimeFaces.current().dialog().closeDynamic("dlgAddLocalUser");
+        PrimeFaces.current().executeScript("PF('dlgAddLocalUser').hide();");
     }
 
     public List<AbstractUser> getAllUsers() {
@@ -243,7 +243,7 @@ public class EditUsers implements Serializable {
     public void onResetPassword(AbstractUser user) {
         logger.info("Open dialog dlgResetPassword");
         passwordResetUserName = user.getUsername();
-        PrimeFaces.current().dialog().openDynamic("dlgResetPassword");
+        PrimeFaces.current().executeScript("PF('dlgResetPassword').show();");
     }
 
     public void onResetPasswordOk() {
@@ -263,7 +263,7 @@ public class EditUsers implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
             logger.warning(msg);
         }
-        PrimeFaces.current().dialog().closeDynamic("dlgResetPassword");
+        PrimeFaces.current().executeScript("PF('dlgResetPassword').hide();");
     }
 
     public void onRemoveUser(String username) {

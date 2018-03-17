@@ -127,7 +127,7 @@ public class EditTaskScheduler
         else {
             logger.info(String.format("There's no task class, don't create task"));
         }
-        PrimeFaces.current().dialog().closeDynamic("dlgAddTask");
+        PrimeFaces.current().executeScript("PF('dlgAddTask').hide();");
     }
 
     public void onAddTask() {
@@ -144,7 +144,7 @@ public class EditTaskScheduler
         dlgAddTask_taskType = null;
         dlgTaskMode = DlgTaskMode.ADD;
 
-        PrimeFaces.current().dialog().openDynamic("dlgAddTask");
+        PrimeFaces.current().executeScript("PF('dlgAddTask').show();");
     }
 
     public void onEditTask() {
@@ -162,7 +162,7 @@ public class EditTaskScheduler
 
         dlgTaskMode = DlgTaskMode.EDIT;
 
-        PrimeFaces.current().dialog().openDynamic("dlgAddTask");
+        PrimeFaces.current().executeScript("PF('dlgAddTask').show();");
     }
 
     public void onRemoveTask() {
