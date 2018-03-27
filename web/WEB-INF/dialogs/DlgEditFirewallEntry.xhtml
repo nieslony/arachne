@@ -16,10 +16,10 @@
                           layout="custom"
                           id="whatType">
             <f:selectItem itemValue="Everything" />
-            <f:selectItem itemLabel="Service:" itemValue="Service"/>
-            <f:selectItem itemValue="PortProtocol:"/>
-            <f:selectItem itemValue="PortRangeProtocol:"/>
-            <f:selectItem itemValue="PortListProtocol:"/>
+            <f:selectItem itemLabel="Service" itemValue="Service"/>
+            <f:selectItem itemValue="PortProtocol"/>
+            <f:selectItem itemValue="PortRangeProtocol"/>
+            <f:selectItem itemValue="PortListProtocol"/>
             <f:ajax render="service portProtocol portRangeProtocol portListProtocol"/>
         </p:selectOneRadio>
 
@@ -32,7 +32,9 @@
             <p:outputLabel for="rbService" value="Service"/>
             <p:selectOneMenu disabled='#{editFirewallEntry.editWhat.type != "Service"}'
                              id="service"
-                             value="#{editFirewallEntry.editWhat.service}">
+                             converter="firewallDServiceConverter"
+                             value="#{editFirewallEntry.editWhat.service}"
+                             >
                 <f:selectItems value="#{firewallDServices.services}"
                                var="s"
                                itemLabel="#{s.shortDescription}"

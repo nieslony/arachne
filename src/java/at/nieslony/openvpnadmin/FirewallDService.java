@@ -28,7 +28,7 @@ public class FirewallDService {
         init(shortName, description, ports);
     }
 
-    public void init(String shortName,
+    private void init(String shortName,
         String description,
         List<String> ports)
     {

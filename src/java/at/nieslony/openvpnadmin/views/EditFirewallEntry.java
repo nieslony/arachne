@@ -31,13 +31,13 @@ public class EditFirewallEntry implements Serializable {
 
     private final List<Where> wheres = new LinkedList<>();
     private final List<What> whats = new LinkedList<>();
-    private String label;
-    private String description;
-    private boolean isActive;
+    private String label = "";
+    private String description = "";
+    private boolean isActive = false;
 
     private Entry firewallEntry;
 
-    private EditWhat editWhat = new EditWhat(this);
+    final private EditWhat editWhat = new EditWhat(this);
 
     private Where selectedWhere;
 
