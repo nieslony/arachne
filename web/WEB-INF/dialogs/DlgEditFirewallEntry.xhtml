@@ -7,26 +7,87 @@
     xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 
     <p:dialog header="Access what"
+              dynamic="true"
         id="dlgEditWhat"
+        onShow="#{editWhat.onShow()}"
         widgetVar="dlgEditWhat"
         >
-        <p:selectOneRadio value="#{editFirewallEntry.editWhat.whatType}"
+        <p:selectOneRadio value="#{editFirewallEntry.editWhat.type}"
                           layout="custom"
                           id="whatType">
-            <f:selectItem itemLabel="Everything" itemValue="Everything" />
-            <f:selectItem itemLabel="Service" itemValue="Service"/>
-            <f:selectItem itemLabel="Port and protocol" itemValue="PortProtocol"/>
-            <f:selectItem itemLabel="Port range and protocol" itemValue="PortRangeProtocol"/>
-            <f:selectItem itemLabel="Port list and rotocol" itemValue="PortListProtocol"/>
+            <f:selectItem itemValue="Everything" />
+            <f:selectItem itemLabel="Service:" itemValue="Service"/>
+            <f:selectItem itemValue="PortProtocol:"/>
+            <f:selectItem itemValue="PortRangeProtocol:"/>
+            <f:selectItem itemValue="PortListProtocol:"/>
+            <f:ajax render="service portProtocol portRangeProtocol portListProtocol"/>
         </p:selectOneRadio>
 
-        <h:panelGrid columns="2">
-            <p:radioButton for="whatType" itemIndex="0"/>
-            <p:radioButton for="whatType" itemIndex="1"/>
-            <p:radioButton for="whatType" itemIndex="2"/>
-            <p:radioButton for="whatType" itemIndex="3"/>
-            <p:radioButton for="whatType" itemIndex="4"/>
+        <h:panelGrid columns="3">
+            <p:radioButton for="whatType" itemIndex="0" id="rbEverything"/>
+            <p:outputLabel for="rbEverything" value="Everything"/>
+            <h:outputText value=""/>
+
+            <p:radioButton for="whatType" itemIndex="1" id="rbService"/>
+            <p:outputLabel for="rbService" value="Service"/>
+            <p:selectOneMenu disabled='#{editFirewallEntry.editWhat.type != "Service"}'
+                             id="service"
+                             value="#{editFirewallEntry.editWhat.service}">
+                <f:selectItems value="#{firewallDServices.services}"
+                               var="s"
+                               itemLabel="#{s.shortDescription}"
+                               itemValue="#{s}"
+                               />
+            </p:selectOneMenu>
+
+            <p:radioButton for="whatType" itemIndex="2" id="rbPortProtocol"/>
+            <p:outputLabel for="rbPortProtocol" value="Port and Protocol"/>
+            <p:outputPanel id="portProtocol">
+                <p:spinner min="1" max="65535" size="5"
+                           disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}'
+                           value="#{editFirewallEntry.editWhat.port}"/>
+                <h:outputText value=" / "/>
+                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                 disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}' >
+                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                </p:selectOneMenu>
+            </p:outputPanel>
+
+            <p:radioButton for="whatType" itemIndex="3" id="rbPortRangeProtocol"/>
+            <p:outputLabel for="rbPortRangeProtocol" value="Port range and protocol"/>
+            <p:outputPanel id="portRangeProtocol">
+                <p:spinner min="1" max="65535" size="5"
+                           disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
+                           value="#{editFirewallEntry.editWhat.portFrom}"/>
+                <h:outputText value=" - "/>
+                <p:spinner min="1" max="65535" size="5"
+                           disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
+                           value="#{editFirewallEntry.editWhat.portTo}"/>
+                <h:outputText value=" / "/>
+                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                 disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'>
+                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                </p:selectOneMenu>
+            </p:outputPanel>
+
+            <p:radioButton for="whatType" itemIndex="4" id="rbPortListProtocol"/>
+            <p:outputLabel for="rbPortListProtocol" value="Port list and Protocol"/>
+            <p:outputPanel id="portListProtocol">
+                <p:chips value="#{editFirewallEntry.editWhat.ports}"
+                         disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'/>
+                <h:outputText value=" / "/>
+                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                 disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'>
+                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                </p:selectOneMenu>
+            </p:outputPanel>
         </h:panelGrid>
+
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWhat.onOk}" update="what"/>
+        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhat.onCancel}"/>
     </p:dialog>
 
     <p:dialog header="#{editFirewallSettings.editingMode} #{editFirewallSettings.editingChain} chain"
@@ -69,7 +130,7 @@
                         <f:facet name="header">
                             What
                         </f:facet>
-                        <h:outputText value="#{what.toString}"/>
+                        <h:outputText value="#{what.asString}"/>
                     </p:dataList>
                 </p:column>
             </p:row>
@@ -98,14 +159,13 @@
             </p:row>
         </p:panelGrid>
 
-        <p:messages/>
-        <p:growl showDetail="true"/>
+        <p:messages showDetail="true"/>
 
         <p:commandButton value="OK"
-                         action="#{editFirewallSettings.onEditEntryOk}"
+                         action="#{editFirewallEntry.onOk}"
                          />
         <p:commandButton value="Cancel"
-                         action="#{editFirewallSettings.onEditEntryCancel}"/>
+                         action="#{editFirewallEntry.onCancel}"/>
     </p:dialog>
 
 </ui:composition>

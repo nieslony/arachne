@@ -5,15 +5,19 @@
  */
 package at.nieslony.openvpnadmin.beans.firewallzone;
 
-import at.nieslony.openvpnadmin.FirewallDServices;
+import at.nieslony.openvpnadmin.FirewallDService;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
  * @author claas
  */
-public class What {
+public class What implements Serializable {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
     public enum WhatType {
         Everything("Everything"),
         Service("Service"),
@@ -47,11 +51,11 @@ public class What {
     }
 
     private WhatType whatType = WhatType.Everything;
-    private int portFrom;
-    private int portTo;
+    private int portFrom = 1;
+    private int portTo = 65535;
     private List<String> ports = new LinkedList<>();
-    private Protocol protocol;
-    private FirewallDServices.Service service;
+    private Protocol protocol = Protocol.TCP;
+    private FirewallDService service = null;
     private int id = -1;
     private static int tmpId = -1;
 
@@ -107,8 +111,7 @@ public class What {
         ports = p;
     }
 
-    @Override
-    public String toString() {
+    public String getAsString() {
         StringBuilder buf = new StringBuilder();
 
         switch (whatType) {
@@ -126,7 +129,12 @@ public class What {
                 buf.append(portFrom).append(" - ").append(portTo).append(" / ").append(protocol);
                 break;
             case Service:
-                buf.append(service.getShortDescription());
+                if (service == null) {
+                    buf.append("Service is null");
+                }
+                else {
+                    buf.append(service.getShortDescription());
+                }
                 break;
         }
 
@@ -141,11 +149,11 @@ public class What {
         return Protocol.values();
     }
 
-    public FirewallDServices.Service getService() {
+    public FirewallDService getService() {
         return service;
     }
 
-    public void setService(FirewallDServices.Service s) {
+    public void setService(FirewallDService s) {
         service = s;
     }
 }

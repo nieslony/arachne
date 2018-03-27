@@ -5,13 +5,17 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.beans.FirewallDServices;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditMode;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.PrimeFaces;
@@ -23,28 +27,21 @@ import org.primefaces.PrimeFaces;
 @ManagedBean
 @ViewScoped
 public class EditFirewallEntry implements Serializable {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
     private final List<Where> wheres = new LinkedList<>();
     private final List<What> whats = new LinkedList<>();
     private String label;
     private String description;
     private boolean isActive;
 
-    private What selectedWhat = null;
-    private Where selectedWhere;
-
     private Entry firewallEntry;
 
-    private What editWhat;
+    private EditWhat editWhat = new EditWhat(this);
 
-    public What getEditWhat() {
-        return editWhat;
-    }
+    private Where selectedWhere;
 
-    public void setEditWhat(What w) {
-        editWhat = w;
-    }
-
-    public void setFirewallEntry(Entry e) {
+   public void setFirewallEntry(Entry e) {
         firewallEntry = e;
 
         readValues();
@@ -66,14 +63,6 @@ public class EditFirewallEntry implements Serializable {
 
     public Where getSelectedWhare() {
         return selectedWhere;
-    }
-
-    public void setSelectedWhat(What sw) {
-        selectedWhat = sw;
-    }
-
-    public What getSelectedWhat() {
-        return selectedWhat;
     }
 
     public List<Where> getWheres() {
@@ -116,19 +105,36 @@ public class EditFirewallEntry implements Serializable {
 
     }
 
-    public void onAddWhat() {
-        What what = new What();
-
-        whats.add(what);
-
-        PrimeFaces.current().dialog().openDynamic("dlgEditWhat");
+    public EditWhat getEditWhat() {
+        return editWhat;
     }
 
-    public void onRemoveWhare() {
+    public void updateEditWhat() {
+    }
+
+    public void onAddWhat() {
+        logger.info("Adding new what");
+
+        What what = new What();
+        what.setService(FirewallDServices.getAllServices().get(2));
+
+        editWhat.beginEdit(what, EditMode.NEW);
+
+        PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
+    }
+
+    public void onRemoveWhere() {
 
     }
 
     public void onRemoveWhat() {
+    }
 
+    public void onOk() {
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
+    }
+
+    public void onCancel() {
+        PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
     }
 }
