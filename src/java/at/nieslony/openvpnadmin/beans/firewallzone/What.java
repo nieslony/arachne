@@ -53,6 +53,7 @@ public class What implements Serializable {
     private WhatType whatType = WhatType.Everything;
     private int portFrom = 1;
     private int portTo = 65535;
+    private int port = 1;
     private List<String> ports = new LinkedList<>();
     private Protocol protocol = Protocol.TCP;
     private FirewallDService service = null;
@@ -108,7 +109,16 @@ public class What implements Serializable {
     }
 
     public void setPorts(List<String> p) {
-        ports = p;
+        ports.clear();
+        ports.addAll(p);
+    }
+
+    public void setPort(int p) {
+        port = p;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getAsString() {
@@ -123,7 +133,7 @@ public class What implements Serializable {
                 buf.append(" / ").append(protocol);
                 break;
             case PortProtocol:
-                buf.append(portFrom).append(" / ").append(protocol);
+                buf.append(port).append(" / ").append(protocol);
                 break;
             case PortRangeProtocol:
                 buf.append(portFrom).append(" - ").append(portTo).append(" / ").append(protocol);

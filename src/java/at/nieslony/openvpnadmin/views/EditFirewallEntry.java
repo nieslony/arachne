@@ -5,7 +5,6 @@
  */
 package at.nieslony.openvpnadmin.views;
 
-import at.nieslony.openvpnadmin.beans.FirewallDServices;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
@@ -115,10 +114,7 @@ public class EditFirewallEntry implements Serializable {
     public void onAddWhat() {
         logger.info("Adding new what");
 
-        What what = new What();
-        what.setService(FirewallDServices.getAllServices().get(2));
-
-        editWhat.beginEdit(what, EditMode.NEW);
+        editWhat.beginEdit(new What(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
     }

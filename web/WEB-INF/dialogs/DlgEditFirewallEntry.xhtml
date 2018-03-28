@@ -88,7 +88,7 @@
             </p:outputPanel>
         </h:panelGrid>
 
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWhat.onOk}" update="what"/>
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWhat.onOk}" update="what dlgEditWhat"/>
         <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhat.onCancel}"/>
     </p:dialog>
 
@@ -153,7 +153,7 @@
                 <p:column>
                     <p:commandButton value="New"
                                      action="#{editFirewallEntry.onAddWhat}"
-                                     update="what"
+                                     update="what dlgEditWhat"
                                      />
                     <p:commandButton value="Edit"/>
                     <p:commandButton value="Delete"/>

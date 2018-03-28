@@ -53,7 +53,7 @@ public class EditWhat implements Serializable {
     }
 
     public void loadWhat() {
-        port = what.getPortFrom();
+        port = what.getPort();
         whatType = what.getWhatType();
         portFrom = what.getPortFrom();
         portTo = what.getPortTo();
@@ -67,6 +67,7 @@ public class EditWhat implements Serializable {
         what.setPortFrom(portFrom);
         what.setPortTo(portTo);
         what.setPorts(ports);
+        what.setPort(port);
         what.setProtocol(protocol);
         what.setService(service);
         what.setWhatType(whatType);
