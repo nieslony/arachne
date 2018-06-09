@@ -17,7 +17,7 @@ public class Where {
         return network;
     }
 
-    public String getNerworkStr() {
+    public String getAsString() {
         StringBuilder buf = new StringBuilder();
         switch (mask) {
             case 0:
@@ -44,14 +44,5 @@ public class Where {
 
     public void setMask(int m) {
         mask = m;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append(network).append("/").append(mask);
-
-        return buf.toString();
     }
 }
