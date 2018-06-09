@@ -11,6 +11,7 @@ import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditMode;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class EditFirewallEntry implements Serializable {
     private Entry firewallEntry;
 
     final private EditWhat editWhat = new EditWhat(this);
+    final private EditWhere editWhere = new EditWhere(this);
 
     private Where selectedWhere;
 
@@ -101,9 +103,17 @@ public class EditFirewallEntry implements Serializable {
     }
 
     public void onAddWhere() {
+        logger.info("Adding new where");
 
+        editWhere.beginEdit(new Where(), EditMode.NEW);
+
+        PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
     }
 
+    public EditWhere getEditWhere() {
+        return editWhere;
+    }
+    
     public EditWhat getEditWhat() {
         return editWhat;
     }

@@ -6,6 +6,45 @@
     xmlns:h="http://xmlns.jcp.org/jsf/html"
     xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 
+    <p:dialog header="Acces from where"
+              dynamic="true"
+              id="dlgEditWhere"
+              widgetVar="dlgEditWhere">
+        <p:selectOneRadio value="#{editFirewallEntry.editWhere.whereType}"
+                          layout="custom"
+                          id="whereType">
+            <f:selectItem itemValue="Everywhere"/>
+            <f:selectItem itemValue="Hostname"/>
+            <f:selectItem itemValue="Network"/>
+            <f:ajax render="hostname network mask"/>
+        </p:selectOneRadio>
+        
+        <h:panelGrid columns="3">
+            <p:radioButton for="whereType" itemIndex="0" id="rbEverywhere"/>
+            <p:outputLabel for="rbEverywhere" value="Everywhere"/>
+            <h:outputText value=""/>
+            
+            <p:radioButton for="whereType" itemIndex="1" id="rbHostname"/>
+            <p:outputLabel for="rbHostname" value="Hostname:"/>
+            <p:inputText value="#{editFirewallEntry.editWhere.hostname}" id="hostname"
+                         disabled='#{editFirewallEntry.editWhere.whereType != "Hostname"}'/>
+            
+            <p:radioButton for="whereType" itemIndex="2" id="rbNetwork"/>
+            <p:outputLabel for="rbNetwork" value="Network:"/>
+            <p:outputPanel>
+                <p:inputText value="#{editFirewallEntry.editWhere.network}" id="network"
+                             disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+                <h:outputText value="/"/>
+                <p:spinner min="1" max="65535" value="#{editFirewallEntry.editWhere.mask}"
+                           id="mask"
+                           disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+            </p:outputPanel>
+        </h:panelGrid>
+        
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}" update="what dlgEditWhat"/>
+        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>        
+    </p:dialog>
+    
     <p:dialog header="Access what"
               dynamic="true"
         id="dlgEditWhat"
@@ -121,7 +160,7 @@
                     </p:dataList>
                 </p:column>
                 <p:column style="width: 25em">
-                    <p:dataList var="target" id="where" value="#{editFirewallEntry.wheres}">
+                    <p:dataList var="where" id="where" value="#{editFirewallEntry.wheres}">
                         <f:facet name="header">
                             Where
                         </f:facet>
@@ -145,7 +184,7 @@
                 <p:column>
                     <p:commandButton value="New"
                                      action="#{editFirewallEntry.onAddWhere}"
-                                     update="where"
+                                     update="where dlgEditWhere"
                                      />
                     <p:commandButton value="Edit"/>
                     <p:commandButton value="Delete"/>
