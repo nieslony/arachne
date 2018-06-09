@@ -23,11 +23,11 @@
                     <file>${libs.PostgreSQLDriver.classpath}</file>
                 </library>
                 <library dirs="200">
-                    <file>${reference.DatabasePropertiesStorage.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
+                    <file>${file.reference.myfaces-api.jar}</file>
                 </library>
                 <library dirs="200">
-                    <file>${file.reference.myfaces-api.jar}</file>
+                    <file>${reference.DatabasePropertiesStorage.jar}</file>
+                    <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.myfaces-impl.jar}</file>

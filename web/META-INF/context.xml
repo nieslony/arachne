@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context allowLinking="true" antiJARLocking="true" path="/arachne">
+<!--     allowLinking="true" antiJARLocking="true" 
+-->
+<Context 
+    path="/arachne">
     <Resources allowLinking="true">
         <PostResources base="/usr/share/java/commons-digester.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"

@@ -31,6 +31,7 @@ BuildRequires:  databasepropertiesstorage
 
 %if 0%{?fedora}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas libxslt
+BuildRequires:	lua ruby
 %endif
 %if 0%{?centos_version}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api docbook5-style-xsl docbook5-schemas
