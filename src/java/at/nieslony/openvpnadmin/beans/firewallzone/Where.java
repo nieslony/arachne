@@ -5,11 +5,13 @@
  */
 package at.nieslony.openvpnadmin.beans.firewallzone;
 
+import java.io.Serializable;
+
 /**
  *
  * @author claas
  */
-public class Where {
+public class Where implements Serializable {
     public enum WhereType {
         Everywhere("Everywhere"),
         Hostname("Hostname"),

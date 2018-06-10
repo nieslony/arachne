@@ -6,7 +6,17 @@
     xmlns:h="http://xmlns.jcp.org/jsf/html"
     xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 
-    <p:dialog header="Acces from where"
+    <p:dialog header="Who has access"
+        dynamic="true"
+        id="dlgEditWho"
+        widgetVar="dlgEditWho">        
+
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}" 
+                         update="who dlgEditWho"/>
+        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWho.onCancel}"/>        
+    </p:dialog>
+    
+    <p:dialog header="Acces where"
               dynamic="true"
               id="dlgEditWhere"
               widgetVar="dlgEditWhere">
@@ -157,7 +167,7 @@
                         <f:facet name="header">
                             Who
                         </f:facet>
-                        <h:outputText value="#{who}"/>
+                        <h:outputText value="#{who.asString}"/>
                     </p:dataList>
                 </p:column>
                 <p:column style="width: 25em">
@@ -179,7 +189,8 @@
             </p:row>
             <p:row>
                 <p:column>
-                    <p:commandButton value="New"/>
+                    <p:commandButton value="New"
+                                     action="#{editFirewallEntry.onAddWho}"/>
                     <p:commandButton value="Edit"/>
                     <p:commandButton value="Delete"/>
                 </p:column>

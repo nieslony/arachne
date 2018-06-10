@@ -5,10 +5,14 @@
  */
 package at.nieslony.openvpnadmin.beans.firewallzone;
 
+import java.io.Serializable;
+
 /**
  *
  * @author claas
  */
-public class Who {
-
+public class Who implements Serializable {
+    public String asString() {
+        return "not implemented";
+    }
 }

@@ -9,9 +9,11 @@ import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
+import at.nieslony.openvpnadmin.beans.firewallzone.Who;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditMode;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.primefaces.PrimeFaces;
 public class EditFirewallEntry implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
+    private final List<Who> whos = new LinkedList<>();
     private final List<Where> wheres = new LinkedList<>();
     private final List<What> whats = new LinkedList<>();
     private String label = "";
@@ -39,6 +42,7 @@ public class EditFirewallEntry implements Serializable {
 
     final private EditWhat editWhat = new EditWhat(this);
     final private EditWhere editWhere = new EditWhere(this);
+    final private EditWho editWho = new EditWho(this);
 
     private Where selectedWhere;
 
@@ -68,6 +72,10 @@ public class EditFirewallEntry implements Serializable {
 
     public List<Where> getWheres() {
         return wheres;
+    }
+
+    public List<Who> getWhos() {
+        return whos;
     }
 
     public List<What> getWhats() {
@@ -102,12 +110,24 @@ public class EditFirewallEntry implements Serializable {
         return isActive;
     }
 
+    public void onAddWho() {
+        logger.info("Adding new who");
+
+        editWho.beginEdit(new Who(), EditMode.NEW);
+
+        PrimeFaces.current().executeScript("PF('dlgEditWho').show();");
+    }
+
     public void onAddWhere() {
         logger.info("Adding new where");
 
         editWhere.beginEdit(new Where(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
+    }
+
+    public EditWho getEditWho() {
+        return editWho;
     }
 
     public EditWhere getEditWhere() {
@@ -127,6 +147,10 @@ public class EditFirewallEntry implements Serializable {
         editWhat.beginEdit(new What(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
+    }
+
+    public void onRemoveWho() {
+
     }
 
     public void onRemoveWhere() {
