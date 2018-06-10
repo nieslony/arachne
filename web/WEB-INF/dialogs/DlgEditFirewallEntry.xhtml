@@ -41,7 +41,8 @@
             </p:outputPanel>
         </h:panelGrid>
         
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}" update="what dlgEditWhat"/>
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}" 
+                         update="where dlgEditWhere"/>
         <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>        
     </p:dialog>
     
@@ -164,6 +165,7 @@
                         <f:facet name="header">
                             Where
                         </f:facet>
+                        <h:outputText value="#{where.asString}"/>
                     </p:dataList>
                 </p:column>
                 <p:column style="width: 25em">

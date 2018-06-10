@@ -14,46 +14,46 @@ public class Where {
         Everywhere("Everywhere"),
         Hostname("Hostname"),
         Network("Network");
-        
+
         public final String _description;
-        
+
         WhereType(String d) {
-            _description = d;                    
+            _description = d;
         }
-        
+
         public String getDescription() {
             return _description;
         }
     }
-    
+
     private WhereType whereType = WhereType.Everywhere;
     String network = "0.0.0.0";
     int mask = 0;
     String hostname = "";
-    
+
     public WhereType getWhereType() {
         return whereType;
     }
-    
+
     public void setWhereType(WhereType wt) {
         whereType = wt;
     }
-    
+
     public String getHostname() {
         return hostname;
     }
-    
+
     public void setHostname(String hn) {
         hostname = hn;
     }
-    
+
     public String getNetwork() {
         return network;
     }
 
     public String getAsString() {
         StringBuilder buf = new StringBuilder();
-        
+
         switch (whereType) {
             case Everywhere:
                 buf.append("Everywhere");

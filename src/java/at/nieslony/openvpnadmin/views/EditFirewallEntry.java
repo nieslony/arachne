@@ -113,7 +113,7 @@ public class EditFirewallEntry implements Serializable {
     public EditWhere getEditWhere() {
         return editWhere;
     }
-    
+
     public EditWhat getEditWhat() {
         return editWhat;
     }

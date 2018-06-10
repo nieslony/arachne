@@ -5,7 +5,6 @@
  */
 package at.nieslony.openvpnadmin.views.editfirewallsettings;
 
-import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
 import at.nieslony.openvpnadmin.views.EditFirewallEntry;
 import java.util.logging.Logger;
@@ -22,7 +21,7 @@ public class EditWhere {
     private EditMode editMode;
 
     private EditFirewallEntry editFirewallEntry;
-    
+
     Where.WhereType whereType;
     String hostname;
     String network = "0.0.0.0";
@@ -31,39 +30,39 @@ public class EditWhere {
     public EditWhere(EditFirewallEntry efe) {
         editFirewallEntry = efe;
     }
-    
+
     public Where.WhereType getWhereType() {
         return whereType;
     }
-    
+
     public void setWhereType(Where.WhereType wt) {
         whereType = wt;
     }
-    
+
     public String getHostname() {
         return hostname;
     }
-    
+
     public void setHostname(String hn) {
         hostname = hn;
     }
-    
+
     public String getNetwork() {
         return network;
     }
-    
+
     public void setNetwork(String nw) {
         network = nw;
     }
-            
+
     public int getMask() {
         return mask;
     }
-    
+
     public void setMask(int m) {
         mask = m;
     }
-    
+
     public void beginEdit(Where w, EditMode em) {
         where = w;
         loadWhere();
@@ -76,7 +75,7 @@ public class EditWhere {
         network = where.getNetwork();
         mask = where.getMask();
     }
-    
+        
     private void saveWhere() {
         where.setWhereType(whereType);
         where.setHostname(hostname);
