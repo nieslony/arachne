@@ -1,10 +1,11 @@
 #!/bin/bash
 
-THEME_FILE=~/Download/jquery-ui-1.12.1.custom.zip
+THEME_FILE=~/Downloads/jquery-ui-1.12.1.custom.zip
 THEME_ORG=tmp
 THEME_OUT_DIR=META-INF/resources/primefaces-arachne
 THEME_OUT_IMAGES=$THEME_OUT_DIR/images
 
+rm -rvf tmp
 mkdir -v tmp
 unzip $THEME_FILE -d tmp
 mkdir -pv $THEME_OUT_IMAGES
@@ -27,3 +28,4 @@ jar -cvf arachne-theme.jar META-INF
 # ORG: url("#{resource['primefaces-afterdark:images/ui-icons-light.png']}");
 #      url("#{resource['primefaces-mytheme:images/ui-icons_eeeeee_256x240.png']}");
 #      url("#{resource[primefaces-mytheme:images1.png]}");
+#
