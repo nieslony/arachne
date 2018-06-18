@@ -27,7 +27,7 @@
         </p:dialog>
 
         <p:layout fullPage="true">
-            <p:layoutUnit position="north" >
+            <p:layoutUnit position="north" style="border-width: 0px;">
                 <h:form>
                     <p:toolbar id="toolbar">
                         <f:facet name="left">
@@ -52,12 +52,14 @@
                     #{currentUser.username} (#{currentUser.visibleName}).
                 </h:head>-->
             </p:layoutUnit>
-            <p:layoutUnit position="west" minSize="200">
+            <p:layoutUnit position="west" minSize="200"
+                          style="border-width: 0px;">
                 <h:form id="menuForm">
                     <p:menu id="mainMenu" model="#{adminWelcome.menuModel}"/>
                 </h:form>
             </p:layoutUnit>
-            <p:layoutUnit position="center">
+            <p:layoutUnit position="center"
+                          style="border-width: 0px;">
                 <p:panel header="${title}">
                     <ui:insert name="content">Content TEMPLATE</ui:insert>
                 </p:panel>

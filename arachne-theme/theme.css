@@ -8,7 +8,7 @@
  *
  * http://api.jqueryui.com/category/theming/
  *
- * To view and modify this theme, visit http://jqueryui.com/themeroller/?scope=&folderName=custom-theme&bgImgOpacityError=&bgImgOpacityHighlight=&bgImgOpacityActive=&bgImgOpacityHover=&bgImgOpacityDefault=&bgImgOpacityContent=&bgImgOpacityHeader=&cornerRadiusShadow=8px&offsetLeftShadow=0px&offsetTopShadow=0px&thicknessShadow=5px&opacityShadow=30&bgImgOpacityShadow=0&bgTextureShadow=flat&bgColorShadow=%23777777&opacityOverlay=30&bgImgOpacityOverlay=0&bgTextureOverlay=flat&bgColorOverlay=%23aaaaaa&iconColorError=%23cc0000&fcError=%235f3f3f&borderColorError=%23f1a899&bgTextureError=flat&bgColorError=%23fddfdf&iconColorHighlight=%23eeeeee&fcHighlight=%23eeeeee&borderColorHighlight=%2344aa44&bgTextureHighlight=flat&bgColorHighlight=%2344aa44&iconColorActive=%23eeeeee&fcActive=%23eeeeee&borderColorActive=%2344aa44&bgTextureActive=flat&bgColorActive=%2344aa44&iconColorHover=%23eeeeee&fcHover=%23eeeeee&borderColorHover=%2344aa44&bgTextureHover=flat&bgColorHover=%23666666&iconColorDefault=%23eeeeee&fcDefault=%23eeeeee&borderColorDefault=%2344aa44&bgTextureDefault=flat&bgColorDefault=%23333333&iconColorContent=%23eeeeee&fcContent=%23eeeeee&borderColorContent=%2344aa44&bgTextureContent=flat&bgColorContent=%23000000&iconColorHeader=%23eeeeee&fcHeader=%23eeeeee&borderColorHeader=%2344aa44&bgTextureHeader=flat&bgColorHeader=%2344aa44&cornerRadius=3px&fwDefault=normal&fsDefault=1em&ffDefault=Verdana%2CLucida%2CArial%2CHelvetica%2Csans-serif
+ * To view and modify this theme, visit http://jqueryui.com/themeroller/?scope=&folderName=custom-theme&bgImgOpacityHeader=&bgImgOpacityContent=&bgImgOpacityDefault=&bgImgOpacityHover=&bgImgOpacityActive=&bgImgOpacityHighlight=&bgImgOpacityError=&cornerRadiusShadow=8px&offsetLeftShadow=0px&offsetTopShadow=0px&thicknessShadow=5px&opacityShadow=30&bgImgOpacityShadow=0&bgTextureShadow=flat&bgColorShadow=%23777777&opacityOverlay=30&bgImgOpacityOverlay=0&bgTextureOverlay=flat&bgColorOverlay=%23aaaaaa&iconColorError=%23cc0000&fcError=%235f3f3f&borderColorError=%23f1a899&bgTextureError=flat&bgColorError=%23fddfdf&iconColorHighlight=%23222222&fcHighlight=%23222222&borderColorHighlight=%23877717&bgTextureHighlight=flat&bgColorHighlight=%23d7bd20&iconColorActive=%23222222&fcActive=%23222222&borderColorActive=%23877717&bgTextureActive=flat&bgColorActive=%23d7bd20&iconColorHover=%23eeeeee&fcHover=%23eeeeee&borderColorHover=%23877717&bgTextureHover=flat&bgColorHover=%23666666&iconColorDefault=%23eeeeee&fcDefault=%23eeeeee&borderColorDefault=%23877717&bgTextureDefault=flat&bgColorDefault=%23333333&iconColorContent=%23eeeeee&fcContent=%23eeeeee&borderColorContent=%23877717&bgTextureContent=flat&bgColorContent=%23000000&iconColorHeader=%23222222&fcHeader=%23222222&borderColorHeader=%23877717&bgTextureHeader=flat&bgColorHeader=%23d7bd20&cornerRadius=3px&fwDefault=normal&fsDefault=1em&ffDefault=Verdana%2CLucida%2CArial%2CHelvetica%2Csans-serif
  */
 
 
@@ -29,10 +29,10 @@
 	font-size: 1em;
 }
 .ui-widget.ui-widget-content {
-	border: 1px solid #44aa44;
+	border: 1px solid #877717;
 }
 .ui-widget-content {
-	border: 1px solid #44aa44;
+	border: 1px solid #877717;
 	background: #000000;
 	color: #eeeeee;
 }
@@ -40,13 +40,13 @@
 	color: #eeeeee;
 }
 .ui-widget-header {
-	border: 1px solid #44aa44;
-	background: #44aa44;
-	color: #eeeeee;
+	border: 1px solid #877717;
+	background: #d7bd20;
+	color: #222222;
 	font-weight: bold;
 }
 .ui-widget-header a {
-	color: #eeeeee;
+	color: #222222;
 }
 
 /* Interaction states
@@ -60,7 +60,7 @@
 works properly when clicked or hovered */
 html .ui-button.ui-state-disabled:hover,
 html .ui-button.ui-state-disabled:active {
-	border: 1px solid #44aa44;
+	border: 1px solid #877717;
 	background: #333333;
 	font-weight: normal;
 	color: #eeeeee;
@@ -83,7 +83,7 @@ a:visited.ui-button,
 .ui-widget-header .ui-state-focus,
 .ui-button:hover,
 .ui-button:focus {
-	border: 1px solid #44aa44;
+	border: 1px solid #877717;
 	background: #666666;
 	font-weight: normal;
 	color: #eeeeee;
@@ -111,20 +111,20 @@ a.ui-button:focus {
 a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
-	border: 1px solid #44aa44;
-	background: #44aa44;
+	border: 1px solid #877717;
+	background: #d7bd20;
 	font-weight: normal;
-	color: #eeeeee;
+	color: #222222;
 }
 .ui-icon-background,
 .ui-state-active .ui-icon-background {
-	border: #44aa44;
-	background-color: #eeeeee;
+	border: #877717;
+	background-color: #222222;
 }
 .ui-state-active a,
 .ui-state-active a:link,
 .ui-state-active a:visited {
-	color: #eeeeee;
+	color: #222222;
 	text-decoration: none;
 }
 
@@ -133,18 +133,18 @@ a.ui-button:active,
 .ui-state-highlight,
 .ui-widget-content .ui-state-highlight,
 .ui-widget-header .ui-state-highlight {
-	border: 1px solid #44aa44;
-	background: #44aa44;
-	color: #eeeeee;
+	border: 1px solid #877717;
+	background: #d7bd20;
+	color: #222222;
 }
 .ui-state-checked {
-	border: 1px solid #44aa44;
-	background: #44aa44;
+	border: 1px solid #877717;
+	background: #d7bd20;
 }
 .ui-state-highlight a,
 .ui-widget-content .ui-state-highlight a,
 .ui-widget-header .ui-state-highlight a {
-	color: #eeeeee;
+	color: #222222;
 }
 .ui-state-error,
 .ui-widget-content .ui-state-error,
@@ -199,7 +199,7 @@ a.ui-button:active,
 	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-widget-header .ui-icon {
-	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
+	background-image: url("images/ui-icons_222222_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-state-hover .ui-icon,
 .ui-state-focus .ui-icon,
@@ -209,11 +209,11 @@ a.ui-button:active,
 }
 .ui-state-active .ui-icon,
 .ui-button:active .ui-icon {
-	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
+	background-image: url("images/ui-icons_222222_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-state-highlight .ui-icon,
 .ui-button .ui-state-highlight.ui-icon {
-	background-image: url("images/ui-icons_eeeeee_256x240.png.xhtml?ln=primefaces-arachne");
+	background-image: url("images/ui-icons_222222_256x240.png.xhtml?ln=primefaces-arachne");
 }
 .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
@@ -440,4 +440,8 @@ a.ui-button:active,
 .ui-widget-shadow {
 	-webkit-box-shadow: 0px 0px 5px #777777;
 	box-shadow: 0px 0px 5px #777777;
+}
+
+body {
+	background-color: black;
 }
