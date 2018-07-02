@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
@@ -19,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.PrimeFaces;
 
@@ -46,7 +48,17 @@ public class EditFirewallEntry implements Serializable {
 
     private Where selectedWhere;
 
-   public void setFirewallEntry(Entry e) {
+    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    RoleRuleFactoryCollection roleRuleFactoryCollection;
+    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
+        roleRuleFactoryCollection = rrfc;
+    }
+
+    public RoleRuleFactoryCollection getRoleRuleFactoryCollection() {
+        return roleRuleFactoryCollection;
+    }
+
+    public void setFirewallEntry(Entry e) {
         firewallEntry = e;
 
         readValues();
@@ -167,4 +179,5 @@ public class EditFirewallEntry implements Serializable {
     public void onCancel() {
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
     }
+
 }

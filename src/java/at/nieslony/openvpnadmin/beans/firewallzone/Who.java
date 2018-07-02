@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans.firewallzone;
 
+import at.nieslony.openvpnadmin.RoleRule;
 import java.io.Serializable;
 
 /**
@@ -12,7 +13,23 @@ import java.io.Serializable;
  * @author claas
  */
 public class Who implements Serializable {
-    public String asString() {
-        return "not implemented";
+    RoleRule roleRule = null;
+
+    public String getAsString() {
+        return String.format("%s %s",
+                roleRule.getRoleDescription(),
+                roleRule.getValue());
+    }
+
+    public void setTypeAndValue(RoleRule rr) {
+        roleRule = rr;
+    }
+
+    public String getWhoValue() {
+        return roleRule == null ? "" : roleRule.getValue();
+    }
+
+    public String getWhoType() {
+        return roleRule == null ? "" : roleRule.getRoleType();
     }
 }

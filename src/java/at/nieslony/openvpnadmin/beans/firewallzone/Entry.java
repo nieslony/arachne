@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans.firewallzone;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,13 +13,13 @@ import java.util.List;
  *
  * @author claas
  */
-public class Entry {
-    private String label = "NewEntry";
+public class Entry implements Serializable {
+    private String label = "NewEntrruley";
     private String description = "";
     private boolean isActive = false;
-    List<Where> where = new LinkedList<>();
-    List<What> what = new LinkedList<>();
-    List<String> who = new LinkedList<>();
+    private List<Where> where = new LinkedList<>();
+    private List<What> what = new LinkedList<>();
+    private List<String> who = new LinkedList<>();
 
     public String getLabel() {
         return label;

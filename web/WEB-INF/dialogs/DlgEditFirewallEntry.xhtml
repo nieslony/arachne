@@ -9,13 +9,36 @@
     <p:dialog header="Who has access"
         dynamic="true"
         id="dlgEditWho"
-        widgetVar="dlgEditWho">        
+        widgetVar="dlgEditWho">
 
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}" 
-                         update="who dlgEditWho"/>
-        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWho.onCancel}"/>        
+        <h:panelGrid columns="2">
+            <p:outputLabel value="Select who by…:" for="whoType"/>
+            <p:selectOneMenu id="whoType" value="#{editFirewallEntry.editWho.whoType}"
+                             >
+                <f:selectItem itemLabel="Select who type" itemValue="" noSelectionOption="true" />
+                <f:selectItems value="#{roleRuleFactoryCollection.factories}"
+                               var="factory"
+                               itemLabel="#{factory.descriptionString}"
+                               itemValue="#{factory.roleRuleName}"                               />
+                <p:ajax update="whoType okWho"/>
+            </p:selectOneMenu>
+
+            <p:outputLabel value="Value:" for="whoValue"/>
+            <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
+                            id="whoValue"
+                            completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
+                            forceSelection="true"/>
+        </h:panelGrid>
+
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
+                         disabled='#{editFirewallEntry.editWho.whoType == ""}'
+                         id="okWho"
+                         update="dlgEditWho who"/>
+        <p:commandButton value="Cancel"
+                         id="cancelWho"
+                         action="#{editFirewallEntry.editWho.onCancel}"/>
     </p:dialog>
-    
+
     <p:dialog header="Acces where"
               dynamic="true"
               id="dlgEditWhere"
@@ -28,17 +51,17 @@
             <f:selectItem itemValue="Network"/>
             <f:ajax render="hostname network mask"/>
         </p:selectOneRadio>
-        
+
         <h:panelGrid columns="3">
             <p:radioButton for="whereType" itemIndex="0" id="rbEverywhere"/>
             <p:outputLabel for="rbEverywhere" value="Everywhere"/>
             <h:outputText value=""/>
-            
+
             <p:radioButton for="whereType" itemIndex="1" id="rbHostname"/>
             <p:outputLabel for="rbHostname" value="Hostname:"/>
             <p:inputText value="#{editFirewallEntry.editWhere.hostname}" id="hostname"
                          disabled='#{editFirewallEntry.editWhere.whereType != "Hostname"}'/>
-            
+
             <p:radioButton for="whereType" itemIndex="2" id="rbNetwork"/>
             <p:outputLabel for="rbNetwork" value="Network:"/>
             <p:outputPanel>
@@ -50,12 +73,12 @@
                            disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
             </p:outputPanel>
         </h:panelGrid>
-        
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}" 
+
+        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}"
                          update="where dlgEditWhere"/>
-        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>        
+        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>
     </p:dialog>
-    
+
     <p:dialog header="Access what"
               dynamic="true"
         id="dlgEditWhat"
@@ -163,7 +186,7 @@
         <p:panelGrid>
             <p:row>
                 <p:column style="width: 25em">
-                    <p:dataList var="who" id="who" value="#{editFirewallSettings.editingEntry.whos}">
+                    <p:dataList var="who" id="who" value="#{editFirewallEntry.whos}">
                         <f:facet name="header">
                             Who
                         </f:facet>
