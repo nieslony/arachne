@@ -39,6 +39,7 @@ abstract public class RoleRule
     }
 
     abstract public boolean isAssumedByUser(AbstractUser user);
+    abstract public String getValueLabel();
 
     public String getRoleType() {
         return factory.getRoleRuleName();
