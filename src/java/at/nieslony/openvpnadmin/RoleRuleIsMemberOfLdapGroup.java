@@ -59,4 +59,8 @@ public class RoleRuleIsMemberOfLdapGroup
             return false;
         }
     }
+
+    public String getValueLabel() {
+        return "LDAP group";
+    }
 }

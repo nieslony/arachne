@@ -53,4 +53,9 @@ public class RoleRuleIsUser
             return false;
         }
     }
+
+    @Override
+    public String getValueLabel() {
+        return "Username";
+    }
 }
