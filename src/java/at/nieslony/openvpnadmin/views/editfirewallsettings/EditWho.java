@@ -45,12 +45,24 @@ public class EditWho implements Serializable {
         whoValue = who.getWhoValue();
     }
 
-    private void saveWho() {
+    private boolean saveWho() {
         RoleRule rr = editFirewallEntry.getRoleRuleFactoryCollection()
                 .createRoleRule(whoType, whoValue);
-        who.setTypeAndValue(rr);
 
         List<Who> whos = editFirewallEntry.getWhos();
+        for (Who w: whos) {
+            logger.info(w.getAsString());
+            if (w != who && w.getRoleRule().equals(rr)) {
+                String msgTxt = "Cannot add rule: rule already exists.";
+                FacesMessage message = new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error", msgTxt);
+                logger.severe(msgTxt);
+                PrimeFaces.current().dialog().showMessageDynamic(message);
+                return false;
+            }
+        }
+        who.setTypeAndValue(rr);
 
         switch (editMode) {
             case MODIFY:
@@ -63,6 +75,8 @@ public class EditWho implements Serializable {
             default:
                 logger.warning("Invalid editMode");
         }
+
+        return true;
     }
 
     public String getWhoType() {
@@ -82,22 +96,8 @@ public class EditWho implements Serializable {
     }
 
     public void onOk() {
-        List<Who> whos = editFirewallEntry.getWhos();
-        whos.forEach( w -> {
-            logger.info(w.getAsString());
-            if (w != who && w.equals(who)) {
-                String msgTxt = "Cannot add rule: rule already exists.";
-                FacesMessage message = new FacesMessage(
-                        FacesMessage.SEVERITY_ERROR,
-                        "Error", msgTxt);
-                logger.severe(msgTxt);
-                PrimeFaces.current().dialog().showMessageDynamic(message);
-                return;
-            }
-        });
-
-        saveWho();
-        PrimeFaces.current().executeScript("PF('dlgEditWho').hide();");
+        if (saveWho())
+            PrimeFaces.current().executeScript("PF('dlgEditWho').hide();");
     }
 
     public void onCancel() {

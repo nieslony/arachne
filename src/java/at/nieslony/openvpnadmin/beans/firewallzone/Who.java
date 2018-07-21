@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin.beans.firewallzone;
 
 import at.nieslony.openvpnadmin.RoleRule;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -15,10 +16,36 @@ import java.io.Serializable;
 public class Who implements Serializable {
     RoleRule roleRule = null;
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Who other = (Who) obj;
+        if (!Objects.equals(this.roleRule, other.roleRule)) {
+            return false;
+        }
+        return true;
+    }
+
+    public int hashCode() {
+        return roleRule.hashCode();
+    }
+
     public String getAsString() {
         return String.format("%s %s",
                 roleRule.getRoleDescription(),
                 roleRule.getValue());
+    }
+
+    public RoleRule getRoleRule() {
+        return roleRule;
     }
 
     public void setTypeAndValue(RoleRule rr) {

@@ -19,6 +19,8 @@ package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,6 +29,7 @@ import java.io.Serializable;
 abstract public class RoleRule
         implements Serializable
 {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private String value;
     private RoleRuleFactory factory;
 
@@ -39,27 +42,36 @@ abstract public class RoleRule
     }
 
     @Override
-    public int hashCode() {
-        return value.hashCode() * this.getClass().hashCode();
-    }
-
-    public boolean equals(RoleRule other) {
-        if (other == null)
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            logger.info("Same object => equal");
+            return true;
+        }
+        if (obj == null) {
+            logger.info("null object => not equal");
             return false;
+        }
+        if (getClass() != obj.getClass()) {
+            logger.info("different classes => not equal");
+            return false;
+        }
+        final RoleRule other = (RoleRule) obj;
+        if (!Objects.equals(this.value, other.value)) {
+            logger.info(String.format("different values (%s, %s)=> not equal", this.value, other.value));
+            return false;
+        }
+        if (!Objects.equals(this.factory, other.factory)) {
+            logger.info("different factories => not equal");
+            return false;
+        }
+        logger.info("object equal");
 
-        return value.equals(other.getValue());
+        return true;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (o == null)
-            return false;
-
-        if (!o.getClass().equals(this.getClass()))
-            return false;
-
-        RoleRule rr = (RoleRule) o;
-        return equals(rr);
+    public int hashCode() {
+        return value.hashCode() * factory.hashCode();
     }
 
     abstract public boolean isAssumedByUser(AbstractUser user);

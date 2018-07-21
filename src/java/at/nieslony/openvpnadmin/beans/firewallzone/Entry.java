@@ -14,7 +14,7 @@ import java.util.List;
  * @author claas
  */
 public class Entry implements Serializable {
-    private String label = "NewEntrruley";
+    private String label = "NewEntryRule";
     private String description = "";
     private boolean isActive = false;
     private List<Where> where = new LinkedList<>();
