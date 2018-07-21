@@ -59,15 +59,19 @@ public class ClassFinder {
                 String className = dir + "/" + fn;
                 className = className.replaceAll("/", ".").substring(1).replaceAll("\\.\\.", ".");
                 className = className.substring(0, className.lastIndexOf(".class"));
-                //System.out.println(className);
+                logger.info(String.format("Looking at class %s in file %s" , className, fn));
 
                 try {
-                Class c = Class.forName(className);
-                if (matcher.classMatches(c))
-                    classes.add(c);
-                }
+                    Class c = Class.forName(className);
+                    if (matcher.classMatches(c))
+                        classes.add(c);
+                    }
                 catch (ClassNotFoundException ex) {
-                    //logger.warning(String.format("Cannot find class %s: %s", className, ex.toString()));
+                    logger.warning(String.format("Cannot find class %s: %s", className, ex.toString()));
+                }
+                catch (Exception ex) {
+                    logger.severe(String.format("Cannot load class %s: %s",
+                            className, ex.getMessage()));
                 }
             }
 

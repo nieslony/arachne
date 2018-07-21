@@ -65,6 +65,9 @@ public class RoleRuleFactoryCollection
         catch (ClassNotFoundException | IOException | URISyntaxException ex) {
             logger.warning(String.format("Cannot load classes: %s", ex.getMessage()));
         }
+        catch (Exception ex) {
+            logger.severe(String.format("Unhandled exception: %s", ex.toString()));
+        }
 
         FacesContext ctx = FacesContext.getCurrentInstance();
         for (Class c : factories) {
