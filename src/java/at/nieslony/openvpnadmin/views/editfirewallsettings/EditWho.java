@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
 import org.primefaces.PrimeFaces;
 
 /**
@@ -49,13 +50,15 @@ public class EditWho implements Serializable {
                 .createRoleRule(whoType, whoValue);
         who.setTypeAndValue(rr);
 
+        List<Who> whos = editFirewallEntry.getWhos();
+
         switch (editMode) {
             case MODIFY:
                 logger.info(String.format("Saving who %s", who.getAsString()));
                 break;
             case NEW:
                 logger.info(String.format("Adding who %s", who.getAsString()));
-                editFirewallEntry.getWhos().add(who);
+                whos.add(who);
                 break;
             default:
                 logger.warning("Invalid editMode");
@@ -79,6 +82,20 @@ public class EditWho implements Serializable {
     }
 
     public void onOk() {
+        List<Who> whos = editFirewallEntry.getWhos();
+        whos.forEach( w -> {
+            logger.info(w.getAsString());
+            if (w != who && w.equals(who)) {
+                String msgTxt = "Cannot add rule: rule already exists.";
+                FacesMessage message = new FacesMessage(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error", msgTxt);
+                logger.severe(msgTxt);
+                PrimeFaces.current().dialog().showMessageDynamic(message);
+                return;
+            }
+        });
+
         saveWho();
         PrimeFaces.current().executeScript("PF('dlgEditWho').hide();");
     }

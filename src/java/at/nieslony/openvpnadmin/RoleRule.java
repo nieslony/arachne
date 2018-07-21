@@ -38,6 +38,30 @@ abstract public class RoleRule
         this.factory = factory;
     }
 
+    @Override
+    public int hashCode() {
+        return value.hashCode() * this.getClass().hashCode();
+    }
+
+    public boolean equals(RoleRule other) {
+        if (other == null)
+            return false;
+
+        return value.equals(other.getValue());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null)
+            return false;
+
+        if (!o.getClass().equals(this.getClass()))
+            return false;
+
+        RoleRule rr = (RoleRule) o;
+        return equals(rr);
+    }
+
     abstract public boolean isAssumedByUser(AbstractUser user);
     abstract public String getValueLabel();
 
