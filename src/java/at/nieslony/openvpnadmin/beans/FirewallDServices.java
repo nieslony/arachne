@@ -43,7 +43,7 @@ public class FirewallDServices implements Serializable {
     public FirewallDServices() {
     }
 
-    final static private List<FirewallDService> _services = loadServices(SERVICES_DIR);
+    static private List<FirewallDService> _services = null;
 
     static private FirewallDService loadFile(String filename) {
         try {
@@ -105,10 +105,16 @@ public class FirewallDServices implements Serializable {
     }
 
     public List<FirewallDService> getServices() {
+        if (_services == null) {
+            _services = loadServices(SERVICES_DIR);
+        }
         return _services;
     }
 
     static public List<FirewallDService> getAllServices() {
+        if (_services == null) {
+            _services = loadServices(SERVICES_DIR);
+        }
         return _services;
     }
 }
