@@ -47,15 +47,24 @@ public class FirewallDServices implements Serializable {
 
     static private FirewallDService loadFile(String filename) {
         try {
-            // logger.info(String.format("Loading services from %s...", filename));
+            logger.info(String.format("Loading services from %s...", filename));
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new File(filename));
 
             doc.getDocumentElement().normalize();
 
-            String shortName = doc.getElementsByTagName("short").item(0).getTextContent();
-            String description = doc.getElementsByTagName("description").item(0).getTextContent();
+            NodeList elems;
+            elems = doc.getElementsByTagName("short");
+            String shortName = "";
+            if (elems != null && elems.getLength() > 0)
+                shortName = elems.item(0).getTextContent();
+
+            String description = "";
+            elems = doc.getElementsByTagName("description");
+            if (elems != null && elems.getLength() > 0)
+                description = elems.item(0).getTextContent();
+            
             List<String> ports = new LinkedList<>();
             NodeList portList = doc.getElementsByTagName("port");
 
@@ -84,6 +93,7 @@ public class FirewallDServices implements Serializable {
     static private List<FirewallDService> loadServices(String dirName) {
         List<FirewallDService> services = new LinkedList<>();
 
+        logger.info(String.format("Loading firewall services from %s", dirName));
         try (Stream<Path> paths = Files.walk(Paths.get(dirName))) {
             paths
                 .filter(Files::isRegularFile)
