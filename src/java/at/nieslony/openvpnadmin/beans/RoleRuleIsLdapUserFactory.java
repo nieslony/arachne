@@ -131,4 +131,14 @@ public class RoleRuleIsLdapUserFactory
         }
         return groups;
     }
+
+    @Override
+    public boolean getNeedsValue() {
+        return true;
+    }
+
+    @Override
+    public String getValueLabel() {
+        return "Group name";
+    }
 }

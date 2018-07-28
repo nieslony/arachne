@@ -29,4 +29,6 @@ public interface RoleRuleFactory {
      public String getRoleRuleName();
      public String getDescriptionString();
      public List<String> completeValue(String userPattern);
+     public boolean getNeedsValue();
+     public String getValueLabel();
 }

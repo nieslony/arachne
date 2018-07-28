@@ -121,4 +121,14 @@ public class RoleRuleIsUserFactory
         }
         return users;
     }
+
+    @Override
+    public boolean getNeedsValue() {
+        return true;
+    }
+
+    @Override
+    public String getValueLabel() {
+        return "User name";
+    }
 }

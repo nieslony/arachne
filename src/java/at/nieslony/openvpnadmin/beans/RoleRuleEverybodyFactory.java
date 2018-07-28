@@ -53,4 +53,14 @@ public class RoleRuleEverybodyFactory
         final List<String> emptyList = new LinkedList<>();
         return emptyList;
     }
+
+    @Override
+    public boolean getNeedsValue() {
+        return false;
+    }
+
+    @Override
+    public String getValueLabel() {
+        return "";
+    }
 }

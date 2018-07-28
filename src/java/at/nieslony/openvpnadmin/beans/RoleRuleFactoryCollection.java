@@ -122,4 +122,16 @@ public class RoleRuleFactoryCollection
     public RoleRuleFactory getFactory(String ruleType) {
         return factories.get(ruleType);
     }
+
+    public boolean getNeedsValue(String ruleName) {
+        RoleRuleFactory factory = factories.get(ruleName);
+        if (factory != null)
+                return factory.getNeedsValue();
+        return false;
+    }
+
+    public String getValueLabel(String ruleName) {
+        RoleRuleFactory factory = factories.get(ruleName);
+        return factory != null ? factory.getValueLabel() : "";
+    }
 }

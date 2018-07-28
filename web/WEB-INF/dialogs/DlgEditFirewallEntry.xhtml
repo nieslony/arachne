@@ -20,18 +20,29 @@
                                var="factory"
                                itemLabel="#{factory.descriptionString}"
                                itemValue="#{factory.roleRuleName}"                               />
-                <p:ajax update="whoType okWho"/>
+                <f:ajax render="@form"/>
             </p:selectOneMenu>
 
-            <p:outputLabel value="Value:" for="whoValue"/>
+            <p:outputLabel value="#{editFirewallEntry.editWho.whoLabel}:"
+                           for="whoValue"
+                           rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                           id="whoLabel"/>
             <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
                             id="whoValue"
                             completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
-                            forceSelection="true"/>
+                            rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                            forceSelection="true">
+                <p:ajax update="okWho"/>
+            </p:autoComplete>
         </h:panelGrid>
 
         <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
-                         disabled='#{editFirewallEntry.editWho.whoType == ""}'
+                         disabled='#{editFirewallEntry.editWho.whoType == ""
+                                     and (
+                                        !editFirewallEntry.editWho.needsWhoValue
+                                        or
+                                        editFirewallEntry.editWho.whoValue != ""
+                                     )}'
                          id="okWho"
                          update="dlgEditWho who"/>
         <p:commandButton value="Cancel"

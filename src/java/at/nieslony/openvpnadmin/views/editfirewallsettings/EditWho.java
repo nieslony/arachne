@@ -95,6 +95,14 @@ public class EditWho implements Serializable {
         whoValue = wv;
     }
 
+    public boolean getNeedsWhoValue() {
+        return editFirewallEntry.getRoleRuleFactoryCollection().getNeedsValue(whoType);
+    }
+
+    public String getWhoLabel() {
+        return editFirewallEntry.getRoleRuleFactoryCollection().getValueLabel(whoType);
+    }
+
     public void onOk() {
         if (saveWho())
             PrimeFaces.current().executeScript("PF('dlgEditWho').hide();");
