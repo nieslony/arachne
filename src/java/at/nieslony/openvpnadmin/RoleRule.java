@@ -20,6 +20,7 @@ package at.nieslony.openvpnadmin;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Random;
 import java.util.logging.Logger;
 
 /**
@@ -32,6 +33,7 @@ abstract public class RoleRule
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private String value;
     private RoleRuleFactory factory;
+    private int hashCode_ = 0;
 
     public RoleRule() {
     }
@@ -71,7 +73,10 @@ abstract public class RoleRule
 
     @Override
     public int hashCode() {
-        return value.hashCode() * factory.hashCode();
+        if (hashCode_ == 0)
+            hashCode_ = new Random().nextInt();
+
+        return hashCode_;
     }
 
     abstract public boolean isAssumedByUser(AbstractUser user);
