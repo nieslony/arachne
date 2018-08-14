@@ -10,6 +10,7 @@ import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import at.nieslony.openvpnadmin.beans.firewallzone.Who;
 import at.nieslony.openvpnadmin.views.EditFirewallEntry;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -49,7 +50,7 @@ public class EditWho implements Serializable {
         RoleRule rr = editFirewallEntry.getRoleRuleFactoryCollection()
                 .createRoleRule(whoType, whoValue);
 
-        List<Who> whos = editFirewallEntry.getWhos();
+        Collection<Who> whos = editFirewallEntry.getWhos();
         for (Who w: whos) {
             logger.info(w.getAsString());
             if (w != who && w.getRoleRule().equals(rr)) {
@@ -70,7 +71,7 @@ public class EditWho implements Serializable {
                 break;
             case NEW:
                 logger.info(String.format("Adding who %s", who.getAsString()));
-                whos.add(who);
+                editFirewallEntry.addWho(who);
                 break;
             default:
                 logger.warning("Invalid editMode");

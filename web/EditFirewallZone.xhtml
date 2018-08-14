@@ -14,11 +14,9 @@
         <ui:include  src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
 
         <ui:define name="content">
-            <h:form id="formEditFirewallEntry">
-                <p:fragment autoUpdate="true">
-                    <ui:include src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
-                </p:fragment>
-            </h:form>
+            <p:fragment autoUpdate="true">
+                <ui:include src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
+            </p:fragment>
 
             <h:form id="firewallZoneForm">
                 <p:accordionPanel>
@@ -49,7 +47,7 @@
                             action="#{editFirewallSettings.onNewIncomingEntry}"
                             value="New..."
                             ajax="true"
-                            update=":formEditFirewallEntry:dlgEditFirewallEntry"
+                            update="dlgEditFirewallEntry formEditFirewallEntry"
                             />
                         <p:commandButton
                             action="#{editFirewallSettings.onCloneIncomingEntry}"

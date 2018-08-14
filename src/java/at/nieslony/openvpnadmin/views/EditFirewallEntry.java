@@ -16,6 +16,8 @@ import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -33,7 +35,9 @@ import org.primefaces.PrimeFaces;
 public class EditFirewallEntry implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private final List<Who> whos = new LinkedList<>();
+    private final HashMap<String, Who> whos = new HashMap<>();
+    private String selectedWhoId = null;
+
     private final List<Where> wheres = new LinkedList<>();
     private final List<What> whats = new LinkedList<>();
     private String label = "";
@@ -74,6 +78,23 @@ public class EditFirewallEntry implements Serializable {
         isActive = firewallEntry.getIsActive();
     }
 
+    public String getSelectedWhoId() {
+        return selectedWhoId;
+    }
+
+    public void setSelectedWhoId(String id) {
+        selectedWhoId = id;
+    }
+
+    public Who getWhoForId(String id) {
+        return whos.get(id);
+    }
+
+    public Collection<String> getWhoIds() {
+        return whos.keySet();
+    }
+
+
     public void setSelectedWhere(Where sw) {
         selectedWhere = sw;
     }
@@ -86,8 +107,8 @@ public class EditFirewallEntry implements Serializable {
         return wheres;
     }
 
-    public List<Who> getWhos() {
-        return whos;
+    public Collection<Who> getWhos() {
+        return whos.values();
     }
 
     public List<What> getWhats() {
@@ -138,6 +159,17 @@ public class EditFirewallEntry implements Serializable {
         PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
     }
 
+    public void onEditWho() {
+        Who who = getWhoForId(selectedWhoId);
+        if (who == null) {
+            logger.info("No who selected for editing");
+            return;
+        }
+        logger.info(String.format("Editing who %s", who.getAsString()));
+        editWho.beginEdit(who, EditMode.MODIFY);
+        PrimeFaces.current().executeScript("PF('dlgEditWho').show();");
+    }
+
     public EditWho getEditWho() {
         return editWho;
     }
@@ -162,7 +194,10 @@ public class EditFirewallEntry implements Serializable {
     }
 
     public void onRemoveWho() {
-
+        if (selectedWhoId != null) {
+            whos.remove(selectedWhoId);
+            selectedWhoId = null;
+        }
     }
 
     public void onRemoveWhere() {
@@ -180,4 +215,7 @@ public class EditFirewallEntry implements Serializable {
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
     }
 
+    public void addWho(Who who) {
+        whos.put(String.valueOf(who.hashCode()), who);
+    }
 }

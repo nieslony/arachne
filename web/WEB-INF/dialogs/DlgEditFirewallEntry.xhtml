@@ -11,83 +11,89 @@
         id="dlgEditWho"
         widgetVar="dlgEditWho">
 
-        <h:panelGrid columns="2">
-            <p:outputLabel value="Select who by…:" for="whoType"/>
-            <p:selectOneMenu id="whoType" value="#{editFirewallEntry.editWho.whoType}"
-                             >
-                <f:selectItem itemLabel="Select who type" itemValue="" noSelectionOption="true" />
-                <f:selectItems value="#{roleRuleFactoryCollection.factories}"
-                               var="factory"
-                               itemLabel="#{factory.descriptionString}"
-                               itemValue="#{factory.roleRuleName}"                               />
-                <f:ajax render="@form"/>
-            </p:selectOneMenu>
+        <h:form id="formEditWho">
+            <h:panelGrid columns="2">
+                <p:outputLabel value="Select who by…:" for="whoType"/>
+                <p:selectOneMenu id="whoType" value="#{editFirewallEntry.editWho.whoType}"
+                                 >
+                    <f:selectItem itemLabel="Select who type" itemValue="" noSelectionOption="true" />
+                    <f:selectItems value="#{roleRuleFactoryCollection.factories}"
+                                   var="factory"
+                                   itemLabel="#{factory.descriptionString}"
+                                   itemValue="#{factory.roleRuleName}"                               />
+                    <p:ajax update="okWho"/>
+                    <f:ajax render="@form"/>
+                </p:selectOneMenu>
 
-            <p:outputLabel value="#{editFirewallEntry.editWho.whoLabel}:"
-                           for="whoValue"
-                           rendered="#{editFirewallEntry.editWho.needsWhoValue}"
-                           id="whoLabel"/>
-            <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
-                            id="whoValue"
-                            completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
-                            rendered="#{editFirewallEntry.editWho.needsWhoValue}"
-                            forceSelection="true">
-                <p:ajax update="okWho"/>
-            </p:autoComplete>
-        </h:panelGrid>
+                <p:outputLabel value="#{editFirewallEntry.editWho.whoLabel}:"
+                               for="whoValue"
 
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
-                         disabled='#{editFirewallEntry.editWho.whoType == ""
-                                     and (
-                                        !editFirewallEntry.editWho.needsWhoValue
-                                        or
-                                        editFirewallEntry.editWho.whoValue != ""
-                                     )}'
-                         id="okWho"
-                         update="dlgEditWho who"/>
-        <p:commandButton value="Cancel"
-                         id="cancelWho"
-                         action="#{editFirewallEntry.editWho.onCancel}"/>
+                               rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                               id="whoLabel"/>
+                <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
+                                id="whoValue"
+                                completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
+                                rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                                forceSelection="true">
+                    <p:ajax update="okWho"/>
+                </p:autoComplete>
+            </h:panelGrid>
+
+            <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
+                             disabled='#{editFirewallEntry.editWho.whoType == ""
+                                         and (
+                                            !editFirewallEntry.editWho.needsWhoValue
+                                            or
+                                            editFirewallEntry.editWho.whoValue != ""
+                                         )}'
+                             id="okWho"
+                             update="dlgEditWho formEditFirewallEntry:who"/>
+            <p:commandButton value="Cancel"
+                             id="cancelWho"
+                             action="#{editFirewallEntry.editWho.onCancel}"/>
+        </h:form>
     </p:dialog>
 
     <p:dialog header="Acces where"
               dynamic="true"
               id="dlgEditWhere"
               widgetVar="dlgEditWhere">
-        <p:selectOneRadio value="#{editFirewallEntry.editWhere.whereType}"
-                          layout="custom"
-                          id="whereType">
-            <f:selectItem itemValue="Everywhere"/>
-            <f:selectItem itemValue="Hostname"/>
-            <f:selectItem itemValue="Network"/>
-            <f:ajax render="hostname network mask"/>
-        </p:selectOneRadio>
+        <h:form id="formEditWhere">
+            <p:selectOneRadio value="#{editFirewallEntry.editWhere.whereType}"
+                              layout="custom"
+                              id="whereType">
+                <f:selectItem itemValue="Everywhere"/>
+                <f:selectItem itemValue="Hostname"/>
+                <f:selectItem itemValue="Network"/>
+                <f:ajax render="hostname network mask"/>
+            </p:selectOneRadio>
 
-        <h:panelGrid columns="3">
-            <p:radioButton for="whereType" itemIndex="0" id="rbEverywhere"/>
-            <p:outputLabel for="rbEverywhere" value="Everywhere"/>
-            <h:outputText value=""/>
+            <h:panelGrid columns="3">
+                <p:radioButton for="whereType" itemIndex="0" id="rbEverywhere"/>
+                <p:outputLabel for="rbEverywhere" value="Everywhere"/>
+                <h:outputText value=""/>
 
-            <p:radioButton for="whereType" itemIndex="1" id="rbHostname"/>
-            <p:outputLabel for="rbHostname" value="Hostname:"/>
-            <p:inputText value="#{editFirewallEntry.editWhere.hostname}" id="hostname"
-                         disabled='#{editFirewallEntry.editWhere.whereType != "Hostname"}'/>
+                <p:radioButton for="whereType" itemIndex="1" id="rbHostname"/>
+                <p:outputLabel for="rbHostname" value="Hostname:"/>
+                <p:inputText value="#{editFirewallEntry.editWhere.hostname}" id="hostname"
+                             disabled='#{editFirewallEntry.editWhere.whereType != "Hostname"}'/>
 
-            <p:radioButton for="whereType" itemIndex="2" id="rbNetwork"/>
-            <p:outputLabel for="rbNetwork" value="Network:"/>
-            <p:outputPanel>
-                <p:inputText value="#{editFirewallEntry.editWhere.network}" id="network"
-                             disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
-                <h:outputText value="/"/>
-                <p:spinner min="1" max="65535" value="#{editFirewallEntry.editWhere.mask}"
-                           id="mask"
-                           disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
-            </p:outputPanel>
-        </h:panelGrid>
+                <p:radioButton for="whereType" itemIndex="2" id="rbNetwork"/>
+                <p:outputLabel for="rbNetwork" value="Network:"/>
+                <p:outputPanel>
+                    <p:inputText value="#{editFirewallEntry.editWhere.network}" id="network"
+                                 disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+                    <h:outputText value="/"/>
+                    <p:spinner min="1" max="65535" value="#{editFirewallEntry.editWhere.mask}"
+                               id="mask"
+                               disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+                </p:outputPanel>
+            </h:panelGrid>
 
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}"
-                         update="where dlgEditWhere"/>
-        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>
+            <p:commandButton value="OK" action="#{editFirewallEntry.editWhere.onOk}"
+                             update="where dlgEditWhere"/>
+            <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhere.onCancel}"/>
+        </h:form>
     </p:dialog>
 
     <p:dialog header="Access what"
@@ -96,164 +102,187 @@
         onShow="#{editWhat.onShow()}"
         widgetVar="dlgEditWhat"
         >
-        <p:selectOneRadio value="#{editFirewallEntry.editWhat.type}"
-                          layout="custom"
-                          id="whatType">
-            <f:selectItem itemValue="Everything" />
-            <f:selectItem itemLabel="Service" itemValue="Service"/>
-            <f:selectItem itemValue="PortProtocol"/>
-            <f:selectItem itemValue="PortRangeProtocol"/>
-            <f:selectItem itemValue="PortListProtocol"/>
-            <f:ajax render="service portProtocol portRangeProtocol portListProtocol"/>
-        </p:selectOneRadio>
+        <h:form id="formEditWhat">
+            <p:selectOneRadio value="#{editFirewallEntry.editWhat.type}"
+                              layout="custom"
+                              id="whatType">
+                <f:selectItem itemValue="Everything" />
+                <f:selectItem itemLabel="Service" itemValue="Service"/>
+                <f:selectItem itemValue="PortProtocol"/>
+                <f:selectItem itemValue="PortRangeProtocol"/>
+                <f:selectItem itemValue="PortListProtocol"/>
+                <f:ajax render="service portProtocol portRangeProtocol portListProtocol"/>
+            </p:selectOneRadio>
 
-        <h:panelGrid columns="3">
-            <p:radioButton for="whatType" itemIndex="0" id="rbEverything"/>
-            <p:outputLabel for="rbEverything" value="Everything"/>
-            <h:outputText value=""/>
+            <h:panelGrid columns="3">
+                <p:radioButton for="whatType" itemIndex="0" id="rbEverything"/>
+                <p:outputLabel for="rbEverything" value="Everything"/>
+                <h:outputText value=""/>
 
-            <p:radioButton for="whatType" itemIndex="1" id="rbService"/>
-            <p:outputLabel for="rbService" value="Service"/>
-            <p:selectOneMenu disabled='#{editFirewallEntry.editWhat.type != "Service"}'
-                             id="service"
-                             converter="firewallDServiceConverter"
-                             value="#{editFirewallEntry.editWhat.service}"
-                             >
-                <f:selectItems value="#{firewallDServices.services}"
-                               var="s"
-                               itemLabel="#{s.shortDescription}"
-                               itemValue="#{s}"
-                               />
-            </p:selectOneMenu>
-
-            <p:radioButton for="whatType" itemIndex="2" id="rbPortProtocol"/>
-            <p:outputLabel for="rbPortProtocol" value="Port and Protocol"/>
-            <p:outputPanel id="portProtocol">
-                <p:spinner min="1" max="65535" size="5"
-                           disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}'
-                           value="#{editFirewallEntry.editWhat.port}"/>
-                <h:outputText value=" / "/>
-                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
-                                 disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}' >
-                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
-                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                <p:radioButton for="whatType" itemIndex="1" id="rbService"/>
+                <p:outputLabel for="rbService" value="Service"/>
+                <p:selectOneMenu disabled='#{editFirewallEntry.editWhat.type != "Service"}'
+                                 id="service"
+                                 converter="firewallDServiceConverter"
+                                 value="#{editFirewallEntry.editWhat.service}"
+                                 >
+                    <f:selectItems value="#{firewallDServices.services}"
+                                   var="s"
+                                   itemLabel="#{s.shortDescription}"
+                                   itemValue="#{s}"
+                                   />
                 </p:selectOneMenu>
-            </p:outputPanel>
 
-            <p:radioButton for="whatType" itemIndex="3" id="rbPortRangeProtocol"/>
-            <p:outputLabel for="rbPortRangeProtocol" value="Port range and protocol"/>
-            <p:outputPanel id="portRangeProtocol">
-                <p:spinner min="1" max="65535" size="5"
-                           disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
-                           value="#{editFirewallEntry.editWhat.portFrom}"/>
-                <h:outputText value=" - "/>
-                <p:spinner min="1" max="65535" size="5"
-                           disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
-                           value="#{editFirewallEntry.editWhat.portTo}"/>
-                <h:outputText value=" / "/>
-                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
-                                 disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'>
-                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
-                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
-                </p:selectOneMenu>
-            </p:outputPanel>
+                <p:radioButton for="whatType" itemIndex="2" id="rbPortProtocol"/>
+                <p:outputLabel for="rbPortProtocol" value="Port and Protocol"/>
+                <p:outputPanel id="portProtocol">
+                    <p:spinner min="1" max="65535" size="5"
+                               disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}'
+                               value="#{editFirewallEntry.editWhat.port}"/>
+                    <h:outputText value=" / "/>
+                    <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                     disabled='#{editFirewallEntry.editWhat.type != "PortProtocol"}' >
+                        <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                        <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                    </p:selectOneMenu>
+                </p:outputPanel>
 
-            <p:radioButton for="whatType" itemIndex="4" id="rbPortListProtocol"/>
-            <p:outputLabel for="rbPortListProtocol" value="Port list and Protocol"/>
-            <p:outputPanel id="portListProtocol">
-                <p:chips value="#{editFirewallEntry.editWhat.ports}"
-                         disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'/>
-                <h:outputText value=" / "/>
-                <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
-                                 disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'>
-                    <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
-                    <f:selectItem itemLabel="Udp" itemValue="UDP"/>
-                </p:selectOneMenu>
-            </p:outputPanel>
-        </h:panelGrid>
+                <p:radioButton for="whatType" itemIndex="3" id="rbPortRangeProtocol"/>
+                <p:outputLabel for="rbPortRangeProtocol" value="Port range and protocol"/>
+                <p:outputPanel id="portRangeProtocol">
+                    <p:spinner min="1" max="65535" size="5"
+                               disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
+                               value="#{editFirewallEntry.editWhat.portFrom}"/>
+                    <h:outputText value=" - "/>
+                    <p:spinner min="1" max="65535" size="5"
+                               disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'
+                               value="#{editFirewallEntry.editWhat.portTo}"/>
+                    <h:outputText value=" / "/>
+                    <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                     disabled='#{editFirewallEntry.editWhat.type != "PortRangeProtocol"}'>
+                        <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                        <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                    </p:selectOneMenu>
+                </p:outputPanel>
 
-        <p:commandButton value="OK" action="#{editFirewallEntry.editWhat.onOk}" update="what dlgEditWhat"/>
-        <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhat.onCancel}"/>
+                <p:radioButton for="whatType" itemIndex="4" id="rbPortListProtocol"/>
+                <p:outputLabel for="rbPortListProtocol" value="Port list and Protocol"/>
+                <p:outputPanel id="portListProtocol">
+                    <p:chips value="#{editFirewallEntry.editWhat.ports}"
+                             disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'/>
+                    <h:outputText value=" / "/>
+                    <p:selectOneMenu value="#{editFirewallEntry.editWhat.protocol}"
+                                     disabled='#{editFirewallEntry.editWhat.type != "PortListProtocol"}'>
+                        <f:selectItem itemLabel="Tcp" itemValue="TCP"/>
+                        <f:selectItem itemLabel="Udp" itemValue="UDP"/>
+                    </p:selectOneMenu>
+                </p:outputPanel>
+            </h:panelGrid>
+
+            <p:commandButton value="OK" action="#{editFirewallEntry.editWhat.onOk}" update="what dlgEditWhat"/>
+            <p:commandButton value="Cancel" action="#{editFirewallEntry.editWhat.onCancel}"/>
+        </h:form>
     </p:dialog>
 
     <p:dialog header="#{editFirewallSettings.editingMode} #{editFirewallSettings.editingChain} chain"
               id="dlgEditFirewallEntry"
               widgetVar="dlgEditFirewallEntry">
-        <h:panelGrid columns="2">
-                <p:outputLabel value="Label:" for="label"/>
-                <p:inputText value="#{editFirewallEntry.label}"
-                             id="label"/>
+        <h:form id="formEditFirewallEntry">
+            <h:panelGrid columns="2">
+                    <p:outputLabel value="Label:" for="label"/>
+                    <p:inputText value="#{editFirewallEntry.label}"
+                                 id="label"/>
 
-                <p:outputLabel value="Description:"/>
-                <p:inputText value="#{editFirewallEntry.description}"
-                             id="description"/>
+                    <p:outputLabel value="Description:"/>
+                    <p:inputText value="#{editFirewallEntry.description}"
+                                 id="description"/>
 
-                <p:outputLabel value="Is active:" for="isActive"/>
-                <p:inputSwitch offLabel="no" onLabel="yes"
-                               value="#{editFirewallEntry.isActive}"
-                               id="isActive"/>
-        </h:panelGrid>
+                    <p:outputLabel value="Is active:" for="isActive"/>
+                    <p:inputSwitch offLabel="no" onLabel="yes"
+                                   value="#{editFirewallEntry.isActive}"
+                                   id="isActive"/>
+            </h:panelGrid>
 
-        <p:panelGrid>
-            <p:row>
-                <p:column style="width: 25em">
-                    <p:dataList var="who" id="who" value="#{editFirewallEntry.whos}">
-                        <f:facet name="header">
-                            Who
-                        </f:facet>
-                        <h:outputText value="#{who.asString}"/>
-                    </p:dataList>
-                </p:column>
-                <p:column style="width: 25em">
-                    <p:dataList var="where" id="where" value="#{editFirewallEntry.wheres}">
-                        <f:facet name="header">
-                            Where
-                        </f:facet>
-                        <h:outputText value="#{where.asString}"/>
-                    </p:dataList>
-                </p:column>
-                <p:column style="width: 25em">
-                    <p:dataList var="what" id="what" value="#{editFirewallEntry.whats}">
-                        <f:facet name="header">
-                            What
-                        </f:facet>
-                        <h:outputText value="#{what.asString}"/>
-                    </p:dataList>
-                </p:column>
-            </p:row>
-            <p:row>
-                <p:column>
-                    <p:commandButton value="New…"
-                                     action="#{editFirewallEntry.onAddWho}"/>
-                    <p:commandButton value="Edit…"/>
-                    <p:commandButton value="Delete"/>
-                </p:column>
-                <p:column>
-                    <p:commandButton value="New…"
-                                     action="#{editFirewallEntry.onAddWhere}"
-                                     update="where dlgEditWhere"
-                                     />
-                    <p:commandButton value="Edit…"/>
-                    <p:commandButton value="Delete"/>
-                </p:column>
-                <p:column>
-                    <p:commandButton value="New…"
-                                     action="#{editFirewallEntry.onAddWhat}"
-                                     update="what dlgEditWhat"
-                                     />
-                    <p:commandButton value="Edit…"/>
-                    <p:commandButton value="Delete"/>
-                </p:column>
-            </p:row>
-        </p:panelGrid>
+            <p:panelGrid>
+                <f:facet name="header">
+                    <p:row>
+                        <p:column>Who</p:column>
+                        <p:column>Where</p:column>
+                        <p:column>What</p:column>
+                    </p:row>
+                </f:facet>
+                <p:row>
+                    <p:column style="width: 25em">
+                        <p:selectOneListbox value="#{editFirewallEntry.selectedWhoId}"
+                                            id="who"
+                                            style="height: 10em; width: 30em;"
+                                            >
+                            <f:selectItems value="#{editFirewallEntry.whoIds}"
+                                           var="id"
+                                           itemValue="#{id}"
+                                           itemLabel="#{editFirewallEntry.getWhoForId(id).asString}"/>
+                            <p:ajax update="editWhoButton deleteWhoButton"/>
+                        </p:selectOneListbox>
+                    </p:column>
+                    <p:column style="width: 25em">
+                        <p:dataList var="where" id="where" value="#{editFirewallEntry.wheres}">
+                            <f:facet name="header">
+                                Where
+                            </f:facet>
+                            <h:outputText value="#{where.asString}"/>
+                        </p:dataList>
+                    </p:column>
+                    <p:column style="width: 25em">
+                        <p:dataList var="what" id="what" value="#{editFirewallEntry.whats}">
+                            <f:facet name="header">
+                                What
+                            </f:facet>
+                            <h:outputText value="#{what.asString}"/>
+                        </p:dataList>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <p:commandButton value="New…"
+                                         action="#{editFirewallEntry.onAddWho}"/>
+                        <p:commandButton id="editWhoButton"
+                                         value="Edit…"
+                                         action="#{editFirewallEntry.onEditWho}"
+                                         update="who dlgEditWho"
+                                         disabled="#{editFirewallEntry.selectedWhoId == null}"/>
+                        <p:commandButton id="deleteWhoButton"
+                                         value="Delete"
+                                         action="#{editFirewallEntry.onRemoveWho}"
+                                         update="who"
+                                         disabled="#{editFirewallEntry.selectedWhoId == null}"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton value="New…"
+                                         action="#{editFirewallEntry.onAddWhere}"
+                                         update="where dlgEditWhere"
+                                         />
+                        <p:commandButton value="Edit…"/>
+                        <p:commandButton value="Delete"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton value="New…"
+                                         action="#{editFirewallEntry.onAddWhat}"
+                                         update="what dlgEditWhat"
+                                         />
+                        <p:commandButton value="Edit…"/>
+                        <p:commandButton value="Delete"/>
+                    </p:column>
+                </p:row>
+            </p:panelGrid>
 
-        <p:messages showDetail="true"/>
+            <p:messages showDetail="true"/>
 
-        <p:commandButton value="OK"
-                         action="#{editFirewallEntry.onOk}"
-                         />
-        <p:commandButton value="Cancel"
-                         action="#{editFirewallEntry.onCancel}"/>
+            <p:commandButton value="OK"
+                             action="#{editFirewallEntry.onOk}"
+                             />
+            <p:commandButton value="Cancel"
+                             action="#{editFirewallEntry.onCancel}"/>
+            </h:form>
     </p:dialog>
 
 </ui:composition>
