@@ -19,7 +19,7 @@ public class Entry implements Serializable {
     private boolean isActive = false;
     private List<Where> where = new LinkedList<>();
     private List<What> what = new LinkedList<>();
-    private List<String> who = new LinkedList<>();
+    private List<Who> who = new LinkedList<>();
 
     public String getLabel() {
         return label;
@@ -77,7 +77,7 @@ public class Entry implements Serializable {
         return what;
     }
 
-    public List<String> getWhos() {
+    public List<Who> getWhos() {
         return who;
     }
 

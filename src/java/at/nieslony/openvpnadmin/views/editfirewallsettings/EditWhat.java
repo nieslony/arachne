@@ -76,7 +76,7 @@ public class EditWhat implements Serializable {
             case MODIFY:
                 break;
             case NEW:
-                editFirewallEntry.getWhats().add(what);
+                editFirewallEntry.addWhat(what);
                 break;
         }
     }

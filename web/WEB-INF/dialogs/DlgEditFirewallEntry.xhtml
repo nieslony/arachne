@@ -46,26 +46,35 @@
                         </p:selectOneListbox>
                     </p:column>
                     <p:column style="width: 25em">
-                        <p:dataList var="where" id="where" value="#{editFirewallEntry.wheres}">
-                            <f:facet name="header">
-                                Where
-                            </f:facet>
-                            <h:outputText value="#{where.asString}"/>
-                        </p:dataList>
+                        <p:selectOneListbox value="#{editFirewallEntry.selectedWhereId}"
+                                         id="where"
+                                            style="height: 10em; width: 30em;"
+                                            >
+                            <f:selectItems value="#{editFirewallEntry.whereIds}"
+                                           var="id"
+                                           itemValue="#{id}"
+                                           itemLabel="#{editFirewallEntry.getWhereForId(id).asString}"/>
+                            <p:ajax update="editWhereButton deleteWhereButton"/>
+                        </p:selectOneListbox>
                     </p:column>
                     <p:column style="width: 25em">
-                        <p:dataList var="what" id="what" value="#{editFirewallEntry.whats}">
-                            <f:facet name="header">
-                                What
-                            </f:facet>
-                            <h:outputText value="#{what.asString}"/>
-                        </p:dataList>
+                        <p:selectOneListbox value="#{editFirewallEntry.selectedWhatId}"
+                                         id="what"
+                                            style="height: 10em; width: 30em;"
+                                            >
+                            <f:selectItems value="#{editFirewallEntry.whatIds}"
+                                           var="id"
+                                           itemValue="#{id}"
+                                           itemLabel="#{editFirewallEntry.getWhatForId(id).asString}"/>
+                            <p:ajax update="editWhatButton deleteWhatButton"/>
+                        </p:selectOneListbox>
                     </p:column>
                 </p:row>
                 <p:row>
                     <p:column>
                         <p:commandButton value="New…"
-                                         action="#{editFirewallEntry.onAddWho}"/>
+                                         action="#{editFirewallEntry.onAddWho}"
+                                         update="who dlgEditWho"/>
                         <p:commandButton id="editWhoButton"
                                          value="Edit…"
                                          action="#{editFirewallEntry.onEditWho}"
@@ -80,18 +89,32 @@
                     <p:column>
                         <p:commandButton value="New…"
                                          action="#{editFirewallEntry.onAddWhere}"
+                                         update="where dlgEditWhere"/>
+                        <p:commandButton id="editWhereButton"
+                                         value="Edit…"
+                                         action="#{editFirewallEntry.onEditWhere}"
                                          update="where dlgEditWhere"
-                                         />
-                        <p:commandButton value="Edit…"/>
-                        <p:commandButton value="Delete"/>
+                                         disabled="#{editFirewallEntry.selectedWhereId == null}"/>
+                        <p:commandButton id="deleteWhereButton"
+                                         value="Delete"
+                                         action="#{editFirewallEntry.onRemoveWhere}"
+                                         update="where"
+                                         disabled="#{editFirewallEntry.selectedWhereId == null}"/>
                     </p:column>
                     <p:column>
                         <p:commandButton value="New…"
                                          action="#{editFirewallEntry.onAddWhat}"
+                                         update="what dlgEditWhat"/>
+                        <p:commandButton id="editWhatButton"
+                                         value="Edit…"
+                                         action="#{editFirewallEntry.onEditWhat}"
                                          update="what dlgEditWhat"
-                                         />
-                        <p:commandButton value="Edit…"/>
-                        <p:commandButton value="Delete"/>
+                                         disabled="#{editFirewallEntry.selectedWhatId == null}"/>
+                        <p:commandButton id="deleteWhatButton"
+                                         value="Delete"
+                                         action="#{editFirewallEntry.onRemoveWhat}"
+                                         update="what"
+                                         disabled="#{editFirewallEntry.selectedWhatId == null}"/>
                     </p:column>
                 </p:row>
             </p:panelGrid>

@@ -18,8 +18,6 @@ import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -38,8 +36,12 @@ public class EditFirewallEntry implements Serializable {
     private final HashMap<String, Who> whos = new HashMap<>();
     private String selectedWhoId = null;
 
-    private final List<Where> wheres = new LinkedList<>();
-    private final List<What> whats = new LinkedList<>();
+    private final HashMap<String, Where> wheres = new HashMap<>();
+    private String selectedWhereId = null;
+
+    private final HashMap<String, What> whats = new HashMap<>();
+    private String selectedWhatId = null;
+
     private String label = "";
     private String description = "";
     private boolean isActive = false;
@@ -69,10 +71,21 @@ public class EditFirewallEntry implements Serializable {
     }
 
     private void readValues() {
+        whos.clear();
+        firewallEntry.getWhos().forEach( w -> {
+            addWho(w);
+        });
+
         wheres.clear();
-        wheres.addAll(firewallEntry.getWheres());
+        firewallEntry.getWheres().forEach( w -> {
+            addWhere(w);
+        });
+
         whats.clear();
-        whats.addAll(firewallEntry.getWhats());
+        firewallEntry.getWhats().forEach( w -> {
+            addWhat(w);
+        });
+
         label = firewallEntry.getLabel();
         description = firewallEntry.getDescription();
         isActive = firewallEntry.getIsActive();
@@ -94,25 +107,36 @@ public class EditFirewallEntry implements Serializable {
         return whos.keySet();
     }
 
-
-    public void setSelectedWhere(Where sw) {
-        selectedWhere = sw;
+    public String getSelectedWhereId() {
+        return selectedWhereId;
     }
 
-    public Where getSelectedWhare() {
-        return selectedWhere;
+    public void setSelectedWhereId(String id) {
+        selectedWhereId = id;
     }
 
-    public List<Where> getWheres() {
-        return wheres;
+    public Where getWhereForId(String id) {
+        return wheres.get(id);
     }
 
-    public Collection<Who> getWhos() {
-        return whos.values();
+    public Collection<String> getWhereIds() {
+        return wheres.keySet();
     }
 
-    public List<What> getWhats() {
-        return whats;
+    public String getSelectedWhatId() {
+        return selectedWhatId;
+    }
+
+    public void setSelectedWhatId(String id) {
+        selectedWhatId = id;
+    }
+
+    public What getWhatForId(String id) {
+        return whats.get(id);
+    }
+
+    public Collection<String> getWhatIds() {
+        return whats.keySet();
     }
 
     public WhatType[] getWhatTypes() {
@@ -170,6 +194,28 @@ public class EditFirewallEntry implements Serializable {
         PrimeFaces.current().executeScript("PF('dlgEditWho').show();");
     }
 
+    public void onEditWhere() {
+        Where where = getWhereForId(selectedWhereId);
+        if (where == null) {
+            logger.info("No where selected for editing");
+            return;
+        }
+        logger.info(String.format("Editing where %s", where.getAsString()));
+        editWhere.beginEdit(where, EditMode.MODIFY);
+        PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
+    }
+
+    public void onEditWhat() {
+        What what = getWhatForId(selectedWhatId);
+        if (what == null) {
+            logger.info("No what selected for editing");
+            return;
+        }
+        logger.info(String.format("Editing where %s", what.getAsString()));
+        editWhat.beginEdit(what, EditMode.MODIFY);
+        PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
+    }
+
     public EditWho getEditWho() {
         return editWho;
     }
@@ -201,10 +247,17 @@ public class EditFirewallEntry implements Serializable {
     }
 
     public void onRemoveWhere() {
-
+        if (selectedWhereId != null) {
+            wheres.remove(selectedWhereId);
+            selectedWhereId = null;
+        }
     }
 
     public void onRemoveWhat() {
+        if (selectedWhatId != null) {
+            whats.remove(selectedWhatId);
+            selectedWhatId = null;
+        }
     }
 
     public void onOk() {
@@ -217,5 +270,17 @@ public class EditFirewallEntry implements Serializable {
 
     public void addWho(Who who) {
         whos.put(String.valueOf(who.hashCode()), who);
+    }
+
+    public void addWhere(Where where) {
+        wheres.put(String.valueOf(where.hashCode()), where);
+    }
+
+    public void addWhat(What what) {
+        whats.put(String.valueOf(what.hashCode()), what);
+    }
+
+    public Collection<Who> getWhos() {
+        return whos.values();
     }
 }

@@ -34,6 +34,7 @@ public class Who implements Serializable {
         return true;
     }
 
+    @Override
     public int hashCode() {
         return roleRule.hashCode();
     }

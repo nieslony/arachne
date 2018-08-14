@@ -87,7 +87,7 @@ public class EditWhere implements Serializable {
             case MODIFY:
                 break;
             case NEW:
-                editFirewallEntry.getWheres().add(where);
+                editFirewallEntry.addWhere(where);
                 break;
         }
     }

@@ -91,4 +91,31 @@ public class Where implements Serializable {
     public void setMask(int m) {
         mask = m;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        return hashCode() == obj.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+
+        hash *= 1 * (hostname == null ? 1 : hostname.hashCode());
+        hash *= 3 * (mask + 1);
+        hash *= 5 * (network == null ? 1 : network.hashCode());
+        hash *= 7 * (whereType == null | whereType.hashCode() == 0 ? 1 : whereType.hashCode());
+
+        return hash;
+    }
 }

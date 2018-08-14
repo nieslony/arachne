@@ -166,4 +166,35 @@ public class What implements Serializable {
     public void setService(FirewallDService s) {
         service = s;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        return hashCode() == obj.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+
+        hash *= 1 * (port == 0 ? 1 : port);
+        hash *= 3 * (portFrom == 0 ? 1 : portFrom);
+        hash *= 5 * (portTo == 0 ? 1 : portTo);
+        hash *= 7 * ports.hashCode();
+        hash *= 11 * (protocol == null | protocol.hashCode() == 0 ? 1 : protocol.hashCode());
+        if (service != null)
+            hash *= 13 * (service.hashCode() == 0 ? 1 : service.hashCode());
+        hash *= 17 * (whatType == null | whatType.hashCode() == 0 ? 1 : whatType.hashCode());
+
+        return hash;
+    }
 }
