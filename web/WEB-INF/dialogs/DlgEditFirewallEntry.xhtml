@@ -74,7 +74,7 @@
                     <p:column>
                         <p:commandButton value="New…"
                                          action="#{editFirewallEntry.onAddWho}"
-                                         update="who dlgEditWho"/>
+                                         update="who dlgEditWho butOk"/>
                         <p:commandButton id="editWhoButton"
                                          value="Edit…"
                                          action="#{editFirewallEntry.onEditWho}"
@@ -83,13 +83,13 @@
                         <p:commandButton id="deleteWhoButton"
                                          value="Delete"
                                          action="#{editFirewallEntry.onRemoveWho}"
-                                         update="who"
+                                         update="who butOk deleteWhoButton editWhoButton"
                                          disabled="#{editFirewallEntry.selectedWhoId == null}"/>
                     </p:column>
                     <p:column>
                         <p:commandButton value="New…"
                                          action="#{editFirewallEntry.onAddWhere}"
-                                         update="where dlgEditWhere"/>
+                                         update="where dlgEditWhere butOk"/>
                         <p:commandButton id="editWhereButton"
                                          value="Edit…"
                                          action="#{editFirewallEntry.onEditWhere}"
@@ -98,13 +98,13 @@
                         <p:commandButton id="deleteWhereButton"
                                          value="Delete"
                                          action="#{editFirewallEntry.onRemoveWhere}"
-                                         update="where"
+                                         update="where butOk deleteWhereButton editWhereButton"
                                          disabled="#{editFirewallEntry.selectedWhereId == null}"/>
                     </p:column>
                     <p:column>
                         <p:commandButton value="New…"
                                          action="#{editFirewallEntry.onAddWhat}"
-                                         update="what dlgEditWhat"/>
+                                         update="what dlgEditWhat butOk"/>
                         <p:commandButton id="editWhatButton"
                                          value="Edit…"
                                          action="#{editFirewallEntry.onEditWhat}"
@@ -113,7 +113,7 @@
                         <p:commandButton id="deleteWhatButton"
                                          value="Delete"
                                          action="#{editFirewallEntry.onRemoveWhat}"
-                                         update="what"
+                                         update="what butOk editWhatButton deleteWhatButton"
                                          disabled="#{editFirewallEntry.selectedWhatId == null}"/>
                     </p:column>
                 </p:row>
@@ -122,7 +122,9 @@
             <p:messages showDetail="true"/>
 
             <p:commandButton value="OK"
+                             id="butOk"
                              action="#{editFirewallEntry.onOk}"
+                             disabled="#{!editFirewallEntry.valid}"
                              />
             <p:commandButton value="Cancel"
                              action="#{editFirewallEntry.onCancel}"/>

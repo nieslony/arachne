@@ -283,4 +283,13 @@ public class EditFirewallEntry implements Serializable {
     public Collection<Who> getWhos() {
         return whos.values();
     }
+
+    public boolean isValid() {
+        boolean valid = !whos.isEmpty() && !wheres.isEmpty() && !whats.isEmpty();
+        logger.info(String.format("Entry is %svalid",
+                (valid ? "" : "not ")
+        ));
+
+        return valid;
+    }
 }
