@@ -11,12 +11,11 @@
     <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
         <ui:param name="title" value="Edit firewall zone"/>
 
-        <ui:include  src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
-
         <ui:define name="content">
-            <p:fragment autoUpdate="true">
-                <ui:include src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
-            </p:fragment>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWho.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWhere.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWhat.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
 
             <h:form id="firewallZoneForm">
                 <p:accordionPanel>

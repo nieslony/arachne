@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<ui:composition
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    <p:dialog header="Who has access"
+        dynamic="true"
+        id="dlgEditWho"
+        widgetVar="dlgEditWho">
+
+        <h:form id="formEditWho">
+            <h:panelGrid columns="2">
+                <p:outputLabel value="Select who by…:" for="whoType"/>
+                <p:selectOneMenu id="whoType" value="#{editFirewallEntry.editWho.whoType}"
+                                 >
+                    <f:selectItem itemLabel="Select who type" itemValue="" noSelectionOption="true" />
+                    <f:selectItems value="#{roleRuleFactoryCollection.factories}"
+                                   var="factory"
+                                   itemLabel="#{factory.descriptionString}"
+                                   itemValue="#{factory.roleRuleName}"                               />
+                    <p:ajax update="okWho"/>
+                    <f:ajax render="@form"/>
+                </p:selectOneMenu>
+
+                <p:outputLabel value="#{editFirewallEntry.editWho.whoLabel}:"
+                               for="whoValue"
+
+                               rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                               id="whoLabel"/>
+                <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
+                                id="whoValue"
+                                completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
+                                rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                                forceSelection="true">
+                    <p:ajax update="okWho"/>
+                </p:autoComplete>
+            </h:panelGrid>
+
+            <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
+                             disabled='#{editFirewallEntry.editWho.whoType == ""
+                                         and (
+                                            !editFirewallEntry.editWho.needsWhoValue
+                                            or
+                                            editFirewallEntry.editWho.whoValue != ""
+                                         )}'
+                             id="okWho"
+                             update="dlgEditWho formEditFirewallEntry:who"/>
+            <p:commandButton value="Cancel"
+                             id="cancelWho"
+                             action="#{editFirewallEntry.editWho.onCancel}"/>
+        </h:form>
+    </p:dialog>
+</ui:composition>
