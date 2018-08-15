@@ -6,7 +6,7 @@
 package at.nieslony.openvpnadmin.views.editfirewallsettings;
 
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
-import at.nieslony.openvpnadmin.views.EditFirewallEntry;
+import at.nieslony.openvpnadmin.views.EditFirewallSettings;
 import java.io.Serializable;
 import java.util.logging.Logger;
 import org.primefaces.PrimeFaces;
@@ -21,15 +21,15 @@ public class EditWhere implements Serializable {
     private Where where;
     private EditMode editMode;
 
-    private EditFirewallEntry editFirewallEntry;
+    private EditFirewallSettings editFirewallSettings;
 
     Where.WhereType whereType;
     String hostname;
     String network = "0.0.0.0";
     int mask = 0;
 
-    public EditWhere(EditFirewallEntry efe) {
-        editFirewallEntry = efe;
+    public EditWhere(EditFirewallSettings efs) {
+        editFirewallSettings = efs;
     }
 
     public Where.WhereType getWhereType() {
@@ -87,7 +87,7 @@ public class EditWhere implements Serializable {
             case MODIFY:
                 break;
             case NEW:
-                editFirewallEntry.addWhere(where);
+                editFirewallSettings.getEditFirewallEntry().addWhere(where);
                 break;
         }
     }

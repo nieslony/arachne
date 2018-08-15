@@ -37,32 +37,6 @@ public class Entry implements Serializable {
         description = d;
     }
 
-    public String getWhoStr() {
-        if (who.isEmpty())
-            return "";
-        if (who.size() > 0)
-            return String.format("%s…", who.get(0).getAsString());
-        return who.get(0).getAsString();
-    }
-
-    public String getWhoStrExpanded() {
-        who.
-    }
-
-    public String getWhereStr() {
-        List<String> whereStr = new LinkedList<>();
-        where.forEach(w -> whereStr.add(w.toString()));
-
-        return String.join(", ", whereStr);
-    }
-
-    public String getWhatStr() {
-        List<String> whatStr = new LinkedList<>();
-        what.forEach(w -> whatStr.add(w.toString()));
-
-        return String.join(", ", whatStr);
-    }
-
     public boolean getIsActive() {
         return isActive;
     }

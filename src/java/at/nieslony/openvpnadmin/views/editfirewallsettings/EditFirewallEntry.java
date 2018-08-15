@@ -3,34 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package at.nieslony.openvpnadmin.views;
+package at.nieslony.openvpnadmin.views.editfirewallsettings;
 
-import at.nieslony.openvpnadmin.beans.FirewallSettings;
-import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.What.WhatType;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
 import at.nieslony.openvpnadmin.beans.firewallzone.Who;
-import at.nieslony.openvpnadmin.views.editfirewallsettings.EditMode;
-import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
-import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
-import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
+import at.nieslony.openvpnadmin.views.EditFirewallSettings;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Logger;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import org.primefaces.PrimeFaces;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
-@ViewScoped
 public class EditFirewallEntry implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -49,24 +39,10 @@ public class EditFirewallEntry implements Serializable {
 
     private Entry firewallEntry;
 
-    final private EditWhat editWhat = new EditWhat(this);
-    final private EditWhere editWhere = new EditWhere(this);
-    final private EditWho editWho = new EditWho(this);
+    EditFirewallSettings editFirewallSettings;
 
-    @ManagedProperty(value = "#{firewallSettings}")
-    FirewallSettings firewallSettings;
-    public void setFirewallSettings(FirewallSettings fs) {
-        firewallSettings = fs;
-    }
-
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
-    RoleRuleFactoryCollection roleRuleFactoryCollection;
-    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
-        roleRuleFactoryCollection = rrfc;
-    }
-
-    public RoleRuleFactoryCollection getRoleRuleFactoryCollection() {
-        return roleRuleFactoryCollection;
+    public EditFirewallEntry(EditFirewallSettings efs) {
+        editFirewallSettings = efs;
     }
 
     public void setFirewallEntry(Entry e) {
@@ -175,7 +151,7 @@ public class EditFirewallEntry implements Serializable {
     public void onAddWho() {
         logger.info("Adding new who");
 
-        editWho.beginEdit(new Who(), EditMode.NEW);
+        editFirewallSettings.getEditWho().beginEdit(new Who(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWho').show();");
     }
@@ -183,7 +159,7 @@ public class EditFirewallEntry implements Serializable {
     public void onAddWhere() {
         logger.info("Adding new where");
 
-        editWhere.beginEdit(new Where(), EditMode.NEW);
+        editFirewallSettings.getEditWhere().beginEdit(new Where(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
     }
@@ -195,7 +171,7 @@ public class EditFirewallEntry implements Serializable {
             return;
         }
         logger.info(String.format("Editing who %s", who.getAsString()));
-        editWho.beginEdit(who, EditMode.MODIFY);
+        editFirewallSettings.getEditWho().beginEdit(who, EditMode.MODIFY);
         PrimeFaces.current().executeScript("PF('dlgEditWho').show();");
     }
 
@@ -206,7 +182,7 @@ public class EditFirewallEntry implements Serializable {
             return;
         }
         logger.info(String.format("Editing where %s", where.getAsString()));
-        editWhere.beginEdit(where, EditMode.MODIFY);
+        editFirewallSettings.getEditWhere().beginEdit(where, EditMode.MODIFY);
         PrimeFaces.current().executeScript("PF('dlgEditWhere').show();");
     }
 
@@ -217,29 +193,14 @@ public class EditFirewallEntry implements Serializable {
             return;
         }
         logger.info(String.format("Editing where %s", what.getAsString()));
-        editWhat.beginEdit(what, EditMode.MODIFY);
+        editFirewallSettings.getEditWhat().beginEdit(what, EditMode.MODIFY);
         PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
-    }
-
-    public EditWho getEditWho() {
-        return editWho;
-    }
-
-    public EditWhere getEditWhere() {
-        return editWhere;
-    }
-
-    public EditWhat getEditWhat() {
-        return editWhat;
-    }
-
-    public void updateEditWhat() {
     }
 
     public void onAddWhat() {
         logger.info("Adding new what");
 
-        editWhat.beginEdit(new What(), EditMode.NEW);
+        editFirewallSettings.getEditWhat().beginEdit(new What(), EditMode.NEW);
 
         PrimeFaces.current().executeScript("PF('dlgEditWhat').show();");
     }
@@ -267,7 +228,7 @@ public class EditFirewallEntry implements Serializable {
 
     public void onOk() {
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
-        firewallSettings.addIncomingEntry(firewallEntry);
+        editFirewallSettings.addIncomingEntry(firewallEntry);
     }
 
     public void onCancel() {

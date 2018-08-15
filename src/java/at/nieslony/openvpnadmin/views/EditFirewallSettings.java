@@ -5,9 +5,18 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.beans.FirewallSettings;
+import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditFirewallEntry;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -25,15 +34,90 @@ public class EditFirewallSettings implements Serializable {
     final static String CHAIN_INCOMING = "incoming";
     final static String CHAIN_OUTGOING = "outgoing";
 
-    @ManagedProperty(value = "#{editFirewallEntry}")
-    private EditFirewallEntry editFirewallEntry;
+    public class FirewallEntryInfo {
+        private Entry entry;
+        private boolean isExpanded = false;
+
+        FirewallEntryInfo(Entry e) {
+            entry = e;
+        }
+
+        public boolean getIsExpanded() {
+            return isExpanded;
+        }
+
+        public void setIsExpanded(boolean ie) {
+            isExpanded = ie;
+        }
+
+        public String getWhoStr() {
+            if (entry.getWhos().isEmpty())
+                return "";
+            if (entry.getWhos().size() > 0)
+                return String.format("%s…", entry.getWhos().get(0).getAsString());
+            return entry.getWhos().get(0).getAsString();
+        }
+
+        public String getWhoStrExpanded() {
+            return getWhoStr();
+        }
+
+        public String getWhereStr() {
+            List<String> whereStr = new LinkedList<>();
+            entry.getWheres().forEach(w -> whereStr.add(w.toString()));
+
+            return String.join(", ", whereStr);
+        }
+
+        public String getWhatStr() {
+            List<String> whatStr = new LinkedList<>();
+            entry.getWhats().forEach(w -> whatStr.add(w.toString()));
+
+            return String.join(", ", whatStr);
+        }
+
+        public Entry getEntry() {
+            return entry;
+        }
+    }
+
+    final List<FirewallEntryInfo> incomingEntries = new LinkedList<>();
+
+    final EditFirewallEntry editFirewallEntry = new EditFirewallEntry(this);
+    final EditWho editWho = new EditWho(this);
+    final EditWhere editWhere = new EditWhere(this);
+    final EditWhat editWhat = new EditWhat(this);
 
     public EditFirewallEntry getEditFirewallEntry() {
         return editFirewallEntry;
     }
 
-    public void setEditFirewallEntry(EditFirewallEntry efe) {
-        editFirewallEntry = efe;
+    public EditWho getEditWho() {
+        return editWho;
+    }
+
+    public EditWhere getEditWhere() {
+        return editWhere;
+    }
+
+    public EditWhat getEditWhat() {
+        return editWhat;
+    }
+
+    @ManagedProperty(value = "#{firewallSettings}")
+    private FirewallSettings firewallSettings;
+    public void setFirewallSettings(FirewallSettings fs) {
+        firewallSettings = fs;
+    }
+
+    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    RoleRuleFactoryCollection roleRuleFactoryCollection;
+    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
+        roleRuleFactoryCollection = rrfc;
+    }
+
+    public RoleRuleFactoryCollection getRoleRuleFactoryCollection() {
+        return roleRuleFactoryCollection;
     }
 
     enum EditMode {
@@ -55,10 +139,22 @@ public class EditFirewallSettings implements Serializable {
 
     String editingChain;
     EditMode editingMode;
-    Entry selectedIncomingEntry;
+    FirewallEntryInfo selectedIncomingEntry;
     Entry editingEntry;
 
     public EditFirewallSettings() {
+    }
+
+    @PostConstruct
+    public void init() {
+        onSyncEntries();
+    }
+
+    public void onSyncEntries() {
+        incomingEntries.clear();
+        firewallSettings.getIncomingEntries().forEach(
+                e -> incomingEntries.add(new FirewallEntryInfo(e))
+        );
     }
 
     public void onNewIncomingEntry() {
@@ -121,20 +217,29 @@ public class EditFirewallSettings implements Serializable {
                     editingEntry = new Entry();
                     break;
                 case EM_EDIT:
-                    editingEntry = selectedIncomingEntry;
+                    editingEntry = selectedIncomingEntry.getEntry();
                 case EM_CLONE:
-                    editingEntry = selectedIncomingEntry.clone();
+                    editingEntry = selectedIncomingEntry.getEntry().clone();
             }
         }
 
         return editingEntry;
     }
 
-    public void setSelectedIncomingEntry(Entry e) {
+    public void setSelectedIncomingEntry(FirewallEntryInfo e) {
         selectedIncomingEntry = e;
     }
 
-    public Entry getSelectedIncomingEntry() {
+    public FirewallEntryInfo getSelectedIncomingEntry() {
         return selectedIncomingEntry;
+    }
+
+    public List<FirewallEntryInfo> getIncomingEntries() {
+        return incomingEntries;
+    }
+
+    public void addIncomingEntry(Entry entry) {
+        firewallSettings.addIncomingEntry(entry);
+        incomingEntries.add(new FirewallEntryInfo(entry));
     }
 }

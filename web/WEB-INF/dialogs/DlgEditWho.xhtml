@@ -13,7 +13,7 @@
         <h:form id="formEditWho">
             <h:panelGrid columns="2">
                 <p:outputLabel value="Select who by…:" for="whoType"/>
-                <p:selectOneMenu id="whoType" value="#{editFirewallEntry.editWho.whoType}"
+                <p:selectOneMenu id="whoType" value="#{editFirewallSettings.editWho.whoType}"
                                  >
                     <f:selectItem itemLabel="Select who type" itemValue="" noSelectionOption="true" />
                     <f:selectItems value="#{roleRuleFactoryCollection.factories}"
@@ -24,32 +24,32 @@
                     <f:ajax render="@form"/>
                 </p:selectOneMenu>
 
-                <p:outputLabel value="#{editFirewallEntry.editWho.whoLabel}:"
+                <p:outputLabel value="#{editFirewallSettings.editWho.whoLabel}:"
                                for="whoValue"
 
-                               rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                               rendered="#{editFirewallSettings.editWho.needsWhoValue}"
                                id="whoLabel"/>
-                <p:autoComplete value="#{editFirewallEntry.editWho.whoValue}"
+                <p:autoComplete value="#{editFirewallSettings.editWho.whoValue}"
                                 id="whoValue"
-                                completeMethod="#{editFirewallEntry.editWho.onCompleteRoleValue}"
-                                rendered="#{editFirewallEntry.editWho.needsWhoValue}"
+                                completeMethod="#{editFirewallSettings.editWho.onCompleteRoleValue}"
+                                rendered="#{editFirewallSettings.editWho.needsWhoValue}"
                                 forceSelection="true">
                     <p:ajax update="okWho"/>
                 </p:autoComplete>
             </h:panelGrid>
 
-            <p:commandButton value="OK" action="#{editFirewallEntry.editWho.onOk}"
-                             disabled='#{editFirewallEntry.editWho.whoType == ""
+            <p:commandButton value="OK" action="#{editFirewallSettings.editWho.onOk}"
+                             disabled='#{editFirewallSettings.editWho.whoType == ""
                                          and (
-                                            !editFirewallEntry.editWho.needsWhoValue
+                                            !editFirewallSettings.editWho.needsWhoValue
                                             or
-                                            editFirewallEntry.editWho.whoValue != ""
+                                            editFirewallSettings.editWho.whoValue != ""
                                          )}'
                              id="okWho"
                              update="dlgEditWho formEditFirewallEntry"/>
             <p:commandButton value="Cancel"
                              id="cancelWho"
-                             action="#{editFirewallEntry.editWho.onCancel}"/>
+                             action="#{editFirewallSettings.editWho.onCancel}"/>
         </h:form>
     </p:dialog>
 </ui:composition>

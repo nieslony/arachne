@@ -10,7 +10,7 @@
               id="dlgEditWhere"
               widgetVar="dlgEditWhere">
         <h:form id="formEditWhere">
-            <p:selectOneRadio value="#{editFirewallEntry.editWhere.whereType}"
+            <p:selectOneRadio value="#{editFirewallSettings.editWhere.whereType}"
                               layout="custom"
                               id="whereType">
                 <f:selectItem itemValue="Everywhere"/>
@@ -26,26 +26,26 @@
 
                 <p:radioButton for="whereType" itemIndex="1" id="rbHostname"/>
                 <p:outputLabel for="rbHostname" value="Hostname:"/>
-                <p:inputText value="#{editFirewallEntry.editWhere.hostname}" id="hostname"
-                             disabled='#{editFirewallEntry.editWhere.whereType != "Hostname"}'/>
+                <p:inputText value="#{editFirewallSettings.editWhere.hostname}" id="hostname"
+                             disabled='#{editFirewallSettings.editWhere.whereType != "Hostname"}'/>
 
                 <p:radioButton for="whereType" itemIndex="2" id="rbNetwork"/>
                 <p:outputLabel for="rbNetwork" value="Network:"/>
                 <p:outputPanel>
-                    <p:inputText value="#{editFirewallEntry.editWhere.network}" id="network"
-                                 disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+                    <p:inputText value="#{editFirewallSettings.editWhere.network}" id="network"
+                                 disabled='#{editFirewallSettings.editWhere.whereType != "Network"}'/>
                     <h:outputText value="/"/>
-                    <p:spinner min="1" max="65535" value="#{editFirewallEntry.editWhere.mask}"
+                    <p:spinner min="1" max="65535" value="#{editFirewallSettings.editWhere.mask}"
                                id="mask"
-                               disabled='#{editFirewallEntry.editWhere.whereType != "Network"}'/>
+                               disabled='#{editFirewallSettings.editWhere.whereType != "Network"}'/>
                 </p:outputPanel>
             </h:panelGrid>
 
             <p:commandButton value="OK"
-                             action="#{editFirewallEntry.editWhere.onOk}"
+                             action="#{editFirewallSettings.editWhere.onOk}"
                              update="formEditFirewallEntry dlgEditWhere"/>
             <p:commandButton value="Cancel"
-                             action="#{editFirewallEntry.editWhere.onCancel}"/>
+                             action="#{editFirewallSettings.editWhere.onCancel}"/>
         </h:form>
     </p:dialog>
 </ui:composition>

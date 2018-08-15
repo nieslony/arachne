@@ -8,7 +8,7 @@ package at.nieslony.openvpnadmin.views.editfirewallsettings;
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import at.nieslony.openvpnadmin.beans.firewallzone.Who;
-import at.nieslony.openvpnadmin.views.EditFirewallEntry;
+import at.nieslony.openvpnadmin.views.EditFirewallSettings;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -26,13 +26,13 @@ public class EditWho implements Serializable {
 
     private Who who;
     private EditMode editMode;
-    private EditFirewallEntry editFirewallEntry;
+    private EditFirewallSettings editFirewallSettings;
 
     private String whoType = "";
     private String whoValue = "";
 
-    public EditWho(EditFirewallEntry efe) {
-        editFirewallEntry = efe;
+    public EditWho(EditFirewallSettings efs) {
+        editFirewallSettings = efs;
     }
 
     public void beginEdit(Who w, EditMode em) {
@@ -47,10 +47,10 @@ public class EditWho implements Serializable {
     }
 
     private boolean saveWho() {
-        RoleRule rr = editFirewallEntry.getRoleRuleFactoryCollection()
+        RoleRule rr = editFirewallSettings.getRoleRuleFactoryCollection()
                 .createRoleRule(whoType, whoValue);
 
-        Collection<Who> whos = editFirewallEntry.getWhos();
+        Collection<Who> whos = editFirewallSettings.getEditFirewallEntry().getWhos();
         for (Who w: whos) {
             logger.info(w.getAsString());
             if (w != who && w.getRoleRule().equals(rr)) {
@@ -71,7 +71,7 @@ public class EditWho implements Serializable {
                 break;
             case NEW:
                 logger.info(String.format("Adding who %s", who.getAsString()));
-                editFirewallEntry.addWho(who);
+                editFirewallSettings.getEditFirewallEntry().addWho(who);
                 break;
             default:
                 logger.warning("Invalid editMode");
@@ -97,11 +97,11 @@ public class EditWho implements Serializable {
     }
 
     public boolean getNeedsWhoValue() {
-        return editFirewallEntry.getRoleRuleFactoryCollection().getNeedsValue(whoType);
+        return editFirewallSettings.getRoleRuleFactoryCollection().getNeedsValue(whoType);
     }
 
     public String getWhoLabel() {
-        return editFirewallEntry.getRoleRuleFactoryCollection().getValueLabel(whoType);
+        return editFirewallSettings.getRoleRuleFactoryCollection().getValueLabel(whoType);
     }
 
     public void onOk() {
@@ -120,7 +120,7 @@ public class EditWho implements Serializable {
             return null;
 
         RoleRuleFactory factory =
-                editFirewallEntry.getRoleRuleFactoryCollection().getFactory(whoType);
+                editFirewallSettings.getRoleRuleFactoryCollection().getFactory(whoType);
         if (factory == null) {
             logger.warning(String.format("rule type %s doesn't exist", whoType));
             return new LinkedList<>();

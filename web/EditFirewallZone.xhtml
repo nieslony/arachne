@@ -20,26 +20,26 @@
             <h:form id="firewallZoneForm">
                 <p:accordionPanel>
                     <p:tab title="Incomping">
-                        <p:dataTable value="#{firewallSettings.incomingEntries}"
+                        <p:dataTable value="#{editFirewallSettings.incomingEntries}"
                                      id="incomingEntries"
-                                     var="entry">
+                                     var="entryInfo">
                             <p:column headerText="Label">
-                                <h:outputText value="#{entry.label}"/>
+                                <h:outputText value="#{entryInfo.entry.label}"/>
                             </p:column>
                             <p:column headerText="Is Active">
-                                <h:outputText value="#{entry.isActive}"/>
+                                <h:outputText value="#{entryInfo.entry.isActive}"/>
                             </p:column>
                             <p:column headerText="Who">
-                                <h:outputText value="#{entry.whoStr}"/>
+                                <h:outputText value="#{entryInfo.whoStr}"/>
                             </p:column>
                             <p:column headerText="Where">
-                                <h:outputText value="#{entry.whereStr}"/>
+                                <h:outputText value="#{entryInfo.whereStr}"/>
                             </p:column>
                             <p:column headerText="What">
-                                <h:outputText value="#{entry.whatStr}"/>
+                                <h:outputText value="#{entryInfo.whatStr}"/>
                             </p:column>
                             <p:column headerText="Description">
-                                <h:outputText value="#{entry.description}"/>
+                                <h:outputText value="#{entryInfo.entry.description}"/>
                             </p:column>
                         </p:dataTable>
 

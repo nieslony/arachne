@@ -7,7 +7,7 @@ package at.nieslony.openvpnadmin.views.editfirewallsettings;
 
 import at.nieslony.openvpnadmin.FirewallDService;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
-import at.nieslony.openvpnadmin.views.EditFirewallEntry;
+import at.nieslony.openvpnadmin.views.EditFirewallSettings;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,10 +32,10 @@ public class EditWhat implements Serializable {
     private What what;
     private EditMode editMode;
 
-    private EditFirewallEntry editFirewallEntry;
+    private EditFirewallSettings editFirewallSettings;
 
-    public EditWhat(EditFirewallEntry efe) {
-        editFirewallEntry = efe;
+    public EditWhat(EditFirewallSettings efs) {
+        editFirewallSettings = efs;
     }
 
     public void beginEdit(What w, EditMode em) {
@@ -76,7 +76,7 @@ public class EditWhat implements Serializable {
             case MODIFY:
                 break;
             case NEW:
-                editFirewallEntry.addWhat(what);
+                editFirewallSettings.getEditFirewallEntry().addWhat(what);
                 break;
         }
     }
