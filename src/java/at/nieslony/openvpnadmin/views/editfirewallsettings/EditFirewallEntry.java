@@ -227,6 +227,16 @@ public class EditFirewallEntry implements Serializable {
     }
 
     public void onOk() {
+        firewallEntry.setLabel(label);
+        firewallEntry.setDescription(description);
+        firewallEntry.setIsActive(isActive);
+        firewallEntry.getWhos().clear();
+        firewallEntry.getWhos().addAll(whos.values());
+        firewallEntry.getWheres().clear();
+        firewallEntry.getWheres().addAll(wheres.values());
+        firewallEntry.getWhats().clear();
+        firewallEntry.getWhats().addAll(whats.values());
+
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
         editFirewallSettings.addIncomingEntry(firewallEntry);
     }

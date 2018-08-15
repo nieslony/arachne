@@ -13,7 +13,7 @@ import java.util.Objects;
  *
  * @author claas
  */
-public class Who implements Serializable {
+public class Who implements Serializable, EntryCreteria {
     RoleRule roleRule = null;
 
     @Override

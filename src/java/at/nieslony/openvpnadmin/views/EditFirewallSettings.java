@@ -8,6 +8,7 @@ package at.nieslony.openvpnadmin.views;
 import at.nieslony.openvpnadmin.beans.FirewallSettings;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
+import at.nieslony.openvpnadmin.beans.firewallzone.EntryCreteria;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditFirewallEntry;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
@@ -50,12 +51,20 @@ public class EditFirewallSettings implements Serializable {
             isExpanded = ie;
         }
 
-        public String getWhoStr() {
-            if (entry.getWhos().isEmpty())
+        private String getAsString(List<? extends EntryCreteria> ec) {
+            if (ec.isEmpty())
                 return "";
-            if (entry.getWhos().size() > 0)
-                return String.format("%s…", entry.getWhos().get(0).getAsString());
-            return entry.getWhos().get(0).getAsString();
+            if (ec.size() > 1)
+                return String.format("%s…", ec.get(0).getAsString());
+            return ec.get(0).getAsString();
+        }
+
+        private String getAsStringExpanded(List<? extends EntryCreteria> ec) {
+            return getAsString(ec);
+        }
+
+        public String getWhoStr() {
+            return getAsStringExpanded(entry.getWhos());
         }
 
         public String getWhoStrExpanded() {
@@ -63,17 +72,11 @@ public class EditFirewallSettings implements Serializable {
         }
 
         public String getWhereStr() {
-            List<String> whereStr = new LinkedList<>();
-            entry.getWheres().forEach(w -> whereStr.add(w.toString()));
-
-            return String.join(", ", whereStr);
+            return getAsString(entry.getWheres());
         }
 
         public String getWhatStr() {
-            List<String> whatStr = new LinkedList<>();
-            entry.getWhats().forEach(w -> whatStr.add(w.toString()));
-
-            return String.join(", ", whatStr);
+            return getAsString(entry.getWhats());
         }
 
         public Entry getEntry() {
@@ -239,6 +242,10 @@ public class EditFirewallSettings implements Serializable {
     }
 
     public void addIncomingEntry(Entry entry) {
+        logger.info(String.format("Adding %s entry %s",
+                (entry.getIsActive() ? "active" : "inactive"),
+                entry.getLabel()
+        ));
         firewallSettings.addIncomingEntry(entry);
         incomingEntries.add(new FirewallEntryInfo(entry));
     }

@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  *
  * @author claas
  */
-public class What implements Serializable {
+public class What implements Serializable, EntryCreteria {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     public enum WhatType {

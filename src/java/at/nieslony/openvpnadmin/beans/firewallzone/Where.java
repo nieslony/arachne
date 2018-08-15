@@ -11,7 +11,7 @@ import java.io.Serializable;
  *
  * @author claas
  */
-public class Where implements Serializable {
+public class Where implements Serializable, EntryCreteria {
     public enum WhereType {
         Everywhere("Everywhere"),
         Hostname("Hostname"),
