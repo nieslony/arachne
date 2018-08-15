@@ -37,18 +37,18 @@ public class EditFirewallSettings implements Serializable {
 
     public class FirewallEntryInfo {
         private Entry entry;
-        private boolean isExpanded = false;
+        private boolean isWhoExpanded = false;
 
         FirewallEntryInfo(Entry e) {
             entry = e;
         }
 
-        public boolean getIsExpanded() {
-            return isExpanded;
+        public boolean getIsWhoExpanded() {
+            return isWhoExpanded;
         }
 
-        public void setIsExpanded(boolean ie) {
-            isExpanded = ie;
+        public void setIsWhoExpanded(boolean ie) {
+            isWhoExpanded = ie;
         }
 
         private String getAsString(List<? extends EntryCreteria> ec) {
@@ -60,15 +60,17 @@ public class EditFirewallSettings implements Serializable {
         }
 
         private String getAsStringExpanded(List<? extends EntryCreteria> ec) {
-            return getAsString(ec);
+            List<String> whos = new LinkedList<>();
+            ec.forEach( e -> whos.add(e.getAsString()));
+
+            return String.join("</br>", whos);
         }
 
         public String getWhoStr() {
-            return getAsStringExpanded(entry.getWhos());
-        }
-
-        public String getWhoStrExpanded() {
-            return getWhoStr();
+            if (isWhoExpanded)
+                return getAsStringExpanded(entry.getWhos());
+            else
+                return getAsString(entry.getWhos());
         }
 
         public String getWhereStr() {

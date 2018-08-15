@@ -30,7 +30,15 @@
                                 <h:outputText value="#{entryInfo.entry.isActive}"/>
                             </p:column>
                             <p:column headerText="Who">
-                                <h:outputText value="#{entryInfo.whoStr}"/>
+                                <p:selectBooleanButton value="#{entryInfo.isWhoExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whoStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whoStr"
+                                              escape="false"
+                                              value="#{entryInfo.whoStr}"/>
                             </p:column>
                             <p:column headerText="Where">
                                 <h:outputText value="#{entryInfo.whereStr}"/>

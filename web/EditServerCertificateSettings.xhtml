@@ -21,17 +21,17 @@
                     <p:inputText id="organizationalUnit" value="#{editServerCertificateSettings.organizationalUnit}"/>
                     <h:outputLabel value="Organization:" for="organization"/>
                     <p:inputText id="organization" value="#{editServerCertificateSettings.organization}"/>
-                    
+
                     <h:outputLabel value="City:" for="city"/>
                     <p:inputText id="city" value="#{editServerCertificateSettings.city}"/>
-                    <h:outputLabel value="State:" state="state"/>
+                    <h:outputLabel value="State:" id="state"/>
                     <p:inputText id="state" value="#{editServerCertificateSettings.state}"/>
-                    
+
                     <h:outputLabel value="Country:" for="country"/>
                     <p:inputText id="country" value="#{editServerCertificateSettings.country}"/>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
-                    
+
                     <h:outputLabel value="Validity time:" for="validTime"/>
                     <h:panelGroup id="validTime" style="vertical-align:baseline">
                         <p:spinner value="#{editServerCertificateSettings.validTime}"/>
@@ -41,7 +41,7 @@
                     </h:panelGroup>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
-                    
+
                     <h:outputLabel value="Signature algorithm:" for="signatureAlgorithm"/>
                     <p:selectOneMenu id="signatureAlgorithm" value="#{editServerCertificateSettings.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
@@ -51,18 +51,18 @@
                     <p:selectOneMenu id="keySize" value="#{editServerCertificateSettings.keySize}">
                         <f:selectItems value="#{editServerCertificateSettings.keySizes}"/>
                     </p:selectOneMenu>
-                    
+
                     <h:outputLabel value="Auto renew after" for="autoUpdateLifetime"/>
                     <p:outputPanel>
                         <p:inputNumber value="#{editServerCertificateSettings.autoUpdateLifetime}"
-                                        symbol="%" 
-                                        symbolPosition="s" 
+                                        symbol="%"
+                                        symbolPosition="s"
                                         id="autoUpdateLifetime"
                                         />
                         <h:outputText value =" lifetime"/>
                     </p:outputPanel>
                 </h:panelGrid>
-                
+
                 <p:commandButton value="Save" action="#{editServerCertificateSettings.onSave}"/>
                 <p:commandButton value="Reset" action="#{editServerCertificateSettings.onReset}"/>
             </h:form>
