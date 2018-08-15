@@ -37,4 +37,8 @@ public class FirewallSettings implements Serializable {
     public List<Entry> getOutgoingEntries() {
         return outgoingEntries;
     }
+
+    public void addIncomingEntry(Entry entry) {
+        incomingEntries.add(entry);
+    }
 }

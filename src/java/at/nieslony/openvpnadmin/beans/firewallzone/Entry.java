@@ -38,7 +38,15 @@ public class Entry implements Serializable {
     }
 
     public String getWhoStr() {
-        return "TBD";
+        if (who.isEmpty())
+            return "";
+        if (who.size() > 0)
+            return String.format("%s…", who.get(0).getAsString());
+        return who.get(0).getAsString();
+    }
+
+    public String getWhoStrExpanded() {
+        who.
     }
 
     public String getWhereStr() {

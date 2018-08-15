@@ -21,6 +21,7 @@
                 <p:accordionPanel>
                     <p:tab title="Incomping">
                         <p:dataTable value="#{firewallSettings.incomingEntries}"
+                                     id="incomingEntries"
                                      var="entry">
                             <p:column headerText="Label">
                                 <h:outputText value="#{entry.label}"/>
