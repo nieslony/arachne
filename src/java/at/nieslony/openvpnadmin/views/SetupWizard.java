@@ -19,6 +19,7 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.beans.DatabaseSettings;
+import at.nieslony.openvpnadmin.beans.FirewallSettings;
 import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import at.nieslony.openvpnadmin.beans.Pki;
@@ -248,6 +249,9 @@ public class SetupWizard implements Serializable {
 
     @ManagedProperty(value = "#{taskScheduler}")
     private TaskScheduler taskScheduler;
+
+    @ManagedProperty(value = "#{firewallSettings}")
+    private FirewallSettings firewallSettings;
 
     /**
      * Creates a new instance of SetupWizardBean
@@ -858,6 +862,12 @@ public class SetupWizard implements Serializable {
         taskScheduler.init();
     }
 
+    public void setupFirewall()
+        throws ClassNotFoundException, IOException, SQLException
+    {
+        firewallSettings.createTables();
+    }
+
     public void onSave() {
         performingSetup = true;
         String step = "";
@@ -944,6 +954,10 @@ public class SetupWizard implements Serializable {
             setupTaskScheduler();
             styleClassScheduleTasks = ICO_STEP_DONE;
             //rc.update("form-setup:scheduleTasksIcon");
+
+            step = "Firewall";
+            logger.info(step);
+            setupFirewall();
 
             performingSetup = false;
 
@@ -1108,6 +1122,10 @@ public class SetupWizard implements Serializable {
 
     public void setRoles(Roles roles) {
         this.roles = roles;
+    }
+
+    public void setFirewallSettings(FirewallSettings fs) {
+        firewallSettings = fs;
     }
 
     public void setTaskScheduler(TaskScheduler ts) {

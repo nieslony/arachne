@@ -19,13 +19,13 @@ CREATE TABLE firewallEntryWho (
     firewallEntry_id SERIAL references firewallEntries(id),
     ruleType text NOT NULL,
     param text
-);
+);;
 
+CREATE TYPE Protocol AS ENUM('TCP', 'UDP');;
 CREATE TABLE firewallEntryTargets (
     firewallEntry_id SERIAL references firewallEntries(id),
-    network
-    betMask
-    portFrom
-    portTo
-    protocol
+    network cidr,
+    portFrom integer,
+    portTo integer,
+    protocol Protocol
 );;
