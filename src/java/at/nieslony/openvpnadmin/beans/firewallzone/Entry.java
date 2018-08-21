@@ -14,12 +14,21 @@ import java.util.List;
  * @author claas
  */
 public class Entry implements Serializable {
+    int id = -1;
     private String label = "NewEntryRule";
     private String description = "";
     private boolean isActive = false;
-    private List<Where> where = new LinkedList<>();
-    private List<What> what = new LinkedList<>();
-    private List<Who> who = new LinkedList<>();
+    private final List<Where> where = new LinkedList<>();
+    private final List<What> what = new LinkedList<>();
+    private final List<Who> who = new LinkedList<>();
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getLabel() {
         return label;
