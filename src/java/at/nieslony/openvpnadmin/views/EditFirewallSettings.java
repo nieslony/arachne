@@ -14,13 +14,16 @@ import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import org.primefaces.PrimeFaces;
 
 /**
@@ -248,7 +251,15 @@ public class EditFirewallSettings implements Serializable {
                 (entry.getIsActive() ? "active" : "inactive"),
                 entry.getLabel()
         ));
-        firewallSettings.addIncomingEntry(entry);
-        incomingEntries.add(new FirewallEntryInfo(entry));
+        try {
+            firewallSettings.addIncomingEntry(entry);
+            incomingEntries.add(new FirewallEntryInfo(entry));
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msg = String.format("Cannot add firewall entry: %s", ex.getMessage());
+            logger.warning(msg);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
     }
 }

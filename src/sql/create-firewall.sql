@@ -22,10 +22,20 @@ CREATE TABLE firewallEntryWho (
 );;
 
 CREATE TYPE Protocol AS ENUM('TCP', 'UDP');;
-CREATE TABLE firewallEntryTargets (
+CREATE TABLE firewallEntryWhat (
     firewallEntry_id SERIAL references firewallEntries(id),
-    network cidr,
+    service text,
+    whatType text,
+    port integer,
+    ports integer ARRAY,
     portFrom integer,
     portTo integer,
     protocol Protocol
+);;
+
+CREATE TABLE firewallEntryWhere (
+    firewallEntry_id SERIAL references firewallEntries(id),
+    whereType text NOT NULL,
+    hostname text,
+    network cidr
 );;

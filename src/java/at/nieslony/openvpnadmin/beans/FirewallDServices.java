@@ -64,7 +64,7 @@ public class FirewallDServices implements Serializable {
             elems = doc.getElementsByTagName("description");
             if (elems != null && elems.getLength() > 0)
                 description = elems.item(0).getTextContent();
-            
+
             List<String> ports = new LinkedList<>();
             NodeList portList = doc.getElementsByTagName("port");
 
@@ -119,6 +119,16 @@ public class FirewallDServices implements Serializable {
             _services = loadServices(SERVICES_DIR);
         }
         return _services;
+    }
+
+    public FirewallDService getServiceByShort(String s) {
+        List<FirewallDService> services = getServices();
+        for (FirewallDService fs : services) {
+            if (fs.getShortDescription().equals(s))
+                return fs;
+        }
+
+        return null;
     }
 
     static public List<FirewallDService> getAllServices() {
