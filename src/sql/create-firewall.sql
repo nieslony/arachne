@@ -24,8 +24,8 @@ CREATE TABLE firewallEntryWho (
 CREATE TYPE Protocol AS ENUM('TCP', 'UDP');;
 CREATE TABLE firewallEntryWhat (
     firewallEntry_id SERIAL references firewallEntries(id),
-    service text,
     whatType text,
+    service text,
     port integer,
     ports integer ARRAY,
     portFrom integer,

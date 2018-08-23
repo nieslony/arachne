@@ -48,6 +48,11 @@ public class FirewallDServices implements Serializable {
     static private FirewallDService loadFile(String filename) {
         try {
             logger.info(String.format("Loading services from %s...", filename));
+
+            Path path = Paths.get(filename);
+            String fn = path.getFileName().toString();
+            String id = fn.substring(0, fn.lastIndexOf("."));
+
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(new File(filename));
@@ -79,7 +84,7 @@ public class FirewallDServices implements Serializable {
                 ports.add(buf.toString());
             }
 
-            FirewallDService service = new FirewallDService(shortName, description, ports);
+            FirewallDService service = new FirewallDService(id, shortName, description, ports);
 
             return service;
         }
@@ -125,6 +130,16 @@ public class FirewallDServices implements Serializable {
         List<FirewallDService> services = getServices();
         for (FirewallDService fs : services) {
             if (fs.getShortDescription().equals(s))
+                return fs;
+        }
+
+        return null;
+    }
+
+    public FirewallDService getServiceById(String id) {
+        List<FirewallDService> services = getServices();
+        for (FirewallDService fs : services) {
+            if (fs.getId().equals(id))
                 return fs;
         }
 

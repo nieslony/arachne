@@ -78,7 +78,9 @@
                 <p:outputLabel for="rbPortListProtocol" value="Port list and Protocol"/>
                 <p:outputPanel id="portListProtocol">
                     <p:chips value="#{editFirewallSettings.editWhat.ports}"
-                             disabled='#{editFirewallSettings.editWhat.type != "PortListProtocol"}'/>
+                             disabled='#{editFirewallSettings.editWhat.type != "PortListProtocol"}'>
+                        <f:validateLongRange minimum="1" maximum="65534"/>
+                    </p:chips>
                     <h:outputText value=" / "/>
                     <p:selectOneMenu value="#{editFirewallSettings.editWhat.protocol}"
                                      disabled='#{editFirewallSettings.editWhat.type != "PortListProtocol"}'>
@@ -93,6 +95,8 @@
                              update="formEditFirewallEntry dlgEditWhat"/>
             <p:commandButton value="Cancel"
                              action="#{editFirewallSettings.editWhat.onCancel}"/>
+
+            <p:messages autoUpdate="true" showDetail="true"/>
         </h:form>
     </p:dialog>
 </ui:composition>

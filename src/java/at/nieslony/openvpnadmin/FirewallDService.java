@@ -13,28 +13,40 @@ import java.util.List;
  * @author claas
  */
 public class FirewallDService {
+    private String _id;
     private String _shortName;
     private String _description;
     private List<String> _ports;
 
     public FirewallDService() {
-        init("", "", new LinkedList<>());
+        init("", "", "", new LinkedList<>());
     }
 
-    public FirewallDService(String shortName,
-        String description,
-        List<String> ports)
+    public FirewallDService(String id,
+            String shortName,
+            String description,
+            List<String> ports)
     {
-        init(shortName, description, ports);
+        init(id, shortName, description, ports);
     }
 
-    private void init(String shortName,
-        String description,
-        List<String> ports)
+    private void init(String id,
+            String shortName,
+            String description,
+            List<String> ports)
     {
+        _id = id;
         _shortName = shortName;
         _description = description;
         _ports = ports;
+    }
+
+    public String getId() {
+        return _id;
+    }
+
+    public void setId(String id) {
+        _id = id;
     }
 
     public String getShortDescription() {

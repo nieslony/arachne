@@ -115,9 +115,10 @@ public class What implements Serializable, EntryCreteria {
 
     public List<Integer> getPortsInt() {
         List<Integer> portsInt = new LinkedList<>();
-        ports.forEach(
-                p -> portsInt.add(Integer.getInteger(p))
-        );
+        ports.forEach(p -> {
+            logger.info(String.format("Port %s", p));
+            portsInt.add(Integer.valueOf(p));
+        });
 
         return portsInt;
     }

@@ -107,6 +107,12 @@ public class FirewallSettings implements Serializable {
         roleRuleFactoryCollection = rrfc;
     }
 
+    @ManagedProperty(value = "#{firewallDServices}")
+    FirewallDServices firewallDServices;
+    public void setFirewallDServices(FirewallDServices fs) {
+        firewallDServices = fs;
+    }
+
     public FirewallSettings() {
         incomingEntries = new LinkedList<>();
         outgoingEntries = new LinkedList<>();
@@ -192,6 +198,9 @@ public class FirewallSettings implements Serializable {
                 List<Integer> portsList = new LinkedList<>();
                 Collections.addAll(portsList, (Integer[]) ports.getArray());
                 what.setPortsInt(portsList);
+            }
+            if (service != null && !service.isEmpty()) {
+                what.setService(firewallDServices.getServiceById(service));
             }
             entry.getWhats().add(what);
         }
@@ -345,12 +354,12 @@ public class FirewallSettings implements Serializable {
                 case Everything:
                     stm = con.prepareStatement(INSERT_WHAT_EVERYTHING);
                     stm.setInt(posWhatStm++, entry.getId());
-                    stm.setString(posWhatStm++, what.getWhatType().getDescription());
+                    stm.setString(posWhatStm++, what.getWhatType().toString());
                     break;
                 case PortListProtocol:
                     stm = con.prepareStatement(INSERT_WHAT_PORT_LIST_PROTOCOL);
                     stm.setInt(posWhatStm++, entry.getId());
-                    stm.setString(posWhatStm++, what.getWhatType().getDescription());
+                    stm.setString(posWhatStm++, what.getWhatType().toString());
                     stm.setArray(posWhatStm++,
                             con.createArrayOf("integer", what.getPortsInt().toArray()));
                     stm.setString(posWhatStm++, what.getProtocol().toString());
@@ -358,14 +367,14 @@ public class FirewallSettings implements Serializable {
                 case PortProtocol:
                     stm = con.prepareStatement(INSERT_WHAT_PORT_PROTOCOL);
                     stm.setInt(posWhatStm++, entry.getId());
-                    stm.setString(posWhatStm++, what.getWhatType().getDescription());
+                    stm.setString(posWhatStm++, what.getWhatType().toString());
                     stm.setInt(posWhatStm++, what.getPort());
                     stm.setString(posWhatStm++, what.getProtocol().toString());
                     break;
                 case PortRangeProtocol:
                     stm = con.prepareStatement(INSERT_WHAT_PORT_RAMGE_PROTOCOL);
                     stm.setInt(posWhatStm++, entry.getId());
-                    stm.setString(posWhatStm++, what.getWhatType().getDescription());
+                    stm.setString(posWhatStm++, what.getWhatType().toString());
                     stm.setInt(posWhatStm++, what.getPortFrom());
                     stm.setInt(posWhatStm++, what.getPortTo());
                     stm.setString(posWhatStm++, what.getProtocol().toString());
@@ -373,8 +382,8 @@ public class FirewallSettings implements Serializable {
                 case Service:
                     stm = con.prepareStatement(INSERT_WHAT_SERVICE);
                     stm.setInt(posWhatStm++, entry.getId());
-                    stm.setString(posWhatStm++, what.getWhatType().getDescription());
-                    stm.setString(posWhatStm++, what.getService().getShortDescription());
+                    stm.setString(posWhatStm++, what.getWhatType().toString());
+                    stm.setString(posWhatStm++, what.getService().getId());
                     break;
             }
             if (stm != null) {
