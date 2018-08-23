@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
+import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
 import at.nieslony.openvpnadmin.beans.firewallzone.Where;
@@ -14,13 +15,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -69,6 +73,19 @@ public class FirewallSettings implements Serializable {
             "INSERT INTO firewallEntryWhat (firewallEntry_id, WhatType, service)" +
             "VALUES (?, ?, ?);";
 
+    static final String GET_ALL_ENTRIES =
+            "SELECT id, label, description, isActive FROM firewallEntries;";
+    static final String GET_WHOS_FOR_ENTRY =
+            "SELECT ruleType, param FROM firewallEntryWho " +
+            "WHERE firewallEntry_id = ?;";
+    static final String GET_WHERES_FOR_ENTRY =
+            "SELECT whereType, hostname, network FROM firewallEntryWhere " +
+            "WHERE firewallEntry_id = ?;";
+    static final String GET_WHATS_FOR_ENTRY =
+            "SELECT service, whatType, ports, port, portFrom, portTo, protocol " +
+            "FROM firewallEntryWhat " +
+            "WHERE firewallEntry_id = ?;";
+
     List<Entry> incomingEntries;
     List<Entry> outgoingEntries;
 
@@ -84,9 +101,140 @@ public class FirewallSettings implements Serializable {
         this.databaseSettings = databaseSettings;
     }
 
+    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    RoleRuleFactoryCollection roleRuleFactoryCollection;
+    public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
+        roleRuleFactoryCollection = rrfc;
+    }
+
     public FirewallSettings() {
         incomingEntries = new LinkedList<>();
         outgoingEntries = new LinkedList<>();
+    }
+
+    @PostConstruct
+    public void init() {
+        loadFromDb();
+    }
+
+    private void loadWhos(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(GET_WHOS_FOR_ENTRY);
+        stm.setInt(1, entry.getId());
+        ResultSet result = stm.executeQuery();
+        while (result.next()) {
+            String whoType = result.getString("ruleType");
+            String whoValue = result.getString("param");
+            RoleRule rr = roleRuleFactoryCollection.createRoleRule(whoType, whoValue);
+
+            Who who = new Who();
+            who.setTypeAndValue(rr);
+            entry.getWhos().add(who);
+        }
+        result.close();
+        stm.close();;
+    }
+
+    private void loadWheres(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(GET_WHERES_FOR_ENTRY);
+        stm.setInt(1, entry.getId());
+        ResultSet result = stm.executeQuery();
+        while (result.next()) {
+            Where where = new Where();
+
+            String whereType = result.getString("whereType");
+            String hostname = result.getString("hostname");
+            String network = result.getString("network");
+
+            where.setWhereType(Where.WhereType.valueOf(whereType));
+            where.setHostname(hostname);
+            if (network != null && !network.isEmpty()) {
+                String[] components = network.split("/");
+                where.setNetwork(components[0]);
+                where.setMask(Integer.valueOf(components[1]));
+            }
+
+            entry.getWheres().add(where);
+        }
+        result.close();
+        stm.close();
+    }
+
+    private void loadWhats(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(GET_WHATS_FOR_ENTRY);
+        stm.setInt(1, entry.getId());
+        ResultSet result = stm.executeQuery();
+        while (result.next()) {
+            String service = result.getString("service");
+            String whatType = result.getString("whatType");
+            int port = result.getInt("port");
+            Array ports = result.getArray("ports");
+            int portFrom = result.getInt("portFrom");
+            int portTo = result.getInt("portTo");
+            String protocol = result.getString("protocol");
+
+            What what = new What();
+            what.setWhatType(What.WhatType.valueOf(whatType));
+            what.setPort(port);
+            what.setPortFrom(portFrom);
+            what.setPortTo(portTo);
+            if (protocol != null)
+                what.setProtocol(What.Protocol.valueOf(protocol));
+            if (ports != null) {
+                List<Integer> portsList = new LinkedList<>();
+                Collections.addAll(portsList, (Integer[]) ports.getArray());
+                what.setPortsInt(portsList);
+            }
+            entry.getWhats().add(what);
+        }
+        result.close();
+        stm.close();
+    }
+
+    private void loadFromDb() {
+        incomingEntries.clear();
+        PreparedStatement stm = null;
+
+        try {
+            Connection con = databaseSettings.getDatabaseConnection();
+            stm = con.prepareStatement(GET_ALL_ENTRIES);
+            ResultSet result = stm.executeQuery();
+            while (result.next()) {
+                int pos = 1;
+                int id = result.getInt("id");
+                String label = result.getString("label");
+                String description = result.getString("description");
+                boolean isActive = result.getBoolean("isActive");
+                Entry entry = new Entry(id, label, description, isActive);
+
+                incomingEntries.add(entry);
+                loadWhos(entry);
+                loadWheres(entry);
+                loadWhats(entry);
+            }
+            result.close();
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+
+        }
+        finally {
+            if (stm != null) {
+                try {
+                    stm.close();
+                }
+                catch (SQLException ex) {
+
+                }
+            }
+        }
     }
 
     public void createTables()
@@ -170,7 +318,11 @@ public class FirewallSettings implements Serializable {
                     stm = con.prepareStatement(INSERT_WHERE_NETWORK);
                     stm.setInt(pos++, entry.getId());
                     stm.setString(pos++, where.getWhereType().getDescription());
-                    stm.setString(pos++, where.getNetwork());
+                    stm.setString(pos++,
+                            String.format("%s/%d",
+                                    where.getNetwork(), where.getMask()
+                            )
+                    );
                     break;
             }
             if (stm != null) {
@@ -200,7 +352,7 @@ public class FirewallSettings implements Serializable {
                     stm.setInt(posWhatStm++, entry.getId());
                     stm.setString(posWhatStm++, what.getWhatType().getDescription());
                     stm.setArray(posWhatStm++,
-                            con.createArrayOf("int", what.getPortsInt().toArray()));
+                            con.createArrayOf("integer", what.getPortsInt().toArray()));
                     stm.setString(posWhatStm++, what.getProtocol().toString());
                     break;
                 case PortProtocol:

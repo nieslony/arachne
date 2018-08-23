@@ -22,6 +22,16 @@ public class Entry implements Serializable {
     private final List<What> what = new LinkedList<>();
     private final List<Who> who = new LinkedList<>();
 
+    public Entry() {
+    }
+
+    public Entry(int id, String label, String description, boolean isActive) {
+        this.id = id;
+        this.label = label;
+        this.description = description;
+        this.isActive = isActive;
+    }
+
     public int getId() {
         return id;
     }

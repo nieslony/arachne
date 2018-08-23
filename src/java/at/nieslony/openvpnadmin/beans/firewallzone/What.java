@@ -122,6 +122,11 @@ public class What implements Serializable, EntryCreteria {
         return portsInt;
     }
 
+    public void setPortsInt(List<Integer> ports) {
+        this.ports.clear();
+        ports.forEach(p -> this.ports.add(String.valueOf(p)));
+    }
+
     public void setPort(int p) {
         port = p;
     }

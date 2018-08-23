@@ -38,7 +38,7 @@ public class EditFirewallSettings implements Serializable {
     final static String CHAIN_INCOMING = "incoming";
     final static String CHAIN_OUTGOING = "outgoing";
 
-    public class FirewallEntryInfo {
+    public class FirewallEntryInfo implements Serializable {
         private Entry entry;
         private boolean isWhoExpanded = false;
 
