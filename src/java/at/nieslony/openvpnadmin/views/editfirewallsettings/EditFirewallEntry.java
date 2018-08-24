@@ -238,7 +238,16 @@ public class EditFirewallEntry implements Serializable {
         firewallEntry.getWhats().addAll(whats.values());
 
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').hide();");
-        editFirewallSettings.addIncomingEntry(firewallEntry);
+        switch (editFirewallSettings.getEditingMode()) {
+            case EM_CLONE:
+                break;
+            case EM_EDIT:
+                editFirewallSettings.updateIncomingEntry(firewallEntry);
+                break;
+            case EM_NEW:
+                editFirewallSettings.addIncomingEntry(firewallEntry);
+                break;
+        }
     }
 
     public void onCancel() {

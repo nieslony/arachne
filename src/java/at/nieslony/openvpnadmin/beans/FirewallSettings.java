@@ -86,6 +86,20 @@ public class FirewallSettings implements Serializable {
             "FROM firewallEntryWhat " +
             "WHERE firewallEntry_id = ?;";
 
+    static final String UPDATE_ENTRY =
+            "UPDATE firewallEntries " +
+            "SET label = ?, description = ?, isActive = ? " +
+            "WHERE id = ?;";
+
+    static final String REMOVE_ENTRY =
+            "DELETE FROM firewallEntries WHERE id = ?;";
+    static final String REMOVE_WHOS_FROM_ENTRY =
+            "DELETE FROM firewallEntryWho WHERE firewallEntry_id = ?;";
+    static final String REMOVE_WHERES_FROM_ENTRY =
+            "DELETE FROM firewallEntryWhere WHERE firewallEntry_id = ?;";
+    static final String REMOVE_WHATS_FROM_ENTRY =
+            "DELETE FROM firewallEntryWhat WHERE firewallEntry_id = ?;";
+
     List<Entry> incomingEntries;
     List<Entry> outgoingEntries;
 
@@ -391,6 +405,74 @@ public class FirewallSettings implements Serializable {
                 stm.close();
             }
         }
+    }
+
+    public void removeIncomingEntry(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        removeWhos(entry);
+        removeWheres(entry);
+        removeWhats(entry);
+
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(REMOVE_ENTRY);
+        stm.setInt(1, entry.getId());
+        stm.executeUpdate();
+        stm.close();
+
+        incomingEntries.remove(entry);
+    }
+
+    private void removeWhos(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(REMOVE_WHOS_FROM_ENTRY);
+        stm.setInt(1, entry.getId());
+        stm.executeUpdate();
+        stm.close();
+    }
+
+    private void removeWheres(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(REMOVE_WHERES_FROM_ENTRY);
+        stm.setInt(1, entry.getId());
+        stm.executeUpdate();
+        stm.close();
+    }
+
+    private void removeWhats(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(REMOVE_WHATS_FROM_ENTRY);
+        stm.setInt(1, entry.getId());
+        stm.executeUpdate();
+        stm.close();
+    }
+
+    public void updateIncomingEntry(Entry entry)
+            throws ClassNotFoundException, SQLException
+    {
+        Connection con = databaseSettings.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement(UPDATE_ENTRY);
+        int pos = 1;
+        stm.setString(pos++, entry.getLabel());
+        stm.setString(pos++, entry.getDescription());
+        stm.setBoolean(pos++, entry.getIsActive());
+        stm.setInt(pos++, entry.getId());
+        stm.executeUpdate();
+        stm.close();
+
+        removeWhos(entry);
+        removeWheres(entry);
+        removeWhats(entry);
+
+        addWhos(entry);
+        addWheres(entry);
+        addWhats(entry);
     }
 
     public void addIncomingEntry(Entry entry)

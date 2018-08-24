@@ -5,15 +5,14 @@
  */
 package at.nieslony.openvpnadmin.views;
 
-import at.nieslony.openvpnadmin.views.editfirewallsettings.FirewallEntryInfo;
 import at.nieslony.openvpnadmin.beans.FirewallSettings;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
-import at.nieslony.openvpnadmin.beans.firewallzone.EntryCreteria;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditFirewallEntry;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhat;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWhere;
 import at.nieslony.openvpnadmin.views.editfirewallsettings.EditWho;
+import at.nieslony.openvpnadmin.views.editfirewallsettings.FirewallEntryInfo;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -79,7 +78,7 @@ public class EditFirewallSettings implements Serializable {
         return roleRuleFactoryCollection;
     }
 
-    enum EditMode {
+    public enum EditMode {
         EM_NEW("New"),
         EM_CLONE("Clone"),
         EM_EDIT("Edit");
@@ -92,6 +91,10 @@ public class EditFirewallSettings implements Serializable {
 
         @Override
         public String toString() {
+            return mode;
+        }
+
+        public String getAsString() {
             return mode;
         }
     }
@@ -140,10 +143,24 @@ public class EditFirewallSettings implements Serializable {
         editingChain = CHAIN_INCOMING;
         editingMode = EditMode.EM_EDIT;
 
+        editingEntry = selectedIncomingEntry.getEntry();
+        editFirewallEntry.setFirewallEntry(editingEntry);
+
         PrimeFaces.current().executeScript("PF('dlgEditFirewallEntry').show();");
     }
 
     public void onRemoveIncomingEntry() {
+        try {
+            incomingEntries.remove(selectedIncomingEntry);
+            firewallSettings.removeIncomingEntry(selectedIncomingEntry.getEntry());
+            selectedIncomingEntry = null;
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msg = String.format("Cannot remove firewall entry: %s", ex.getMessage());
+            logger.warning(msg);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
     }
 
     public void onEditEntryOk() {
@@ -163,10 +180,8 @@ public class EditFirewallSettings implements Serializable {
         return editingChain;
     }
 
-    public String getEditingMode() {
-        if (editingMode != null)
-            return editingMode.toString();
-        return "???";
+    public EditMode getEditingMode() {
+        return editingMode;
     }
 
     public Entry getEditingEntry() {
@@ -195,6 +210,22 @@ public class EditFirewallSettings implements Serializable {
 
     public List<FirewallEntryInfo> getIncomingEntries() {
         return incomingEntries;
+    }
+
+    public void updateIncomingEntry(Entry entry) {
+        logger.info(String.format("Updating %s entry %s",
+                (entry.getIsActive() ? "active" : "inactive"),
+                entry.getLabel()
+        ));
+        try {
+            firewallSettings.updateIncomingEntry(entry);
+        }
+        catch (ClassNotFoundException | SQLException ex) {
+            String msg = String.format("Cannot update firewall entry: %s", ex.getMessage());
+            logger.warning(msg);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
+        }
     }
 
     public void addIncomingEntry(Entry entry) {

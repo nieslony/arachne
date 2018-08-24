@@ -31,7 +31,7 @@ public class FirewallEntryInfo implements Serializable {
     private Entry entry;
     private boolean isWhoExpanded = false;
 
-    FirewallEntryInfo(Entry e) {
+    public FirewallEntryInfo(Entry e) {
         entry = e;
     }
 

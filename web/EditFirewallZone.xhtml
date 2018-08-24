@@ -22,7 +22,12 @@
                     <p:tab title="Incomping">
                         <p:dataTable value="#{editFirewallSettings.incomingEntries}"
                                      id="incomingEntries"
+                                     rowKey="#{entryInfo.entry.id}"
+                                     selectionMode="single"
+                                     selection="#{editFirewallSettings.selectedIncomingEntry}"
                                      var="entryInfo">
+                            <p:ajax event="rowSelect" update="@form"/>
+                            <p:ajax event="rowUnselect" update="@form"/>
                             <p:column headerText="Label">
                                 <h:outputText value="#{entryInfo.entry.label}"/>
                             </p:column>
@@ -66,10 +71,12 @@
                             action="#{editFirewallSettings.onEditIncomingEntry}"
                             disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
                             value="Edit..."
+                            update="dlgEditFirewallEntry formEditFirewallEntry"
                             />
                         <p:commandButton
                             action="#{editFirewallSettings.onRemoveIncomingEntry}"
                             disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
+                            update="@form"
                             value="Remove"/>
                     </p:tab>
 
