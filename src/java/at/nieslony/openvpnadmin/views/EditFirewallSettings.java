@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.views;
 
+import at.nieslony.openvpnadmin.views.editfirewallsettings.FirewallEntryInfo;
 import at.nieslony.openvpnadmin.beans.FirewallSettings;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
@@ -38,56 +39,6 @@ public class EditFirewallSettings implements Serializable {
     final static String CHAIN_INCOMING = "incoming";
     final static String CHAIN_OUTGOING = "outgoing";
 
-    public class FirewallEntryInfo implements Serializable {
-        private Entry entry;
-        private boolean isWhoExpanded = false;
-
-        FirewallEntryInfo(Entry e) {
-            entry = e;
-        }
-
-        public boolean getIsWhoExpanded() {
-            return isWhoExpanded;
-        }
-
-        public void setIsWhoExpanded(boolean ie) {
-            isWhoExpanded = ie;
-        }
-
-        private String getAsString(List<? extends EntryCreteria> ec) {
-            if (ec.isEmpty())
-                return "";
-            if (ec.size() > 1)
-                return String.format("%s…", ec.get(0).getAsString());
-            return ec.get(0).getAsString();
-        }
-
-        private String getAsStringExpanded(List<? extends EntryCreteria> ec) {
-            List<String> whos = new LinkedList<>();
-            ec.forEach( e -> whos.add(e.getAsString()));
-
-            return String.join("</br>", whos);
-        }
-
-        public String getWhoStr() {
-            if (isWhoExpanded)
-                return getAsStringExpanded(entry.getWhos());
-            else
-                return getAsString(entry.getWhos());
-        }
-
-        public String getWhereStr() {
-            return getAsString(entry.getWheres());
-        }
-
-        public String getWhatStr() {
-            return getAsString(entry.getWhats());
-        }
-
-        public Entry getEntry() {
-            return entry;
-        }
-    }
 
     final List<FirewallEntryInfo> incomingEntries = new LinkedList<>();
 
