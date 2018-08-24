@@ -54,7 +54,7 @@ public class What implements Serializable, EntryCreteria {
     private int portFrom = 1;
     private int portTo = 65535;
     private int port = 1;
-    private List<String> ports = new LinkedList<>();
+    private List<Integer> ports = new LinkedList<>();
     private Protocol protocol = Protocol.TCP;
     private FirewallDService service = null;
     private int id = -1;
@@ -104,28 +104,13 @@ public class What implements Serializable, EntryCreteria {
         portTo = pt;
     }
 
-    public List<String> getPorts() {
+    public List<Integer> getPorts() {
         return ports;
     }
 
-    public void setPorts(List<String> p) {
+    public void setPorts(List<Integer> p) {
         ports.clear();
         ports.addAll(p);
-    }
-
-    public List<Integer> getPortsInt() {
-        List<Integer> portsInt = new LinkedList<>();
-        ports.forEach(p -> {
-            logger.info(String.format("Port %s", p));
-            portsInt.add(Integer.valueOf(p));
-        });
-
-        return portsInt;
-    }
-
-    public void setPortsInt(List<Integer> ports) {
-        this.ports.clear();
-        ports.forEach(p -> this.ports.add(String.valueOf(p)));
     }
 
     public void setPort(int p) {
@@ -136,6 +121,12 @@ public class What implements Serializable, EntryCreteria {
         return port;
     }
 
+    public String portsAsString() {
+        List<String> tmp = new LinkedList<>();
+        ports.forEach(p -> tmp.add(String.valueOf(p)));
+        return String.join(" ", tmp);
+    }
+
     public String getAsString() {
         StringBuilder buf = new StringBuilder();
 
@@ -144,7 +135,7 @@ public class What implements Serializable, EntryCreteria {
                 buf.append("Everything");
                 break;
             case PortListProtocol:
-                buf.append(String.join(", ", ports));
+                buf.append(portsAsString());
                 buf.append(" / ").append(protocol);
                 break;
             case PortProtocol:

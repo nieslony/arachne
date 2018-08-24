@@ -197,7 +197,7 @@ public class FirewallSettings implements Serializable {
             if (ports != null) {
                 List<Integer> portsList = new LinkedList<>();
                 Collections.addAll(portsList, (Integer[]) ports.getArray());
-                what.setPortsInt(portsList);
+                what.setPorts(portsList);
             }
             if (service != null && !service.isEmpty()) {
                 what.setService(firewallDServices.getServiceById(service));
@@ -361,7 +361,7 @@ public class FirewallSettings implements Serializable {
                     stm.setInt(posWhatStm++, entry.getId());
                     stm.setString(posWhatStm++, what.getWhatType().toString());
                     stm.setArray(posWhatStm++,
-                            con.createArrayOf("integer", what.getPortsInt().toArray()));
+                            con.createArrayOf("integer", what.getPorts().toArray()));
                     stm.setString(posWhatStm++, what.getProtocol().toString());
                     break;
                 case PortProtocol:

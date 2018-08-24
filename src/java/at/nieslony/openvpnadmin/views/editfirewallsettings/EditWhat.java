@@ -27,7 +27,7 @@ public class EditWhat implements Serializable {
     private int portFrom = 1;
     private int portTo = 65535;
     private What.Protocol protocol = What.Protocol.TCP;
-    private final List<String> ports = new LinkedList<>();
+    private final List<Integer> ports = new LinkedList<>();
 
     private What what;
     private EditMode editMode;
@@ -121,14 +121,25 @@ public class EditWhat implements Serializable {
         protocol = p;
     }
 
-    public List<String> getPorts() {
-        return ports;
+    public String getPorts() {
+        List<String> tmp = new LinkedList<>();
+        ports.forEach(p -> tmp.add(String.valueOf(p)));
+        return String.join(" ", tmp);
     }
 
-    public void setPorts(List<String> p) {
+    public void setPorts(String p) {
+        String[] tmp = p.split("[ ,;]+");
         ports.clear();
-        if (p != null)
-            ports.addAll(p);
+        for (String s : tmp) {
+            try {
+                int i = Integer.valueOf(s);
+                if (i > 0 && i < 65535)
+                    ports.add(Integer.valueOf(s));
+            }
+            catch (NumberFormatException ex) {
+                logger.warning(ex.getMessage());
+            }
+        }
     }
 
     public void onOk() {
