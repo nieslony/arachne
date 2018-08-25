@@ -44,7 +44,6 @@ import javax.servlet.http.HttpServletRequest;
 @ManagedBean
 @SessionScoped
 public class CurrentUser implements Serializable {
-    //private VpnUser vpnUser = null;
     private AbstractUser user = null;
 
     @ManagedProperty(value = "#{ldapSettings}")
@@ -323,5 +322,9 @@ public class CurrentUser implements Serializable {
 
     public void setLocalUserFactory(LocalUserFactory luf) {
         localUserFactory = luf;
+    }
+
+    public AbstractUser getUser() {
+        return user;
     }
 }

@@ -31,6 +31,10 @@
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet>
+        <servlet-name>Api</servlet-name>
+        <servlet-class>at.nieslony.openvpnadmin.servlets.Api</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>*.xhtml</url-pattern>
@@ -52,7 +56,10 @@
         <servlet-name>ConfigOvpn</servlet-name>
         <url-pattern>/download/client-config.ovpn</url-pattern>
     </servlet-mapping>
-
+    <servlet-mapping>
+        <servlet-name>Api</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>
             30
@@ -69,9 +76,9 @@
         <param-name>primefaces.FONT_AWESOME</param-name>
         <param-value>true</param-value>
     </context-param>
-<listener>
-  <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
-</listener>
+    <listener>
+        <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
+    </listener>
     <!--
     <error-page>
         <exception-type>at.nieslony.openvpnadmin.exceptions.PermissionDenied</exception-type>

@@ -5,6 +5,7 @@
  */
 package at.nieslony.openvpnadmin.beans;
 
+import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
@@ -28,12 +29,14 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import org.primefaces.json.JSONArray;
+import org.primefaces.json.JSONObject;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
+@ManagedBean(eager = true)
 @ApplicationScoped
 public class FirewallSettings implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
@@ -479,7 +482,6 @@ public class FirewallSettings implements Serializable {
             throws ClassNotFoundException, SQLException
     {
         logger.info("Adding firewall entry");
-        incomingEntries.add(entry);
 
         Connection con = databaseSettings.getDatabaseConnection();
 
@@ -499,5 +501,73 @@ public class FirewallSettings implements Serializable {
         else {
             logger.info("No id returned");
         }
+
+        incomingEntries.add(entry);
+    }
+
+    public boolean matchesUser(Entry entry, AbstractUser user) {
+        for (Who who : entry.getWhos()) {
+            if (who.getRoleRule().isAssumedByUser(user))
+                return true;
+        }
+
+        return false;
+    }
+
+    public String getFirewallConfig(AbstractUser user) {
+        JSONObject config = new JSONObject();
+        JSONArray incoming = new JSONArray();
+
+        for (Entry entry : incomingEntries) {
+            if (!entry.getIsActive())
+                continue;
+            if (!matchesUser(entry, user))
+                continue;
+
+            for (Where where : entry.getWheres()) {
+                for (What what : entry.getWhats()) {
+                    JSONObject jsonEntry = new JSONObject();
+
+                    jsonEntry.put("whereType", where.getWhereType());
+                    switch (where.getWhereType()) {
+                        case Everywhere:
+                            break;
+                        case Hostname:
+                            jsonEntry.put("hostname", where.getHostname());
+                            break;
+                        case Network:
+                            jsonEntry.put("network", where.getNetwork());
+                            jsonEntry.put("mask", where.getMask());
+                            break;
+                    }
+                    jsonEntry.put("whatType", what.getWhatType());
+                    switch (what.getWhatType()) {
+                        case Everything:
+                            break;
+                        case PortListProtocol:
+                            jsonEntry.put("ports", what.getPorts());
+                            jsonEntry.put("protocol", what.getProtocol());
+                            break;
+                        case PortProtocol:
+                            jsonEntry.put("port", what.getPort());
+                            jsonEntry.put("protocol", what.getProtocol());
+                            break;
+                        case PortRangeProtocol:
+                            jsonEntry.put("portFrom", what.getPortFrom());
+                            jsonEntry.put("portTo", what.getPortTo());
+                            jsonEntry.put("protocol", what.getProtocol());
+                            break;
+                        case Service:
+                            jsonEntry.put("service", what.getService().getId());
+                            break;
+                    }
+                    incoming.put(jsonEntry);
+                }
+            }
+        }
+
+        config.put("incoming", incoming);
+
+        return config.toString(2);
     }
 }

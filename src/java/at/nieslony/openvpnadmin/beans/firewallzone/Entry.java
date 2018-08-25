@@ -89,4 +89,8 @@ public class Entry implements Serializable {
     public void removeWhere(Where w) {
         where.remove(w);
     }
+
+    public boolean matchesUser(String username) {
+        return true;
+    }
 }
