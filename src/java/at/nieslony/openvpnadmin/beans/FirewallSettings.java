@@ -533,11 +533,11 @@ public class FirewallSettings implements Serializable {
                         case Everywhere:
                             break;
                         case Hostname:
-                            jsonEntry.put("hostname", where.getHostname());
+                            jsonEntry.put("whereHostname", where.getHostname());
                             break;
                         case Network:
-                            jsonEntry.put("network", where.getNetwork());
-                            jsonEntry.put("mask", where.getMask());
+                            jsonEntry.put("whereNetwork", where.getNetwork());
+                            jsonEntry.put("whereMask", where.getMask());
                             break;
                     }
                     jsonEntry.put("whatType", what.getWhatType());
@@ -545,20 +545,20 @@ public class FirewallSettings implements Serializable {
                         case Everything:
                             break;
                         case PortListProtocol:
-                            jsonEntry.put("ports", what.getPorts());
-                            jsonEntry.put("protocol", what.getProtocol());
+                            jsonEntry.put("whatPorts", what.getPorts());
+                            jsonEntry.put("whatProtocol", what.getProtocol());
                             break;
                         case PortProtocol:
-                            jsonEntry.put("port", what.getPort());
-                            jsonEntry.put("protocol", what.getProtocol());
+                            jsonEntry.put("whatPort", what.getPort());
+                            jsonEntry.put("whatProtocol", what.getProtocol());
                             break;
                         case PortRangeProtocol:
-                            jsonEntry.put("portFrom", what.getPortFrom());
-                            jsonEntry.put("portTo", what.getPortTo());
-                            jsonEntry.put("protocol", what.getProtocol());
+                            jsonEntry.put("whatPortFrom", what.getPortFrom());
+                            jsonEntry.put("whatPortTo", what.getPortTo());
+                            jsonEntry.put("whatProtocol", what.getProtocol());
                             break;
                         case Service:
-                            jsonEntry.put("service", what.getService().getId());
+                            jsonEntry.put("whatService", what.getService().getId());
                             break;
                     }
                     incoming.put(jsonEntry);

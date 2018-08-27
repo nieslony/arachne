@@ -74,9 +74,13 @@ public class Api extends HttpServlet {
         FirewallSettings firewallSettings = getBean(fCtx, "firewallSettings", FirewallSettings.class);
 
         try (PrintWriter out = response.getWriter()) {
-            if (currentUser.hasRole("user")) {
+            if (currentUser == null ||
+                    !currentUser.isValid() ||
+                    !currentUser.hasRole("user")
+            ) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 out.println ("Forbidden");
+                return;
             }
 
             out.println(firewallSettings.getFirewallConfig(currentUser.getUser()));
@@ -99,15 +103,26 @@ public class Api extends HttpServlet {
         FacesContext fCtx = getFacesContext(request, response);
         ServletContext ctx = getServletContext();
 
-        LinkedList<String> apiPath = new LinkedList<>(Arrays.asList(request.getPathInfo().split("/")));
-        apiPath.pop();
-
-        String command = apiPath.pop();
-
+        String pathInfo = request.getPathInfo();
+        String command = null;
+        LinkedList<String> apiPath = null;
+        if (pathInfo != null && !pathInfo.isEmpty()) {
+            apiPath = new LinkedList<>(Arrays.asList(request.getPathInfo().split("/")));
+            apiPath.pop();
+            command = apiPath.pop();
+        }
 
         try (PrintWriter out = response.getWriter()) {
-            if (command.equals("firewall"))
+            if (command == null || apiPath == null) {
+                out.println("Illegal API call");
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+            else if (command.equals("firewall"))
                 handleFirewall(apiPath, request, response);
+            else {
+                out.println("Illegal API call");
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
         }
     }
 

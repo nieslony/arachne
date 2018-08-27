@@ -92,8 +92,10 @@ public class EditWho implements Serializable {
         return whoValue;
     }
 
-    public void setWhoValue(String wv) {
-        whoValue = wv;
+    public void setWhoValue(String value) {
+        whoValue = value == null ?
+                null :
+                value.replaceFirst(" \\(.*\\)", "");
     }
 
     public boolean getNeedsWhoValue() {
