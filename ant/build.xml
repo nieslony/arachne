@@ -6,7 +6,7 @@
     </description>
 
     <property name="projectName" value="arachne"/>
-    <property name="version" value="0.3.3"/>
+    <property name="version" value="0.3.3.git"/>
     <property name="tar-prefix" value="${projectName}-${version}"/>
 
     <property name="root"  location=".."/>
