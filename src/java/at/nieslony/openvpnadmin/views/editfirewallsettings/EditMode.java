@@ -5,11 +5,13 @@
  */
 package at.nieslony.openvpnadmin.views.editfirewallsettings;
 
+import java.io.Serializable;
+
 /**
  *
  * @author claas
  */
-public enum EditMode {
+public enum EditMode implements Serializable {
     NEW,
     MODIFY
 }

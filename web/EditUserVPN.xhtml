@@ -27,7 +27,7 @@
                     %h - openvpn server name<br/>
                 </p:tooltip>
             </h:panelGrid>
-            <p:accordionPanel multiple="true" activeIndex="0,1,2">
+            <p:accordionPanel multiple="true" activeIndex="0,1,2,3">
                 <p:tab title="Connection">
                     <h:panelGrid  columns="4">
                         <p:outputLabel value="Hostname:" for="hostname"/>
@@ -159,7 +159,7 @@
                             <p:inputText size="50" id="authUrl" value="#{editUserVpn.authWebserverHostPath}">
                                 <f:validateRegex pattern="^[a-z0-9\-]+(\.[a-z0-9\-]+)*(:[1-9][0-9]{0,4})?/[a-zA-Z0-9_/%\-]+$"/>
                             </p:inputText>
-                            <h:outputText value="/AuthOpenVPN.xhtml"/>
+                            <h:outputText value="#{folderFactory.authPage}"/>
                         </h:panelGroup>
 
                         <p:outputLabel value="Use system CA for web server:"
@@ -188,6 +188,26 @@
                                        onLabel="yes" offLabel="no"
                                        rendered="#{editUserVpn.renderSslSettings}"
                                        id="ignoreSslErrors"/>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab title="Firewall">
+                    <h:panelGrid columns="2">
+                        <p:outputLabel value="Manage firewall:"
+                                       for="manageFirewall"/>
+                        <p:inputSwitch value="#{editUserVpn.manageFirewall}"
+                                       onLabel="yes"
+                                       offLabel="no"
+                                       id="manageFirewall">
+                            <f:ajax render="@form"/>
+                        </p:inputSwitch>
+
+                        <p:outputLabel value="Firewall zone:"
+                                       for="firewallZone"
+                                       id="lblFirewallZone"
+                                       rendered="#{editUserVpn.manageFirewall}"/>
+                        <p:inputText id="firewallZone"
+                                     value="#{editUserVpn.firewallZone}"
+                                     rendered="#{editUserVpn.manageFirewall}"/>
                     </h:panelGrid>
                 </p:tab>
             </p:accordionPanel>

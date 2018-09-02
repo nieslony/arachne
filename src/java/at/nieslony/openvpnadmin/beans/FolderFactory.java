@@ -38,6 +38,8 @@ public class FolderFactory implements Serializable {
     private String pluginDir = null;
 
     private final String FN_USER_VPN = "arachne_uservpn.conf";
+    private final String FN_USER_VPN_INI = "arachne_uservpn.ini";
+    private final String AUTH_PAGE = "/api/auth";
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -104,5 +106,13 @@ public class FolderFactory implements Serializable {
 
     public String getUserVpnFileName() {
         return String.format("%s/%s", getServerConfDir(), FN_USER_VPN);
+    }
+
+    public String getUserVpnIniFileName() {
+        return String.format("%s/%s", getServerConfDir(), FN_USER_VPN_INI);
+    }
+
+    public String getAuthPage() {
+        return AUTH_PAGE;
     }
 }

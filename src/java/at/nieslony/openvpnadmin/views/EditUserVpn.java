@@ -121,12 +121,23 @@ public class EditUserVpn
         setIsEnabled(true);
 
         StringBuilder sb = new StringBuilder();
-        sb.append(authWebserverProtocol).append("://").append(authWebserverHostPath);
+        sb.append(authWebserverProtocol)
+                .append("://")
+                .append(authWebserverHostPath);
         setAuthScriptUrl(sb.toString());
         save();
 
+        String iniFile = folderFactory.getUserVpnIniFileName();
+        logger.info(String.format("Writing server ini file to %s", iniFile));
+        try (FileWriter fwr = new FileWriter(iniFile)) {
+            configBuilder.writeUserVpnServerIni(fwr);
+        }
+        catch (IOException ex) {
+            logger.warning(String.format("Cannot write server ini file: %s", ex.getMessage()));
+        }
+
         String serverConfigFile = folderFactory.getUserVpnFileName();
-        logger.info("Writing server config to " + serverConfigFile);
+        logger.info(String.format("Writing server config to %s", serverConfigFile));
         FileWriter fwr = null;
         try {
             fwr = new FileWriter(serverConfigFile);

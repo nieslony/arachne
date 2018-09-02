@@ -64,6 +64,29 @@ public class Api extends HttpServlet {
         return ctx.getApplication().evaluateExpressionGet(ctx, elExpression, expectedType);
     }
 
+    private void handleAuth(LinkedList<String> subCommands,
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        FacesContext fCtx = getFacesContext(request, response);
+        CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
+
+        try (PrintWriter out = response.getWriter()) {
+            if (currentUser == null ||
+                    !currentUser.isValid() ||
+                    !currentUser.hasRole("user")
+            ) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.println ("Forbidden");
+                return;
+            }
+            else {
+                out.println("Access granted");
+            }
+        }
+    }
+
     private void handleFirewall(LinkedList<String> subCommands,
             HttpServletRequest request,
             HttpServletResponse response)
@@ -119,6 +142,8 @@ public class Api extends HttpServlet {
             }
             else if (command.equals("firewall"))
                 handleFirewall(apiPath, request, response);
+            else if (command.equals("auth"))
+                handleAuth(apiPath, request, response);
             else {
                 out.println("Illegal API call");
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);

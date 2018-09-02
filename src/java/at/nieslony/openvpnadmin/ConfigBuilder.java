@@ -123,6 +123,24 @@ public class ConfigBuilder implements Serializable {
         }
     }
 
+    public void writeUserVpnServerIni(Writer wr) {
+        PrintWriter pr = new PrintWriter(wr);
+
+        pr.println(String.format("%s=%s%s",
+                "url",
+                userVpn.getAuthScriptUrl(),
+                folderFactory.getAuthPage()));
+        pr.println(String.format("%s=%b", "ignoressl", userVpn.getIgnoreSslErrors()));
+        if (!userVpn.getAuthCaDefault())
+            pr.println(String.format("%s=%s", "cafile", userVpn.getAuthCaFile()));
+        pr.println(String.format("%s=%b", "manageFirewall", userVpn.getManageFirewall()));
+        if (userVpn.getManageFirewall()) {
+            pr.println(String.format("%s=%s", "firewallZone", userVpn.getFirewallZone()));
+        }
+
+        pr.close();
+    }
+
     public void writeUserVpnServerConfig(Writer wr)
             throws CertificateEncodingException, IOException
     {
@@ -147,7 +165,8 @@ public class ConfigBuilder implements Serializable {
         sb.append("plugin ")
                 .append(folderFactory.getPluginDir())
                 .append("/arachne.so")
-                .append(" url=").append(userVpn.getAuthScriptUrl()).append("/AuthOpenVPN.xhtml");
+                .append(" config=").append(folderFactory.getUserVpnIniFileName());
+//                .append(" url=").append(userVpn.getAuthScriptUrl()).append("/AuthOpenVPN.xhtml");
         if (userVpn.getIgnoreSslErrors()) {
             sb.append(" ignoressl=true");
         }

@@ -42,6 +42,9 @@
         { "type": "String",      "name": "authCaFile",           "default": "/etc/pki/tls/cert.pem" },
         { "type": "Boolean",     "name": "authCaDefault",        "default": "true" },
         { "type": "Boolean",     "name": "ignoreSslErrors",      "default": "false" },
-        { "type": "UserPasswordMode", "name": "userPasswordMode","default": "HTTP" }
+        { "type": "UserPasswordMode", "name": "userPasswordMode","default": "HTTP" },
+
+        { "type": "Boolean",     "name": "manageFirewall",       "default": "true" },
+        { "type": "String",      "name": "firewallZone",         "default": "arachne-user-VPN" }
     ]
 }
