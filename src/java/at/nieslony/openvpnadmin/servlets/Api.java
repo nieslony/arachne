@@ -20,14 +20,16 @@ import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FirewallSettings;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.AccessDeniedException;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.logging.Logger;
+import javax.el.ELException;
 import javax.faces.FactoryFinder;
 import javax.faces.context.FacesContext;
 import javax.faces.context.FacesContextFactory;
 import javax.faces.lifecycle.Lifecycle;
 import javax.faces.lifecycle.LifecycleFactory;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +40,8 @@ import javax.servlet.http.HttpServletResponse;
  * @author Claas Nieslony
  */
 public class Api extends HttpServlet {
+    private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
     private FacesContext getFacesContext(HttpServletRequest request, HttpServletResponse response) {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         if (facesContext == null) {
@@ -64,50 +68,46 @@ public class Api extends HttpServlet {
         return ctx.getApplication().evaluateExpressionGet(ctx, elExpression, expectedType);
     }
 
-    private void handleAuth(LinkedList<String> subCommands,
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException
+    private void requireUser(HttpServletRequest request, HttpServletResponse response)
+            throws AccessDeniedException, ELException
     {
         FacesContext fCtx = getFacesContext(request, response);
         CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
 
-        try (PrintWriter out = response.getWriter()) {
-            if (currentUser == null ||
-                    !currentUser.isValid() ||
-                    !currentUser.hasRole("user")
-            ) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.println ("Forbidden");
-                return;
-            }
-            else {
-                out.println("Access granted");
-            }
+        if (currentUser == null ||
+                !currentUser.isValid() ||
+                !currentUser.hasRole("user")
+                ) {
+            throw new AccessDeniedException("Access denied");
         }
     }
 
-    private void handleFirewall(LinkedList<String> subCommands,
+    private int handleAuth(LinkedList<String> subCommands,
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException
     {
+        requireUser(request, response);
+
+        return HttpServletResponse.SC_OK;
+    }
+
+    private int handleFirewall(LinkedList<String> subCommands,
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException
+    {
+        requireUser(request, response);
+
         FacesContext fCtx = getFacesContext(request, response);
         CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
         FirewallSettings firewallSettings = getBean(fCtx, "firewallSettings", FirewallSettings.class);
 
         try (PrintWriter out = response.getWriter()) {
-            if (currentUser == null ||
-                    !currentUser.isValid() ||
-                    !currentUser.hasRole("user")
-            ) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.println ("Forbidden");
-                return;
-            }
-
             out.println(firewallSettings.getFirewallConfig(currentUser.getUser()));
         }
+
+        return HttpServletResponse.SC_OK;
     }
 
     /**
@@ -123,9 +123,6 @@ public class Api extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
 
-        FacesContext fCtx = getFacesContext(request, response);
-        ServletContext ctx = getServletContext();
-
         String pathInfo = request.getPathInfo();
         String command = null;
         LinkedList<String> apiPath = null;
@@ -135,20 +132,36 @@ public class Api extends HttpServlet {
             command = apiPath.pop();
         }
 
-        try (PrintWriter out = response.getWriter()) {
+        int status = -1;
+
+        PrintWriter out = response.getWriter();
+        try {
             if (command == null || apiPath == null) {
                 out.println("Illegal API call");
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                status = HttpServletResponse.SC_NOT_FOUND;
             }
             else if (command.equals("firewall"))
-                handleFirewall(apiPath, request, response);
+                status = handleFirewall(apiPath, request, response);
             else if (command.equals("auth"))
-                handleAuth(apiPath, request, response);
+                status = handleAuth(apiPath, request, response);
             else {
                 out.println("Illegal API call");
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                status = HttpServletResponse.SC_NOT_FOUND;
             }
         }
+        catch (AccessDeniedException ex) {
+            logger.warning(ex.getMessage());
+            status = HttpServletResponse.SC_FORBIDDEN;
+            out.println("Forbidden");
+        }
+        catch (Exception ex) {
+            logger.warning(String.format("Cannot execute library call %s: %s",
+                    pathInfo, ex.getMessage()));
+            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        }
+        out.close();
+
+        response.setStatus(status);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
