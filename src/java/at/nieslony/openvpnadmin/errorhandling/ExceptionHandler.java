@@ -33,6 +33,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ExceptionQueuedEvent;
 import javax.faces.event.ExceptionQueuedEventContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -69,7 +71,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     cause = cause.getCause();
 
                 LOG.severe("--- Caught exception ---");
-                LOG.severe(throwable.getMessage());
+                LOG.severe(String.format("Throwable: message: %s", throwable.getMessage()));
                 LOG.severe(String.format("Throwable: %s", throwable.getClass().getName()));
 
                 if (rootCause != null)
@@ -92,6 +94,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 ExternalContext extContext = context.getExternalContext();
                 Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
                 HttpServletRequest request = (HttpServletRequest) extContext.getRequest();
+                HttpServletResponse response = (HttpServletResponse) extContext.getResponse();
 
                 String errorMsg = "Unhandled Exception";
                 String errorPage = "/error/error.xhtml";
@@ -112,9 +115,23 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                     isFatal = true;
                 }
                 else if (cause instanceof ViewExpiredException) {
-                    LOG.warning("View expired");
+                    LOG.warning("View expired - invalidating session");
                     errorPage = "Login.xhtml";
                     isFatal = false;
+
+                    HttpSession session = request.getSession(false);
+                    if (session != null) {
+                        try {
+                            session.invalidate();
+                        }
+                        catch (IllegalStateException ex) {
+                            LOG.warning(String.format("Cannot invalidate session: %s", ex.getMessage()));
+                            isFatal = true;
+                        }
+                    }
+                    else {
+                        LOG.warning("There's no session to invalidate");
+                    }
                 }
                 else {
                     LOG.warning("##### Unknown server error");
