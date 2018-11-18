@@ -39,7 +39,7 @@ public class FolderFactory implements Serializable {
 
     private final String FN_USER_VPN = "arachne_uservpn.conf";
     private final String FN_USER_VPN_INI = "arachne_uservpn.ini";
-    private final String AUTH_PAGE = "/api/auth";
+    private final String AUTH_PAGE = "/api";
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
