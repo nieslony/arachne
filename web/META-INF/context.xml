@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--     allowLinking="true" antiJARLocking="true" 
+<!--     allowLinking="true" antiJARLocking="true"
 -->
-<Context 
-    path="/arachne">
+<Context
+    path="/arachne"
+    allowLinking="true">
     <Resources allowLinking="true">
         <PostResources base="/usr/share/java/commons-digester.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
@@ -29,8 +30,8 @@
 
         <PostResources base="/usr/share/java/databasepropertiesstorage.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
-                webAppMount="/WEB-INF/lib/databasepropertiesstorage.jar"/>        
-        
+                webAppMount="/WEB-INF/lib/databasepropertiesstorage.jar"/>
+
         <PostResources base="/usr/share/java/postgresql-jdbc.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/postgresql-jdbc.jar"/>
