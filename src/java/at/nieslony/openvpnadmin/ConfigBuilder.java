@@ -234,10 +234,13 @@ public class ConfigBuilder implements Serializable {
         PrintWriter pr = new PrintWriter(wr);
 
         String vpnName = userVpn.getNmConnectionTemplate();
-        vpnName = vpnName
-                .replaceAll("%u", username)
-                .replaceAll("%h", userVpn.getHost())
-                .replaceAll("%n", userVpn.getConnectionName());
+        if (vpnName != null && vpnName.length() > 0)
+            vpnName = vpnName
+                    .replaceAll("%u", username)
+                    .replaceAll("%h", userVpn.getHost())
+                    .replaceAll("%n", userVpn.getConnectionName());
+        else
+            vpnName = "Unnamed VPN connection";
 
         StringBuilder vpnOpts = new StringBuilder();
         vpnOpts.append("remote = $VPN_HOST");
