@@ -101,53 +101,75 @@ public class CurrentUser implements Serializable {
     private void initWithBasicAuth(HttpServletRequest req)
             throws InvalidUsernameOrPassword
     {
-        if (req.getHeader("authorization") != null) {
-            String auth[] = req.getHeader("authorization").split(" ");
-            if (auth.length == 2 && auth[0].equals("Basic")) {
-                byte[] decoded = Base64.getDecoder().decode(auth[1]);
-                String[] usrPwd = new String(decoded).split(":");
-                if (usrPwd.length == 2) {
-                    String username = usrPwd[0];
-                    String password = usrPwd[1];
+        logger.info("Trying basic auth");
+        String authHeader = req.getHeader("Authorization");
+        if (authHeader == null) {
+            logger.info("There's no authentication header");
+            return;
+        }
 
-                    logger.info(String.format("Trying basic auth with local user %s...",
-                            username));
-                    AbstractUser tmpUser;
+        String auth[] = authHeader.split(" ");
+        if (auth.length != 2) {
+            logger.severe("Cannot parse authtication header");
+            return;
+        }
+        if (!auth[0].equals("Basic")) {
+            logger.info(String.format("Innoring auth type %s", auth[0]));
+            return;
+        }
 
-                    tmpUser = localUserFactory.findUser(username);
-                    if (tmpUser != null) {
-                        if (tmpUser.auth(password)) {
-                            user = tmpUser;
-                        }
-                        else {
-                            throw new InvalidUsernameOrPassword();
-                        }
-                    }
-                    else
-                        if (authSettings.getAllowBasicAuthLdap()) {
-                        logger.info(String.format("Trying basic auth with LDAP user %s...",
-                                username));
-                        try {
-                            tmpUser = ldapSettings.findVpnUser(username);
-                            if (tmpUser != null) {
-                                if (tmpUser.auth(password)) {
-                                    user = tmpUser;
-                                }
-                                else {
-                                    throw new InvalidUsernameOrPassword();
-                                }
-                            }
-                        }
-                        catch (NamingException | NoSuchLdapUser ex) {
-                            logger.warning(String.format("Cannot find LDAP user %s: %s",
-                                    username, ex.getMessage()));
-                        }
-                    }
-                    else {
-                        logger.info("Basic auth with LDAP disabled");
-                    }
-                }
+        byte[] decoded = Base64.getDecoder().decode(auth[1]);
+        String[] usrPwd = new String(decoded).split(":");
+
+        if (usrPwd.length != 2) {
+            logger.severe("Cannot split username/password");
+            return;
+        }
+
+        String username = usrPwd[0];
+        String password = usrPwd[1];
+
+        logger.info(String.format("Trying basic auth with local user %s...",
+                username));
+        AbstractUser tmpUser;
+
+        tmpUser = localUserFactory.findUser(username);
+        if (tmpUser != null) {
+            if (tmpUser.auth(password)) {
+                user = tmpUser;
+                logger.info("Basic auth with local user succeeded.");
+                return;
             }
+
+            logger.severe("Authentication faled");
+            throw new InvalidUsernameOrPassword();
+        }
+
+        if (!authSettings.getAllowBasicAuthLdap()) {
+            logger.info("Basic auth with LDAP disabled, basic auth failed");
+            return;
+        }
+
+        logger.info(String.format("Trying basic auth with LDAP user %s...", username));
+        try {
+            tmpUser = ldapSettings.findVpnUser(username);
+            if (tmpUser != null) {
+                if (tmpUser.auth(password)) {
+                    user = tmpUser;
+                    logger.info("Basic auth with LDAP succeeded.");
+                    return;
+                }
+                logger.severe("Cannot validate password");
+                throw new InvalidUsernameOrPassword();
+            }
+            else {
+                logger.info(String.format("USer %s not found in LDAP, authentication failed"));
+                throw new InvalidUsernameOrPassword();
+            }
+        }
+        catch (NamingException | NoSuchLdapUser ex) {
+            logger.warning(String.format("Cannot find LDAP user %s: %s",
+                        username, ex.getMessage()));
         }
     }
 
@@ -251,6 +273,7 @@ public class CurrentUser implements Serializable {
         if (user == null) {
             logger.info(String.format("There's no current user => no %s role", rolename));
             navigationBean.toLoginPage();
+            return false;
         }
         if (rolename == null) {
             logger.info("There are no empty role names. Don't ask me!");
