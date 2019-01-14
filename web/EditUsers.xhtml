@@ -29,15 +29,15 @@
 
                     <p:outputLabel value="Retype password:" for="retypePassword"/>
                     <p:password id="retypePassword" value="#{editUsers.addLocalUserPassword}"/>
-                    
+
                     <p:outputLabel value="Has role user:" for="hasRoleUser"/>
-                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                    <p:inputSwitch onLabel="yes" offLabel="no"
                                    value="#{editUsers.addLocalUserHasRoleUser}"
                                    id="hasRoleUser"
                                    />
-                                   
+
                     <p:outputLabel value="Has role admin:" for="hasRoleAdmin"/>
-                    <p:inputSwitch onLabel="yes" offLabel="no" 
+                    <p:inputSwitch onLabel="yes" offLabel="no"
                                    value="#{editUsers.addLocalUserHasRoleAdmin}"
                                    id="hasRoleAdmin"
                                    />
@@ -57,7 +57,7 @@
                 <h:panelGrid columns="2">
                     <h:outputText value="Username:"/>
                     <h:outputText value="#{editUsers.editUserUsername}"/>
-                    
+
                     <p:outputLabel value="Full name:" for="editUserFullName"/>
                     <p:inputText value="#{editUsers.editUserFullName}" id="editUserFullName"/>
 
@@ -117,24 +117,24 @@
                 </p:column>
                 <p:column headerText="E-mail">
                     <h:outputText value="#{user.email}"/>
-                </p:column>                
+                </p:column>
                 <p:column headerText="Roles">
                     <h:outputText value="#{editUsers.getRolesString(user)}"/>
                 </p:column>
                 <p:column headerText="Actions">
                     <p:splitButton value="Actions">
-                        <p:menuitem value="Reset password..." 
+                        <p:menuitem value="Reset password..."
                                     rendered="${user.userTypeStr == 'Local'}"
                                     update=":formResetPassword:dlgResetPassword"
                                     action="#{editUsers.onResetPassword(user)}"
                                     />
-                        <p:menuitem value="Edit..." 
-                                    rendered="${user.userTypeStr == 'Local'}"                                    
+                        <p:menuitem value="Edit..."
+                                    rendered="${user.userTypeStr == 'Local'}"
                                     update=":formEditUser:dlgEditUser"
                                     action="#{editUsers.onEditUser(user)}"
                                     />
-                        <p:menuitem value="Remove..." 
-                                    rendered="${user.userTypeStr == 'Local'}"                                    
+                        <p:menuitem value="Remove..."
+                                    rendered="${user.userTypeStr == 'Local'}"
                                     update=":formUsersList"
                                     action="#{editUsers.onRemoveUser(user.username)}"
                                     >
@@ -150,7 +150,7 @@
                         <p:menuitem value="Download NetworkManager installer"
                                    rendered='${roles.hasUserRole(user, "user")}'
                                    ajax="false">
-                            <p:fileDownload value="#{editUsers.downloadNetworkManagerInstaller(user)}"/>
+                            <p:fileDownload value="#{editUsers.getDownloadNetworkManagerInstaller(user)}"/>
                         </p:menuitem>
                     </p:splitButton>
                 </p:column>
