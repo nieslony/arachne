@@ -1086,18 +1086,20 @@ public class SetupWizard implements Serializable {
     public void onTestDatabaseConnection() {
         Connection con = null;
         String message = "Database connection seems to work";
+        String conUrl = String.format("jdbc:postgresql://%s:%d/%s",
+                databaseHost,
+                databasePort,
+                databaseName);
+        logger.info(String.format("Testing database connection to %s", conUrl));
         try {
             Class.forName("org.postgresql.Driver");
-            String conUrl = String.format("jdbc:postgresql://%s:%d/%s",
-                    databaseHost,
-                    databasePort,
-                    databaseName);
             con = DriverManager.getConnection(conUrl, databaseUser, databasePassword);
             if (con == null)
                 message = "Cannot create database connection";
         }
         catch (ClassNotFoundException | SQLException ex) {
-            message = ex.getMessage();
+            message = String.format("Cannot establish connection to %s: %s",
+                    conUrl, ex.getMessage());
         }
         finally {
             if (con != null) {
@@ -1111,7 +1113,7 @@ public class SetupWizard implements Serializable {
             }
         }
 
-
+        logger.info(message);
         FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_INFO,
                 "Test database connection",
                 message
