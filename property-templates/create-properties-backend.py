@@ -152,7 +152,11 @@ def print_getter_setter_backend():
 
     public void set%(u_name)s(%(type)s %(name)s) {
         try {
-            getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
+            PropertyGroup group = getPropertyGroup();
+            if (group != null)
+                getPropertyGroup().setProperty(%(p_name)s, String.valueOf(%(name)s));
+            else
+                logger.warning(String.format("Property group %%s doesn't exist", %(name)s));
         }
         catch (SQLException ex) {
             logger.warning(ex.getMessage());
