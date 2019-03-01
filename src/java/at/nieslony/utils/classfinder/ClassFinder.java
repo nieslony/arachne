@@ -53,13 +53,11 @@ public class ClassFinder {
         DirectoryStream<Path> stream = Files.newDirectoryStream(p);
         for (Path file: stream) {
             String fn = file.getFileName().toString();
-            //System.out.println(dir + file.getFileName());
 
             if (fn.endsWith(".class")) {
                 String className = dir + "/" + fn;
                 className = className.replaceAll("/", ".").substring(1).replaceAll("\\.\\.", ".");
                 className = className.substring(0, className.lastIndexOf(".class"));
-                logger.info(String.format("Looking at class %s in file %s" , className, fn));
 
                 try {
                     Class c = Class.forName(className);
