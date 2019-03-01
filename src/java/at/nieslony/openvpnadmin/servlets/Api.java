@@ -94,7 +94,8 @@ public class Api extends HttpServlet {
 
     private int handleFirewall(LinkedList<String> subCommands,
             HttpServletRequest request,
-            HttpServletResponse response)
+            HttpServletResponse response,
+            PrintWriter out)
             throws ServletException, IOException
     {
         requireUser(request, response);
@@ -103,9 +104,11 @@ public class Api extends HttpServlet {
         CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
         FirewallSettings firewallSettings = getBean(fCtx, "firewallSettings", FirewallSettings.class);
 
-        try (PrintWriter out = response.getWriter()) {
-            out.println(firewallSettings.getFirewallConfig(currentUser.getUser()));
-        }
+        //out = response.getWriter();
+        String jsonStr = firewallSettings.getFirewallConfig(currentUser.getUser());
+        logger.info(jsonStr);
+        out.println(jsonStr);
+        out.flush();
 
         return HttpServletResponse.SC_OK;
     }
@@ -121,8 +124,6 @@ public class Api extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-
         String pathInfo = request.getPathInfo();
         String command = null;
         LinkedList<String> apiPath = null;
@@ -140,8 +141,10 @@ public class Api extends HttpServlet {
                 out.println("Illegal API call");
                 status = HttpServletResponse.SC_NOT_FOUND;
             }
-            else if (command.equals("firewall"))
-                status = handleFirewall(apiPath, request, response);
+            else if (command.equals("firewall")) {
+                status = handleFirewall(apiPath, request, response, out);
+                response.setContentType("application/json");
+            }
             else if (command.equals("auth"))
                 status = handleAuth(apiPath, request, response);
             else {
