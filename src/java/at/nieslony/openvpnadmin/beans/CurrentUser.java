@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -72,12 +73,13 @@ public class CurrentUser implements Serializable {
     }
 
     private void initWithAjpRemoteUser(HttpServletRequest req) {
+        AbstractUser tmpUser = null;
         try {
             if (authSettings.getEnableAjpRemoteUser()) {
                 logger.info("AJP remoteUser enabled");
                 if (req.getRemoteUser() != null) {
                     try {
-                        user = ldapSettings.findVpnUser(req.getRemoteUser());
+                        tmpUser = ldapSettings.findVpnUser(req.getRemoteUser());
                     }
                     catch (NamingException | NoSuchLdapUser ex) {
                         logger.info(String.format("Cannot find LDAP user %s: %s",
@@ -96,12 +98,18 @@ public class CurrentUser implements Serializable {
             logger.warning(String.format("Cannot initialize AJP remote user: %s",
                     ex.getMessage()));
         }
+
+        if (tmpUser != null) {
+            logger.info(String.format("Found remote user %s", tmpUser.getUsername()));
+            user = tmpUser;
+        }
     }
 
     private void initWithBasicAuth(HttpServletRequest req)
             throws InvalidUsernameOrPassword
     {
         logger.info("Trying basic auth");
+        logger.info(req.getAuthType());
         String authHeader = req.getHeader("Authorization");
         if (authHeader == null) {
             logger.info("There's no authentication header");
@@ -110,11 +118,11 @@ public class CurrentUser implements Serializable {
 
         String auth[] = authHeader.split(" ");
         if (auth.length != 2) {
-            logger.severe("Cannot parse authtication header");
-            return;
+            logger.severe("Cannot parse authentication header");
+            throw new InvalidUsernameOrPassword();
         }
         if (!auth[0].equals("Basic")) {
-            logger.info(String.format("Innoring auth type %s", auth[0]));
+            logger.info(String.format("Ignoring auth type %s", auth[0]));
             return;
         }
 
@@ -123,7 +131,7 @@ public class CurrentUser implements Serializable {
 
         if (usrPwd.length != 2) {
             logger.severe("Cannot split username/password");
-            return;
+            throw new InvalidUsernameOrPassword();
         }
 
         String username = usrPwd[0];
@@ -147,7 +155,7 @@ public class CurrentUser implements Serializable {
 
         if (!authSettings.getAllowBasicAuthLdap()) {
             logger.info("Basic auth with LDAP disabled, basic auth failed");
-            return;
+            throw new InvalidUsernameOrPassword();
         }
 
         logger.info(String.format("Trying basic auth with LDAP user %s...", username));
@@ -163,14 +171,20 @@ public class CurrentUser implements Serializable {
                 throw new InvalidUsernameOrPassword();
             }
             else {
-                logger.info(String.format("USer %s not found in LDAP, authentication failed"));
+                logger.info(String.format("User %s not found in LDAP, authentication failed", username));
                 throw new InvalidUsernameOrPassword();
             }
         }
         catch (NamingException | NoSuchLdapUser ex) {
             logger.warning(String.format("Cannot find LDAP user %s: %s",
                         username, ex.getMessage()));
+            throw new InvalidUsernameOrPassword();
         }
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        user = null;
     }
 
     @PostConstruct
