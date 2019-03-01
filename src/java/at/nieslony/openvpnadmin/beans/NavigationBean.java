@@ -105,11 +105,12 @@ public class NavigationBean implements Serializable {
     public void toWelcomePage(AbstractUser user)
             throws PermissionDenied
     {
-        if (user == null) {
+        if (user == null || user.getUsername() == null) {
             logger.info("There's no current user, forwarding to login page");
             toLoginPage();
             return;
         }
+        logger.info(String.format("Redirecting to %s's welcome page", user.getUsername()));
 
         if (roles.hasUserRole(user, "admin")) {
             logger.info(String.format("User %s has role admin => redirect to AdminWelcome",
