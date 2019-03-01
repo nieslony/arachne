@@ -33,6 +33,7 @@
                 <p:outputLabel for="rbService" value="Service"/>
                 <p:selectOneMenu disabled='#{editFirewallSettings.editWhat.type != "Service"}'
                                  id="service"
+                                 filter="true"
                                  converter="firewallDServiceConverter"
                                  value="#{editFirewallSettings.editWhat.service}"
                                  >

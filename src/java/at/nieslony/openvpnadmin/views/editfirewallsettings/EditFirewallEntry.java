@@ -35,7 +35,7 @@ public class EditFirewallEntry implements Serializable {
 
     private String label = "";
     private String description = "";
-    private boolean isActive = false;
+    private Boolean isActive = Boolean.FALSE;
 
     private Entry firewallEntry;
 
@@ -140,11 +140,11 @@ public class EditFirewallEntry implements Serializable {
         return description;
     }
 
-    public void setIsActive(boolean ia) {
+    public void setIsActive(Boolean ia) {
         isActive = ia;
     }
 
-    public boolean getIsActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 

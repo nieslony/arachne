@@ -28,6 +28,7 @@
                                      var="entryInfo">
                             <p:ajax event="rowSelect" update="@form"/>
                             <p:ajax event="rowUnselect" update="@form"/>
+
                             <p:column headerText="Label">
                                 <h:outputText value="#{entryInfo.entry.label}"/>
                             </p:column>
