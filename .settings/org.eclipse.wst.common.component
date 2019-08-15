@@ -2,6 +2,7 @@
     <wb-module deploy-name="arachne">
         <wb-resource deploy-path="/" source-path="/web" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/build/generated-sources"/>
         <property name="context-root" value="arachne"/>
         <property name="java-output-path" value="/arachne/build/web/WEB-INF/classes"/>
     </wb-module>
