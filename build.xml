@@ -1,27 +1,42 @@
 <project name="arachne">
 	<description>
-		Arachne - an web based administration tool for OpenVPN 
+		Arachne - an web based administration tool for OpenVPN
 	</description>
-	
+
 	<property name="projectName" value="arachne"/>
 	<property name="version" value="0.3.3"/>
-	
+
 	<property name="root.dir" location="."/>
 	<property name="src.dir" location="${root.dir}/src"/>
 	<property name="dist.dir" location="${root.dir}/dist"/>
 	<property name="web.dir" location="${root.dir}/web"/>
-	<property name="build.dir" location="${root.dir}/build"/>
-	<property name="property-templates.dir" location="${root.dir}/property-templates"/>
 	
-	<target name="generate-code">		
+	<property name="build.dir" location="${root.dir}/build"/>
+    <property name="generated-sources.dir" location="${build.dir}/generated-sources"/>
+	<property name="property-templates.dir" location="${root.dir}/property-templates"/>
+    <property name="docsrc.dir" location="${root.dir}/doc"/>
+    <property name="docdst.dir" location="${build.dir}/web/doc"/>
+    <property name="theme-src.dir" location="${root.dir}/arachne-theme"/>
+    <property name="theme-dst.dir" location="${build.dir}/web/WEB-INF/resources/primefaces-arachne"/>
+	<property name="jar.dir" location="/usr/share/java"/>
+	<property name="dbps-jar.dir" location="${jar.dir}"/>
+	<property name="pf-jar.dir" location="${jar.dir}"/>
+	<property name="myfaces-jar.dir" location="${jar.dir}"/>
+	<property name="pgsql-jar.dir" location="${jar.dir}"/>	
+	
+	<property name="sql-src.dir" location="${build.dir}/web/WEB-INF/sql"/>
+	<property name="work.dir" location="/var/lib/arachne"/>
+	<property name="plugin.dir" value="/usr/lib64/openvpn/plugins/"/>
+	
+	<target name="generate-code">
 	    <exec executable="python" failonerror="true">
 	        <arg value="${property-templates.dir}/create-properties-backend.py"/>
 	        <arg value="--input_dir"/>
 	        <arg value="${property-templates.dir}"/>
 	        <arg value="--dest_dir"/>
-	        <arg value="${build.dir}/generated-sources"/>
+	        <arg value="${generated-sources.dir}"/>
 	    </exec>
-	
+
 	    <mkdir dir="${build.dir}/generated-sources/at/nieslony/openvpnadmin"/>
 	    <echo output="${build.dir}/generated-sources/at/nieslony/openvpnadmin/ArachneStatics.java">
 package at.nieslony.openvpnadmin;
@@ -36,4 +51,116 @@ public class ArachneStatics {
 	    </echo>
 	</target>
 
+    <target name="generate-doc">
+        <xslt basedir="${docsrc.dir}"
+              in="${docsrc.dir}/arachne.xml"
+              destdir="${docdst.dir}"
+              includes="*xml"
+              suppressWarnings="true"
+              style="/usr/share/sgml/docbook/xsl-ns-stylesheets-1.79.2/xhtml5/chunk.xsl"
+        >
+            <param name="html.stylesheet" expression="arachne.css"/>
+        </xslt>
+    </target>
+
+    <target name="copy-doc-static">
+        <mkdir dir="${docdst.dir}"/>
+        <mkdir dir="${docdst.dir}/pics"/>
+        <copy todir="${docdst.dir}/pics">
+            <fileset dir="${docsrc.dir}/pics"/>
+        </copy>
+        <copy todir="${docdst.dir}"
+              file="${docsrc.dir}/arachne.css"
+        />
+    </target>
+
+    <target name="copy-static">
+        <copy todir="${build.dir}/web">
+            <fileset dir="${web.dir}"/>
+        </copy>
+
+        <mkdir dir="${build.dir}/web/WEB-INF/sql"/>
+        <copy todir="${build.dir}/web/WEB-INF/sql">
+            <fileset dir="${src.dir}/sql"/>
+        </copy>
+
+        <mkdir dir="${theme-dst.dir}"/>
+        <copy todir="${theme-dst.dir}">
+            <fileset file="${theme-src.dir}/theme.css"/>
+        </copy>
+
+        <mkdir dir="${theme-dst.dir}/images"/>
+        <copy todir="${theme-dst.dir}/images">
+            <fileset dir="${theme-src.dir}/images"/>
+        </copy>
+    </target>
+
+	<target name="patch-context.xml">
+		<replace
+			file="${build.dir}/web/META-INF/context.xml"
+			token="@@JAR_DIR@@"
+			value="${jar.dir}"
+			summary="true"
+		/>
+		<replace
+			file="${build.dir}/web/META-INF/context.xml"
+			token="@@DBPS_JAR_DIR@@"
+			value="${dbps-jar.dir}"
+			summary="true"
+		/>
+		<replace
+			file="${build.dir}/web/META-INF/context.xml"
+			token="@@PF_JAR_DIR@@"
+			value="${pf-jar.dir}"
+			summary="true"
+		/>
+		<replace
+			file="${build.dir}/web/META-INF/context.xml"
+			token="@@MYFACES_JAR_DIR@@"
+			value="${myfaces-jar.dir}"
+			summary="true"
+		/>
+		<replace
+			file="${build.dir}/web/META-INF/context.xml"
+			token="@@PGSQL_JAR_DIR@@"
+			value="${pgsql-jar.dir}"
+			summary="true"
+		/>
+	</target>
+	
+	<target name="patch-web.xml">
+		<replace
+			file="${build.dir}/web/WEB-INF/web.xml"
+			token="@@SQL_SRC_DIR@@"
+			value="${sql-src.dir}"
+			summary="true"
+		/>
+		<replace
+        	file="${build.dir}/web/WEB-INF/web.xml"
+            token="@@WORK_DIR@@"
+            value="${work.dir}"
+			summary="true"
+            />
+		<replace
+        	file="${build.dir}/web/WEB-INF/web.xml"
+            token="@@PLUGIN_DIR@@"
+            value="${plugin.dir}"
+			summary="true"
+            />
+	</target>
+	
+	<target name="create-folders">
+		<mkdir dir="${work.dir}"/>
+		<mkdir dir="${work.dir}/vpnconfig"/>
+		<mkdir dir="${work.dir}/appconfig"/>
+	</target>
+		
+    <target name="doc" depends="generate-doc, copy-doc-static"/>
+	<target name="postcompile" depends="copy-static, patch-context.xml, patch-web.xml, create-folders"/>
+
+    <target name="clean">
+        <delete dir="${generated-sources.dir}"/>
+        <delete dir="${docdst.dir}"/>
+    	<delete dir="${build.dir}/web"/>
+    </target>
 </project>

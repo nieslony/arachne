@@ -6,19 +6,15 @@
     </context-param>
     <context-param>
         <param-name>dynamic-data-dir</param-name>
-        <param-value>@@DYNAMIC-DATA-DIR@@</param-value>
+        <param-value>@@WORK_DIR@@</param-value>
     </context-param>
     <context-param>
         <param-name>sql-dir</param-name>
-        <param-value>@@SQL-DIR@@</param-value>
-    </context-param>
-    <context-param>
-        <param-name>bin-dir</param-name>
-        <param-value>@@BIN-DIR@@</param-value>
+        <param-value>@@SQL_SRC_DIR@@</param-value>
     </context-param>
     <context-param>
         <param-name>plugin-dir</param-name>
-        <param-value>@@PLUGIN-DIR@@</param-value>
+        <param-value>@@PLUGIN_DIR@@</param-value>
     </context-param>
     <context-param>
         <param-name>

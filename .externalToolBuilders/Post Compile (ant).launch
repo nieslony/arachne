@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.ant.AntBuilderLaunchConfigurationType">
+<stringAttribute key="org.eclipse.ant.ui.ATTR_ANT_MANUAL_TARGETS" value="postcompile,"/>
+<booleanAttribute key="org.eclipse.ant.ui.ATTR_TARGETS_UPDATED" value="true"/>
+<booleanAttribute key="org.eclipse.ant.ui.DEFAULT_VM_INSTALL" value="false"/>
+<stringAttribute key="org.eclipse.debug.core.ATTR_REFRESH_SCOPE" value="${workspace}"/>
+<booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
+<stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.ant.ui.AntClasspathProvider"/>
+<booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="true"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="arachne"/>
+<mapAttribute key="org.eclipse.ui.externaltools.ATTR_ANT_PROPERTIES">
+<mapEntry key="dbps-jar.dir" value="${workspace_loc}/databasepropertiesstorage/dist"/>
+<mapEntry key="eclipse.home" value="/usr/lib/eclipse"/>
+<mapEntry key="eclipse.pdebuild.home" value="/usr/lib/eclipse/../../share/eclipse/droplets/eclipse-pde/plugins/org.eclipse.pde.build_3.10.300.v20190308-0658/."/>
+<mapEntry key="eclipse.pdebuild.scripts" value="/usr/lib/eclipse/../../share/eclipse/droplets/eclipse-pde/plugins/org.eclipse.pde.build_3.10.300.v20190308-0658/scripts"/>
+<mapEntry key="eclipse.pdebuild.templates" value="/usr/lib/eclipse/../../share/eclipse/droplets/eclipse-pde/plugins/org.eclipse.pde.build_3.10.300.v20190308-0658/templates"/>
+<mapEntry key="eclipse.running" value="true"/>
+<mapEntry key="jar.dir" value="${workspace_loc}/../Libs"/>
+<mapEntry key="pgsql-jar.dir" value="/usr/share/java"/>
+<mapEntry key="sql-src.dir" value="${build_project}/build/web/WEB-INF/sql/"/>
+<mapEntry key="work.dir" value="${build_project}/work"/>
+</mapAttribute>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/arachne/build.xml}"/>
+<stringAttribute key="org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS" value="incremental,"/>
+<booleanAttribute key="org.eclipse.ui.externaltools.ATTR_TRIGGERS_CONFIGURED" value="true"/>
+</launchConfiguration>

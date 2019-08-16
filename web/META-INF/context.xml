@@ -5,49 +5,43 @@
     path="/arachne"
     allowLinking="true">
     <Resources allowLinking="true">
-        <PostResources base="/usr/share/java/commons-digester.jar"
+        <PostResources base="@@JAR_DIR@@/commons-digester.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/commons-digester.jar"/>
-        <PostResources base="/usr/share/java/commons-logging.jar"
+        <PostResources base="@@JAR_DIR@@/commons-logging.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/commons-logging.jar"/>
-        <PostResources base="/usr/share/java/commons-beanutils.jar"
+        <PostResources base="@@JAR_DIR@@/commons-beanutils.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/commons-beanutils.jar"/>
-        <PostResources base="/usr/share/java/commons-collections.jar"
+        <PostResources base="@@JAR_DIR@@/commons-collections.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/commons-collections.jar"/>
-        <PostResources base="/usr/share/java/commons-codec.jar"
-                 className="org.apache.catalina.webresources.FileResourceSet"
-                 webAppMount="/WEB-INF/lib/commons-codec.jar"/>
 
-        <PostResources base="/usr/share/java/bcprov.jar"
+        <PostResources base="@@JAR_DIR@@/bcprov.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/bcprov.jar"/>
-        <PostResources base="/usr/share/java/bcpkix.jar"
+        <PostResources base="@@JAR_DIR@@/bcpkix.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/bcpkix.jar"/>
 
-        <PostResources base="/usr/share/java/databasepropertiesstorage.jar"
+        <PostResources base="@@DBPS_JAR_DIR@@/databasepropertiesstorage.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/databasepropertiesstorage.jar"/>
 
-        <PostResources base="/usr/share/java/postgresql-jdbc.jar"
+        <PostResources base="@@PGSQL_JAR_DIR@@/postgresql-jdbc.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/postgresql-jdbc.jar"/>
 
-        <PostResources base="/usr/share/java/primefaces.jar"
+        <PostResources base="@@PF_JAR_DIR@@/primefaces.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/primefaces.jar"/>
 
-        <PostResources base="/usr/share/java/myfaces-api.jar"
+        <PostResources base="@@MYFACES_JAR_DIR@@/myfaces-api.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/myfaces-api.jar"/>
-        <PostResources base="/usr/share/java/myfaces-impl.jar"
+        <PostResources base="@@MYFACES_JAR_DIR@@/myfaces-impl.jar"
                  className="org.apache.catalina.webresources.FileResourceSet"
                  webAppMount="/WEB-INF/lib/myfaces-impl.jar"/>
-        <PostResources base="/usr/share/java/myfaces-impl-shared.jar"
-                 className="org.apache.catalina.webresources.FileResourceSet"
-                 webAppMount="/WEB-INF/lib/myfaces-impl-shared.jar"/>
     </Resources>
 </Context>

@@ -15,11 +15,11 @@
         <h:outputStylesheet library="css" name="cssLayout.css"/>
 
         <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
-    </h:head>
+    </h:head> 
     <h:body>
         <p:dialog visible="true" closable="false" header="Login to Arachne" draggable="false" resizable="false" >
             <h:form>
-                <p:growl id="growl" showDetail="true" sticky="true"/>
+	            <p:messages id="messages" showDetail="true" closable="true"/>
                 <h:panelGrid columns="2" >
                     <p:outputLabel value="Username:"/>
                     <p:inputText value="#{loginBean.username}" id="username"/>
