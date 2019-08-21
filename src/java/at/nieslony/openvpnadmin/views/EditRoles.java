@@ -38,7 +38,12 @@ import org.primefaces.PrimeFaces;
 @ManagedBean
 @ViewScoped
 public class EditRoles implements Serializable {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -506726382381185001L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{roles}")
     Roles roles;

@@ -85,7 +85,12 @@ import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 public class CertificateAuthority
         implements Serializable
 {
-    private String caDir;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6264085514049150273L;
+	
+	private String caDir;
     transient private X509CertificateHolder caCert;
     transient private PrivateKey caKey;
     transient private X509CRLHolder crl;

@@ -38,7 +38,11 @@ public class EditClientCertificateSettings
     extends EditClientCertificateSettingsBase
     implements Serializable
 {
-    private List<SelectItem> signatureAlgorithms;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6106980971948455764L;
+	private List<SelectItem> signatureAlgorithms;
 
     public EditClientCertificateSettings () {
     }

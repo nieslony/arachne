@@ -40,7 +40,12 @@ import javax.servlet.http.HttpServletResponse;
  * @author Claas Nieslony
  */
 public class Api extends HttpServlet {
-    private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4100854487042320174L;
+	
+	private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private FacesContext getFacesContext(HttpServletRequest request, HttpServletResponse response) {
         FacesContext facesContext = FacesContext.getCurrentInstance();

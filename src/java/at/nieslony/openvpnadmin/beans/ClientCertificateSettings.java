@@ -32,7 +32,12 @@ public class ClientCertificateSettings
     extends ClientCertificateSettingsBase
     implements Serializable
 {
-    public ClientCertificateSettings() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8004196266152624564L;
+
+	public ClientCertificateSettings() {
     }
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());

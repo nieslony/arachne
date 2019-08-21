@@ -22,7 +22,12 @@ import org.primefaces.PrimeFaces;
  * @author claas
  */
 public class EditFirewallEntry implements Serializable {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7727280616776750507L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private final HashMap<String, Who> whos = new HashMap<>();
     private String selectedWhoId = null;

@@ -39,7 +39,11 @@ public class EditServerCertificateSettings
     extends EditServerCertificateSettingsBase
     implements Serializable
 {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7935300203892042222L;
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private List<SelectItem> signatureAlgorithms;
 
     @ManagedProperty(value = "#{pki}")

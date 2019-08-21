@@ -51,7 +51,12 @@ public class EditLdapSettings
     extends EditLdapSettingsBase
     implements Serializable, LdapHelperUser
 {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2693165314432967843L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private LdapHelper ldapHelper;
 

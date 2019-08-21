@@ -33,7 +33,12 @@ import org.primefaces.PrimeFaces;
 @ManagedBean
 @ViewScoped
 public class EditFirewallSettings implements Serializable {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4585221489520760283L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     final static String CHAIN_INCOMING = "incoming";
     final static String CHAIN_OUTGOING = "outgoing";

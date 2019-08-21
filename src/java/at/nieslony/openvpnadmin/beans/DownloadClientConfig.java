@@ -43,7 +43,12 @@ import org.bouncycastle.operator.OperatorCreationException;
 public class DownloadClientConfig
         implements Serializable
 {
-    private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5361149290946431864L;
+
+	private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{currentUser}")
     CurrentUser currentUser;

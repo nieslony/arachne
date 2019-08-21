@@ -48,7 +48,12 @@ import org.primefaces.model.StreamedContent;
 @ManagedBean
 @ViewScoped
 public class EditUsers implements Serializable {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6763705301528434626L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{ldapSettings}")
     LdapSettings ldapSettings;

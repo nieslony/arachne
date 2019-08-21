@@ -33,7 +33,12 @@ public class EditAuthSettings
     extends EditAuthSettingsBase
     implements Serializable
 {
-    public EditAuthSettings () {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4318764850400792778L;
+
+	public EditAuthSettings () {
     }
 
     @ManagedProperty(value = "#{authSettings}")

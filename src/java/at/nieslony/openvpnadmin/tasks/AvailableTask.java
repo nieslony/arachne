@@ -24,8 +24,12 @@ import java.io.Serializable;
  * @author claas
  */
 public class AvailableTask implements Serializable {
-
-    private Class klass;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7701185371837929819L;
+	
+	private Class klass;
     private String name;
     private String description;
 

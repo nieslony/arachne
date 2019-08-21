@@ -53,7 +53,12 @@ import org.primefaces.model.StreamedContent;
 @ManagedBean
 @ApplicationScoped
 public class ConfigBuilder implements Serializable {
-    private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8865334818141151279L;
+
+	private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{pki}")
     private Pki pki;
@@ -203,6 +208,9 @@ public class ConfigBuilder implements Serializable {
                 pr.println(authPlugin);
                 pr.println("client-cert-not-required");
                 pr.println("username-as-common-name");
+                break;
+            case CERTIFICATE:
+            	break;
         }
         String dnsServers = userVpn.getDnsServers();
         if (dnsServers != null && !dnsServers.isEmpty()) {

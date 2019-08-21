@@ -38,7 +38,12 @@ import org.primefaces.PrimeFaces;
 public class EditTaskScheduler
     implements Serializable
 {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 872931838490685225L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @ManagedProperty(value = "#{taskScheduler}")
     private TaskScheduler taskScheduler;

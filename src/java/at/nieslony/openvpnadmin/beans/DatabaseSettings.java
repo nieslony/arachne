@@ -42,7 +42,12 @@ import org.postgresql.util.PSQLException;
 public class DatabaseSettings
         implements Serializable
 {
-    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6938701179778347431L;
+
+	private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     private static final String PROP_HOST = "host";
     private static final String PROP_PORT = "port";

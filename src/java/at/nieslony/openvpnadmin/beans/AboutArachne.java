@@ -34,6 +34,11 @@ public class AboutArachne
 {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8562916893921491727L;
+
+	/**
      * Creates a new instance of AboutArachne
      */
     public AboutArachne() {

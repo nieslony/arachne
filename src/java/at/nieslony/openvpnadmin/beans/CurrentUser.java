@@ -45,7 +45,12 @@ import javax.servlet.http.HttpServletRequest;
 @ManagedBean
 @SessionScoped
 public class CurrentUser implements Serializable {
-    private AbstractUser user = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7348758613584257146L;
+
+	private AbstractUser user = null;
 
     @ManagedProperty(value = "#{ldapSettings}")
     private LdapSettings ldapSettings;

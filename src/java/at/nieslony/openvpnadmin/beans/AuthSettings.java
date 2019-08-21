@@ -32,7 +32,12 @@ public class AuthSettings
     extends AuthSettingsBase
     implements Serializable
 {
-    public AuthSettings() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6462109336740765221L;
+
+	public AuthSettings() {
     }
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());

@@ -30,7 +30,11 @@ import javax.servlet.http.HttpServletResponse;
  * @author claas
  */
 public class ConfigNetworkManager extends HttpServlet {
-    private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8204711862063612180L;
+	private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>

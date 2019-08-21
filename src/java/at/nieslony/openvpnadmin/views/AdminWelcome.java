@@ -45,7 +45,12 @@ import org.primefaces.model.menu.MenuModel;
 @ManagedBean
 @SessionScoped
 public class AdminWelcome implements Serializable {
-    private MenuModel menuModel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 9175446568391502541L;
+	
+	private MenuModel menuModel;
     DefaultSubMenu userVpnsMenu;
     DefaultSubMenu siteVpnsMenu;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
