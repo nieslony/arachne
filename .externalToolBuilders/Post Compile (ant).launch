@@ -17,6 +17,7 @@
 <mapEntry key="eclipse.running" value="true"/>
 <mapEntry key="jar.dir" value="${workspace_loc}/../Libs"/>
 <mapEntry key="pgsql-jar.dir" value="/usr/share/java"/>
+<mapEntry key="plugin.dir" value="${workspace_loc}/openvpn-arachne-plugin/src/.libs"/>
 <mapEntry key="sql-src.dir" value="${build_project}/build/web/WEB-INF/sql/"/>
 <mapEntry key="work.dir" value="${build_project}/work"/>
 </mapAttribute>
