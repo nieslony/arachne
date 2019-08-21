@@ -13,10 +13,10 @@ import java.util.List;
  * @author claas
  */
 public class FirewallDService {
-    private String _id;
+	private String _id;
     private String _shortName;
     private String _description;
-    private List<String> _ports;
+    private List<PortProtocol> _portsProtocols;
 
     public FirewallDService() {
         init("", "", "", new LinkedList<>());
@@ -25,7 +25,7 @@ public class FirewallDService {
     public FirewallDService(String id,
             String shortName,
             String description,
-            List<String> ports)
+            List<PortProtocol> ports)
     {
         init(id, shortName, description, ports);
     }
@@ -33,12 +33,12 @@ public class FirewallDService {
     private void init(String id,
             String shortName,
             String description,
-            List<String> ports)
+            List<PortProtocol> portsProtocols)
     {
         _id = id;
         _shortName = shortName;
         _description = description;
-        _ports = ports;
+        _portsProtocols = portsProtocols;
     }
 
     public String getId() {
@@ -57,11 +57,15 @@ public class FirewallDService {
         return _description;
     }
 
-    public List<String> getPorts() {
-        return _ports;
+    public List<PortProtocol> getPortsProtocols() {
+        return _portsProtocols;
     }
 
-    public String getPortsStr() {
-        return String.join(", ", _ports);
+    public String getPortsProtocolsStr() {  
+    	List<String> l = new LinkedList<>();
+    	for (PortProtocol pp: _portsProtocols)
+    		l.add(pp.getPortPorotol());
+    	
+        return String.join(", ", l);
     }
 }

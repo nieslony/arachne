@@ -6,6 +6,8 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.FirewallDService;
+import at.nieslony.openvpnadmin.PortProtocol;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -60,17 +62,24 @@ public class FirewallDServices implements Serializable {
             doc.getDocumentElement().normalize();
 
             NodeList elems;
+            
             elems = doc.getElementsByTagName("short");
             String shortName = "";
             if (elems != null && elems.getLength() > 0)
                 shortName = elems.item(0).getTextContent();
 
+            elems = doc.getElementsByTagName("destination");
+            if (elems != null && elems.getLength() > 0) {
+            	logger.info(String.format("Ignoring service %s with destination", shortName));
+            	return null;
+            }
+            
             String description = "";
             elems = doc.getElementsByTagName("description");
             if (elems != null && elems.getLength() > 0)
                 description = elems.item(0).getTextContent();
 
-            List<String> ports = new LinkedList<>();
+            List<PortProtocol> ports = new LinkedList<>();
             NodeList portList = doc.getElementsByTagName("port");
 
             for (int i = 0; i < portList.getLength(); i++) {
@@ -81,7 +90,7 @@ public class FirewallDServices implements Serializable {
                 StringBuilder buf = new StringBuilder();
                 buf.append(port).append("/").append(protocol);
 
-                ports.add(buf.toString());
+                ports.add(new PortProtocol(port, protocol));
             }
 
             FirewallDService service = new FirewallDService(id, shortName, description, ports);

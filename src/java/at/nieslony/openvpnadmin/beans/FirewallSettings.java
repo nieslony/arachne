@@ -6,6 +6,7 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.AbstractUser;
+import at.nieslony.openvpnadmin.PortProtocol;
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.firewallzone.Entry;
 import at.nieslony.openvpnadmin.beans.firewallzone.What;
@@ -558,7 +559,14 @@ public class FirewallSettings implements Serializable {
                             jsonEntry.put("whatProtocol", what.getProtocol());
                             break;
                         case Service:
-                            jsonEntry.put("whatService", what.getService().getId());
+                        	JSONArray portProtocols = new JSONArray();
+                        	for (PortProtocol pp: what.getService().getPortsProtocols()) {
+                        		JSONObject ppo = new JSONObject();
+                        		ppo.put("port", pp.getPort());
+                        		ppo.put("protocol", pp.getProtocol());
+                        		portProtocols.put(ppo);
+                        	}
+                            jsonEntry.put("whatService", portProtocols);
                             break;
                     }
                     incoming.put(jsonEntry);
