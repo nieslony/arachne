@@ -56,7 +56,7 @@
                           columnClasses="label,value"
                           rendered="#{not empty userCertificates.selectedCert}">
                 <h:outputText value="Subject:"/>
-                <h:outputText value="#{userCertificates.selectedCert.subjectDN}"/>
+                <h:outputText value="#{userCertificates.selectedCert.subjectDN"/>
 
                 <h:outputText value="Valid from:"/>
                 <h:outputText value="#{userCertificates.selectedCert.notBefore}"/>
@@ -65,7 +65,7 @@
                 <h:outputText value="#{userCertificates.selectedCert.notAfter}"/>
                 
                 <h:outputText value="Issuer:"/>
-                <h:outputText value="#{userCertificates.selectedCert.issuerDN}"/>
+                <h:outputText value="#{userCertificates.selectedCert.issuer}"/>
                 
                 <h:outputText value="Private key algorithm:"/>
                 <h:outputText value="#{userCertificates.selectedCertPrivKeyDetails}"/>
