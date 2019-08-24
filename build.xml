@@ -200,7 +200,7 @@ public class ArachneStatics {
         <mkdir dir="${install-root.dir}/${app-root.dir}"/>
         <mkdir dir="${install-root.dir}/${work.dir}"/>
     	
-        <copy todir="${install-root}/${app-root.dir}">
+        <copy todir="${install-root.dir}/${app-root.dir}">
             <fileset dir="${build.dir}/web"/>
         </copy>
     </target>

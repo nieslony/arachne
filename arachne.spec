@@ -78,7 +78,7 @@ Tomcat Web application for administering openVPN
 ant dist       -Droot=%{_builddir}/%{name}-%{version}
 
 %install
-ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
+ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root.dir=%{buildroot} -Dwebapps.dir=%{webappsdir}
 mkdir -vp %{buildroot}/%_defaultdocdir
 mv -v %{buildroot}/%{webappsdir}/%{name}/doc %{buildroot}/%_defaultdocdir/%{name}-doc
 
