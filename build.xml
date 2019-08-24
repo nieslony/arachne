@@ -18,16 +18,48 @@
     <property name="docdst.dir" location="${build.dir}/web/doc"/>
     <property name="theme-src.dir" location="${root.dir}/arachne-theme"/>
     <property name="theme-dst.dir" location="${build.dir}/web/WEB-INF/resources/primefaces-arachne"/>
+	<property name="classes.dir" location="${build.dir}/web/WEB-INF/lib/classes"/>
+	
 	<property name="jar.dir" location="/usr/share/java"/>
 	<property name="dbps-jar.dir" location="${jar.dir}"/>
 	<property name="pf-jar.dir" location="${jar.dir}"/>
 	<property name="myfaces-jar.dir" location="${jar.dir}"/>
-	<property name="pgsql-jar.dir" location="${jar.dir}"/>	
+	<property name="pgsql-jar.dir" location="${jar.dir}"/>
+	<property name="bouncycastle.dir" location="${jar.dir}"/>
+	<property name="tomcat-libs.dir" location="${jar.dir}"/>
 	
 	<property name="sql-src.dir" location="${build.dir}/web/WEB-INF/sql"/>
 	<property name="work.dir" location="/var/lib/arachne"/>
 	<property name="plugin.dir" value="/usr/lib64/openvpn/plugins/"/>
-	
+
+    <path id="classpath">
+        <fileset
+                dir="${tomcat-libs.dir}"
+                includes="servlet.jar jakarta-taglibs-core.jar tomcat-el-api.jar postgresql.jar"
+        />
+        <fileset
+                dir="${bouncycastle.dir}"
+                includes="bcprov.jar bcpkix.jar"
+        />
+    	<fileset
+    		dir="${pgsql-jar.dir}"
+    		includes="postgresql-jdbc.jar"
+    	/>
+        <fileset
+                dir="${pf-jar.dir}"
+                includes="primefaces.jar"
+        />
+        <fileset
+                dir="${myfaces-jar.dir}"
+                includes="myfaces-api.jar myfaces-impl.jar myfaces-impl-shared.jar"
+        />
+        <fileset
+                dir="${dbps-jar.dir}"
+                includes="databasepropertiesstorage.jar"
+            />
+        <fileset dir="${build.dir}/generated-sources"/>
+    </path>
+
 	<target name="generate-code">
 	    <exec executable="python" failonerror="true">
 	        <arg value="${property-templates.dir}/create-properties-backend.py"/>
@@ -156,8 +188,25 @@ public class ArachneStatics {
 	</target>
 		
     <target name="doc" depends="generate-doc, copy-doc-static"/>
-	<target name="postcompile" depends="copy-static, patch-context.xml, patch-web.xml, create-folders"/>
+	<target name="postcompile" depends="copy-static, patch-context.xml, patch-web.xml"/>
 
+	<target name="compile" depends="generate-code">
+		<mkdir dir="${classes.dir}"/>
+        <javac
+               destdir="${classes.dir}"
+               includeantruntime="false"
+               classpathref="classpath"
+               encoding="utf-8"
+        >
+            <src path="${src.dir}"/>
+            <src path="${build.dir}/generated-sources"/>
+        </javac>
+	</target>
+	
+	<target name="dist" depends="compile, doc, postcompile">
+		<jar jarfile="${dist.dir}/${projectName}.war" basedir="${build.dir}/web"/>
+	</target>
+	
     <target name="clean">
         <delete dir="${generated-sources.dir}"/>
         <delete dir="${docdst.dir}"/>
