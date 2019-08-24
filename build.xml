@@ -32,6 +32,10 @@
 	<property name="work.dir" location="/var/lib/arachne"/>
 	<property name="plugin.dir" value="/usr/lib64/openvpn/plugins/"/>
 
+    <property name="install-root.dir" value=""/>
+    <property name="webapps.dir" value="/usr/share/tomcat/webapps"/>
+    <property name="app-root.dir" value="${webapps.dir}/arachne"/>
+
     <path id="classpath">
         <fileset
                 dir="${tomcat-libs.dir}"
@@ -191,6 +195,15 @@ public class ArachneStatics {
 	<target name="dist" depends="compile, doc, postcompile">
 		<jar jarfile="${dist.dir}/${projectName}.war" basedir="${build.dir}/web"/>
 	</target>
+	
+    <target name="install">
+        <mkdir dir="${install-root.dir}/${app-root.dir}"/>
+        <mkdir dir="${install-root.dir}/${work.dir}"/>
+    	
+        <copy todir="${install-root}/${app-root.dir}">
+            <fileset dir="${build.dir}/web"/>
+        </copy>
+    </target>
 	
     <target name="clean">
         <delete dir="${generated-sources.dir}"/>

@@ -36,6 +36,7 @@ BuildRequires:	lua ruby
 %endif
 %if 0%{?centos_version}
 BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api 
+BuildRequires:  python-setuptools
 %endif
 %if 0%{?suse_version}
 BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api 
@@ -75,7 +76,6 @@ Tomcat Web application for administering openVPN
 
 %build
 ant dist       -Droot=%{_builddir}/%{name}-%{version}
-ant custom.doc -Droot=%{_builddir}/%{name}-%{version} -Ddocbook-stylesheet=%{docbookstylesheet}
 
 %install
 ant install -Droot=%{_builddir}/%{name}-%{version} -Dinstall-root=%{buildroot} -Dwebapps.dir=%{webappsdir}
