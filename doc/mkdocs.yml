@@ -8,3 +8,4 @@ pages:
     - vpn-settings.md
     - get-client-configuration.md
     - links.md
+use_directory_urls: False
