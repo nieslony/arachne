@@ -1,0 +1,10 @@
+site_name: "Arachne: User's guide"
+theme: readthedocs
+pages:
+    - index.md
+    - installation.md
+    - initial-setup.md
+    - usermanagement.md
+    - vpn-settings.md
+    - get-client-configuration.md
+    - links.md

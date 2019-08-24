@@ -84,26 +84,11 @@ public class ArachneStatics {
 	</target>
 
     <target name="generate-doc">
-        <xslt basedir="${docsrc.dir}"
-              in="${docsrc.dir}/arachne.xml"
-              destdir="${docdst.dir}"
-              includes="*xml"
-              suppressWarnings="true"
-              style="/usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl"
-        >
-            <param name="html.stylesheet" expression="arachne.css"/>
-        </xslt>
-    </target>
-
-    <target name="copy-doc-static">
-        <mkdir dir="${docdst.dir}"/>
-        <mkdir dir="${docdst.dir}/pics"/>
-        <copy todir="${docdst.dir}/pics">
-            <fileset dir="${docsrc.dir}/pics"/>
-        </copy>
-        <copy todir="${docdst.dir}"
-              file="${docsrc.dir}/arachne.css"
-        />
+	    <exec executable="mkdocs" failonerror="true" dir="${docsrc.dir}">
+	    	<arg value="build"/>
+	    	<arg value="--site-dir"/>
+	    	<arg path="${docdst.dir}"/>
+		</exec>
     </target>
 
     <target name="copy-static">
@@ -187,7 +172,7 @@ public class ArachneStatics {
 		<mkdir dir="${work.dir}/appconfig"/>
 	</target>
 		
-    <target name="doc" depends="generate-doc, copy-doc-static"/>
+    <target name="doc" depends="generate-doc"/>
 	<target name="postcompile" depends="copy-static, patch-context.xml, patch-web.xml"/>
 
 	<target name="compile" depends="generate-code">

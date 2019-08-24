@@ -28,16 +28,17 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core
 BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc
 BuildRequires:  databasepropertiesstorage
+BuildRequires:  mkdocs
 
 %if 0%{?fedora}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api docbook5-style-xsl docbook5-schemas libxslt
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api 
 BuildRequires:	lua ruby
 %endif
 %if 0%{?centos_version}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api docbook5-style-xsl docbook5-schemas libxslt
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api 
 %endif
 %if 0%{?suse_version}
-BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api docbook_5 docbook5-xsl-stylesheets
+BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api 
 %endif
 
 %package server
