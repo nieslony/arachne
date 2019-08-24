@@ -24,7 +24,10 @@
         <PostResources base="@@JAR_DIR@@/bcpkix.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/bcpkix.jar"/>
-
+        <PostResources base="@@JAR_DIR@@/taglibs-standard-spec.jar"
+                className="org.apache.catalina.webresources.FileResourceSet"
+                webAppMount="/WEB-INF/lib/taglibs-standard-spec.jar"/>
+                
         <PostResources base="@@DBPS_JAR_DIR@@/databasepropertiesstorage.jar"
                 className="org.apache.catalina.webresources.FileResourceSet"
                 webAppMount="/WEB-INF/lib/databasepropertiesstorage.jar"/>
