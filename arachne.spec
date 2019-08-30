@@ -4,9 +4,9 @@
 %define webappgroup root
 %define docbookstylesheet /usr/share/xml/docbook/stylesheet/nwalsh5/1.78.1/xhtml5/chunk.xsl
 %else
-%define webappsdir /var/lib/tomcat/webapps
-%define webappuser tomcat
-%define webappgroup tomcat
+%define webappsdir /var/lib/tomcat9/webapps
+%define webappuser tomcat9
+%define webappgroup tomcat9
 %define docbookstylesheet /usr/share/sgml/docbook/xsl-ns-stylesheets/xhtml5/chunk.xsl
 %endif
 
@@ -31,15 +31,15 @@ BuildRequires:  databasepropertiesstorage
 BuildRequires:  mkdocs
 
 %if 0%{?fedora}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api 
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
 BuildRequires:	lua ruby
 %endif
 %if 0%{?centos_version}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api 
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api
 BuildRequires:  python-setuptools
 %endif
 %if 0%{?suse_version}
-BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api 
+BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
 %endif
 
 %package server
