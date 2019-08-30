@@ -25,35 +25,40 @@ Source0:    %{name}-%{version}.tar.gz
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires:  ant bouncycastle tomcat python primefaces myfaces-core
+BuildRequires:  ant bouncycastle python primefaces myfaces-core
 BuildRequires:  bouncycastle-pkix bouncycastle postgresql-jdbc
 BuildRequires:  databasepropertiesstorage
 BuildRequires:  mkdocs
 
 %if 0%{?fedora}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-3.0-api tomcat
 BuildRequires:	lua ruby
 %endif
 %if 0%{?centos_version}
-BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api
+BuildRequires:  java-1.8.0-openjdk-devel tomcat-el-2.2-api tomcat9
 BuildRequires:  python-setuptools
 %endif
 %if 0%{?suse_version}
-BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api
+BuildRequires:  java-1_8_0-openjdk-devel tomcat-el-3_0-api tomcat
 %endif
 
 %package server
-Summary:	Arachne server
-BuildArch:	noarch
-Requires:	tomcat bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
-Requires:       apache-commons-digester apache-commons-codec databasepropertiesstorage openvpn-arachne-plugin
-Obsoletes:      OpenVPN_Admin-server
+Summary:    Arachne server
+BuildArch:  noarch
+%if 0%{?centos_version}
+Requires:   tomcat9
+%else
+Requires:   tomcat
+%endif
+Requires:   bouncycastle bouncycastle-pkix openvpn postgresql-jdbc myfaces-core primefaces arachne-doc
+Requires:   apache-commons-digester apache-commons-codec databasepropertiesstorage openvpn-arachne-plugin
+Obsoletes:  OpenVPN_Admin-server
 
 %package config-downloader
-Summary:	Arachne downloader for NetworkManager config
-BuildArch:	noarch
-Requires:	curl NetworkManager NetworkManager-openvpn
-Obsoletes:      OpenVPN_Admin-config-downloader
+Summary:    Arachne downloader for NetworkManager config
+BuildArch:  noarch
+Requires:   curl NetworkManager NetworkManager-openvpn
+Obsoletes:  OpenVPN_Admin-config-downloader
 
 %package doc
 Summary:	Documentation for Arachne
