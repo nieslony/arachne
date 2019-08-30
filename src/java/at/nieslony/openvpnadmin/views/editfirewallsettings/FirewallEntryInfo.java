@@ -27,8 +27,9 @@ import java.util.List;
  * @author Claas Nieslony
  */
 public class FirewallEntryInfo implements Serializable {
-
-    private Entry entry;
+	private static final long serialVersionUID = -6902205754696304614L;
+	
+	private Entry entry;
     private boolean isWhoExpanded = false;
     private boolean isWhereExpanded = false;
     private boolean isWhatExpanded = false;
