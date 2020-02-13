@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>at.nieslony</groupId>
+    <artifactId>arachne</artifactId>
+    <version>r0.2-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>arachne</name>
+
+    <properties>
+        <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
+        <generated-sources.dir>${project.build.directory}/generated-sources</generated-sources.dir>
+        <web-inf.dir>${project.build.directory}/${project.build.finalName}/WEB-INF</web-inf.dir>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>databasepropertiesstorage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+          <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-web-api</artifactId>
+            <version>8.0</version>
+            <scope>provided</scope>
+        </dependency>
+<!--        
+<dependency>
+    <groupId>org.apache.myfaces.core</groupId>
+    <artifactId>myfaces-api</artifactId>
+    <version>2.3.6</version>
+</dependency>
+
+<dependency>
+    <groupId>org.apache.myfaces.core</groupId>
+    <artifactId>myfaces-impl</artifactId>
+    <version>2.3.6</version>
+</dependency>
+-->
+<dependency>
+    <groupId>com.sun.faces</groupId>
+    <artifactId>jsf-api</artifactId>
+    <version>2.2.20</version>
+</dependency>
+
+  <dependency>
+            <groupId>org.primefaces</groupId>
+            <artifactId>primefaces</artifactId>
+            <version>7.0</version>
+        </dependency>
+        
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk15on</artifactId>
+    <version>1.64</version>
+</dependency>
+
+        <dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcpkix-jdk15on</artifactId>
+    <version>1.64</version>
+</dependency>
+
+        <dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.2.10</version>
+</dependency>
+        
+    </dependencies>
+
+    <build>   
+        <resources>
+            <resource>   
+                <targetPath>${web-inf.dir}/resources/primefaces-arachne</targetPath>   
+                <directory>src/main/arachne-theme</directory>
+            </resource>
+            <resource>
+                <targetPath>${web-inf.dir}/sql</targetPath>
+                <directory>src/main/sql</directory>
+            </resource>
+        </resources>
+                  
+        <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+                <execution>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                    </goals>
+                    <configuration>
+                        <sources>
+                            <source>${generated-sources.dir}</source>
+                        </sources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <compilerArguments>
+                        <endorseddirs>${endorsed.dir}</endorseddirs>
+                    </compilerArguments>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${endorsed.dir}</outputDirectory>
+                            <silent>true</silent>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>javax</groupId>
+                                    <artifactId>javaee-endorsed-api</artifactId>
+                                    <version>7.0</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+               <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+              <id>generate-sources-flag</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                  
+             <exec executable="python" failonerror="true">
+            <arg value="property-templates/create-properties-backend.py"/>
+            <arg value="--input_dir"/>
+            <arg value="property-templates"/>
+            <arg value="--dest_dir"/>
+            <arg value="${generated-sources.dir}"/>
+        </exec>         
+        <mkdir dir="${generated-sources.dir}/at/nieslony/openvpnadmin"/>
+        <echo output="${generated-sources.dir}/at/nieslony/openvpnadmin/ArachneStatics.java">
+package at.nieslony.openvpnadmin;
+
+public class ArachneStatics {
+    private static final String VERSION = "${project.version}";
+
+    public String getVersion() {
+        return VERSION;
+    }
+}
+        </echo>
+
+        
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+        </plugins>
+    </build>
+
+</project>
