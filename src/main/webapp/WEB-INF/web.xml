@@ -10,7 +10,7 @@
     </context-param>
     <context-param>
         <param-name>sql-dir</param-name>
-        <param-value>@@SQL-DIR@@</param-value>
+        <param-value>WEB-INF/sql</param-value>
     </context-param>
     <context-param>
         <param-name>bin-dir</param-name>
@@ -76,9 +76,11 @@
         <param-name>primefaces.FONT_AWESOME</param-name>
         <param-value>true</param-value>
     </context-param>
+    <!--
     <listener>
         <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
     </listener>
+    -->
     <!--
     <error-page>
         <exception-type>at.nieslony.openvpnadmin.exceptions.PermissionDenied</exception-type>
