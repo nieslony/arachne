@@ -1143,11 +1143,11 @@ public class SetupWizard implements Serializable {
     }
 
     public String getSqlCreateDatabase() {
-        FileInputStream fis = null;
+        InputStream is = null;
         BufferedReader br;
         String sql = "";
 
-        String filename = folderFactory.getSqlDir() + "/setup-database.sql";
+        String filename = "/WEB-INF/sql/setup-database.sql";
         String pwdHash;
         MessageDigest digest = null;
         try {
@@ -1161,8 +1161,9 @@ public class SetupWizard implements Serializable {
         pwdHash = String.format("md5%s", Hex.toHexString(md5Sum));
 
         try {
-            fis = new FileInputStream(filename);
-            br = new BufferedReader(new InputStreamReader(fis));
+            ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
+            is = ectx.getResourceAsStream(filename);
+            br = new BufferedReader(new InputStreamReader(is));
 
             String line;
             StringBuilder buf = new StringBuilder();
@@ -1176,24 +1177,17 @@ public class SetupWizard implements Serializable {
             buf.append("-- EOF\n");
             sql = buf.toString();
         }
-        catch (FileNotFoundException ex) {
+        catch (IOException ex) {
             String msg = String.format("Cannot open %s: %s",
                     filename, ex.getMessage());
             logger.warning(msg);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
         }
-        catch (IOException ex) {
-            String msg = String.format("Error reading %s: %s",
-                    filename, ex.getMessage());
-            logger.warning(msg);
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
-        }
         finally {
-            if (fis != null) {
+            if (is != null) {
                 try {
-                    fis.close();
+                    is.close();
                 }
                 catch (IOException ex) {
                     logger.warning(String.format("Cannot close %s: %s",
