@@ -31,8 +31,6 @@ import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -834,7 +832,10 @@ public class SetupWizard implements Serializable {
     {
         FileWriter fw;
 
-        fw = new FileWriter(pki.getDhFilename());
+        String fn = pki.getDhFilename();
+        File f = new File(fn);
+        f.getParentFile().mkdirs();
+        fw = new FileWriter(fn);
         pki.writeDhParameters(new PrintWriter(fw));
         fw.close();
     }
