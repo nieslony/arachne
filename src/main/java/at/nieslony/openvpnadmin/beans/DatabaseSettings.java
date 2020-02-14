@@ -17,6 +17,7 @@
 
 package at.nieslony.openvpnadmin.beans;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -31,6 +32,7 @@ import java.util.logging.Logger;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.context.FacesContext;
 import org.postgresql.util.PSQLException;
 
 /**
@@ -165,6 +167,9 @@ public class DatabaseSettings
         logger.info(String.format("Saving database settings to %s", getPropsFileName()));
         FileOutputStream fos = null;
         try {
+            File outputDir = new File(folderFactory.getConfigDir());
+            outputDir.mkdirs();
+            
             fos = new FileOutputStream(getPropsFileName());
             props.store(fos, "");
             fos.close();
