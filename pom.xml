@@ -14,6 +14,8 @@
         <generated-sources.dir>${project.build.directory}/generated-sources</generated-sources.dir>
         <web-inf.dir>${project.build.directory}/${project.build.finalName}/WEB-INF</web-inf.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <dynamic-data.dir>/var/lib/arachne</dynamic-data.dir>
+        <maven.war.webxml>${project.build.directory}/generated-resources/web.xml</maven.war.webxml>
     </properties>
     
     <dependencies>
@@ -36,19 +38,7 @@
             <version>8.0</version>
             <scope>provided</scope>
         </dependency>
-<!--        
-<dependency>
-    <groupId>org.apache.myfaces.core</groupId>
-    <artifactId>myfaces-api</artifactId>
-    <version>2.3.6</version>
-</dependency>
 
-<dependency>
-    <groupId>org.apache.myfaces.core</groupId>
-    <artifactId>myfaces-impl</artifactId>
-    <version>2.3.6</version>
-</dependency>
--->
 <dependency>
     <groupId>com.sun.faces</groupId>
     <artifactId>jsf-api</artifactId>
@@ -79,6 +69,12 @@
     <version>42.2.10</version>
 </dependency>
         
+        <dependency>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-vfs</artifactId>
+    <version>3.2.15.Final</version>
+</dependency>
+
     </dependencies>
 
     <build>   
@@ -197,6 +193,29 @@ public class ArachneStatics {
         </executions>
       </plugin>
 
+<plugin>
+     <groupId>com.google.code.maven-replacer-plugin</groupId>
+     <artifactId>replacer</artifactId>
+     <version>1.5.2</version>
+     <executions>
+         <execution>
+             <phase>prepare-package</phase>
+             <goals>
+                 <goal>replace</goal>
+             </goals>
+         </execution>
+     </executions>
+     <configuration>
+         <file>src/main/webapp/WEB-INF/web.xml</file>
+         <outputFile>${project.build.directory}/generated-resources/web.xml</outputFile>
+             <replacements>
+                 <replacement>
+                     <token>@@DYNAMIC-DATA-DIR@@</token>
+                     <value>${dynamic-data.dir}</value>
+                 </replacement>
+             </replacements>
+     </configuration>
+ </plugin>
         </plugins>
     </build>
 
