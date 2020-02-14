@@ -23,8 +23,9 @@ import at.nieslony.openvpnadmin.tasks.TaskListEntry;
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.classfinder.BeanInjector;
 import at.nieslony.utils.classfinder.ClassFinder;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -49,6 +50,7 @@ import javax.annotation.PreDestroy;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 /**
@@ -189,10 +191,12 @@ public class TaskScheduler
             throws IOException, SQLException, ClassNotFoundException
     {
         logger.info("Creating tables for propertiesStorage...");
-        String resourceName = "create-task-scheduler-tables.sql";
+        String resourceName = "/WEB-INF/sql/create-task-scheduler-tables.sql";
         Reader r = null;
         try {
-            r = new FileReader(String.format("%s/%s", folderFactory.getSqlDir(), resourceName));
+            ExternalContext ectx = FacesContext.getCurrentInstance().getExternalContext();
+            InputStream is = ectx.getResourceAsStream(resourceName);
+            r = new InputStreamReader(is);
 
             if (r == null) {
                 logger.severe(String.format("Cannot open %s as resource", resourceName));
