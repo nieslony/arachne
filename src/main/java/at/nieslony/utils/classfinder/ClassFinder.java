@@ -21,18 +21,17 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.logging.Logger;
+import org.jboss.vfs.VirtualFile;
 
 /**
  *
@@ -46,42 +45,84 @@ public class ClassFinder {
         this.classLoader = classLoader;
     }
 
-    private void getPath(String dir, Path p, FileSystem fs,
-            List<Class> classes, ClassMatcher matcher)
-        throws IOException, ClassNotFoundException
-    {
-        DirectoryStream<Path> stream = Files.newDirectoryStream(p);
-        for (Path file: stream) {
-            String fn = file.getFileName().toString();
+    private void getClassesFromFolder(Path folder, List<Class> classes, ClassMatcher matcher) {
+        try {
+            Files.walk(folder).filter(p -> p.getFileName().toString().endsWith(".class")).forEach(file -> {
+                logger.info("All: " + file.toString());
 
-            if (fn.endsWith(".class")) {
-                String className = dir + "/" + fn;
-                className = className.replaceAll("/", ".").substring(1).replaceAll("\\.\\.", ".");
-                className = className.substring(0, className.lastIndexOf(".class"));
+            });
+        }
+        catch (IOException ex) {
+            logger.warning(ex.getMessage());
+        }
+    }
 
-                try {
-                    Class c = Class.forName(className);
-                    if (matcher.classMatches(c))
-                        classes.add(c);
+    private void getClassesFromVfs(URL vfsFilePath, List<Class> classes, ClassMatcher matcher) {
+        try {
+            URLConnection conn = new URL(vfsFilePath.toString()).openConnection();
+            VirtualFile vf = (VirtualFile)conn.getContent();
+            for (VirtualFile f: vf.getChildrenRecursively()) {
+                String fn = f.getPathNameRelativeTo(vf);
+                if (fn.endsWith(".class")) {
+                    String className = fn.replaceAll("/", ".")
+                            .substring(0, fn.length() - ".class".length());
+                    //logger.info(String.format("Loading class %s", className));
+                    try {
+                        Class cl = Class.forName(className);
+                        if (matcher.classMatches(cl)) {
+                            logger.info(String.format("Class %s matches", className));
+                            classes.add(cl);
+                        }
                     }
-                catch (ClassNotFoundException ex) {
-                    logger.warning(String.format("Cannot find class %s: %s", className, ex.toString()));
-                }
-                catch (Exception ex) {
-                    logger.severe(String.format("Cannot load class %s: %s",
-                            className, ex.getMessage()));
+                    catch (ClassNotFoundException | NoClassDefFoundError | IllegalAccessError ex) {
+                        logger.warning(String.format("Cannot load class %s: %s", className, ex.getMessage()));
+                    }
                 }
             }
+        }
+        catch (IOException ex) {
+            logger.warning(ex.getMessage());
+        }
+    }
 
-            if (fn.endsWith("/"))
-                getPath(dir + fn, file, fs, classes, matcher);
+    private void getClassesFromJar(Path jarFilePath, List<Class> classes, ClassMatcher matcher) {
+        String fn = "";
+        String className = "";
+        try {
+            fn = jarFilePath.toString();
+            if (fn.endsWith("!"))
+                fn = fn.substring(0, fn.length()-1);
+            if (fn.startsWith("file:"))
+                fn = fn.substring("file:".length());
+            JarFile jarFile = new JarFile(fn);
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String entryFN = entry.getName();
+                if (entryFN.endsWith(".class")) {
+                    className = entryFN.replaceAll("/", ".");
+                    className = className.substring(0, entryFN.length() - ".class".length());
 
-            try {
-                if (file.toFile().isDirectory())
-                    getPath(dir + "/" + fn, file, fs, classes, matcher);
+                    //logger.info(String.format("Loading class %s", className));
+                    try {
+                        Class cl = Class.forName(className);
+                        if (matcher.classMatches(cl)) {
+                            logger.info(String.format("Class %s matches", className));
+                            classes.add(cl);
+                        }
+                    }
+                    catch (ClassNotFoundException | NoClassDefFoundError | IllegalAccessError ex) {
+                        logger.warning(String.format("Cannot load class %s: %s", className, ex.getMessage()));
+                    }
+                }
             }
-            catch (UnsupportedOperationException ex) {
-            }
+        }
+        catch (IOException ex) {
+            logger.warning(String.format("Error reading JAR file \"%s\": %s",
+                    fn, ex.toString()));
+        }
+        catch (Exception ex) {
+            logger.warning(String.format("Cannot load class %s: %s", className, ex.getMessage()));
         }
     }
 
@@ -95,17 +136,33 @@ public class ClassFinder {
             URI uri = classPathElements.nextElement().toURI();
             logger.info(String.format("Looking for classes in %s", uri.toString()));
 
-            if (uri.getScheme().equals("jar")) {
+            /*if (uri.getScheme().equals("jar")) {
                 Map<String, String> env = new HashMap<>();
                 try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
                     getPath("", fs.getPath("/"), fs, classes, matcher);
                 }
             }
+            else */
+            if (uri.getScheme().equals("vfs")) {
+                getClassesFromVfs(uri.toURL(), classes, matcher);
+
+            }
+            else if (uri.getScheme().equals("jar")) {
+                String fn = uri.getSchemeSpecificPart();
+                Path p = Paths.get(fn);
+                getClassesFromJar(p, classes, matcher);
+
+            }
             else if (uri.getScheme().equals("file")) {
                 String fn = uri.getSchemeSpecificPart();
                 Path p = Paths.get(fn);
-                FileSystem fs = FileSystems.getFileSystem(new URI("file:/"));
-                getPath("", p, fs, classes, matcher);
+                getClassesFromFolder(p, classes, matcher);
+
+                //FileSystem fs = FileSystems.getFileSystem(new URI("file:/"));
+                //getPath("", p, fs, classes, matcher);
+            }
+            else {
+                logger.warning(String.format("Unknown schema: %s", uri.getScheme()));
             }
         }
 
@@ -121,6 +178,9 @@ public class ClassFinder {
     public List<Class> getAllClassesImplementing(Class interfaceC)
         throws IOException, URISyntaxException, ClassNotFoundException
     {
-        return getMatchingClasses(new ImplementingInterfaceMatcher(interfaceC));
+        logger.info(String.format("Getting all classes implementing %s", interfaceC.getName()));
+        List<Class> classes = getMatchingClasses(new ImplementingInterfaceMatcher(interfaceC));
+        logger.info(String.format("Found %d classes", classes.size()));
+        return classes;
     }
 }
