@@ -20,6 +20,7 @@ Any value defined here will override the pom.xml file value but is only applicab
         <configurations>
             <configuration id="Develop" profiles="">
                 <property name="dynamic-data.dir">${project.build.directory}/work</property>
+                <property name="plugin.dir">${project.build.directory}/plugins</property>
             </configuration>
         </configurations>
     </config-data>
