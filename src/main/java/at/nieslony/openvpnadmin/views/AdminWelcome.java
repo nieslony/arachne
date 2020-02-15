@@ -184,7 +184,6 @@ public class AdminWelcome implements Serializable {
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
         ec.invalidateSession();
-        //ec.redirect(ec.getRequestContextPath() + "Login");
         ConfigurableNavigationHandler nav =
                 (ConfigurableNavigationHandler)
                     fc.getApplication().getNavigationHandler();
