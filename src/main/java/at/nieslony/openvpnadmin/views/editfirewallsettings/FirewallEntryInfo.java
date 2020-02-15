@@ -30,6 +30,8 @@ public class FirewallEntryInfo implements Serializable {
 
     private Entry entry;
     private boolean isWhoExpanded = false;
+    private boolean isWhereExpanded = false;
+    private boolean isWhatExpanded = false;
 
     public FirewallEntryInfo(Entry e) {
         entry = e;
@@ -41,6 +43,22 @@ public class FirewallEntryInfo implements Serializable {
 
     public void setIsWhoExpanded(boolean ie) {
         isWhoExpanded = ie;
+    }
+
+    public boolean getIsWhereExpanded() {
+        return isWhereExpanded;
+    }
+
+    public void setIsWhereExpanded(boolean ie) {
+        isWhereExpanded = ie;
+    }
+
+    public boolean getIsWhatExpanded() {
+        return isWhatExpanded;
+    }
+
+    public void setIsWhatExpanded(boolean ie) {
+        isWhatExpanded = ie;
     }
 
     private String getAsString(List<? extends EntryCreteria> ec) {
@@ -68,11 +86,19 @@ public class FirewallEntryInfo implements Serializable {
     }
 
     public String getWhereStr() {
-        return getAsString(entry.getWheres());
+        if (isWhereExpanded) {
+            return getAsStringExpanded(entry.getWheres());
+        } else {
+            return getAsString(entry.getWheres());
+        }
     }
 
     public String getWhatStr() {
-        return getAsString(entry.getWhats());
+        if (isWhatExpanded) {
+            return getAsStringExpanded(entry.getWhats());
+        } else {
+            return getAsString(entry.getWhats());
+        }
     }
 
     public Entry getEntry() {

@@ -47,10 +47,26 @@
                                               value="#{entryInfo.whoStr}"/>
                             </p:column>
                             <p:column headerText="Where">
-                                <h:outputText value="#{entryInfo.whereStr}"/>
+                                <p:selectBooleanButton value="#{entryInfo.isWhereExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whereStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whereStr"
+                                              escape="false"
+                                              value="#{entryInfo.whereStr}"/>
                             </p:column>
                             <p:column headerText="What">
-                                <h:outputText value="#{entryInfo.whatStr}"/>
+                                <p:selectBooleanButton value="#{entryInfo.isWhatExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whatStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whatStr"
+                                              escape="false"
+                                              value="#{entryInfo.whatStr}"/>
                             </p:column>
                             <p:column headerText="Description">
                                 <h:outputText value="#{entryInfo.entry.description}"/>
