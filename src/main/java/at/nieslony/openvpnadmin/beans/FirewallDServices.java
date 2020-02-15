@@ -17,8 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Named;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,7 +34,7 @@ import org.xml.sax.SAXException;
  */
 
 @ApplicationScoped
-@ManagedBean
+@Named
 public class FirewallDServices implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
     private static final transient String SERVICES_DIR = "/usr/lib/firewalld/services";

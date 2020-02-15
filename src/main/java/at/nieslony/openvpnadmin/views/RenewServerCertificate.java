@@ -23,32 +23,33 @@ import at.nieslony.openvpnadmin.beans.ServerCertificateEditor;
 import at.nieslony.openvpnadmin.beans.ServerCertificateRenewer;
 import at.nieslony.utils.pki.CaHelper;
 import at.nieslony.utils.pki.CertificateAuthority;
+import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.x500.X500Name;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class RenewServerCertificate
-        implements ServerCertificateEditor
+        implements ServerCertificateEditor, Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     Pki pki;
 
     public void setPki(Pki pki) {
         this.pki = pki;
     }
 
-    @ManagedProperty(value = "#{serverCertificateRenewer}")
+    @Inject
     ServerCertificateRenewer serverCertificateRenewer;
 
     public void setServerCertificateRenewer(ServerCertificateRenewer scr) {

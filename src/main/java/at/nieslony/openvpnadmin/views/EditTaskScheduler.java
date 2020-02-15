@@ -23,24 +23,24 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class EditTaskScheduler
     implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{taskScheduler}")
+    @Inject
     private TaskScheduler taskScheduler;
 
     public void setTaskScheduler(TaskScheduler ts) {

@@ -37,14 +37,14 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
-@ManagedBean
 @ViewScoped
+@Named
 public class EditUserVpn
     extends EditUserVpnBase
     implements Serializable
@@ -64,19 +64,19 @@ public class EditUserVpn
     public EditUserVpn () {
     }
 
-    @ManagedProperty(value = "#{userVpn}")
+    @Inject
     UserVpn userVpn;
 
-    @ManagedProperty(value = "#{configBuilder}")
+    @Inject
     ConfigBuilder configBuilder;
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     FolderFactory folderFactory;
 
-    @ManagedProperty(value = "#{adminWelcome}")
+    @Inject
     private AdminWelcome adminWelcome;
 
-    @ManagedProperty(value = "#{managementInterface}")
+    @Inject
     private ManagementInterface managementInterface;
 
     @PostConstruct

@@ -32,10 +32,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -45,8 +45,8 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import org.primefaces.PrimeFaces;
 
-@ManagedBean
 @ViewScoped
+@Named
 public class EditLdapSettings
     extends EditLdapSettingsBase
     implements Serializable, LdapHelperUser
@@ -59,7 +59,7 @@ public class EditLdapSettings
         ldapHelper = new LdapHelper(this);
     }
 
-    @ManagedProperty(value = "#{ldapSettings}")
+    @Inject
     LdapSettings ldapSettings;
 
     @PostConstruct

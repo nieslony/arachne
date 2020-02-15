@@ -30,16 +30,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class RoleRuleFactoryCollection
         implements Serializable
 {

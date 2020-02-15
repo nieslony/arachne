@@ -32,30 +32,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class Roles implements Serializable {
     private Map<String, Role> roles = new HashMap<>();
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
 
     public void setDatabaseSettings(DatabaseSettings databaseSettings) {
         this.databaseSettings = databaseSettings;
     }
 
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    @Inject
     RoleRuleFactoryCollection roleRuleFactoryCollection;
 
     public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {

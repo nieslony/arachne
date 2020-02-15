@@ -20,18 +20,18 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class EditFirewallSettings implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -62,13 +62,13 @@ public class EditFirewallSettings implements Serializable {
         return editWhat;
     }
 
-    @ManagedProperty(value = "#{firewallSettings}")
+    @Inject
     private FirewallSettings firewallSettings;
     public void setFirewallSettings(FirewallSettings fs) {
         firewallSettings = fs;
     }
 
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    @Inject
     RoleRuleFactoryCollection roleRuleFactoryCollection;
     public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
         roleRuleFactoryCollection = rrfc;

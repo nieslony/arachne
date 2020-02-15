@@ -29,12 +29,12 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,24 +42,24 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author claas
  */
-@ManagedBean
 @SessionScoped
+@Named
 public class CurrentUser implements Serializable {
     private AbstractUser user = null;
 
-    @ManagedProperty(value = "#{ldapSettings}")
+    @Inject
     private LdapSettings ldapSettings;
 
-    @ManagedProperty(value = "#{roles}")
+    @Inject
     private Roles roles;
 
-    @ManagedProperty(value = "#{navigationBean}")
+    @Inject
     private NavigationBean navigationBean;
 
-    @ManagedProperty(value = "#{authSettings}")
+    @Inject
     private AuthSettings authSettings;
 
-    @ManagedProperty(value = "#{localUserFactory}")
+    @Inject
     LocalUserFactory localUserFactory;
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());

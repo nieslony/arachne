@@ -29,18 +29,17 @@ import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Properties;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.context.FacesContext;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.postgresql.util.PSQLException;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class DatabaseSettings
         implements Serializable
 {
@@ -64,7 +63,7 @@ public class DatabaseSettings
 
     private transient Connection con = null;
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
 
     public void setFolderFactory(FolderFactory ff) {
@@ -169,7 +168,7 @@ public class DatabaseSettings
         try {
             File outputDir = new File(folderFactory.getConfigDir());
             outputDir.mkdirs();
-            
+
             fos = new FileOutputStream(getPropsFileName());
             props.store(fos, "");
             fos.close();

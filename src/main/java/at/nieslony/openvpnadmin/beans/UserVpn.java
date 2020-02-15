@@ -32,18 +32,18 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.servlet.http.HttpServletRequest;
 
-@ManagedBean
 @ApplicationScoped
+@Named
 public class UserVpn
     extends UserVpnBase
     implements Serializable
@@ -53,7 +53,7 @@ public class UserVpn
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{propertiesStorage}")
+    @Inject
     private PropertiesStorageBean propertiesStorage;
 
     public void setPropertiesStorage(PropertiesStorageBean ps) {

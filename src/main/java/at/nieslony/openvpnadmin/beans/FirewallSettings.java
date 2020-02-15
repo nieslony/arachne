@@ -27,11 +27,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.json.JSONArray;
 import org.primefaces.json.JSONObject;
 
@@ -39,8 +39,8 @@ import org.primefaces.json.JSONObject;
  *
  * @author claas
  */
-@ManagedBean(eager = true)
 @ApplicationScoped
+@Named
 public class FirewallSettings implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
@@ -109,25 +109,25 @@ public class FirewallSettings implements Serializable {
     List<Entry> incomingEntries;
     List<Entry> outgoingEntries;
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;
     }
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
     public void setDatabaseSettings(DatabaseSettings databaseSettings) {
         this.databaseSettings = databaseSettings;
     }
 
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    @Inject
     RoleRuleFactoryCollection roleRuleFactoryCollection;
     public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
         roleRuleFactoryCollection = rrfc;
     }
 
-    @ManagedProperty(value = "#{firewallDServices}")
+    @Inject
     FirewallDServices firewallDServices;
     public void setFirewallDServices(FirewallDServices fs) {
         firewallDServices = fs;

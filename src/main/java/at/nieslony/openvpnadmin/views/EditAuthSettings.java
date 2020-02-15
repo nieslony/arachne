@@ -22,13 +22,13 @@ import at.nieslony.openvpnadmin.views.base.EditAuthSettingsBase;
 import java.io.Serializable;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
-@ManagedBean
 @ViewScoped
+@Named
 public class EditAuthSettings
     extends EditAuthSettingsBase
     implements Serializable
@@ -36,7 +36,7 @@ public class EditAuthSettings
     public EditAuthSettings () {
     }
 
-    @ManagedProperty(value = "#{authSettings}")
+    @Inject
     AuthSettings authSettings;
 
     @PostConstruct

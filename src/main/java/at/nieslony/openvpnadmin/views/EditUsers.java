@@ -33,10 +33,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.StreamedContent;
@@ -45,27 +45,27 @@ import org.primefaces.model.StreamedContent;
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class EditUsers implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{ldapSettings}")
+    @Inject
     LdapSettings ldapSettings;
 
-    @ManagedProperty(value = "#{roles}")
+    @Inject
     Roles roles;
     public void setRoles(Roles rb) {
         roles = rb;
     }
 
-    @ManagedProperty(value = "#{localUserFactory}")
+    @Inject
     LocalUserFactory localUserFactory;
     public void setLocalUserFactory(LocalUserFactory luf) {
         localUserFactory = luf;
     }
 
-    @ManagedProperty(value ="#{configBuilder}")
+    @Inject
     ConfigBuilder configBuilder;
 
     private String addLocalUserUsername;

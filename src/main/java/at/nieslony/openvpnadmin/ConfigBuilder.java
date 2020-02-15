@@ -33,9 +33,9 @@ import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -44,18 +44,18 @@ import org.primefaces.model.StreamedContent;
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class ConfigBuilder implements Serializable {
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     private Pki pki;
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     FolderFactory folderFactory;
 
-    @ManagedProperty(value = "#{userVpn}")
+    @Inject
     UserVpn userVpn;
 
     public void setUserVpn(UserVpn uv) {

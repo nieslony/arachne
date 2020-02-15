@@ -47,31 +47,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean(eager = true)
 @ApplicationScoped
+@Named
 public class TaskScheduler
         implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
 
     public void setDatabaseSettings(DatabaseSettings dbs) {
         databaseSettings = dbs;
     }
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
 
     public void setFolderFactory(FolderFactory ff) {

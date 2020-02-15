@@ -20,17 +20,17 @@ package at.nieslony.openvpnadmin.beans;
 import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class FolderFactory implements Serializable {
     private String dynamicDataDir = null;
     private String sqlDir = null;

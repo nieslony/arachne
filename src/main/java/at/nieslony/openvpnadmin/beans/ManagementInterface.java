@@ -36,15 +36,15 @@ import java.util.Queue;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class ManagementInterface
         implements Serializable
 {

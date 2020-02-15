@@ -19,15 +19,15 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.ArachneStatics;
 import java.io.Serializable;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class AboutArachne
         extends ArachneStatics
         implements Serializable

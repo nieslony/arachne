@@ -31,13 +31,13 @@ import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.application.ConfigurableNavigationHandler;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.NamingException;
 import org.primefaces.PrimeFaces;
 
@@ -45,8 +45,8 @@ import org.primefaces.PrimeFaces;
  *
  * @author claas
  */
-@ManagedBean
 @RequestScoped
+@Named
 public class LoginBean implements Serializable {
     private static final long serialVersionUID = 1234L;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
@@ -54,19 +54,19 @@ public class LoginBean implements Serializable {
     private String username;
     private String password;
 
-    @ManagedProperty(value="#{navigationBean}")
+    @Inject
     private NavigationBean navigationBean;
 
-    @ManagedProperty(value = "#{localUserFactory}")
+    @Inject
     LocalUserFactory localUserFactory;
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     DatabaseSettings databaseSettings;
 
-    @ManagedProperty(value = "#{authSettings}")
+    @Inject
     AuthSettings authSettings;
 
-    @ManagedProperty(value = "#{ldapSettings}")
+    @Inject
     LdapSettings ldapSettings;
 
     public void onLogin() throws PermissionDenied{

@@ -24,10 +24,10 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -38,19 +38,19 @@ import org.bouncycastle.cert.X509CertificateHolder;
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class UserCertificates implements Serializable {
     X509CertificateHolder selectedCert;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     Pki pki;
     public void setPki(Pki pki) {
         this.pki = pki;
     }
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;

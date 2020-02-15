@@ -27,11 +27,11 @@ import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.primefaces.model.StreamedContent;
 
@@ -39,21 +39,21 @@ import org.primefaces.model.StreamedContent;
  *
  * @author claas
  */
-@ManagedBean
 @SessionScoped
+@Named
 public class UserWelcome implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{currentUser}")
+    @Inject
     CurrentUser currentUser;
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
 
-    @ManagedProperty(value = "#{configBuilder}")
+    @Inject
     private ConfigBuilder configBuilder;
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     Pki pki;
 
     public void setConfigBuilder(ConfigBuilder cb) {

@@ -39,13 +39,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -58,35 +58,35 @@ import org.bouncycastle.operator.OperatorCreationException;
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class ServerCertificateRenewer
         implements Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     Pki pki;
 
     public void setPki(Pki pki) {
         this.pki = pki;
     }
 
-    @ManagedProperty(value = "#{managementInterface}")
+    @Inject
     ManagementInterface managementInterface;
 
     public void setManagementInterface(ManagementInterface mi) {
         managementInterface = mi;
     }
 
-    @ManagedProperty(value = "#{configBuilder}")
+    @Inject
     ConfigBuilder configBuilder;
 
     public void setConfigBuilder(ConfigBuilder cb) {
         configBuilder = cb;
     }
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     FolderFactory folderFactory;
 
     public void setFolderFactory(FolderFactory ff) {

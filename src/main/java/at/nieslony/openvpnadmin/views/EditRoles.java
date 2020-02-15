@@ -26,27 +26,27 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class EditRoles implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{roles}")
+    @Inject
     Roles roles;
     public void setRoles(Roles rb) {
         roles = rb;
     }
 
-    @ManagedProperty(value = "#{roleRuleFactoryCollection}")
+    @Inject
     RoleRuleFactoryCollection roleRuleFactoryCollection;
     public void setRoleRuleFactoryCollection(RoleRuleFactoryCollection rrfc) {
         roleRuleFactoryCollection = rrfc;

@@ -55,14 +55,14 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -79,8 +79,8 @@ import org.primefaces.model.StreamedContent;
  *
  * @author claas
  */
-@ManagedBean
 @ViewScoped
+@Named
 public class SetupWizard implements Serializable {
     private static final long serialVersionUID = 467254444471451527L;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
@@ -148,7 +148,7 @@ public class SetupWizard implements Serializable {
     private final String ICO_STEP_WORKING = "fa fa-cog";
     private final String ICO_STEP_DONE = "fa fa-check-circle-o";
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
 
     public FolderFactory getFolderFactory() {
@@ -227,28 +227,28 @@ public class SetupWizard implements Serializable {
 
     private List<SelectItem> signatureAlgorithms;
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     private Pki pki;
 
-    @ManagedProperty(value = "#{roles}")
+    @Inject
     private Roles rolesBean;
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
 
-    @ManagedProperty(value = "#{propertiesStorage}")
+    @Inject
     private PropertiesStorageBean propertiesStorage;
 
-    @ManagedProperty(value = "#{localUserFactory}")
+    @Inject
     private LocalUserFactory localUserFactory;
 
-    @ManagedProperty(value = "#{roles}")
+    @Inject
     private Roles roles;
 
-    @ManagedProperty(value = "#{taskScheduler}")
+    @Inject
     private TaskScheduler taskScheduler;
 
-    @ManagedProperty(value = "#{firewallSettings}")
+    @Inject
     private FirewallSettings firewallSettings;
 
     /**

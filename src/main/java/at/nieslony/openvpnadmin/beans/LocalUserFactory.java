@@ -21,7 +21,6 @@ import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.LocalUser;
 import at.nieslony.openvpnadmin.UserFactory;
 import at.nieslony.utils.DbUtils;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,18 +33,18 @@ import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @ApplicationScoped
+@Named
 public class LocalUserFactory
         extends UserFactory
         implements Serializable
@@ -54,14 +53,14 @@ public class LocalUserFactory
 
     private final String USERS_TABLE = "users";
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
 
     public void setDatabaseSettings(DatabaseSettings databaseSettings) {
         this.databaseSettings = databaseSettings;
     }
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
 
     public void setFolderFactory(FolderFactory ff) {

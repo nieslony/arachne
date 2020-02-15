@@ -26,9 +26,9 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -36,8 +36,8 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.X509CertificateHolder;
 
-@ManagedBean
 @ApplicationScoped
+@Named
 public class ServerCertificateSettings
     extends ServerCertificateSettingsBase
     implements Serializable, ServerCertificateEditor
@@ -47,21 +47,21 @@ public class ServerCertificateSettings
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{propertiesStorage}")
+    @Inject
     private PropertiesStorageBean propertiesStorage;
 
     public void setPropertiesStorage(PropertiesStorageBean ps) {
         propertiesStorage = ps;
     }
 
-    @ManagedProperty(value = "#{pki}")
+    @Inject
     private Pki pki;
 
     public void setPki(Pki pki) {
         this.pki = pki;
     }
 
-    @ManagedProperty(value = "#{serverCertificateRenewer}")
+    @Inject
     ServerCertificateRenewer serverCertificateRenewer;
 
     public void setServerCertificateRenewer(ServerCertificateRenewer scr) {

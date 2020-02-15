@@ -26,33 +26,33 @@ import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ComponentSystemEvent;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.operator.OperatorCreationException;
 
 /**
  *
  * @author claas
  */
-@ManagedBean
 @RequestScoped
+@Named
 public class DownloadClientConfig
         implements Serializable
 {
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{currentUser}")
+    @Inject
     CurrentUser currentUser;
 
     public void setCurrentUser(CurrentUser cub) {
         currentUser = cub;
     }
 
-    @ManagedProperty(value = "#{configBuilder}")
+    @Inject
     ConfigBuilder configBuilder;
 
     public void setConfigBuilder(ConfigBuilder cb) {

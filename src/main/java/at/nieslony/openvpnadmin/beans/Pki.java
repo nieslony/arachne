@@ -55,11 +55,11 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLReason;
@@ -79,8 +79,8 @@ import org.postgresql.util.PSQLException;
  *
  * @author claas
  */
-@ManagedBean(name = "pki")
 @ApplicationScoped
+@Named("pki")
 public class Pki
         extends CertificateAuthority
         implements Serializable
@@ -117,19 +117,19 @@ public class Pki
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     private FolderFactory folderFactory;
     public void setFolderFactory(FolderFactory ff) {
         this.folderFactory = ff;
     }
 
-    @ManagedProperty(value = "#{clientCertificateSettings}")
+    @Inject
     private ClientCertificateSettings clientCertificateSettings;
     public void setClientCertificateSettings(ClientCertificateSettings ccs) {
         clientCertificateSettings = ccs;
     }
 
-    @ManagedProperty(value = "#{databaseSettings}")
+    @Inject
     private DatabaseSettings databaseSettings;
     public void setDatabaseSettings(DatabaseSettings databaseSettings) {
         this.databaseSettings = databaseSettings;

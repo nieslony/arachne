@@ -25,15 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.faces.model.SelectItemGroup;
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 
-@ManagedBean
 @ViewScoped
+@Named
 public class EditClientCertificateSettings
     extends EditClientCertificateSettingsBase
     implements Serializable
@@ -43,7 +43,7 @@ public class EditClientCertificateSettings
     public EditClientCertificateSettings () {
     }
 
-    @ManagedProperty(value = "#{clientCertificateSettings}")
+    @Inject
     ClientCertificateSettings clientCertificateSettings;
 
     @PostConstruct

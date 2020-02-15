@@ -26,12 +26,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.ConfigurableNavigationHandler;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.DynamicMenuModel;
@@ -42,21 +42,21 @@ import org.primefaces.model.menu.MenuModel;
  *
  * @author claas
  */
-@ManagedBean
 @SessionScoped
+@Named
 public class AdminWelcome implements Serializable {
     private MenuModel menuModel;
     DefaultSubMenu userVpnsMenu;
     DefaultSubMenu siteVpnsMenu;
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{folderFactory}")
+    @Inject
     FolderFactory folderFactory;
 
-    @ManagedProperty(value = "#{currentUser}")
+    @Inject
     CurrentUser currentUser;
 
-    @ManagedProperty(value = "#{userVpn}")
+    @Inject
     UserVpn userVpn;
 
     public void setUserVpn(UserVpn uv) {

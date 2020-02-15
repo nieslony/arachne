@@ -29,14 +29,14 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 
-@ManagedBean
 @ApplicationScoped
+@Named
 public class LdapSettings
     extends LdapSettingsBase
     implements Serializable, LdapHelperUser
@@ -47,7 +47,7 @@ public class LdapSettings
 
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    @ManagedProperty(value = "#{propertiesStorage}")
+    @Inject
     private PropertiesStorageBean propertiesStorage;
 
     private LdapHelper ldapHelper;
