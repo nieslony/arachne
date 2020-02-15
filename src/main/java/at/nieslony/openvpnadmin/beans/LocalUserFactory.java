@@ -158,6 +158,7 @@ public class LocalUserFactory
         return ret == 1;
     }
 
+    @Override
     public List<AbstractUser> getAllUsers()
             throws ClassNotFoundException, SQLException
     {

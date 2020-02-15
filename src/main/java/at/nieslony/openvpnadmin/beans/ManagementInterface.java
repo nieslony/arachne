@@ -73,7 +73,7 @@ public class ManagementInterface
         User1("SIGUSR1"),
         User2("SIGUSR2");
 
-        private String signalName;
+        private final String signalName;
 
         private Signal(String s) {
             signalName = s;
@@ -129,8 +129,8 @@ public class ManagementInterface
         }
 
         private final String user;
-        private InetAddress remoteHost;
-        private InetAddress vpnHost;
+        private final InetAddress remoteHost;
+        private final InetAddress vpnHost;
         private final long bytesReceived;
         private final long bytesSent;
         private final Date connectedSince;
@@ -355,22 +355,32 @@ END
             if (line != null && line.startsWith("HEADER,CLIENT_LIST")) {
                 String[] fieldNames = line.split(",");
                 for (int i = 2; i < fieldNames.length; i++) {
-                    if (fieldNames[i].equals("Common Name"))
-                        userStatusFieldMap.put(UserStatusField.CommonName, i-1);
-                    else if (fieldNames[i].equals("Real Address"))
-                        userStatusFieldMap.put(UserStatusField.RemoteIpV4, i-1);
-                    else if (fieldNames[i].equals("Virtual Address"))
-                        userStatusFieldMap.put(UserStatusField.VpnIpV4, i-1);
-                    else if (fieldNames[i].equals("Virtual IPv6 Address"))
-                        userStatusFieldMap.put(UserStatusField.RemoteIpV6, i-1);
-                    else if (fieldNames[i].equals("Bytes Received"))
-                        userStatusFieldMap.put(UserStatusField.BytesReceived, i-1);
-                    else if (fieldNames[i].equals("Bytes Sent"))
-                        userStatusFieldMap.put(UserStatusField.BytesSent, i-1);
-                    else if (fieldNames[i].equals("Connected Since (time_t)"))
-                        userStatusFieldMap.put(UserStatusField.ConnectedSinceTimeT, i-1);
-                    else
-                        logger.info(String.format("Ignoring fieöd %s", fieldNames[i-1]));
+                    switch (fieldNames[i]) {
+                        case "Common Name":
+                            userStatusFieldMap.put(UserStatusField.CommonName, i-1);
+                            break;
+                        case "Real Address":
+                            userStatusFieldMap.put(UserStatusField.RemoteIpV4, i-1);
+                            break;
+                        case "Virtual Address":
+                            userStatusFieldMap.put(UserStatusField.VpnIpV4, i-1);
+                            break;
+                        case "Virtual IPv6 Address":
+                            userStatusFieldMap.put(UserStatusField.RemoteIpV6, i-1);
+                            break;
+                        case "Bytes Received":
+                            userStatusFieldMap.put(UserStatusField.BytesReceived, i-1);
+                            break;
+                        case "Bytes Sent":
+                            userStatusFieldMap.put(UserStatusField.BytesSent, i-1);
+                            break;
+                        case "Connected Since (time_t)":
+                            userStatusFieldMap.put(UserStatusField.ConnectedSinceTimeT, i-1);
+                            break;
+                        default:
+                            logger.info(String.format("Ignoring fieöd %s", fieldNames[i-1]));
+                            break;
+                    }
                 }
             }
             else if (line != null && line.startsWith("CLIENT_LIST,")) {

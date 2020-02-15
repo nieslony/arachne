@@ -60,6 +60,7 @@ public class UserVpn
         propertiesStorage = ps;
     }
 
+    @Override
     protected PropertyGroup getPropertyGroup() {
         PropertyGroup  pg = null;
 
@@ -138,6 +139,7 @@ public class UserVpn
         return String.join(",", routes);
     }
 
+    @Override
     public String getDefaultHost() {
         String host = "unknown";
 

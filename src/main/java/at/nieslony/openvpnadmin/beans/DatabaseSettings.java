@@ -121,16 +121,10 @@ public class DatabaseSettings
             throws IOException
     {
         Properties props = new Properties();
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(getPropsFileName());
+        try (FileInputStream fis = new FileInputStream(getPropsFileName())) {
             props.load(fis);
             logger.info("database properties successfully loaded, setting status to VALID.");
             valid = true;
-        }
-        finally {
-            if (fis != null)
-                fis.close();
         }
 
         host = props.getProperty(PROP_HOST, "localhost");

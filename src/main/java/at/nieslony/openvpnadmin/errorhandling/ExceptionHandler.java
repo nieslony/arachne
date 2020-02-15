@@ -67,20 +67,25 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 Throwable throwable = exceptionQueuedEventContext.getException();
                 Throwable rootCause = getRootCause(throwable);
                 Throwable cause = throwable;
-                while (cause.getCause() != null)
-                    cause = cause.getCause();
+                if (cause != null)
+                    while (cause.getCause() != null)
+                        cause = cause.getCause();
 
                 LOG.severe("--- Caught exception ---");
                 LOG.severe(String.format("Throwable: message: %s", throwable.getMessage()));
                 LOG.severe(String.format("Throwable: %s", throwable.getClass().getName()));
 
-                if (rootCause != null)
+                String rcName = "unknown";
+                if (rootCause != null) {
+                    rcName = rootCause.getClass().getName();
                     LOG.severe(String.format("Root cause: %s", rootCause.getClass().getName()));
+                }
                 else
                     LOG.severe("No root cause");
 
-                if (cause != null)
-                    LOG.severe(String.format("Cause: %s", rootCause.getClass().getName()));
+                if (cause != null) {
+                    LOG.severe(String.format("Cause: %s", rcName));
+                }
                 else
                     LOG.severe("No cause");
 
@@ -171,7 +176,10 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                         ex.getMessage()));
                     }
                     LOG.severe("#####  BEGIN ...---... #####");
-                    LOG.severe(rootCause.toString());
+                    if (rootCause != null)
+                        LOG.severe(rootCause.toString());
+                    else
+                        LOG.severe("No root cause");
                     LOG.severe("#####  ...---... END #####");
                 }
             } catch (Exception ex) {

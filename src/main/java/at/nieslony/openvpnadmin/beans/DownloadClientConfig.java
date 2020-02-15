@@ -71,7 +71,7 @@ public class DownloadClientConfig
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
 
-        Writer wr = null;
+        Writer wr;
         try {
             wr = ec.getResponseOutputWriter();
             ec.setResponseContentType("text/plain");
@@ -101,7 +101,7 @@ public class DownloadClientConfig
         FacesContext fc = FacesContext.getCurrentInstance();
         ExternalContext ec = fc.getExternalContext();
 
-        Writer wr = null;
+        Writer wr;
         try {
             wr = ec.getResponseOutputWriter();
             ec.setResponseContentType("text/plain");

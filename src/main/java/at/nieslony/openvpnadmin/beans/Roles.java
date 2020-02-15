@@ -45,7 +45,7 @@ import javax.inject.Named;
 @ApplicationScoped
 @Named
 public class Roles implements Serializable {
-    private Map<String, Role> roles = new HashMap<>();
+    private final Map<String, Role> roles = new HashMap<>();
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @Inject

@@ -293,12 +293,11 @@ public class CurrentUser implements Serializable {
             logger.info("There are no empty role names. Don't ask me!");
             return false;
         }
-        Boolean hr = null;
         if (cachedRoles == null) {
             logger.severe("Role cache == null. Shoukd not occur");
             cachedRoles = new HashMap<>();
         }
-        hr = cachedRoles.get(rolename);
+        Boolean hr = cachedRoles.get(rolename);
         if (hr != null) {
             logger.info(String.format("Return from cache: user %s %s role %s",
                     user.getUsername(),

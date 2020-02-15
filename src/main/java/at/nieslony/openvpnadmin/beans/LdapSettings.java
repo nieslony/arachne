@@ -50,12 +50,13 @@ public class LdapSettings
     @Inject
     private PropertiesStorageBean propertiesStorage;
 
-    private LdapHelper ldapHelper;
+    private final LdapHelper ldapHelper;
 
     public void setPropertiesStorage(PropertiesStorageBean ps) {
         propertiesStorage = ps;
     }
 
+    @Override
     protected PropertyGroup getPropertyGroup() {
         PropertyGroup  pg = null;
 
@@ -100,6 +101,7 @@ public class LdapSettings
         return ldapHelper.findVpnUsers(pattern);
     }
 
+    @Override
     public boolean auth(String dn, String password) {
         return ldapHelper.auth(dn, password);
     }

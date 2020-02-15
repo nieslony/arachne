@@ -44,6 +44,7 @@ public class ClientCertificateSettings
         propertiesStorage = ps;
     }
 
+    @Override
     protected PropertyGroup getPropertyGroup() {
         PropertyGroup  pg = null;
 

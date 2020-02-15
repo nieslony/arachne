@@ -58,9 +58,9 @@ public class RoleRuleFactoryCollection
         logger.info("Initializing RoleRuleFactoryCollection");
         ClassFinder classFinder = new ClassFinder((getClass().getClassLoader()));
 
-        List<Class> factories = null;
+        List<Class> loadedFactories = null;
         try {
-            factories = classFinder.getAllClassesImplementing(RoleRuleFactory.class);
+            loadedFactories = classFinder.getAllClassesImplementing(RoleRuleFactory.class);
         }
         catch (ClassNotFoundException | IOException | URISyntaxException ex) {
             logger.warning(String.format("Cannot load classes: %s", ex.getMessage()));
@@ -68,11 +68,15 @@ public class RoleRuleFactoryCollection
         catch (Exception ex) {
             logger.severe(String.format("Unhandled exception: %s", ex.toString()));
         }
+        if (loadedFactories == null) {
+            logger.severe("No factories found");
+            return;
+        }
 
         FacesContext ctx = FacesContext.getCurrentInstance();
-        for (Class c : factories) {
+        for (Class c : loadedFactories) {
             try {
-                RoleRuleFactory roleRuleFactory = (RoleRuleFactory) c.newInstance();
+                RoleRuleFactory roleRuleFactory = (RoleRuleFactory) c.getDeclaredConstructor().newInstance();
                 addRoleRuleFactory(roleRuleFactory);
 
                 BeanInjector.injectStaticBeans(ctx, c);

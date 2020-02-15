@@ -52,6 +52,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -98,8 +99,8 @@ public class Pki
     }
 
     public class KeyAndCert {
-        private PrivateKey key;
-        private X509CertificateHolder cert;
+        private final PrivateKey key;
+        private final X509CertificateHolder cert;
 
         public KeyAndCert(PrivateKey key, X509CertificateHolder cert) {
             this.key = key;
@@ -157,7 +158,7 @@ public class Pki
             logger.info("Loading CRL");
             updateCrlFromDb();
         }
-        catch (Exception ex) {
+        catch (IOException | ClassNotFoundException | GeneralSecurityException | SQLException | OperatorCreationException ex) {
             logger.severe(String.format("Cannot init Pki: %s", ex.toString()));
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
@@ -249,9 +250,9 @@ public class Pki
     private void writeCrl()
             throws CRLException, IOException
     {
-        PrintWriter pr = new PrintWriter(getCrlFilename());
-        writeCrl(pr);
-        pr.close();
+        try (PrintWriter pr = new PrintWriter(getCrlFilename())) {
+            writeCrl(pr);
+        }
     }
 
     private void addKeyAndCert(CertType type, PrivateKey key, X509CertificateHolder cert)
@@ -295,7 +296,7 @@ public class Pki
             logger.severe("clientCertificateSettings must not be null");
         }
 
-        logger.info("Creating new key pair for user" + username);
+        logger.log(Level.INFO, "Creating new key pair for user{0}", username);
         KeyPairGenerator keygen;
         KeyPair certKey;
 
@@ -305,11 +306,11 @@ public class Pki
             certKey = keygen.generateKeyPair();
         }
         catch (NoSuchAlgorithmException ex) {
-            logger.severe("Cannot create key pair" + ex.getMessage());
+            logger.log(Level.SEVERE, "Cannot create key pair{0}", ex.getMessage());
             throw ex;
         }
 
-        logger.info("Preparing certificate creation for user " + username);
+        logger.log(Level.INFO, "Preparing certificate creation for user {0}", username);
         StringWriter sw = new StringWriter();
         sw.append("CN=" + username);
         if (!clientCertificateSettings.getOrganizationalUnit().isEmpty())
@@ -327,14 +328,18 @@ public class Pki
         Date fromDate = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(fromDate);
-        if (clientCertificateSettings.getValidTimeUnit().equals("days")) {
-            cal.add(Calendar.DAY_OF_MONTH, clientCertificateSettings.getValidTime());
-        }
-        else if (clientCertificateSettings.getValidTimeUnit().equals("months")) {
-            cal.add(Calendar.MONTH, clientCertificateSettings.getValidTime());
-        }
-        else if (clientCertificateSettings.getValidTimeUnit().equals("years")) {
-            cal.add(Calendar.YEAR, clientCertificateSettings.getValidTime());
+        switch (clientCertificateSettings.getValidTimeUnit()) {
+            case "days":
+                cal.add(Calendar.DAY_OF_MONTH, clientCertificateSettings.getValidTime());
+                break;
+            case "months":
+                cal.add(Calendar.MONTH, clientCertificateSettings.getValidTime());
+                break;
+            case "years":
+                cal.add(Calendar.YEAR, clientCertificateSettings.getValidTime());
+                break;
+            default:
+                break;
         }
         Date toDate = cal.getTime();
 

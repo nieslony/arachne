@@ -20,6 +20,7 @@ package at.nieslony.openvpnadmin.tasks;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
@@ -34,7 +35,7 @@ import java.util.logging.Logger;
 public class TaskListEntry implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private String name;
+    private final String name;
     private String comment = null;
     private long startupDelay = -1;
     private long interval = -1;
@@ -195,9 +196,14 @@ public class TaskListEntry implements Serializable {
         public void run() {
             if (task == null) {
                 try {
-                    task = taskClass.newInstance();
+                    task = taskClass.getConstructor().newInstance();
                 }
-                catch (IllegalAccessException | InstantiationException ex) {
+                catch (IllegalAccessException
+                        | InstantiationException
+                        | NoSuchMethodException
+                        | InvocationTargetException
+                        | IllegalArgumentException
+                        | SecurityException ex) {
                     logger.warning(String.format("Cannot create task %s: %s",
                             getName(), ex.getMessage()));
                     return;

@@ -147,85 +147,85 @@ public class FirewallSettings implements Serializable {
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(GET_WHOS_FOR_ENTRY);
-        stm.setInt(1, entry.getId());
-        ResultSet result = stm.executeQuery();
-        while (result.next()) {
-            String whoType = result.getString("ruleType");
-            String whoValue = result.getString("param");
-            RoleRule rr = roleRuleFactoryCollection.createRoleRule(whoType, whoValue);
+        try (PreparedStatement stm = con.prepareStatement(GET_WHOS_FOR_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            try (ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    String whoType = result.getString("ruleType");
+                    String whoValue = result.getString("param");
+                    RoleRule rr = roleRuleFactoryCollection.createRoleRule(whoType, whoValue);
 
-            Who who = new Who();
-            who.setTypeAndValue(rr);
-            entry.getWhos().add(who);
+                    Who who = new Who();
+                    who.setTypeAndValue(rr);
+                    entry.getWhos().add(who);
+                }
+            }
         }
-        result.close();
-        stm.close();;
     }
 
     private void loadWheres(Entry entry)
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(GET_WHERES_FOR_ENTRY);
-        stm.setInt(1, entry.getId());
-        ResultSet result = stm.executeQuery();
-        while (result.next()) {
-            Where where = new Where();
+        try (PreparedStatement stm = con.prepareStatement(GET_WHERES_FOR_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            try (ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    Where where = new Where();
 
-            String whereType = result.getString("whereType");
-            String hostname = result.getString("hostname");
-            String network = result.getString("network");
+                    String whereType = result.getString("whereType");
+                    String hostname = result.getString("hostname");
+                    String network = result.getString("network");
 
-            where.setWhereType(Where.WhereType.valueOf(whereType));
-            where.setHostname(hostname);
-            if (network != null && !network.isEmpty()) {
-                String[] components = network.split("/");
-                where.setNetwork(components[0]);
-                where.setMask(Integer.valueOf(components[1]));
+                    where.setWhereType(Where.WhereType.valueOf(whereType));
+                    where.setHostname(hostname);
+                    if (network != null && !network.isEmpty()) {
+                        String[] components = network.split("/");
+                        where.setNetwork(components[0]);
+                        where.setMask(Integer.valueOf(components[1]));
+                    }
+
+                    entry.getWheres().add(where);
+                }
             }
-
-            entry.getWheres().add(where);
         }
-        result.close();
-        stm.close();
     }
 
     private void loadWhats(Entry entry)
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(GET_WHATS_FOR_ENTRY);
-        stm.setInt(1, entry.getId());
-        ResultSet result = stm.executeQuery();
-        while (result.next()) {
-            String service = result.getString("service");
-            String whatType = result.getString("whatType");
-            int port = result.getInt("port");
-            Array ports = result.getArray("ports");
-            int portFrom = result.getInt("portFrom");
-            int portTo = result.getInt("portTo");
-            String protocol = result.getString("protocol");
+        try (PreparedStatement stm = con.prepareStatement(GET_WHATS_FOR_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            try (ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    String service = result.getString("service");
+                    String whatType = result.getString("whatType");
+                    int port = result.getInt("port");
+                    Array ports = result.getArray("ports");
+                    int portFrom = result.getInt("portFrom");
+                    int portTo = result.getInt("portTo");
+                    String protocol = result.getString("protocol");
 
-            What what = new What();
-            what.setWhatType(What.WhatType.valueOf(whatType));
-            what.setPort(port);
-            what.setPortFrom(portFrom);
-            what.setPortTo(portTo);
-            if (protocol != null)
-                what.setProtocol(What.Protocol.valueOf(protocol));
-            if (ports != null) {
-                List<Integer> portsList = new LinkedList<>();
-                Collections.addAll(portsList, (Integer[]) ports.getArray());
-                what.setPorts(portsList);
+                    What what = new What();
+                    what.setWhatType(What.WhatType.valueOf(whatType));
+                    what.setPort(port);
+                    what.setPortFrom(portFrom);
+                    what.setPortTo(portTo);
+                    if (protocol != null)
+                        what.setProtocol(What.Protocol.valueOf(protocol));
+                    if (ports != null) {
+                        List<Integer> portsList = new LinkedList<>();
+                        Collections.addAll(portsList, (Integer[]) ports.getArray());
+                        what.setPorts(portsList);
+                    }
+                    if (service != null && !service.isEmpty()) {
+                        what.setService(firewallDServices.getServiceById(service));
+                    }
+                    entry.getWhats().add(what);
+                }
             }
-            if (service != null && !service.isEmpty()) {
-                what.setService(firewallDServices.getServiceById(service));
-            }
-            entry.getWhats().add(what);
         }
-        result.close();
-        stm.close();
     }
 
     private void loadFromDb() {
@@ -235,21 +235,21 @@ public class FirewallSettings implements Serializable {
         try {
             Connection con = databaseSettings.getDatabaseConnection();
             stm = con.prepareStatement(GET_ALL_ENTRIES);
-            ResultSet result = stm.executeQuery();
-            while (result.next()) {
-                int pos = 1;
-                int id = result.getInt("id");
-                String label = result.getString("label");
-                String description = result.getString("description");
-                boolean isActive = result.getBoolean("isActive");
-                Entry entry = new Entry(id, label, description, isActive);
+            try (ResultSet result = stm.executeQuery()) {
+                while (result.next()) {
+                    int pos = 1;
+                    int id = result.getInt("id");
+                    String label = result.getString("label");
+                    String description = result.getString("description");
+                    boolean isActive = result.getBoolean("isActive");
+                    Entry entry = new Entry(id, label, description, isActive);
 
-                incomingEntries.add(entry);
-                loadWhos(entry);
-                loadWheres(entry);
-                loadWhats(entry);
+                    incomingEntries.add(entry);
+                    loadWhos(entry);
+                    loadWheres(entry);
+                    loadWhats(entry);
+                }
             }
-            result.close();
         }
         catch (ClassNotFoundException | SQLException ex) {
 
@@ -423,10 +423,10 @@ public class FirewallSettings implements Serializable {
         removeWhats(entry);
 
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(REMOVE_ENTRY);
-        stm.setInt(1, entry.getId());
-        stm.executeUpdate();
-        stm.close();
+        try (PreparedStatement stm = con.prepareStatement(REMOVE_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            stm.executeUpdate();
+        }
 
         incomingEntries.remove(entry);
     }
@@ -435,44 +435,44 @@ public class FirewallSettings implements Serializable {
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(REMOVE_WHOS_FROM_ENTRY);
-        stm.setInt(1, entry.getId());
-        stm.executeUpdate();
-        stm.close();
+        try (PreparedStatement stm = con.prepareStatement(REMOVE_WHOS_FROM_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            stm.executeUpdate();
+        }
     }
 
     private void removeWheres(Entry entry)
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(REMOVE_WHERES_FROM_ENTRY);
-        stm.setInt(1, entry.getId());
-        stm.executeUpdate();
-        stm.close();
+        try (PreparedStatement stm = con.prepareStatement(REMOVE_WHERES_FROM_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            stm.executeUpdate();
+        }
     }
 
     private void removeWhats(Entry entry)
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(REMOVE_WHATS_FROM_ENTRY);
-        stm.setInt(1, entry.getId());
-        stm.executeUpdate();
-        stm.close();
+        try (PreparedStatement stm = con.prepareStatement(REMOVE_WHATS_FROM_ENTRY)) {
+            stm.setInt(1, entry.getId());
+            stm.executeUpdate();
+        }
     }
 
     public void updateIncomingEntry(Entry entry)
             throws ClassNotFoundException, SQLException
     {
         Connection con = databaseSettings.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement(UPDATE_ENTRY);
-        int pos = 1;
-        stm.setString(pos++, entry.getLabel());
-        stm.setString(pos++, entry.getDescription());
-        stm.setBoolean(pos++, entry.getIsActive());
-        stm.setInt(pos++, entry.getId());
-        stm.executeUpdate();
-        stm.close();
+        try (PreparedStatement stm = con.prepareStatement(UPDATE_ENTRY)) {
+            int pos = 1;
+            stm.setString(pos++, entry.getLabel());
+            stm.setString(pos++, entry.getDescription());
+            stm.setBoolean(pos++, entry.getIsActive());
+            stm.setInt(pos++, entry.getId());
+            stm.executeUpdate();
+        }
 
         removeWhos(entry);
         removeWheres(entry);

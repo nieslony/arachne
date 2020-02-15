@@ -84,9 +84,7 @@ public class PropertiesStorageBean
         catch (PSQLException ex) {
             throw ex;
         }
-        catch (ClassNotFoundException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+        catch (ClassNotFoundException | SQLException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
 

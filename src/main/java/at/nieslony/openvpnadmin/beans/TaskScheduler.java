@@ -166,7 +166,7 @@ public class TaskScheduler
                 boolean isEnabled = result.getBoolean("isEnabled");
                 String comment = result.getString("comment");
                 long id = result.getLong("id");
-                TaskListEntry task = null;
+                TaskListEntry task;
 
                 if (!scheduledTasks.containsKey(id)) {
                     task = new TaskListEntry(Class.forName(taskClass));
@@ -250,18 +250,18 @@ public class TaskScheduler
         String sql = "INSERT INTO scheduledTasks " +
                 "(taskClass, startupDelay, interval, isEnabled, comment) " +
                 "VALUES (?, ?, ?, ?, ?);";
-        PreparedStatement stm = con.prepareStatement(sql);
-        logger.info(String.format("Executing sql: %s", stm.toString()));
-        int pos = 1;
-        stm.setString(pos++, tle.getTaskClass().getName());
-        stm.setLong(pos++, tle.getStartupDelay());
-        stm.setLong(pos++, tle.getInterval());
-        stm.setBoolean(pos++, tle.isEnabled());
-        stm.setString(pos++, tle.getComment());
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            logger.info(String.format("Executing sql: %s", stm.toString()));
+            int pos = 1;
+            stm.setString(pos++, tle.getTaskClass().getName());
+            stm.setLong(pos++, tle.getStartupDelay());
+            stm.setLong(pos++, tle.getInterval());
+            stm.setBoolean(pos++, tle.isEnabled());
+            stm.setString(pos++, tle.getComment());
 
-        int ret = stm.executeUpdate();
-        logger.info(String.format("%d entries inserted", ret));
-        stm.close();
+            int ret = stm.executeUpdate();
+            logger.info(String.format("%d entries inserted", ret));
+        }
 
         if (tle.isEnabled())
             tle.scheduleTask(scheduler);
