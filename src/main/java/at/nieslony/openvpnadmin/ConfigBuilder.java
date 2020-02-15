@@ -29,15 +29,9 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
-import java.util.Set;
 import java.util.logging.Logger;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
@@ -144,23 +138,6 @@ public class ConfigBuilder implements Serializable {
     public void writeUserVpnServerConfig(Writer wr)
             throws CertificateEncodingException, IOException
     {
-        String authScript = folderFactory.getBinDir() + "/auth.sh";
-
-        Path path = Paths.get(authScript);
-        try {
-            logger.info(String.format("Setting write permissions for %s", authScript));
-            PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class);
-            Set<PosixFilePermission> attrSet = attrs.permissions();
-            attrSet.add(PosixFilePermission.OTHERS_EXECUTE);
-            attrSet.add(PosixFilePermission.GROUP_EXECUTE);
-            attrSet.add(PosixFilePermission.OWNER_EXECUTE);
-            Files.setPosixFilePermissions(path, attrSet);
-        }
-        catch (IOException ex) {
-            logger.severe(String.format("Error setting write permissions for %s: %s",
-                authScript, ex.getMessage()));
-        }
-
         StringBuilder sb = new StringBuilder();
         sb.append("plugin ")
                 .append(folderFactory.getPluginDir())

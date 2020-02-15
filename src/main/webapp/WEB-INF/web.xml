@@ -13,10 +13,6 @@
         <param-value>WEB-INF/sql</param-value>
     </context-param>
     <context-param>
-        <param-name>bin-dir</param-name>
-        <param-value>@@BIN-DIR@@</param-value>
-    </context-param>
-    <context-param>
         <param-name>plugin-dir</param-name>
         <param-value>@@PLUGIN-DIR@@</param-value>
     </context-param>
