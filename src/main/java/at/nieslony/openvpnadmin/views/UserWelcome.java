@@ -28,7 +28,9 @@ import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.ConfigurableNavigationHandler;
 import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -121,5 +123,17 @@ public class UserWelcome implements Serializable {
         }
 
         return content;
+    }
+
+    public void logout() throws IOException {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        ExternalContext ec = fc.getExternalContext();
+        ec.invalidateSession();
+        ConfigurableNavigationHandler nav =
+                (ConfigurableNavigationHandler)
+                    fc.getApplication().getNavigationHandler();
+
+        logger.info("Navigating to Login");
+        nav.performNavigation("Login");
     }
 }
