@@ -962,13 +962,6 @@ public class SetupWizard implements Serializable {
 
             performingSetup = false;
 
-            FacesContext ctx = FacesContext.getCurrentInstance();
-            ExternalContext eCtx = ctx.getExternalContext();
-            String fileName = eCtx.getRealPath("/SetupWizard.xhtml");
-            logger.info(String.format("Removing %s", fileName));
-            File setupWizardXhtml = new File(fileName);
-            setupWizardXhtml.delete();
-
             logger.info("Setup successful, redirecting to login page");
             ec.redirect("Login.xhtml");
         }
