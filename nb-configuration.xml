@@ -19,8 +19,8 @@ Any value defined here will override the pom.xml file value but is only applicab
     <config-data xmlns="http://www.netbeans.org/ns/maven-config-data/1">
         <configurations>
             <configuration id="Develop" profiles="">
-                <property name="dynamic-data.dir">${project.build.directory}/work</property>
-                <property name="plugin.dir">${project.build.directory}/plugins</property>
+                <property name="dynamic-data.dir">${project.build.directory}/../work</property>
+                <property name="plugin.dir">${project.build.directory}/../work/plugins</property>
             </configuration>
         </configurations>
     </config-data>
