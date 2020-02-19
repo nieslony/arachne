@@ -327,7 +327,7 @@ public class ConfigBuilder implements Serializable {
         in = new ByteArrayInputStream(writer.toString().getBytes());
 
         StreamedContent sc = new DefaultStreamedContent(in,
-                "text/plain", "openvpn.ovpn");
+                "text/plain", "client-config.ovpn");
 
         return sc;
     }
