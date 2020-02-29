@@ -16,22 +16,16 @@
  */
 package at.nieslony.openvpnadmin.servlets;
 
-import at.nieslony.openvpnadmin.beans.CurrentUser;
 import at.nieslony.openvpnadmin.beans.FirewallSettings;
+import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.AccessDeniedException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.logging.Logger;
-import javax.el.ELException;
-import javax.faces.FactoryFinder;
-import javax.faces.context.FacesContext;
-import javax.faces.context.FacesContextFactory;
-import javax.faces.lifecycle.Lifecycle;
-import javax.faces.lifecycle.LifecycleFactory;
+import javax.inject.Inject;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -39,55 +33,20 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Claas Nieslony
  */
-public class Api extends HttpServlet {
+@WebServlet("/api/*")
+public class Api extends AbstractFacesServlet {
     private static final transient Logger logger= Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private FacesContext getFacesContext(HttpServletRequest request, HttpServletResponse response) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext == null) {
-
-            FacesContextFactory contextFactory  =
-                (FacesContextFactory)FactoryFinder.getFactory(FactoryFinder.FACES_CONTEXT_FACTORY);
-            LifecycleFactory lifecycleFactory =
-                (LifecycleFactory)FactoryFinder.getFactory(FactoryFinder.LIFECYCLE_FACTORY);
-            Lifecycle lifecycle =
-                lifecycleFactory.getLifecycle(LifecycleFactory.DEFAULT_LIFECYCLE);
-
-            facesContext =
-                contextFactory.getFacesContext(request.getSession().getServletContext(),
-                    request, response, lifecycle);
-        }
-
-        return facesContext;
-    }
-
-    private <T> T getBean(FacesContext ctx, String beanName, Class<? extends T> expectedType)
-            throws javax.el.ELException
-    {
-        String elExpression = String.format("#{%s}", beanName);
-        return ctx.getApplication().evaluateExpressionGet(ctx, elExpression, expectedType);
-    }
-
-    private void requireUser(HttpServletRequest request, HttpServletResponse response)
-            throws AccessDeniedException, ELException
-    {
-        FacesContext fCtx = getFacesContext(request, response);
-        CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
-
-        if (currentUser == null ||
-                !currentUser.isValid() ||
-                !currentUser.hasRole("user")
-                ) {
-            throw new AccessDeniedException("Access denied");
-        }
-    }
+    @Inject
+    FirewallSettings firewallSettings;
 
     private int handleAuth(LinkedList<String> subCommands,
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException
     {
-        requireUser(request, response);
+        if (!currentUser.hasRole("user"))
+            throw new PermissionDenied();
 
         return HttpServletResponse.SC_OK;
     }
@@ -98,13 +57,9 @@ public class Api extends HttpServlet {
             PrintWriter out)
             throws ServletException, IOException
     {
-        requireUser(request, response);
+        if (!currentUser.hasRole("user"))
+            throw new PermissionDenied();
 
-        FacesContext fCtx = getFacesContext(request, response);
-        CurrentUser currentUser = getBean(fCtx, "currentUser", CurrentUser.class);
-        FirewallSettings firewallSettings = getBean(fCtx, "firewallSettings", FirewallSettings.class);
-
-        //out = response.getWriter();
         String jsonStr = firewallSettings.getFirewallConfig(currentUser.getUser());
         logger.info(jsonStr);
         out.println(jsonStr);
@@ -122,6 +77,7 @@ public class Api extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    @Override
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
@@ -133,67 +89,33 @@ public class Api extends HttpServlet {
             command = apiPath.pop();
         }
 
-        int status = -1;
+        int status;
 
-        PrintWriter out = response.getWriter();
-        try {
-            if (command == null || apiPath == null) {
-                out.println("Illegal API call");
-                status = HttpServletResponse.SC_NOT_FOUND;
+        try (PrintWriter out = response.getWriter()) {
+            try {
+                if (command == null || apiPath == null) {
+                    out.println("Illegal API call");
+                    status = HttpServletResponse.SC_NOT_FOUND;
+                }
+                else if (command.equals("firewall")) {
+                    status = handleFirewall(apiPath, request, response, out);
+                    response.setContentType("application/json");
+                }
+                else if (command.equals("auth"))
+                    status = handleAuth(apiPath, request, response);
+                else {
+                    out.println("Illegal API call");
+                    status = HttpServletResponse.SC_NOT_FOUND;
+                }
             }
-            else if (command.equals("firewall")) {
-                status = handleFirewall(apiPath, request, response, out);
-                response.setContentType("application/json");
-            }
-            else if (command.equals("auth"))
-                status = handleAuth(apiPath, request, response);
-            else {
-                out.println("Illegal API call");
-                status = HttpServletResponse.SC_NOT_FOUND;
+            catch (IOException | ServletException ex) {
+                logger.warning(String.format("Cannot execute library call %s: %s",
+                        pathInfo, ex.getMessage()));
+                status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
             }
         }
-        catch (AccessDeniedException ex) {
-            logger.warning(ex.getMessage());
-            status = HttpServletResponse.SC_FORBIDDEN;
-            out.println("Forbidden");
-        }
-        catch (Exception ex) {
-            logger.warning(String.format("Cannot execute library call %s: %s",
-                    pathInfo, ex.getMessage()));
-            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-        }
-        out.close();
 
         response.setStatus(status);
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
-    }
-
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
     }
 
     /**
@@ -204,5 +126,5 @@ public class Api extends HttpServlet {
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
+    }
 }
