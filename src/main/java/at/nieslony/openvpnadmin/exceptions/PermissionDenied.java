@@ -17,17 +17,20 @@
 
 package at.nieslony.openvpnadmin.exceptions;
 
+import javax.servlet.ServletException;
+
 /**
  *
  * @author claas
  */
-public class PermissionDenied extends Exception {
+public class PermissionDenied extends ServletException {
 
     /**
      * Creates a new instance of <code>PermissionDenied</code> without detail
      * message.
      */
     public PermissionDenied() {
+        super("Permission denied");
     }
 
     /**
