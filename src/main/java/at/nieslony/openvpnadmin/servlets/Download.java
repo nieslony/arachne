@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author claas
  */
-@WebServlet(name = "Download", urlPatterns = {"/downloads/*"})
+@WebServlet(name = "Download", urlPatterns = {"/download/*"})
 public class Download extends AbstractFacesServlet {
     @Inject
     ConfigBuilder configBuilder;
