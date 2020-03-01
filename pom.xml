@@ -202,25 +202,44 @@
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
+                        <id>Patch web.xml></id>
                         <goals>
                             <goal>replace</goal>
                         </goals>
+                        <configuration>
+                            <file>src/main/webapp/WEB-INF/web.xml</file>
+                            <outputFile>${project.build.directory}/generated-resources/web.xml</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@DYNAMIC-DATA-DIR@@</token>
+                                    <value>${dynamic-data.dir}</value>
+                                </replacement>
+                                <replacement>
+                                    <token>@@PLUGIN-DIR@@</token>
+                                    <value>${plugin.dir}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <id>Patch arachne.conf</id>
+                        <configuration>
+                            <file>src/main/apache/arachne.conf</file>
+                            <outputFile>${project.build.directory}/arachne.conf</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@arachne-path@@</token>token>
+                                    <value>arachne-${version}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <file>src/main/webapp/WEB-INF/web.xml</file>
-                    <outputFile>${project.build.directory}/generated-resources/web.xml</outputFile>
-                    <replacements>
-                        <replacement>
-                            <token>@@DYNAMIC-DATA-DIR@@</token>
-                            <value>${dynamic-data.dir}</value>
-                        </replacement>
-                        <replacement>
-                            <token>@@PLUGIN-DIR@@</token>
-                            <value>${plugin.dir}</value>
-                        </replacement>
-                    </replacements>
-                </configuration>
             </plugin>
         </plugins>
     </build>
