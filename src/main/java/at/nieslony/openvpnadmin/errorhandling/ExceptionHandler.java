@@ -121,7 +121,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 }
                 else if (cause instanceof ViewExpiredException) {
                     LOG.warning("View expired - invalidating session");
-                    errorPage = "Login.xhtml";
+                    errorPage = "Login.xhtml?faces-redirect=true";
                     isFatal = false;
 
                     HttpSession session = request.getSession(false);
