@@ -233,8 +233,26 @@
                             <outputFile>${project.build.directory}/arachne.conf</outputFile>
                             <replacements>
                                 <replacement>
-                                    <token>@@arachne-path@@</token>token>
+                                    <token>@@arachne-path@@</token>
                                     <value>arachne-${version}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <id>Patch install-arachne.yml</id>
+                        <configuration>
+                            <file>src/main/setup/install-arachne.yml</file>
+                            <outputFile>${project.build.directory}/install-arachne.yml</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@version@@</token>
+                                    <value>${version}</value>
                                 </replacement>
                             </replacements>
                         </configuration>
