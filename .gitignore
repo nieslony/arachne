@@ -4,4 +4,6 @@ dist
 /nbproject/private/
 *~
 external
-/target/
+/target/work
+work
+target

@@ -24,8 +24,10 @@ import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -72,6 +74,44 @@ public class CurrentUser implements Serializable {
     public CurrentUser() {
     }
 
+    private void initWithHttpHeader(HttpServletRequest req) {
+        if (authSettings.getEnableHttpHeaderAuth()) {
+            logger.info("Try to authenticate wth HTTP header");
+            String headerName = authSettings.getHttpHeaderRemoteUser();
+            if (headerName == null || headerName.isEmpty()) {
+                logger.warning("No HTTP header provided");
+                return;
+            }
+            String remoteUser = req.getHeader(headerName);
+            if (remoteUser == null || remoteUser.isEmpty()) {
+                Enumeration<String> headerNames = req.getHeaderNames();
+                while (headerNames.hasMoreElements()) {
+                    String h = headerNames.nextElement();
+                    String v = req.getHeader(h);
+                    logger.log(Level.INFO, "{0}={1}", new Object[]{h, v});
+                }   
+                logger.log(Level.INFO, "Header {0} is empty or not provided", headerName);
+                return;
+            }
+            else {
+                logger.log(Level.INFO, "Try to find user {0}", remoteUser);
+            }
+            AbstractUser tmpUser = null;
+            try {
+                tmpUser = ldapSettings.findVpnUser(remoteUser);
+            }
+            catch (NamingException | NoSuchLdapUser ex) {
+                logger.info(String.format("Cannot find LDAP user %s: %s",
+                        req.getRemoteUser(), ex.getMessage()));
+                return;
+            }
+            if (tmpUser != null) {
+                logger.info(String.format("Found remote user %s", tmpUser.getUsername()));
+                user = tmpUser;
+            }            
+        }
+    }
+    
     private void initWithAjpRemoteUser(HttpServletRequest req) {
         AbstractUser tmpUser = null;
         try {
@@ -187,7 +227,7 @@ public class CurrentUser implements Serializable {
         user = null;
     }
 
-    @PostConstruct
+        @PostConstruct
     public void init()
     {
         logger.info("Initializing currentUser");
@@ -199,6 +239,9 @@ public class CurrentUser implements Serializable {
 
         try {
             initWithAjpRemoteUser(req);
+            if (user == null) {
+                initWithHttpHeader(req);
+            }
             if (user ==  null) {
                 initWithBasicAuth(req);
             }
