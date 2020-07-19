@@ -111,7 +111,7 @@ public class ClassFinder {
                             classes.add(cl);
                         }
                     }
-                    catch (ClassNotFoundException | NoClassDefFoundError | IllegalAccessError ex) {
+                    catch (ExceptionInInitializerError | ClassNotFoundException | NoClassDefFoundError | IllegalAccessError ex) {
                         logger.warning(String.format("Cannot load class %s: %s", className, ex.getMessage()));
                     }
                 }
