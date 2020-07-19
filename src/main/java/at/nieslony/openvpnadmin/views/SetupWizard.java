@@ -70,7 +70,6 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Hex;
 import org.primefaces.PrimeFaces;
-import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -491,7 +490,7 @@ public class SetupWizard implements Serializable {
 
         return sc;
     }
-
+/*
     public void handleCsrSignedCertUpload(FileUploadEvent event) {
         InputStream is;
 
@@ -591,7 +590,7 @@ public class SetupWizard implements Serializable {
 
         csrSigningCa = sb.toString();
     }
-
+*/
     public void setCsrCommonName(String csrCommonName) {
         this.csrCommonName = csrCommonName;
     }

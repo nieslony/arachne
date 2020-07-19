@@ -42,11 +42,11 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
 import java.util.logging.Logger;
-import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
@@ -266,11 +266,10 @@ public class CertificateAuthority
     private void writeBase64(byte[] data, PrintWriter out) throws IOException {
         final int MAX_LINE = 64;
 
-        String base64 = DatatypeConverter.printBase64Binary(data);
+        String base64 = Base64.getEncoder().encodeToString(data);
         for (int i = 0; i < base64.length(); i += MAX_LINE) {
             int end = Math.min(i + MAX_LINE, base64.length());
             out.println(base64.substring(i, end));
-            //out.write("\n");
         }
     }
 
@@ -317,7 +316,7 @@ public class CertificateAuthority
             return new byte[0];
         }
 
-        return DatatypeConverter.parseBase64Binary(base64.toString());
+        return Base64.getEncoder().encode(base64.toString().getBytes());
     }
 
     public PrivateKey readPrivateKey(InputStream in) throws IOException, GeneralSecurityException {

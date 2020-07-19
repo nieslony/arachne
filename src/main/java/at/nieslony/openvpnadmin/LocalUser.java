@@ -19,14 +19,16 @@ package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.LocalUserFactory;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Base64;
 import java.util.Random;
 import java.util.logging.Logger;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  *
@@ -114,9 +116,9 @@ public class LocalUser
             digest.update(salt);
             byte[] hash = digest.digest(password.getBytes("UTF-8"));
 
-            ret = DatatypeConverter.printBase64Binary(salt) + "$" + DatatypeConverter.printBase64Binary(hash);
+            ret = Base64.getEncoder().encodeToString(salt) + "$" + Base64.getEncoder().encodeToString(hash);
         }
-        catch (Exception ex) {
+        catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
             logger.severe(String.format("Cannot create salted hash: %s", ex.getMessage()));
         }
 
@@ -129,7 +131,7 @@ public class LocalUser
             return false;
         }
         if (password == null) {
-            logger.warning("Empry password suuplied => check failed");
+            logger.warning("Empry password supplied => check failed");
             return false;
         }
 
@@ -139,21 +141,24 @@ public class LocalUser
         String hashStr = saltedHash.split("\\$")[1];
 
         try {
-            byte[] salt = DatatypeConverter.parseBase64Binary(saltStr);
+            byte[] salt = Base64.getDecoder().decode(saltStr);
 
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.reset();
             digest.update(salt);
-            String hash2 = DatatypeConverter.printBase64Binary(digest.digest(password.getBytes("UTF-8")));
+            String hash2 = Base64.getEncoder().encodeToString(
+                    digest.digest(password.getBytes("UTF-8"))
+            );
 
             ret = hashStr.equals(hash2);
             if (ret)
                 logger.info("Password matches hash");
+
             else
                 logger.warning(String.format("Password doesn't match hash: '%s' ≠ '%s'",
                         saltedHash, hash2));
         }
-        catch (Exception ex) {
+        catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
               logger.severe(String.format("Cannot compare hash and password: %s", ex.getMessage()));
         }
 

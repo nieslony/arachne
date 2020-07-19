@@ -34,7 +34,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
-import org.primefaces.model.menu.DynamicMenuModel;
+import org.primefaces.model.menu.DefaultMenuModel;
 import org.primefaces.model.menu.MenuElement;
 import org.primefaces.model.menu.MenuModel;
 
@@ -79,7 +79,7 @@ public class AdminWelcome implements Serializable {
 
     @PostConstruct
     public void init() {
-        menuModel = new DynamicMenuModel();
+        menuModel = new DefaultMenuModel();
 
         DefaultSubMenu usersMenu = new DefaultSubMenu("Users & roles");
             DefaultMenuItem editUsers = new DefaultMenuItem("View/Edit users");
@@ -94,10 +94,10 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem editAuthSettings = new DefaultMenuItem("Edit authentication settings");
             editAuthSettings.setHref("EditAuthSettings.xhtml");
 
-            usersMenu.addElement(editUsers);
-            usersMenu.addElement(editRoles);
-            usersMenu.addElement(editLdapUsers);
-            usersMenu.addElement(editAuthSettings);
+            usersMenu.getElements().add(editUsers);
+            usersMenu.getElements().add(editRoles);
+            usersMenu.getElements().add(editLdapUsers);
+            usersMenu.getElements().add(editAuthSettings);
         menuModel.addElement(usersMenu);
 
         DefaultSubMenu certsMenu = new DefaultSubMenu("Certificates");
@@ -116,11 +116,11 @@ public class AdminWelcome implements Serializable {
             DefaultMenuItem editFirewallZone = new DefaultMenuItem("Edit firewall zone");
             editFirewallZone.setHref("EditFirewallZone.xhtml");
 
-            certsMenu.addElement(userCerts);
-            certsMenu.addElement(editClientCertSettings);
-            certsMenu.addElement(editServerCertSettings);
-            certsMenu.addElement(renewServerCertificate);
-            certsMenu.addElement(editFirewallZone);
+            certsMenu.getElements().add(userCerts);
+            certsMenu.getElements().add(editClientCertSettings);
+            certsMenu.getElements().add(editServerCertSettings);
+            certsMenu.getElements().add(renewServerCertificate);
+            certsMenu.getElements().add(editFirewallZone);
         menuModel.addElement(certsMenu);
 
         userVpnsMenu = new DefaultSubMenu("User VPNs");
@@ -137,19 +137,19 @@ public class AdminWelcome implements Serializable {
             if (currentUser.hasRole("user")) {
                 DefaultMenuItem userWelcomeItem = new DefaultMenuItem("Switch to user welcome");
                 userWelcomeItem.setHref("UserWelcome.xhtml");
-                actionsMenu.addElement(userWelcomeItem);
+                actionsMenu.getElements().add(userWelcomeItem);
             }
             DefaultMenuItem statusItem = new DefaultMenuItem("Show user status");
             statusItem.setHref("ShowUserStatus.xhtml");
-            actionsMenu.addElement(statusItem);
+            actionsMenu.getElements().add(statusItem);
 
             DefaultMenuItem schedulesTasksItem = new DefaultMenuItem("Edit schedules tasks");
             schedulesTasksItem.setHref("ScheduledTasks.xhtml");
-            actionsMenu.addElement(schedulesTasksItem);
+            actionsMenu.getElements().add(schedulesTasksItem);
 
             DefaultMenuItem logoutItem = new DefaultMenuItem("Logout...");
             logoutItem.setCommand("#{adminWelcome.logout}");
-            actionsMenu.addElement(logoutItem);
+            actionsMenu.getElements().add(logoutItem);
         menuModel.addElement(actionsMenu);
     }
 

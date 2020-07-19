@@ -308,8 +308,11 @@ public class ConfigBuilder implements Serializable {
 
         in = new ByteArrayInputStream(writer.toString().getBytes());
 
-        StreamedContent sc = new DefaultStreamedContent(in,
-                "text/plain", "client-config.sh");
+        StreamedContent sc = DefaultStreamedContent.builder()
+                .name("client-config.sh")
+                .contentType("text/plain")
+                .stream(() -> in)
+                .build();
 
         return sc;
     }
@@ -326,8 +329,11 @@ public class ConfigBuilder implements Serializable {
 
         in = new ByteArrayInputStream(writer.toString().getBytes());
 
-        StreamedContent sc = new DefaultStreamedContent(in,
-                "text/plain", "client-config.ovpn");
+        StreamedContent sc = DefaultStreamedContent.builder()
+                .name("client-config.ovpn")
+                .contentType("text/x-shellscript")
+                .stream(() -> in)
+                .build();
 
         return sc;
     }

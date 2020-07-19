@@ -32,8 +32,8 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import org.primefaces.json.JSONArray;
-import org.primefaces.json.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -566,13 +566,13 @@ public class FirewallSettings implements Serializable {
                             jsonEntry.put("whatService", what.getService().getId());
                             break;
                     }
-                    incoming.put(jsonEntry);
+                    incoming.add(jsonEntry);
                 }
             }
         }
 
         config.put("incoming", incoming);
 
-        return config.toString(2);
+        return config.toJSONString();
     }
 }
