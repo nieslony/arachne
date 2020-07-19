@@ -192,8 +192,13 @@ public class DatabaseSettings
                     host,
                     port,
                     databaseName);
-            con = DriverManager.getConnection(conUrl, databaseUser, databasePassword);
-            con.setAutoCommit(true);
+            try {
+                con = DriverManager.getConnection(conUrl, databaseUser, databasePassword);
+                con.setAutoCommit(true);
+            }
+            catch (SQLException ex) {
+                logger.severe(String.format("Cannot get JDBC connection: %s", ex.getMessage()));
+            }
         }
 
         return con;
