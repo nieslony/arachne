@@ -6,7 +6,13 @@
 #  vars:
 #    ansible_python_interpreter: /usr/bin/python3
 
+  vars:
+    pwd_alias: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
   tasks:
+  - set_fact:
+      ajp_pass: "{{ pwd_alias }}"
+
   - name: Add arachne repository
     yum_repository:
       name: nieslony
@@ -30,11 +36,11 @@
         - openvpn-arachne-plugin
         - wildfly
         - postgresql-server
-        - java-11-openjdk
         - mod_ssl
         - mod_session
         - mod_auth_gssapi
         - httpd
+        - net-tools
       state: present
 
   - name: Copy arachne webapp
@@ -55,7 +61,7 @@
       enabled: yes
 
   - name: Initialze PostgresQL
-    command: "/usr/bin/postgresql-setup --initdb"
+    command: "/usr/bin/postgresql-setup {{ '--initdb' if ansible_distribution_major_version == 8 else 'initdb' }}"
     args:
       creates: /var/lib/pgsql/data/pg_hba.conf
 
@@ -102,6 +108,9 @@
       immediate: yes
       permanent: yes
 
+  - debug:
+      msg: "ansible_facts['distribution_major_version'] == {{ ansible_facts['distribution_major_version'] }}"
+
   - name: Copy arachne config for apache
     copy:
       src: arachne.conf
@@ -110,21 +119,53 @@
   - name: Install urllib gssapi (yum)
     yum:
       name: python3-urllib-gssapi
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "8"
 
-#  - name: Install urllib-gssapi
-#    pip:
-#      name: urllib-gssapi
+  - name: Install pip
+    yum:
+      name: python2-pip
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "7"
+
+  - name: Install urllib-gssapi
+    pip:
+      name: urllib-gssapi
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "7"
+
+  - name: Check AJP already enabled
+    shell: "netstat -tln | grep -q :8009"
+    register: ajp_enabled
+    ignore_errors: yes
 
   - name: Enable AJP in wildfly
     command: "/usr/share/wildfly/bin/jboss-cli.sh --commands='connect,/subsystem=undertow/server=default-server/ajp-listener=myListener:add(socket-binding=ajp, scheme=http, enabled=true'"
+    when: ajp_enabled.rc == 1
+
+
+#    /subsystem=undertow/configuration=filter/expression-filter=secret-checker:add(expression="not equals(%{r,secret}, 'YOUR_AJP_SECRET') -> response-code(403)")
+#/subsystem=undertow/server=default-server/host=default-host/filter-ref=secret-checker:add(predicate="equals(%p,8009)")
+
+#  - debug:
+#    environment
+#      KRB5_CLIENT_KTNAME: /etc/krb5.keytab
+#    msg: "{{ lookup('env', 'KRB5_CLIENT_KTNAME') }}"
 
   - name: Create service HTTP/{{ ansible_fqdn }} in FreeIPA
+    environment:
+      KRB5_CLIENT_KTNAME: /etc/krb5.keytab
     ipa_service:
       name: HTTP/{{ ansible_fqdn }}
       state: present
 
   - name: Install keytab in /etc/httpd
-    shell: "KRB5_CLIENT_KTNAME=/etc/krb5.keytab ipa-getkeytab --principal=HTTP/{{ ansible_fqdn }} --keytab=/etc/httpd/krb5.keytab"
+    environment:
+      KRB5_CLIENT_KTNAME: /etc/krb5.keytab
+    shell: "ipa-getkeytab --principal=HTTP/{{ ansible_fqdn }} --keytab=/etc/httpd/krb5.keytab --mech GSSAPI"
     args:
       creates: /etc/httpd/krb5.keytab
 
