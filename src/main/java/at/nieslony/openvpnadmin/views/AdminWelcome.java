@@ -22,7 +22,6 @@ import at.nieslony.openvpnadmin.beans.FolderFactory;
 import at.nieslony.openvpnadmin.beans.UserVpn;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -33,8 +32,8 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import org.primefaces.model.menu.DefaultMenuItem;
-import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.DefaultMenuModel;
+import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.MenuElement;
 import org.primefaces.model.menu.MenuModel;
 
@@ -79,105 +78,130 @@ public class AdminWelcome implements Serializable {
 
     @PostConstruct
     public void init() {
+        DefaultSubMenu usersMenu = DefaultSubMenu.builder()
+                .label("Users & Roles")
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("View/Edit users")
+                                .url("EditUsers.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("View/Edit roles")
+                                .url("EditRoles.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Configure LDAP source")
+                                .url("LdapSetup.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Edit authentication settings")
+                                .url("EditAuthSettings.xhtml")
+                                .build()
+                )
+                .build();
+
+        DefaultSubMenu certsMenu = DefaultSubMenu.builder()
+                .label("Certificates")
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("User Certificates")
+                                .url("UserCertificates.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Edit client cert defaults")
+                                .url("EditClientCertificateSettings.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Edit server cert defaults")
+                                .url("EditServerCertificateSettings.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Renew server certificate")
+                                .url("RenewServerCertificate.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Edit firewall zone")
+                                .url("EditFirewallZone.xhtml")
+                                .build()
+                )
+                .build();
+
+
+        userVpnsMenu = DefaultSubMenu.builder()
+                .label("User VPNs")
+                .build();
+        loadUserVpns();
+
+        DefaultSubMenu actionsMenu = DefaultSubMenu.builder()
+                .label("Actions")
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Show user status")
+                                .url("ShowUserStatus.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Edit schedules tasks")
+                                .url("ScheduledTasks.xhtml")
+                                .build()
+                )
+                .addElement(
+                        DefaultMenuItem.builder()
+                                .value("Logout…")
+                                .command("#{adminWelcome.logout}")
+                                .build()
+                )
+                .build();
+        if (currentUser.hasRole("user")) {
+            actionsMenu.getElements().add(0,
+                    DefaultMenuItem.builder()
+                            .value("Switch to user welcome")
+                            .url("UserWelcome.xhtml")
+                            .build()
+            );
+        }
+
         menuModel = new DefaultMenuModel();
-
-        DefaultSubMenu usersMenu = new DefaultSubMenu("Users & roles");
-            DefaultMenuItem editUsers = new DefaultMenuItem("View/Edit users");
-            editUsers.setHref("EditUsers.xhtml");
-
-            DefaultMenuItem editRoles = new DefaultMenuItem("View/Edit roles");
-            editRoles.setHref("EditRoles.xhtml");
-
-            DefaultMenuItem editLdapUsers = new DefaultMenuItem("Configure LDAP source");
-            editLdapUsers.setHref("LdapSetup.xhtml");
-
-            DefaultMenuItem editAuthSettings = new DefaultMenuItem("Edit authentication settings");
-            editAuthSettings.setHref("EditAuthSettings.xhtml");
-
-            usersMenu.getElements().add(editUsers);
-            usersMenu.getElements().add(editRoles);
-            usersMenu.getElements().add(editLdapUsers);
-            usersMenu.getElements().add(editAuthSettings);
-        menuModel.addElement(usersMenu);
-
-        DefaultSubMenu certsMenu = new DefaultSubMenu("Certificates");
-            DefaultMenuItem userCerts = new DefaultMenuItem("User Certificates");
-            userCerts.setHref("UserCertificates.xhtml");
-
-            DefaultMenuItem editClientCertSettings = new DefaultMenuItem("Edit client cert defaults");
-            editClientCertSettings.setHref("EditClientCertificateSettings.xhtml");
-
-            DefaultMenuItem editServerCertSettings = new DefaultMenuItem("Edit server cert defaults");
-            editServerCertSettings.setHref("EditServerCertificateSettings.xhtml");
-
-            DefaultMenuItem renewServerCertificate = new DefaultMenuItem("Renew server certificate");
-            renewServerCertificate.setHref("RenewServerCertificate.xhtml");
-
-            DefaultMenuItem editFirewallZone = new DefaultMenuItem("Edit firewall zone");
-            editFirewallZone.setHref("EditFirewallZone.xhtml");
-
-            certsMenu.getElements().add(userCerts);
-            certsMenu.getElements().add(editClientCertSettings);
-            certsMenu.getElements().add(editServerCertSettings);
-            certsMenu.getElements().add(renewServerCertificate);
-            certsMenu.getElements().add(editFirewallZone);
-        menuModel.addElement(certsMenu);
-
-        userVpnsMenu = new DefaultSubMenu("User VPNs");
-            loadUserVpns();
-        menuModel.addElement(userVpnsMenu);
-
-        /*
-        siteVpnsMenu = new DefaultSubMenu("Site VPNs");
-        loadSiteVpns();
-        menuModel.addElement(siteVpnsMenu);
-        */
-
-        DefaultSubMenu actionsMenu = new DefaultSubMenu("Actions");
-            if (currentUser.hasRole("user")) {
-                DefaultMenuItem userWelcomeItem = new DefaultMenuItem("Switch to user welcome");
-                userWelcomeItem.setHref("UserWelcome.xhtml");
-                actionsMenu.getElements().add(userWelcomeItem);
-            }
-            DefaultMenuItem statusItem = new DefaultMenuItem("Show user status");
-            statusItem.setHref("ShowUserStatus.xhtml");
-            actionsMenu.getElements().add(statusItem);
-
-            DefaultMenuItem schedulesTasksItem = new DefaultMenuItem("Edit schedules tasks");
-            schedulesTasksItem.setHref("ScheduledTasks.xhtml");
-            actionsMenu.getElements().add(schedulesTasksItem);
-
-            DefaultMenuItem logoutItem = new DefaultMenuItem("Logout...");
-            logoutItem.setCommand("#{adminWelcome.logout}");
-            actionsMenu.getElements().add(logoutItem);
-        menuModel.addElement(actionsMenu);
+        menuModel.getElements().add(usersMenu);
+        menuModel.getElements().add(certsMenu);
+        menuModel.getElements().add(userVpnsMenu);
+        menuModel.getElements().add(actionsMenu);
     }
 
     public MenuModel getMenuModel() {
         return menuModel;
     }
 
-    public void loadSiteVpns() {
-        List<MenuElement> items = new LinkedList<>();
-
-        DefaultMenuItem addSiteVPN = new DefaultMenuItem("Add site VPN");
-        items.add(addSiteVPN);
-
-        siteVpnsMenu.setElements(items);
-    }
-
     public void loadUserVpns() {
         logger.info("Loading user VPNs...");
-        List<MenuElement> items = new LinkedList<>();
+
+        List<MenuElement> menuElements = userVpnsMenu.getElements();
+        menuElements.clear();
 
         String vpnName = userVpn.getIsEnabled() ?
             userVpn.getConnectionName() : "Add user VPN";
 
-        DefaultMenuItem addUserVPN = new DefaultMenuItem(vpnName);
-        addUserVPN.setHref("EditUserVPN.xhtml");
-        items.add(addUserVPN);
+        DefaultMenuItem addUserVpn = DefaultMenuItem.builder()
+                .value(vpnName)
+                .url("EditUserVPN.xhtml")
+                .build();
 
-        userVpnsMenu.setElements(items);
+        menuElements.add(addUserVpn);
     }
 
     public void logout() throws IOException {
