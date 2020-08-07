@@ -65,7 +65,7 @@ public class Download extends AbstractFacesServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException {
         if (!currentUser.hasRole("user")) {
-            String msg = String.format("USer %s doesn't have role user", currentUser.getUser());
+            String msg = String.format("User %s doesn't have role user", currentUser.getUsername());
             throw new PermissionDenied(msg);
         }
 
