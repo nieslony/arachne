@@ -486,10 +486,13 @@ def main():
             os.makedirs(outdir)
 
         out_fn = "%s/%sBase.java" % (outdir, entries["className"])
-        print("  Writing %s ..." % out_fn)
-        f = open(out_fn, "w")
-        f.write(print_backend_class_base())
-        f.close()
+        if not os.path.exists(out_fn) or os.path.getmtime(out_fn) < os.path.getmtime(fn):
+            print("  Writing %s ..." % out_fn)
+            f = open(out_fn, "w")
+            f.write(print_backend_class_base())
+            f.close()
+        else:
+            print("  Skipping %s, file exists or unmodifited" % out_fn)
 
         # Create backend bean
         if args.create_skel:
@@ -514,10 +517,13 @@ def main():
         if not os.path.exists(outdir):
             os.makedirs(outdir)
         out_fn = "%s/Edit%sBase.java" % (outdir, entries["className"])
-        print("  Writing %s ..." % out_fn)
-        f = open(out_fn, "w")
-        f.write(print_edit_class_base())
-        f.close()
+        if not os.path.exists(out_fn) or os.path.getmtime(out_fn) < os.path.getmtime(fn):
+            print("  Writing %s ..." % out_fn)
+            f = open(out_fn, "w")
+            f.write(print_edit_class_base())
+            f.close()
+        else:
+            print("  Skipping %s, file exists or unmodifited" % out_fn)
 
         # Create edit bean
         if args.create_skel:
