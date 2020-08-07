@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.FactoryFinder;
-import javax.faces.application.Application;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -54,31 +53,36 @@ abstract public class AbstractFacesServlet extends HttpServlet {
      * @throws javax.servlet.ServletException
      * @throws java.io.IOException
     */
-@Override
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse
         response) throws ServletException, IOException
     {
         FacesContext ctx = getFacesContext(request, response);
 
-        if (currentUser == null) {
-            logger.warning("There is no current ujser");
-        }
-        else if (!currentUser.isValid()) {
-            logger.warning("Current user is not valid");
-        }
-        else
-            try {
+        try {
+            if (currentUser == null) {
+                String msg = "There is no current ujser";
+                logger.warning(msg);
+                throw new PermissionDenied(msg);
+            }
+            else if (!currentUser.isValid()) {
+                String msg = "Current user is not valid";
+                logger.warning(msg);
+                throw new PermissionDenied(msg);
+            }
+            else {
                 processRequest(request, response);
             }
-            catch (PermissionDenied ex) {
-                ExternalContext ectx = ctx.getExternalContext();
-                ectx.setResponseStatus(HttpServletResponse.SC_FORBIDDEN);
-                Map<String, Object> requestMap = ectx.getRequestMap();
-                requestMap.put("errorMsg", ex.getMessage());
-                String errPage = "/error/error.xhtml";
-                logger.warning(ex.getMessage());
-                ectx.dispatch(errPage);
-            }
+        }
+        catch (PermissionDenied ex) {
+            ExternalContext ectx = ctx.getExternalContext();
+            ectx.setResponseStatus(HttpServletResponse.SC_FORBIDDEN);
+            Map<String, Object> requestMap = ectx.getRequestMap();
+            requestMap.put("errorMsg", ex.getMessage());
+            String errPage = "/error/error.xhtml";
+            logger.warning(ex.getMessage());
+            ectx.dispatch(errPage);
+        }
 
         try {
             ctx.release();
@@ -97,11 +101,12 @@ abstract public class AbstractFacesServlet extends HttpServlet {
      * @throws javax.servlet.ServletException
      * @throws java.io.IOException
     */
-@Override
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse
         response) throws ServletException, IOException {
         processRequest(request, response);
     }
+
     protected FacesContext getFacesContext(HttpServletRequest request,
         HttpServletResponse response) {
         FacesContext facesContext = FacesContext.getCurrentInstance();
@@ -129,18 +134,7 @@ abstract public class AbstractFacesServlet extends HttpServlet {
         }
         return facesContext;
     }
-    public void removeFacesContext() {
-        InnerFacesContext.setFacesContextAsCurrentInstance(null);
-    }
-    protected Application getApplication(FacesContext facesContext) {
-        return facesContext.getApplication();
-    }
-    protected Object getManagedBean(String beanName, FacesContext
-        facesContext) {
-    return
-        getApplication(facesContext).getVariableResolver().resolveVariable(facesContext,
-            beanName);
-    }
+
     // You need an inner class to be able to call FacesContext.setCurrentInstance
     // since it's a protected method
     private abstract static class InnerFacesContext extends FacesContext {
