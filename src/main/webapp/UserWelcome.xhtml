@@ -24,7 +24,8 @@
                         <p:submenu label="Actions">
                             <p:menuitem value="Change password"/>
                             <p:menuitem url="AdminWelcome.xhtml"
-                                value="Go to AdminWelcome"/>
+                                        rendered='#{ currentUser.hasRole("admin") }'
+                                        value="Go to AdminWelcome"/>
                             <p:menuitem action="#{userWelcome.logout}" value="Logout"/>
                         </p:submenu>
                     </p:menu>
