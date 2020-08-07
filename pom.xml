@@ -12,7 +12,10 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <generated-sources.dir>${project.build.directory}/generated-sources</generated-sources.dir>
+        <generated-doc.dir>/home/claas/NetBeansProjects/arachne/target/mkdocs/doc</generated-doc.dir>
+
         <web-inf.dir>${project.build.directory}/${project.build.finalName}/WEB-INF</web-inf.dir>
+        <web-doc.dir>${project.build.directory}/${project.build.finalName}/doc</web-doc.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <dynamic-data.dir>/var/lib/arachne</dynamic-data.dir>
         <plugin.dir>/usr/lib64/openvpn/plugins/</plugin.dir>
@@ -98,6 +101,25 @@
         </resources>
 
         <plugins>
+            <plugin>
+                <groupId>com.github.fabienbarbero</groupId>
+                <artifactId>mkdocs-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <id>doc</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <configFile>${basedir}/src/main/doc/mkdocs.yml</configFile>
+                            <clean>false</clean>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -202,13 +224,35 @@
             </plugin>
 
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <id>copy-web-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/doc</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${generated-doc.dir}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
                 <version>1.5.2</version>
                 <executions>
                     <execution>
                         <phase>prepare-package</phase>
-                        <id>Patch web.xml></id>
+                        <id>Patch web.xml</id>
                         <goals>
                             <goal>replace</goal>
                         </goals>
