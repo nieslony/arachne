@@ -308,7 +308,7 @@
                             <replacements>
                                 <replacement>
                                     <token>@@version@@</token>
-                                    <value>${version}</value>
+                                    <value>${project.version}</value>
                                 </replacement>
                             </replacements>
                         </configuration>
