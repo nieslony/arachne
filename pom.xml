@@ -86,7 +86,7 @@
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -103,6 +103,10 @@
             <resource>
                 <targetPath>${web-inf.dir}/sql</targetPath>
                 <directory>src/main/sql</directory>
+            </resource>
+            <resource>
+                <targetPath>${web-inf.dir}</targetPath>
+                <directory>${project.build.directory}/generated-resources</directory>
             </resource>
         </resources>
 
@@ -121,6 +125,28 @@
                         <configuration>
                             <configFile>${basedir}/src/main/doc/mkdocs.yml</configFile>
                             <clean>false</clean>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>Copy generated docs</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/doc</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${generated-doc.dir}</directory>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
@@ -230,34 +256,12 @@
             </plugin>
 
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-web-resources</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}/doc</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${generated-doc.dir}</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
                 <artifactId>replacer</artifactId>
                 <version>1.5.3</version>
                 <executions>
                     <execution>
-                        <phase>prepare-package</phase>
+                        <phase>generate-resources</phase>
                         <id>Patch web.xml</id>
                         <goals>
                             <goal>replace</goal>
