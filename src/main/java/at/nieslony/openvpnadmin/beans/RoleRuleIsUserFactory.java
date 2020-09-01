@@ -19,11 +19,11 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.RoleRuleIsUser;
+import at.nieslony.utils.classfinder.StaticMemberBean;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.context.FacesContext;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -40,16 +40,15 @@ public class RoleRuleIsUserFactory
         implements RoleRuleFactory, Serializable
 {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
-    private LdapSettings ldapSettings = null;
+
+    @StaticMemberBean
+    static private LdapSettings ldapSettings = null;
+
+    static public void setLdapSettings(LdapSettings ls) {
+        ldapSettings = ls;
+    }
 
     private LdapSettings getLdapSettings() {
-        if (ldapSettings == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            ldapSettings = (LdapSettings) context.getExternalContext().getApplicationMap().get("ldapSettings");
-            if (ldapSettings == null)
-                logger.severe("Cannot find attribute ldapSettings");
-        }
-
         return ldapSettings;
     }
 
