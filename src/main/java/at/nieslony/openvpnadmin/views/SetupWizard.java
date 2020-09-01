@@ -1194,9 +1194,13 @@ public class SetupWizard implements Serializable {
 
     public StreamedContent getSqlCreateDatabaseFile() {
         String sql = getSqlCreateDatabase();
-
         InputStream is = new ByteArrayInputStream(sql.getBytes());
-        StreamedContent sc = new DefaultStreamedContent(is, "text/sql", "create-arachne-database.sql");
+
+        StreamedContent sc = DefaultStreamedContent.builder()
+                .name("create-arachne-database.sql")
+                .contentType("text/sql")
+                .stream(() -> is)
+                .build();
 
         return sc;
     }
