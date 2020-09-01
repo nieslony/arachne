@@ -7,14 +7,21 @@ package at.nieslony.openvpnadmin.servlets;
 
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -53,6 +60,26 @@ public class Download extends AbstractFacesServlet {
         }
     }
 
+    private void handleIndex(HttpServletRequest request, HttpServletResponse response)
+            throws Exception
+    {
+        logger.info("Getting index");
+        String index = "<empty>";
+
+        ServletContext sctx = request.getServletContext();
+
+        try (InputStream is = sctx.getResourceAsStream("/WEB-INF/download-index.html")) {
+            index = IOUtils.toString(is, StandardCharsets.UTF_8);
+            logger.info(index);
+        }
+        catch (IOException ex) {
+            logger.warning(ex.getMessage());
+        }
+
+        try (PrintWriter printWriter = response.getWriter()) {
+            printWriter.write(index);
+        }
+    }
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -75,26 +102,28 @@ public class Download extends AbstractFacesServlet {
             splitPath = request.getPathInfo().split("/");
         }
 
-        if (splitPath == null || splitPath.length < 2) {
-            handleNotFound(request, response, "<empty>");
+        String fileName = "";
+        if (splitPath != null && splitPath.length >= 2) {
+            fileName = splitPath[1];
         }
-        else {
-            String fileName = splitPath[1];
-            try {
-                switch (fileName) {
-                    case "add-vpn-to-networkmanager.sh":
-                        handleAdddVpnToNetworkManagerSh(request, response);
-                        break;
-                    case "client-config.ovpn":
-                        handleClientConfig(request, response);
-                        break;
-                    default:
-                        handleNotFound(request, response, fileName);
-                }
+        try {
+            logger.info(String.format("Download: %s", fileName));
+            switch (fileName) {
+                case "add-vpn-to-networkmanager.sh":
+                    handleAdddVpnToNetworkManagerSh(request, response);
+                    break;
+                case "client-config.ovpn":
+                    handleClientConfig(request, response);
+                    break;
+                case "":
+                    handleIndex(request, response);
+                    break;
+                default:
+                    handleNotFound(request, response, fileName);
             }
-            catch (Exception ex) {
-                logger.log(Level.WARNING, "Cannot handle download: {0}", ex.getMessage());
-            }
+        }
+        catch (Exception ex) {
+            logger.log(Level.WARNING, "Cannot handle download: {0}", ex.getMessage());
         }
     }
 
