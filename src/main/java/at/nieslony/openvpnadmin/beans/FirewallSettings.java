@@ -533,7 +533,7 @@ public class FirewallSettings implements Serializable {
                 for (What what : entry.getWhats()) {
                     JSONObject jsonEntry = new JSONObject();
 
-                    jsonEntry.put("whereType", where.getWhereType());
+                    jsonEntry.put("whereType", where.getWhereType().toString());
                     switch (where.getWhereType()) {
                         case Everywhere:
                             break;
@@ -545,7 +545,7 @@ public class FirewallSettings implements Serializable {
                             jsonEntry.put("whereMask", where.getMask());
                             break;
                     }
-                    jsonEntry.put("whatType", what.getWhatType());
+                    jsonEntry.put("whatType", what.getWhatType().toString());
                     switch (what.getWhatType()) {
                         case Everything:
                             break;
