@@ -64,6 +64,24 @@ public class Api extends AbstractFacesServlet {
         logger.info(jsonStr);
         out.println(jsonStr);
         out.flush();
+        response.setContentType("application/json");
+
+        return HttpServletResponse.SC_OK;
+    }
+
+    private int handleApiIndex(HttpServletRequest request,
+            HttpServletResponse response)
+            throws PermissionDenied, IOException
+    {
+        if (!currentUser.hasRole("user"))
+            throw new PermissionDenied();
+
+        try (PrintWriter writer = response.getWriter()) {
+            writer.println("<html><body>");
+            writer.println("<a href='auth'>auth</a>");
+            writer.println("<a href='firewall'>firewall</a>");
+            writer.println("</body></html>");
+        }
 
         return HttpServletResponse.SC_OK;
     }
@@ -83,7 +101,7 @@ public class Api extends AbstractFacesServlet {
         String pathInfo = request.getPathInfo();
         String command = null;
         LinkedList<String> apiPath = null;
-        if (pathInfo != null && !pathInfo.isEmpty()) {
+        if (pathInfo != null && !pathInfo.isEmpty() && !pathInfo.equals("/")) {
             apiPath = new LinkedList<>(Arrays.asList(request.getPathInfo().split("/")));
             apiPath.pop();
             command = apiPath.pop();
@@ -94,12 +112,10 @@ public class Api extends AbstractFacesServlet {
         try (PrintWriter out = response.getWriter()) {
             try {
                 if (command == null || apiPath == null) {
-                    out.println("Illegal API call");
-                    status = HttpServletResponse.SC_NOT_FOUND;
+                    status = handleApiIndex(request, response);
                 }
                 else if (command.equals("firewall")) {
                     status = handleFirewall(apiPath, request, response, out);
-                    response.setContentType("application/json");
                 }
                 else if (command.equals("auth"))
                     status = handleAuth(apiPath, request, response);
