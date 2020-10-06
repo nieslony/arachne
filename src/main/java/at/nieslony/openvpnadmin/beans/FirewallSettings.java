@@ -551,16 +551,16 @@ public class FirewallSettings implements Serializable {
                             break;
                         case PortListProtocol:
                             jsonEntry.put("whatPorts", what.getPorts());
-                            jsonEntry.put("whatProtocol", what.getProtocol());
+                            jsonEntry.put("whatProtocol", what.getProtocol().toString());
                             break;
                         case PortProtocol:
                             jsonEntry.put("whatPort", what.getPort());
-                            jsonEntry.put("whatProtocol", what.getProtocol());
+                            jsonEntry.put("whatProtocol", what.getProtocol().toString());
                             break;
                         case PortRangeProtocol:
                             jsonEntry.put("whatPortFrom", what.getPortFrom());
                             jsonEntry.put("whatPortTo", what.getPortTo());
-                            jsonEntry.put("whatProtocol", what.getProtocol());
+                            jsonEntry.put("whatProtocol", what.getProtocol().toString());
                             break;
                         case Service:
                             jsonEntry.put("whatService", what.getService().getId());
