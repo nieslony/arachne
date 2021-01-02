@@ -364,7 +364,7 @@ public class CertificateAuthority
     public void writeDhParameters(PrintWriter out) throws IOException {
         logger.info("Creating DH parameters. This can take a while...");
         DHParametersGenerator generator = new DHParametersGenerator();
-        generator.init(1024, 80, new SecureRandom());
+        generator.init(2048, 80, new SecureRandom());
         DHParameters params = generator.generateParameters();
         DHParameters realParams = new DHParameters(params.getP(), BigInteger.valueOf(2));
         ASN1EncodableVector seq = new ASN1EncodableVector();
