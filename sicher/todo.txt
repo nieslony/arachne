@@ -1,5 +1,0 @@
-- redesign user vpn page
-
-- LDAP
-  - basic auth
-

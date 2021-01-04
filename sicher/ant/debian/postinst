@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ln -svf /usr/share/java/bcprov.jar /var/lib/tomcat8/webapps/arachne/WEB-INF/lib
-ln -svf /usr/share/java/postgresql.jar /var/lib/tomcat8/webapps/arachne/WEB-INF/lib
