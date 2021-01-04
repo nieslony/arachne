@@ -1,0 +1,354 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:event listener="#{setupWizard.requireNoSetup}" type="preRenderView"/>
+
+    <h:head>
+        <title>Arachne - Setup Wizard</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="shortcut icon" type="image/png" href="#{resource['pics:ovpncdl-green-32x32.png']}"/>
+    </h:head>
+
+    <h:body>
+        <p:dialog id="dialog-setup" visible="true" closable="false" header="Arachne - SetupWizard">
+            <h:form id="form-setup">
+                <p:wizard flowListener="#{setupWizard.onFlowProcess}"
+                          id="setupWizard">
+                    <p:tab title="Welcome">
+                        <p>
+                            Welcome to <strong>arachne</strong>, an web application
+                            for administering an openVPN server!
+                        </p>
+                        <p>
+                            Before first use some settings have do be done.
+                        </p>
+                    </p:tab>
+                <p:tab id="adminUser" title="Admin User">
+                    <h:panelGrid columns="2" columnClasses="label, value">
+                        <h:outputText value="Admin user name *:"/>
+                        <p:inputText value="#{setupWizard.adminUserName}" required="true"/>
+                        <h:outputText value="Password *:"/>
+                        <p:password id="password1"
+                                       value="#{setupWizard.password}"
+                                       match="password2"
+                                       required="true"
+                                       feedback="true"
+                                       label="'Password'"
+                                       />
+
+                        <h:outputText value="Retype password *:"/>
+                        <p:password id="password2"
+                                       value="#{setupWizard.password}"
+                                       required="true"
+                                       label="'Retype password'"
+                                       />
+                    </h:panelGrid>
+                </p:tab>
+<!--                <p:tab id="pki" title="PKI">
+                    <p:selectOneRadio columns="1" value="#{setupWizard.caType}">
+                        <f:selectItem itemLabel="Self signed CA"
+                                      itemValue="SELF_SIGNED"/>
+                        <f:selectItem itemLabel="Request server certificate from root CA"
+                                      itemValue="REMOTE_SIGNED"/>
+                        <p:ajax update="setupWizard"/>
+                    </p:selectOneRadio>
+                </p:tab>
+                <p:tab id="prepareSignCA" title="Prepare CSR for CA"
+                       rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="csrLabel"/>
+                        <p:inputText id="csrLabel"
+                                     value="#{setupWizard.csrTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="csrCommonName"/>
+                        <p:inputText id="csrCommonName"
+                                     value="#{setupWizard.csrCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="csrOrganization"/>
+                        <p:inputText id="csrOrganization" value="#{setupWizard.csrOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="csrOrganizationalUnit"/>
+                        <p:inputText id="csrOrganizationalUnit" value="#{setupWizard.csrOrganizationalUnit}"/>
+
+                        <h:outputLabel value="City:" for="csrCity"/>
+                        <p:inputText id="csrCity" value="#{setupWizard.csrCity}"/>
+                        <h:outputLabel value="State:" for="csrState"/>
+                        <p:inputText id="csrState" value="#{setupWizard.csrState}"/>
+
+                        <h:outputLabel value="Country:" for="csrCountry"/>
+                        <p:inputText id="csrCountry" value="#{setupWizard.csrCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Signature algorithm:" for="csrSignatureAlgorithm"/>
+                        <p:selectOneMenu id="csrSignatureAlgorithm" value="#{setupWizard.csrSignatureAlgorithm}">
+                            <p:ajax update="csrKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key size:"/>
+                        <p:selectOneMenu id="csrKeySize" value="#{setupWizard.csrKeySize}">
+                            <f:selectItems value="#{setupWizard.csrKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="createCsr" title="Create CSR" rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <h:outputLabel value="Copy this CSR to you CA…"/>
+                    <br/>
+                    <h:outputText rows="15" cols="80" value="#{setupWizard.csrText}"
+                                     disabled="true"
+                                     style="font-family: monospace; white-space: pre"/>
+                    <br/>
+                    <h:outputText value="… or download CSR as file: …"/>
+                    <p:commandButton value="Download" ajax="false" icon="ui-icon-arrowthick-1-s">
+                        <p:fileDownload value="#{setupWizard.csrAsFile}" />
+                    </p:commandButton>
+                    <h:outputText value="… and sign it with your signing CA"/>
+                </p:tab>
+                <p:tab id="signCsr" title="Set signed CA certificate"
+                       rendered='#{setupWizard.caType == "REMOTE_SIGNED"}'>
+                    <p:panelGrid columns="2" layout="grid">
+                        <h:outputText value="Insert your signed certificate: …"/>
+                        <h:outputText value="Insert your CA chain: …"/>
+
+                        <p:inputTextarea style="font-family: monospace; white-space: pre"
+                                     rows="15" cols="80"
+                                     id="csrSignedCsr"
+                                     value="#{setupWizard.csrSignedCsr}"/>
+                        <p:inputTextarea style="font-family: monospace; white-space: pre"
+                                     rows="15" cols="80"
+                                     id="csrSigningCa"
+                                     value="#{setupWizard.csrSigningCa}"/>
+
+                        <h:outputText value="… or upload certificate file:"/>
+                        <h:outputText value="… or upload CA chain file:"/>
+
+                        <p:fileUpload fileUploadListener="#{setupWizard.handleCsrSignedCertUpload}"
+                                      mode="advanced" dragDropSupport="false"
+                                      update="csrSignedCsr"
+                                      sizeLimit="100000"
+                                      fileLimit="1"
+                                      allowTypes="/(\.|\/)(pem|crt)$/" />
+                        <p:fileUpload fileUploadListener="#{setupWizard.handleCsrSigningCaUpload}"
+                                      mode="advanced" dragDropSupport="false"
+                                      update="csrSigningCa"
+                                      sizeLimit="100000"
+                                      fileLimit="1"
+                                      allowTypes="/(\.|\/)(pem|crt)$/" />
+                    </p:panelGrid>
+                </p:tab> -->
+                <p:tab id="createSelfSignedCA" title="Create self signed CA"
+                       rendered='#{setupWizard.caType == "SELF_SIGNED"}'>
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="caLabel"/>
+                        <p:inputText id="caLabel"
+                                     value="#{setupWizard.caTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="caCommonName"/>
+                        <p:inputText id="caCommonName"
+                                     value="#{setupWizard.caCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="caOrganization"/>
+                        <p:inputText id="caOrganization" value="#{setupWizard.caOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="caOrganizationalUnit"/>
+                        <p:inputText id="caOrganizationalUnit" value="#{setupWizard.caOrganizationalUnit}"/>
+
+                        <h:outputLabel value="City:" for="caCity"/>
+                        <p:inputText id="caCity" value="#{setupWizard.caCity}"/>
+                        <h:outputLabel value="State:" for="caState"/>
+                        <p:inputText id="caState" value="#{setupWizard.caState}"/>
+
+                        <h:outputLabel value="Country:" for="caCountry"/>
+                        <p:inputText id="caCountry" value="#{setupWizard.caCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Valid from:" for="caStartDate"/>
+                        <p:calendar id="caStartDate" value="#{setupWizard.caStartDate}"/>
+                        <p:outputLabel value="Valid to:" for="caEndDate"/>
+                        <p:calendar id="caEndDate" value="#{setupWizard.caEndDate}"/>
+
+                        <p:outputLabel value="Signature algorithm:" for="caSignatureAlgorithm"/>
+                        <p:selectOneMenu id="caSignatureAlgorithm" value="#{setupWizard.caSignatureAlgorithm}">
+                            <p:ajax update="caKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key size:"/>
+                        <p:selectOneMenu id="caKeySize" value="#{setupWizard.caKeySize}">
+                            <f:selectItems value="#{setupWizard.caKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="createCertificate" title="Create server certificate">
+                    <h:panelGrid columns="4" columnClasses="label, value, label, value">
+                        <h:outputLabel value="Title *:" for="certLabel"/>
+                        <p:inputText id="certLabel"
+                                     value="#{setupWizard.certTitle}"
+                                     label="title"
+                                     required="true"/>
+                        <h:outputLabel value="Common name *:" for="certCommonName"/>
+                        <p:inputText id="certCommonName"
+                                     value="#{setupWizard.certCommonName}"
+                                     label="common name"
+                                     required="true"/>
+
+                        <h:outputLabel value="Organization:" for="certOrganization"/>
+                        <p:inputText id="certOrganization" value="#{setupWizard.certOrganization}"/>
+                        <h:outputLabel value="Organizational unit:" for="certOrganizationalUnit"/>
+                        <p:inputText id="certOrganizationalUnit" value="#{setupWizard.certOrganizationalUnit}"/>
+
+                        <h:outputLabel value="City:" for="certCity"/>
+                        <p:inputText id="certCity" value="#{setupWizard.certCity}"/>
+                        <h:outputLabel value="State:" for="certState"/>
+                        <p:inputText id="certState" value="#{setupWizard.certState}"/>
+
+                        <h:outputLabel value="Country:" for="certCountry"/>
+                        <p:inputText id="certCountry" value="#{setupWizard.certCountry}"/>
+                        <h:outputText value=" "/>
+                        <h:outputText value=" "/>
+
+                        <p:outputLabel value="Valid from:" for="certStartDate"/>
+                        <p:calendar id="certStartDate" value="#{setupWizard.certStartDate}"/>
+                        <p:outputLabel value="Valid to:" for="certEndDate"/>
+                        <p:calendar id="certEndDate" value="#{setupWizard.certEndDate}"/>
+
+                        <p:outputLabel value="Signature algorithm:" for="certSignatureAlgorithm"/>
+                        <p:selectOneMenu id="certSignatureAlgorithm" value="#{setupWizard.certSignatureAlgorithm}">
+                            <p:ajax update="certKeySize"/>
+                            <f:selectItems value="#{setupWizard.signatureAlgorithms}"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Key size:" for="certKeySize"/>
+                        <p:selectOneMenu id="certKeySize" value="#{setupWizard.certKeySize}">
+                            <f:selectItems value="#{setupWizard.certKeySizes}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab id="databaseSettings" title="Database">
+                    <h:panelGrid columns="2" columnClasses="label, value">
+                        <h:outputLabel value="Database name:" for="databaseName"/>
+                        <p:inputText id="databaseName" value="#{setupWizard.databaseName}">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>
+
+                        <h:outputLabel value="Databse host:" for="databaseHost"/>
+                        <p:inputText value="#{setupWizard.databaseHost}" id="databaseHost">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>
+
+                        <h:outputLabel value="Databse port:" for="databasePort"/>
+                        <p:inputText value="#{setupWizard.databasePort}" id="databasePort">
+                            <p:ajax update="databaseUrl"/>
+                        </p:inputText>
+
+                        <h:outputLabel value="Databse user:" for="databaseUser"/>
+                        <p:inputText value="#{setupWizard.databaseUser}" id="databaseUser"/>
+
+                        <h:outputLabel value="Databse password:" for="databasePassword"/>
+                        <p:password value="#{setupWizard.databasePassword}" id="databasePassword"/>
+
+                        <h:outputText value="Database URL:"/>
+                        <h:outputText id="databaseUrl" value="#{setupWizard.databaseUrl}"/>
+
+                        <h:outputText value=""/>
+                        <!--
+                        <p:selectOneRadio value="#{setupWizard.userExistingDb}" columns="1">
+                            <f:selectItem itemValue="0" itemLabel="Use existing database and user"/>
+                            <f:selectItem itemValue="1" itemLabel="Create database and user"/>
+                            <p:ajax event="change"
+                                    update="lblDbAdminUser dbAdminUser lblDbAdminPassword dbAdminPassword"/>
+                        </p:selectOneRadio>
+
+                        <h:outputText id="lblDbAdminUser" value="Admin user name:" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        <p:inputText id="dbAdminUser" value="#{setupWizard.dbAdminUser}" disabled="#{setupWizard.userExistingDb == 0}"/>
+
+                        <h:outputLabel id="lblDbAdminPassword" value="Admin user password:" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        <p:password id="dbAdminPassword" value="#{setupWizard.dbAdminPassword}" disabled="#{setupWizard.userExistingDb == 0}"/>
+                        -->
+                    </h:panelGrid>
+
+                    <p:commandButton value="Download SQL for database creation"
+                                     icon="ui-icon-arrowthick-1-s"
+                                     ajax="false">
+                        <p:fileDownload value="#{setupWizard.sqlCreateDatabaseFile}"/>
+                    </p:commandButton>
+                    &nbsp;
+                    <p:commandButton value="Test connection" icon="ui-icon-script" actionListener="#{setupWizard.onTestDatabaseConnection()}" />
+                </p:tab>
+                <p:tab id="summary" title="Summary">
+                    <p:panel id="finishPanel">
+                        <p:commandButton value="Finish" action="#{setupWizard.onSave}" ajax="true"
+                                         id="finishButton"
+                                         />
+                        <!--
+                        <h:panelGrid columns="2">
+                            <h:outputText value="Save database settings"/>
+                            <h:outputText value="#{setupWizard.styleClassSaveDbSettings}"
+                                          id="saveDbSettingsIcon"
+                                          styleClass="#{setupWizard.styleClassSaveDbSettings}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Initialize properties storage"/>
+                            <h:outputText value="#{setupWizard.styleClassInitPropertyStorage}"
+                                          id="initPropertyStorageIcon"
+                                          styleClass="#{setupWizard.styleClassInitPropertyStorage}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Initialize local users and roles"/>
+                            <h:outputText value="initLocalUserAndRolesIcon"
+                                          id="initLocalUserAndRolesIcon"
+                                          styleClass="#{setupWizard.styleClassInitLocalUserAndRoles}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Create user #{setupWizard.adminUserName}"/>
+                            <h:outputText value=""
+                                          id="createUserIcon"
+                                          styleClass="#{setupWizard.styleClassCreateUser}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Assign role admin to user #{setupWizard.adminUserName}"/>
+                            <h:outputText value=""
+                                          id="assignRoleAdminIcon"
+                                          styleClass="#{setupWizard.styleClassAssignRoleAdmin}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Create CA"/>
+                            <h:outputText value=""
+                                          id="createCAIcon"
+                                          styleClass="#{setupWizard.styleClassCreateCA}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Create server certificate"/>
+                            <h:outputText value=""
+                                          id="createServerCertitficateIcon"
+                                          styleClass="#{setupWizard.styleClassCreateServerCertitficate}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Create DH parameters"/>
+                            <h:outputText value=""
+                                          id="createDhParametersIcon"
+                                          styleClass="#{setupWizard.styleClassCreateDhParameters}"
+                                          style="font-size: 150%"/>
+
+                            <h:outputText value="Schedule tasks"/>
+                            <h:outputText value=""
+                                          id="scheduleTasksIcon"
+                                          styleClass="#{setupWizard.styleClassScheduleTasks}"
+                                          style="font-size: 150%"/>
+                        </h:panelGrid>  -->
+                    </p:panel>
+                </p:tab>
+
+            </p:wizard>
+            <p:messages showDetail="true"/>
+            </h:form>
+        </p:dialog>
+    </h:body>
+</html>

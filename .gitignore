@@ -3,3 +3,6 @@ build
 dist
 *~
 external
+/target/work
+work
+target

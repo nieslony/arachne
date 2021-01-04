@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>at.nieslony</groupId>
+    <artifactId>arachne</artifactId>
+    <version>r0.2-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>arachne</name>
+
+    <properties>
+        <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
+        <generated-sources.dir>${project.build.directory}/generated-sources</generated-sources.dir>
+        <generated-doc.dir>/home/claas/NetBeansProjects/arachne/target/mkdocs/doc</generated-doc.dir>
+
+        <web-inf.dir>${project.build.directory}/${project.build.finalName}/WEB-INF</web-inf.dir>
+        <web-doc.dir>${project.build.directory}/${project.build.finalName}/doc</web-doc.dir>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <dynamic-data.dir>/var/lib/arachne</dynamic-data.dir>
+        <plugin.dir>/usr/lib64/openvpn/plugins/</plugin.dir>
+        <maven.war.webxml>${project.build.directory}/generated-resources/web.xml</maven.war.webxml>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>databasepropertiesstorage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-web-api</artifactId>
+            <version>8.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.faces</groupId>
+            <artifactId>jsf-api</artifactId>
+            <version>2.2.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.primefaces</groupId>
+            <artifactId>primefaces</artifactId>
+            <version>8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15to18</artifactId>
+            <version>1.68</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15to18</artifactId>
+            <version>1.68</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-vfs</artifactId>
+            <version>3.2.15.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <targetPath>${web-inf.dir}/resources/primefaces-arachne</targetPath>
+                <directory>src/main/arachne-theme</directory>
+            </resource>
+            <resource>
+                <targetPath>${web-inf.dir}/sql</targetPath>
+                <directory>src/main/sql</directory>
+            </resource>
+            <resource>
+                <targetPath>${web-inf.dir}</targetPath>
+                <directory>${project.build.directory}/generated-resources</directory>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>com.github.fabienbarbero</groupId>
+                <artifactId>mkdocs-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <id>doc</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <configFile>${basedir}/src/main/doc/mkdocs.yml</configFile>
+                            <clean>false</clean>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>Copy generated docs</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/doc</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${generated-doc.dir}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${generated-sources.dir}</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <compilerArguments>
+                        <endorseddirs>${endorsed.dir}</endorseddirs>
+                    </compilerArguments>
+                    <showDeprecation>true</showDeprecation>
+	            <source>1.8</source>
+	            <target>1.8</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${endorsed.dir}</outputDirectory>
+                            <silent>true</silent>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>javax</groupId>
+                                    <artifactId>javaee-endorsed-api</artifactId>
+                                    <version>7.0</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-sources-flag</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <target>
+                                <exec executable="python" failonerror="true">
+                                    <arg value="property-templates/create-properties-backend.py"/>
+                                    <arg value="--input_dir"/>
+                                    <arg value="property-templates"/>
+                                    <arg value="--dest_dir"/>
+                                    <arg value="${generated-sources.dir}"/>
+                                </exec>
+                                <mkdir dir="${generated-sources.dir}/at/nieslony/openvpnadmin"/>
+                                <echo output="${generated-sources.dir}/at/nieslony/openvpnadmin/ArachneStatics.java">
+                                    package at.nieslony.openvpnadmin;
+
+                                    public class ArachneStatics {
+                                    private static final String VERSION = "${project.version}";
+
+                                    public String getVersion() {
+                                    return VERSION;
+                                    }
+                                    }
+                                </echo>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <id>Patch web.xml</id>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <configuration>
+                            <file>src/main/webapp/WEB-INF/web.xml</file>
+                            <outputFile>${project.build.directory}/generated-resources/web.xml</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@DYNAMIC-DATA-DIR@@</token>
+                                    <value>${dynamic-data.dir}</value>
+                                </replacement>
+                                <replacement>
+                                    <token>@@PLUGIN-DIR@@</token>
+                                    <value>${plugin.dir}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <id>Patch arachne.conf</id>
+                        <configuration>
+                            <file>src/main/apache/arachne.conf</file>
+                            <outputFile>${project.build.directory}/arachne.conf</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@arachne-path@@</token>
+                                    <value>arachne</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                        <id>Patch install-arachne.yml</id>
+                        <configuration>
+                            <file>src/main/setup/install-arachne.yml</file>
+                            <outputFile>${project.build.directory}/install-arachne.yml</outputFile>
+                            <replacements>
+                                <replacement>
+                                    <token>@@version@@</token>
+                                    <value>${project.version}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>2.0.2.Final</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

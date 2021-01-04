@@ -1,0 +1,209 @@
+- hosts: all
+
+  environment:
+    KRB5_CLIENT_KTNAME: /etc/krb5.keytab
+
+#  vars:
+#    ansible_python_interpreter: /usr/bin/python3
+
+  vars:
+    pwd_alias: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+    packages:
+        - openvpn
+        - openvpn-arachne-plugin
+        - wildfly
+        - postgresql-server
+        - mod_ssl
+        - mod_session
+        - mod_auth_gssapi
+        - httpd
+        - net-tools
+    arachne_repo_url: "https://download.opensuse.org/repositories/home:/nieslony/CentOS_$releasever"
+    arachne_repo_key: "https://download.opensuse.org/repositories/home:/nieslony/CentOS_{{ ansible_distribution_major_version }}/repodata/repomd.xml.key"
+
+  tasks:
+  - set_fact:
+      ajp_pass: "{{ pwd_alias }}"
+
+  - name: "Add arachne repository {{ arachne_repo_url }}"
+    yum_repository:
+      name: nieslony
+      description: "Nieslony's repository"
+      baseurl: "{{ arachne_repo_url }}"
+
+  - name: Install rpm key for repo nieslony
+    rpm_key:
+      state: present
+      key: "{{ arachne_repo_key }}"
+
+  - name: Add harbottle repository
+    package:
+      name: https://harbottle.gitlab.io/harbottle-main/{{ ansible_distribution_major_version }}/x86_64/harbottle-main-release.rpm
+      state: present
+      disable_gpg_check: true
+
+  - name: Add EPEL
+    package:
+      name: "epel-release"
+      state: present
+
+  - name: "Install packages {{ packages | join(', ') }}"
+    package:
+      name: "{{ packages }}"
+      state: present
+
+  - name: Copy arachne webapp
+    copy:
+      src: arachne-@@version@@.war
+      dest: /var/lib/wildfly/standalone/deployments/
+
+  - name: Create Arachne work directorfy
+    file:
+      path: /var/lib/arachne
+      owner: wildfly
+      state: directory
+
+  - name: Enable firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+
+  - name: Start wildfly
+    service:
+      name: wildfly
+      state: started
+      enabled: yes
+
+  - name: Initialze PostgresQL
+    command: "/usr/bin/postgresql-setup {{ '--initdb' if ansible_distribution_major_version == 8 else 'initdb' }}"
+    args:
+      creates: /var/lib/pgsql/data/pg_hba.conf
+
+  - name: Allow access to postgres db
+    postgresql_pg_hba:
+      dest: /var/lib/pgsql/data/pg_hba.conf
+      contype: host
+      users: openvpnadmin
+      source: 127.0.0.1
+      databases: openvpnadmin
+      method: md5
+
+  - name: Start and enable postgresql
+    service:
+      name: postgresql
+      state: started
+      enabled: yes
+
+  - name: Enable HTTP in firewalld
+    firewalld:
+      service: http
+      state: enabled
+      immediate: yes
+      permanent: yes
+
+  - name: Enable HTTPS in firewalld
+    firewalld:
+      service: https
+      state: enabled
+      immediate: yes
+      permanent: yes
+
+  - name: Enable 8080 in firewalld
+    firewalld:
+      port: 8080/tcp
+      state: enabled
+      immediate: yes
+      permanent: yes
+
+  - name: Enable Openvpn in firewalld
+    firewalld:
+      service: openvpn
+      state: enabled
+      immediate: yes
+      permanent: yes
+
+  - name: Copy arachne config for apache
+    copy:
+      src: arachne.conf
+      dest: /etc/httpd/conf.d
+
+  - name: Install urllib gssapi (yum)
+    yum:
+      name: python3-urllib-gssapi
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "8"
+
+  - name: Install pip
+    yum:
+      name: python2-pip
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "7"
+
+  - name: Install urllib-gssapi
+    pip:
+      name: urllib-gssapi
+    when:
+      - ansible_facts['distribution'] == "CentOS"
+      - ansible_facts['distribution_major_version'] == "7"
+
+  - name: Check AJP already enabled
+    shell: "netstat -tln | grep -q :8009"
+    register: ajp_enabled
+    ignore_errors: yes
+
+  - name: Enable AJP in wildfly
+    command: "/usr/share/wildfly/bin/jboss-cli.sh --commands='connect,/subsystem=undertow/server=default-server/ajp-listener=myListener:add(socket-binding=ajp, scheme=http, enabled=true'"
+    when: ajp_enabled.rc == 1
+
+  - name: Create service HTTP/{{ ansible_fqdn }} in FreeIPA
+    environment:
+      KRB5_CLIENT_KTNAME: /etc/krb5.keytab
+    ipa_service:
+      name: HTTP/{{ ansible_fqdn }}
+      state: present
+
+  - name: Install keytab in /etc/httpd
+    shell: |
+        kinit -k
+        ipa-getkeytab --principal=HTTP/{{ ansible_fqdn }} --keytab=/etc/httpd/krb5.keytab --mech GSSAPI
+        kdestroy
+    args:
+      creates: /etc/httpd/krb5.keytab
+
+  - name: Change permissions of /etc/httpd/krb5.keytab
+    file:
+      path: /etc/httpd/krb5.keytab
+      owner: apache
+      mode: 0600
+
+  - name: Request SSL certificate
+    shell: |
+      kinit -k
+      ipa-getcert request -k /etc/pki/tls/private/{{ ansible_fqdn }}.key -f /etc/pki/tls/certs/{{ ansible_fqdn }}.crt -w
+      kdestroy
+
+  - name: Set certificate in apache config
+    lineinfile:
+      path: /etc/httpd/conf.d/ssl.conf
+      regexp: 'SSLCertificateFile\s*/etc/pki/tls/certs/localhost.crt'
+      line: SSLCertificateFile /etc/pki/tls/certs/{{ ansible_fqdn }}.crt
+
+  - name: Set private key in apache config
+    lineinfile:
+      path: /etc/httpd/conf.d/ssl.conf
+      regexp: 'SSLCertificateKeyFile\s*/etc/pki/tls/private/localhost.key'
+      line: SSLCertificateKeyFile /etc/pki/tls/private/{{ ansible_fqdn }}.key
+
+  - name: Put SELinux in permissive mode, logging actions that would be blocked.
+    selinux:
+      policy: targeted
+      state: permissive
+
+  - name: Start HTTPD
+    service:
+      name: httpd
+      state: started
+      enabled: yes

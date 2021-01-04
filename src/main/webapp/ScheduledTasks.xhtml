@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<body>
+    <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+        <ui:param name="title" value="Scheduled tasks"/>
+
+        <ui:define name="content">
+            <h:form id="formAddTask">
+                <p:dialog header="#{editTaskScheduler.dlgTaskMode}" widgetVar="dlgAddTask" id="dlgAddTask" minHeight="40">
+                    <p:panelGrid id="panelAddTask" columns="2" layout="grid">
+                        <h:outputLabel value="Task type:"/>
+                        <p:selectOneMenu id="taskType" 
+                                         value="#{editTaskScheduler.dlgAddTask_taskType}"
+                                         disabled="#{!editTaskScheduler.selectTaskTypeEnabled}"
+                                         >
+                            <p:ajax update="panelAddTask dlgAddTaskOk"/>
+                            <f:selectItem itemLabel="Select task type" itemValue="" noSelectionOption="true" />
+                            <f:selectItems value="#{taskScheduler.availableTasks}"
+                                           var="availableTask" 
+                                           itemLabel="#{availableTask.name}"
+                                           itemValue="#{availableTask.klass.name}"/>
+                        </p:selectOneMenu>
+                        
+                        <p:outputLabel value="Startup delay:"/>
+                        <p:outputPanel id="startupDelay">
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayDays}"
+                                       min="0" max="365"
+                                       size="7"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       suffix=" days"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayHours}"
+                                       min="0" max="59"
+                                       suffix=" hours"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelayMins}"
+                                       min="0" max="59"
+                                       suffix=" mins"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_startupDelaySecs}"
+                                       min="0" max="59"
+                                       suffix=" secs"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>
+                        </p:outputPanel>
+                        
+                        <p:outputLabel value="Interval:"/>
+                        <p:outputPanel>
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalDays}"
+                                       min="0" max="365"
+                                       size="7"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       suffix=" days"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalHours}"
+                                       min="0" max="59"
+                                       suffix=" hours"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalMins}"
+                                       min="0" max="59"
+                                       suffix=" mins"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>&nbsp;
+                            <p:spinner value="#{editTaskScheduler.dlgAddTask_intervalSecs}"
+                                       min="0" max="59"
+                                       suffix=" secs"
+                                       disabled="#{!editTaskScheduler.inputOk}"
+                                       size="7"/>
+                        </p:outputPanel>
+                        
+                        <p:outputLabel value="Comment:"/>
+                        <p:inputText value="#{editTaskScheduler.dlgAddTask_comment}"
+                                     disabled="#{!editTaskScheduler.inputOk}"/>     
+                        
+                        <p:outputLabel value="Enabled:"/>
+                        <p:selectBooleanCheckbox value="#{editTaskScheduler.dlgAddTask_isEnabled}"
+                                                 disabled="#{!editTaskScheduler.inputOk}"/>
+                    </p:panelGrid>
+                    
+                    <p:commandButton value="OK" 
+                                     id="dlgAddTaskOk"
+                                     actionListener="#{editTaskScheduler.onAddTaskOk}"
+                                     disabled="#{!editTaskScheduler.inputOk}"
+                                     update=":editTaskScheduler:tasks"
+                                     />
+                    <p:commandButton value="Cancel" onclick="PF('dlgAddTask').hide();"/>
+                </p:dialog>
+            </h:form>
+                
+            <h:form id="editTaskScheduler">
+                <p:contextMenu for="tasks">
+                    <p:menuitem value="Edit..."
+                                actionListener="#{editTaskScheduler.onEditTask}"
+                                update=":formAddTask"
+                                />
+                    <p:menuitem value="Remove" 
+                                actionListener="#{editTaskScheduler.onRemoveTask}"
+                                update="tasks"/>
+                </p:contextMenu>
+                
+                <p:messages id="messages" showDetail="true" closable="true" />
+                <p:dataTable id="tasks" var="task" 
+                             value="#{taskScheduler.scheduledTasks}"
+                             rowKey="#{task.id}"
+                             selectionMode="single"
+                             selection="#{editTaskScheduler.selectedTask}"                             
+                             >
+                    <p:column headerText="Task type">
+                        <h:outputText value="#{task.name}"/>
+                    </p:column>
+                    <p:column headerText="Enabled">
+                        <h:outputText value="#{task.enabled}"/>
+                    </p:column>
+                    <p:column headerText="Startup delay">
+                        <h:outputText value="#{task.formatStartupDelay}"/>
+                    </p:column>
+                    <p:column headerText="Interval">
+                        <h:outputText value="#{task.formatInterval}"/>
+                    </p:column>
+                    <p:column headerText="Next run">
+                        <h:outputText value="#{task.scheduledExecutionTime}"/>
+                    </p:column>
+                    <p:column headerText="Comment">
+                        <h:outputText value="#{task.comment}"/>
+                    </p:column>
+                </p:dataTable>
+                
+                <p:commandButton value="Add task..." 
+                                 actionListener="#{editTaskScheduler.onAddTask}"
+                                 update=":formAddTask"/>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</body>
+</html>

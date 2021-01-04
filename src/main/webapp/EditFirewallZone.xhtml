@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<body>
+    <p:importEnum type="at.nieslony.openvpnadmin.beans.firewallzone.Target.TargetType"/>
+
+    <ui:composition template="/WEB-INF/templates/AdminTemplate.xhtml">
+        <ui:param name="title" value="Edit firewall zone"/>
+
+        <ui:define name="content">
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWho.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWhere.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditWhat.xhtml"/>
+            <ui:include  src="/WEB-INF/dialogs/DlgEditFirewallEntry.xhtml"/>
+
+            <h:form id="firewallZoneForm">
+                <p:accordionPanel>
+                    <p:tab title="Incomping">
+                        <p:dataTable value="#{editFirewallSettings.incomingEntries}"
+                                     id="incomingEntries"
+                                     rowKey="#{entryInfo.entry.id}"
+                                     selectionMode="single"
+                                     selection="#{editFirewallSettings.selectedIncomingEntry}"
+                                     var="entryInfo">
+                            <p:ajax event="rowSelect" update="@form"/>
+                            <p:ajax event="rowUnselect" update="@form"/>
+
+                            <p:column headerText="Label">
+                                <h:outputText value="#{entryInfo.entry.label}"/>
+                            </p:column>
+                            <p:column headerText="Is Active">
+                                <h:outputText value="#{entryInfo.entry.isActive}"/>
+                            </p:column>
+                            <p:column headerText="Who">
+                                <p:selectBooleanButton value="#{entryInfo.isWhoExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whoStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whoStr"
+                                              escape="false"
+                                              value="#{entryInfo.whoStr}"/>
+                            </p:column>
+                            <p:column headerText="Where">
+                                <p:selectBooleanButton value="#{entryInfo.isWhereExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whereStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whereStr"
+                                              escape="false"
+                                              value="#{entryInfo.whereStr}"/>
+                            </p:column>
+                            <p:column headerText="What">
+                                <p:selectBooleanButton value="#{entryInfo.isWhatExpanded}"
+                                                       onLabel="" offLabel=""
+                                                       onIcon="fa-angle-down"
+                                                       offIcon="fa-angle-right">
+                                    <p:ajax update="whatStr"/>
+                                </p:selectBooleanButton>
+                                <h:outputText id="whatStr"
+                                              escape="false"
+                                              value="#{entryInfo.whatStr}"/>
+                            </p:column>
+                            <p:column headerText="Description">
+                                <h:outputText value="#{entryInfo.entry.description}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <p:commandButton
+                            action="#{editFirewallSettings.onNewIncomingEntry}"
+                            value="New..."
+                            ajax="true"
+                            update="dlgEditFirewallEntry formEditFirewallEntry"
+                            />
+                        <p:commandButton
+                            action="#{editFirewallSettings.onCloneIncomingEntry}"
+                            value="Clone..."
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
+                            />
+                        <p:commandButton
+                            action="#{editFirewallSettings.onEditIncomingEntry}"
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
+                            value="Edit..."
+                            update="dlgEditFirewallEntry formEditFirewallEntry"
+                            />
+                        <p:commandButton
+                            action="#{editFirewallSettings.onRemoveIncomingEntry}"
+                            disabled="#{editFirewallSettings.selectedIncomingEntry == null}"
+                            update="@form"
+                            value="Remove"/>
+                    </p:tab>
+
+                    <p:tab title="Outgoing">
+
+                    </p:tab>
+                </p:accordionPanel>
+
+                <p:messages showDetail="true" closable="true"/>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+</body>
+</html>
