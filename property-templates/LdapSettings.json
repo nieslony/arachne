@@ -11,7 +11,8 @@
         { "type": "LdapAuthType",
             "values": [
                 { "const": "NONE",   "description": "none" },
-                { "const": "SIMPLE", "description": "simple" }
+                { "const": "SIMPLE", "description": "simple" },
+                { "const": "GSSAPI", "description": "GSSAPI" }
             ]
         }
     ],
@@ -42,6 +43,8 @@
         { "type": "String", "name": "customGroupSearchFilter", "default": "" },
         { "type": "String", "name": "securityPrincipal",  "default": "" },
         { "type": "String", "name": "securityCredentials",  "default": "", "storeBase64": "true" },
-        { "type": "MemberAttrType", "name": "memberAttrType",  "default": "MAT_MEMBER_DN" }
+        { "type": "MemberAttrType", "name": "memberAttrType",  "default": "MAT_MEMBER_DN" },
+        { "type": "String", "name": "keytabFile", "default": "getDefaultKeytabFile()" },
+        { "type": "String", "name": "kerberosPrincipal", "default": "" }
     ]
 }

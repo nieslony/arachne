@@ -32,6 +32,8 @@ public interface LdapHelperUser {
     public LdapSettingsBase.LdapServerLookupMethod getLdapServereLookupMethod();
     public String getSecurityPrincipal();
     public String getSecurityCredentials();
+    public String getKeytabFile();
+    public String getKerberosPrincipal();
 
     public String getOuUsers();
     public String getAttrUsername();
