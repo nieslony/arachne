@@ -25,6 +25,7 @@ import at.nieslony.openvpnadmin.LdapUser;
 import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import java.io.File;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
@@ -104,5 +105,20 @@ public class LdapSettings
     @Override
     public boolean auth(String dn, String password) {
         return ldapHelper.auth(dn, password);
+    }
+
+    @Override
+    public String getDefaultKeytabFile() {
+        final String[] keytabs = {
+            "/etc/apache2/krb5.keytab",
+            "/etc/httpd/krb5.keytab"
+        };
+
+        for (String k: keytabs) {
+            if (new File(k).isFile())
+                return k;
+        }
+
+        return "/etc/krb5.keytab";
     }
 }

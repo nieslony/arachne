@@ -81,6 +81,20 @@
                                 <f:ajax render="@form"/>
                             </p:selectOneMenu>
 
+                            <p:outputLabel value="Keytab file:"
+                                           rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                           for="keytabFile"/>
+                            <p:inputText id="keytabFile"
+                                           rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                         value="#{ldapSettings.keytabFile}"/>
+
+                            <p:outputLabel value="Kerberos Principal:"
+                                           rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                           for="kerberosPrincipal"/>
+                            <p:inputText id="kerberosPrincipal"
+                                         rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                         value="#{ldapSettings.kerberosPrincipal}"/>
+                               
                             <p:outputLabel value="Bind DN:"
                                            rendered="#{editLdapSettings.authType.description == 'simple'}"
                                            for="securityPrincipal"/>
@@ -276,7 +290,9 @@
                     </p:tab>
                 </p:accordionPanel>
 
-                <p:messages id="messages" showDetail="true" closable="true" />
+                <p:messages id="messages" showDetail="true" closable="true">
+                    <p:autoUpdate/>
+                </p:messages>
                 <p:commandButton value="Save" action="#{editLdapSettings.onSave()}"/>
                 <p:splitButton value="Reset to defaults"
                                actionListener="#{editLdapSettings.onResetToDefaults}"
