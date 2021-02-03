@@ -142,7 +142,7 @@ public class TaskScheduler
                     ));
 
             if (tle.isEnabled())
-                tle.scheduleTask(scheduler);
+                tle.scheduleTask();
         });
     }
 
@@ -151,6 +151,10 @@ public class TaskScheduler
         logger.info("Destroying task scheduler");
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         scheduler.shutdownNow();
+    }
+
+    public ScheduledThreadPoolExecutor getScheduler() {
+        return scheduler;
     }
 
     private void reloadTasks() {
@@ -169,7 +173,7 @@ public class TaskScheduler
                 TaskListEntry task;
 
                 if (!scheduledTasks.containsKey(id)) {
-                    task = new TaskListEntry(Class.forName(taskClass));
+                    task = new TaskListEntry(Class.forName(taskClass), scheduler);
                     scheduledTasks.put(id, task);
                 }
                 else {
@@ -264,9 +268,17 @@ public class TaskScheduler
         }
 
         if (tle.isEnabled())
-            tle.scheduleTask(scheduler);
+            tle.scheduleTask();
 
         reloadTasks();
+    }
+
+    public void runTaskOnce(Class taskClass) {
+        scheduledTasks.values().forEach((TaskListEntry tle) -> {
+            if (tle.getTaskClass() == taskClass) {
+                tle.runOnce();
+            }
+        });
     }
 
     public void updateTask(TaskListEntry tle)
@@ -315,7 +327,7 @@ public class TaskScheduler
                         delay = 0;
                     }
                 }
-                entry.scheduleTask(scheduler, delay);
+                entry.scheduleTask(delay);
             }
         }
     }

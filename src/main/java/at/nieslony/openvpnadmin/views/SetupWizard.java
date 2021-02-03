@@ -27,11 +27,10 @@ import at.nieslony.openvpnadmin.beans.PropertiesStorageBean;
 import at.nieslony.openvpnadmin.beans.Roles;
 import at.nieslony.openvpnadmin.beans.TaskScheduler;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import at.nieslony.openvpnadmin.tasks.CreateDhParams;
 import at.nieslony.utils.pki.CertificateAuthority;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -829,14 +828,9 @@ public class SetupWizard implements Serializable {
     private void saveDhParams()
             throws IOException
     {
-        FileWriter fw;
-
-        String fn = pki.getDhFilename();
-        File f = new File(fn);
-        f.getParentFile().mkdirs();
-        fw = new FileWriter(fn);
-        pki.writeDhParameters(new PrintWriter(fw));
-        fw.close();
+        logger.info("Creating DH params");
+        Class taskClass = CreateDhParams.class;
+        taskScheduler.runTaskOnce(taskClass);
     }
 
     void saveDatabaseSettings() {
@@ -938,15 +932,6 @@ public class SetupWizard implements Serializable {
             styleClassCreateServerCertitficate = ICO_STEP_DONE;
             //rc.update("form-setup:createServerCertitficateIcon");
 
-            step = "Creating DH parameters";
-            logger.info(step);
-            styleClassCreateDhParameters = ICO_STEP_WORKING;
-            //rc.update("form-setup:createDhParametersIcon");
-            saveDhParams();
-            pki.init();
-            styleClassCreateDhParameters = ICO_STEP_DONE;
-            //rc.update("form-setup:createDhParametersIcon");
-
             step = "Scheduling tasks";
             logger.info(step);
             styleClassScheduleTasks = ICO_STEP_WORKING;
@@ -958,6 +943,15 @@ public class SetupWizard implements Serializable {
             step = "Firewall";
             logger.info(step);
             setupFirewall();
+
+            step = "Creating DH parameters";
+            logger.info(step);
+            styleClassCreateDhParameters = ICO_STEP_WORKING;
+            //rc.update("form-setup:createDhParametersIcon");
+            saveDhParams();
+            pki.init();
+            styleClassCreateDhParameters = ICO_STEP_DONE;
+            //rc.update("form-setup:createDhParametersIcon");
 
             performingSetup = false;
 

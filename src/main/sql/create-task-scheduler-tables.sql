@@ -1,4 +1,4 @@
-/* 
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -18,13 +18,13 @@ CREATE TABLE scheduledTasks (
     UNIQUE(taskClass, startupDelay, interval)
 );;
 
-INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES 
-    ( 'at.nieslony.openvpnadmin.tasks.UpdateCrl', 
-        60 * 1, 
+INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES
+    ( 'at.nieslony.openvpnadmin.tasks.UpdateCrl',
+        60 * 1,
         60 * 60 * 24 * 7,
         true
     ),
-    ( 'at.nieslony.openvpnadmin.tasks.DropDisapprovedConnectedUsers', 
+    ( 'at.nieslony.openvpnadmin.tasks.DropDisapprovedConnectedUsers',
         0,
         60 * 2,
         true
@@ -33,5 +33,10 @@ INSERT INTO scheduledTasks (taskClass, startupDelay, interval, isEnabled) VALUES
         60,
         60 * 60 * 24,
         true
+    ),
+    ( 'at.nieslony.openvpnadmin.tasks.CreateDhParams',
+        0,
+        60 * 60 * 24 * 365,
+        false
     )
 ;;

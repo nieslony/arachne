@@ -106,7 +106,7 @@ public class EditTaskScheduler
 
         if (cl != null) {
             TaskListEntry task = null;
-            task = new TaskListEntry(cl);
+            task = new TaskListEntry(cl, taskScheduler);
             task.setComment(dlgAddTask_comment);
             task.setEnabled(dlgAddTask_isEnabled);
             task.setInterval(dlgAddTask_intervalDays, dlgAddTask_intervalHours, dlgAddTask_intervalMins, dlgAddTask_intervalSecs);
