@@ -1204,4 +1204,22 @@ public class SetupWizard implements Serializable {
 
         return sc;
     }
+
+    public void onGenerateRandomDatabasePassword() {
+        final int pwdLen = 16;
+        final String lowerLetters = "abcdefghijklmnopqrstuvwxyz";
+        final String upperLetters = lowerLetters.toUpperCase();
+        final String digits = "01234567890";
+        final String characters = lowerLetters + upperLetters + digits;
+
+        char[] passwordChars = new char[pwdLen+1];
+
+        SecureRandom rnd = new SecureRandom();
+        for (int i = 0; i < pwdLen; i++) {
+            passwordChars[i] = characters.charAt(rnd.nextInt(characters.length()));
+        }
+
+        databasePassword = new String(passwordChars);
+        logger.info("PWD: " + databasePassword);
+    }
 }
