@@ -238,21 +238,31 @@
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>
 
-                        <h:outputLabel value="Databse host:" for="databaseHost"/>
+                        <h:outputLabel value="Database host:" for="databaseHost"/>
                         <p:inputText value="#{setupWizard.databaseHost}" id="databaseHost">
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>
 
-                        <h:outputLabel value="Databse port:" for="databasePort"/>
+                        <h:outputLabel value="Database port:" for="databasePort"/>
                         <p:inputText value="#{setupWizard.databasePort}" id="databasePort">
                             <p:ajax update="databaseUrl"/>
                         </p:inputText>
 
-                        <h:outputLabel value="Databse user:" for="databaseUser"/>
+                        <h:outputLabel value="Database user:" for="databaseUser"/>
                         <p:inputText value="#{setupWizard.databaseUser}" id="databaseUser"/>
 
-                        <h:outputLabel value="Databse password:" for="databasePassword"/>
-                        <p:password value="#{setupWizard.databasePassword}" id="databasePassword"/>
+                        <h:outputLabel value="Database password:" for="databasePassword"/>
+                        <h:panelGroup>
+                            <p:password value="#{setupWizard.databasePassword}"
+                                        id="databasePassword"
+                                        redisplay="true"
+                                        />
+                            <p:commandButton value="Generate random"
+                                             action="${setupWizard.onGenerateRandomDatabasePassword()}"
+                                             update="databasePassword"
+                                             ajax="true"
+                                             />
+                        </h:panelGroup>
 
                         <h:outputText value="Database URL:"/>
                         <h:outputText id="databaseUrl" value="#{setupWizard.databaseUrl}"/>

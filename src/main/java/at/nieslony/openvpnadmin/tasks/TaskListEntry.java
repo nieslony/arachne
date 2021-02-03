@@ -17,6 +17,7 @@
 
 package at.nieslony.openvpnadmin.tasks;
 
+import at.nieslony.openvpnadmin.beans.TaskScheduler;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -35,17 +36,27 @@ import java.util.logging.Logger;
 public class TaskListEntry implements Serializable {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private final String name;
+    private String name;
     private String comment = null;
     private long startupDelay = -1;
     private long interval = -1;
     private boolean isEnabled = false;
     private Class<ScheduledTask> taskClass;
     private long id;
+    private ScheduledThreadPoolExecutor scheduler;
     transient private ScheduledFuture<?> future;
 
-    public TaskListEntry(Class taskClass) {
+    public TaskListEntry(Class taskClass, TaskScheduler taskScheduler) {
+        init(taskClass, taskScheduler.getScheduler());
+    }
+
+    public TaskListEntry(Class taskClass, ScheduledThreadPoolExecutor scheduler) {
+        init(taskClass, scheduler);
+    }
+
+    private void init(Class taskClass, ScheduledThreadPoolExecutor scheduler) {
         this.taskClass = taskClass;
+        this.scheduler = scheduler;
         ScheduledTaskInfo info = (ScheduledTaskInfo) taskClass.getAnnotation(ScheduledTaskInfo.class);
         if (info != null) {
             name = info.name();
@@ -225,14 +236,18 @@ public class TaskListEntry implements Serializable {
         }
     };
 
-    public void scheduleTask(ScheduledThreadPoolExecutor scheduler) {
+    public void runOnce() {
+        scheduler.execute(runnable);
+    }
+
+    public void scheduleTask() {
         future = scheduler.scheduleAtFixedRate(runnable,
                 getStartupDelay(),
                 getInterval(),
                 TimeUnit.SECONDS);
     }
 
-    public void scheduleTask(ScheduledThreadPoolExecutor scheduler, long delay) {
+    public void scheduleTask(long delay) {
         future = scheduler.scheduleAtFixedRate(runnable,
                 delay,
                 getInterval(),
