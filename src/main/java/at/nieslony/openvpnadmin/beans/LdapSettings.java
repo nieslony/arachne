@@ -121,4 +121,9 @@ public class LdapSettings
 
         return "/etc/krb5.keytab";
     }
+
+    @Override
+    public String getLoginContextName() {
+        return getClass().getName();
+    }
 }

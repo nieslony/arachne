@@ -485,4 +485,9 @@ public class EditLdapSettings
     public LdapSettingsBase.LdapAuthType[] getAuthTypes() {
         return LdapSettingsBase.LdapAuthType.values();
     }
+
+    @Override
+    public String getLoginContextName() {
+        return getClass().getName();
+    }
 }

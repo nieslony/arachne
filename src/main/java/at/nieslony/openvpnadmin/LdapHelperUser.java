@@ -34,6 +34,7 @@ public interface LdapHelperUser {
     public String getSecurityCredentials();
     public String getKeytabFile();
     public String getKerberosPrincipal();
+    public String getLoginContextName();
 
     public String getOuUsers();
     public String getAttrUsername();
