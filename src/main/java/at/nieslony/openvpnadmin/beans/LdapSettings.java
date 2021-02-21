@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
+import javax.security.auth.login.LoginException;
 
 @ApplicationScoped
 @Named
@@ -76,13 +77,13 @@ public class LdapSettings
     }
 
     public LdapUser findVpnUser(String username)
-            throws NamingException, NoSuchLdapUser
+            throws NamingException, NoSuchLdapUser, LoginException
     {
         return ldapHelper.findVpnUser(username);
     }
 
     public LdapGroup findLdapGroup(String groupname)
-            throws NamingException, NoSuchLdapGroup
+            throws NamingException, NoSuchLdapGroup, LoginException
     {
         return ldapHelper.findLdapGroup(groupname);
     }
@@ -93,7 +94,7 @@ public class LdapSettings
     }
 
     public DirContext getLdapContext()
-            throws NamingException
+            throws NamingException, LoginException
     {
         return ldapHelper.getLdapContext();
     }

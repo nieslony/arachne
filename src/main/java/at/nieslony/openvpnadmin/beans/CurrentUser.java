@@ -38,6 +38,7 @@ import javax.faces.event.ComponentSystemEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -89,7 +90,7 @@ public class CurrentUser implements Serializable {
                     String h = headerNames.nextElement();
                     String v = req.getHeader(h);
                     logger.log(Level.INFO, "{0}={1}", new Object[]{h, v});
-                }   
+                }
                 logger.log(Level.INFO, "Header {0} is empty or not provided", headerName);
                 return;
             }
@@ -100,7 +101,7 @@ public class CurrentUser implements Serializable {
             try {
                 tmpUser = ldapSettings.findVpnUser(remoteUser);
             }
-            catch (NamingException | NoSuchLdapUser ex) {
+            catch (NamingException | NoSuchLdapUser | LoginException ex) {
                 logger.info(String.format("Cannot find LDAP user %s: %s",
                         req.getRemoteUser(), ex.getMessage()));
                 return;
@@ -108,10 +109,10 @@ public class CurrentUser implements Serializable {
             if (tmpUser != null) {
                 logger.info(String.format("Found remote user %s", tmpUser.getUsername()));
                 user = tmpUser;
-            }            
+            }
         }
     }
-    
+
     private void initWithAjpRemoteUser(HttpServletRequest req) {
         AbstractUser tmpUser = null;
         try {
@@ -215,7 +216,7 @@ public class CurrentUser implements Serializable {
                 throw new InvalidUsernameOrPassword();
             }
         }
-        catch (NamingException | NoSuchLdapUser ex) {
+        catch (NamingException | NoSuchLdapUser | LoginException ex) {
             logger.warning(String.format("Cannot find LDAP user %s: %s",
                         username, ex.getMessage()));
             throw new InvalidUsernameOrPassword();

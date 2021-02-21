@@ -39,6 +39,7 @@ import javax.faces.event.ComponentSystemEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
 import org.primefaces.PrimeFaces;
 
 /**
@@ -92,7 +93,7 @@ public class LoginBean implements Serializable {
                         navigationBean.toWelcomePage(ldapUser);
                     }
                 }
-                catch (NamingException | NoSuchLdapUser ex) {
+                catch (NamingException | NoSuchLdapUser | LoginException ex) {
                     logger.warning(String.format("Cannot find LDAP user %s: %s",
                             username, ex.getMessage()));
                 }

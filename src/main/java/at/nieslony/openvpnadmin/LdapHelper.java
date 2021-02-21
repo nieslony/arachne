@@ -22,6 +22,7 @@ import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
+import java.security.PrivilegedAction;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,10 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.security.auth.Subject;
+import javax.security.auth.login.Configuration;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 /**
  *
@@ -46,6 +51,32 @@ public class LdapHelper
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     LdapHelperUser ldapHelperUser;
+
+    static {
+        Configuration config = new DynamicLoginConfiguration();
+        Configuration.setConfiguration(config);
+    }
+
+    private class GssapiLogin implements PrivilegedAction<Object> {
+        public Object run() {
+            DirContext ctx = null;
+
+            Hashtable env = new Hashtable(11);
+            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+            env.put(Context.PROVIDER_URL, formLdapUrl());
+            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+
+            try {
+                ctx = new InitialDirContext(env);
+
+            }
+            catch (NamingException e) {
+                e.printStackTrace();
+            }
+
+            return ctx;
+        }
+    }
 
     public LdapHelper(LdapHelperUser lhu) {
         ldapHelperUser = lhu;
@@ -95,7 +126,7 @@ public class LdapHelper
                 users.add(vpnUser);
             }
         }
-        catch (NamingException ex) {
+        catch (NamingException | LoginException ex) {
             logger.severe(String.format("Error finding VPN users in LDAP: %s",
                     ex.getMessage()));
         }
@@ -104,7 +135,7 @@ public class LdapHelper
     }
 
     public LdapUser findVpnUser(String username)
-            throws NoSuchLdapUser, NamingException
+            throws NoSuchLdapUser, NamingException, LoginException
     {
         String searchString = getUserSearchString(username);
         logger.info(String.format("Trying to find user %s in LDAP. Search: %s",
@@ -160,7 +191,7 @@ public class LdapHelper
     }
 
     public LdapGroup findLdapGroup(String groupname)
-            throws NoSuchLdapGroup, NamingException
+            throws NoSuchLdapGroup, NamingException, LoginException
     {
         logger.info(String.format("Trying to find group %s in LDAP", groupname));
 
@@ -247,30 +278,45 @@ public class LdapHelper
         return getDefaultGroupSearchString(groupname);
     }
 
-    public DirContext getLdapContext() throws NamingException {
-        Hashtable<String,String> env = new Hashtable<>();
+    public DirContext getLdapContext() throws NamingException, LoginException {
         String authType = ldapHelperUser.getAuthType().getDescription();
         logger.info(String.format("Auth type: %s", authType));
-        env.put(Context.SECURITY_AUTHENTICATION, authType);
 
         String url = formLdapUrl();
-        logger.info(String.format("LDAP bind to %s", url));
+        logger.info(String.format("LDAP bind to %s with %s", url, authType));
         if (authType.equals("simple")) {
             logger.info(String.format("bind type simple => getting principal %s and password", ldapHelperUser.getSecurityPrincipal()));
-            env.put(Context.SECURITY_PRINCIPAL, //"cn=ldap-ro,cn=groups,cn=compat,dc=nieslony,dc=lan"
+            Hashtable<String,String> env = new Hashtable<>();
+            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+            env.put(Context.PROVIDER_URL, url);
+            env.put(Context.SECURITY_AUTHENTICATION, authType);
+            env.put(Context.SECURITY_PRINCIPAL,
                     ldapHelperUser.getSecurityPrincipal()
             );
-            env.put(Context.SECURITY_CREDENTIALS, //"Moin123"
+            env.put(Context.SECURITY_CREDENTIALS,
                     ldapHelperUser.getSecurityCredentials()
             );
+            return new InitialDirContext(env);
+        }
+        if (authType.equals("GSSAPI")) {
+            DynamicLoginConfiguration dlg =
+                    (DynamicLoginConfiguration) Configuration.getConfiguration();
+            dlg.updateEntry(ldapHelperUser);
+
+            LoginContext lctx = new LoginContext(ldapHelperUser.getClass().getName());
+            lctx.login();
+
+            return (DirContext) Subject.doAs(lctx.getSubject(), new GssapiLogin());
         }
         else {
+            Hashtable<String,String> env = new Hashtable<>();
+            env.put(Context.SECURITY_AUTHENTICATION, authType);
             logger.info("LDAP bind without authentication");
-        }
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, url);
+            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+            env.put(Context.PROVIDER_URL, url);
 
-        return new InitialDirContext(env);
+            return new InitialDirContext(env);
+        }
     }
 
     public boolean auth(String dn, String password)

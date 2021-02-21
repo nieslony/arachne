@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
 
 /**
  *
@@ -115,7 +116,7 @@ public class DropDisapprovedConnectedUsers
                 }
             }
         }
-        catch (IOException | ManagementInterfaceException ex) {
+        catch (IOException | ManagementInterfaceException | LoginException ex) {
             logger.warning(String.format("Cannot drop users: %s", ex.getMessage()));
         }
     }

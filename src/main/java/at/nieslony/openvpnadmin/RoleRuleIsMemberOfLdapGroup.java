@@ -22,6 +22,7 @@ import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
 
 /**
  *
@@ -54,7 +55,7 @@ public class RoleRuleIsMemberOfLdapGroup
             LdapGroup group = RoleRuleIsLdapUserFactory.getLdapSettings().findLdapGroup(getValue());
             return group.hasMember((LdapUser) user);
         }
-        catch (NamingException | NoSuchLdapGroup ex) {
+        catch (NamingException | NoSuchLdapGroup | LoginException ex) {
             logger.severe(ex.getMessage());
             return false;
         }

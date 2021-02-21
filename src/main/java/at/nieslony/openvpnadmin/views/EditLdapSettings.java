@@ -47,6 +47,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.security.auth.login.LoginException;
 import org.primefaces.PrimeFaces;
 
 @ViewScoped
@@ -223,7 +224,7 @@ public class EditLdapSettings
 
             PrimeFaces.current().executeScript("PF('testLdapGroup').show();");
         }
-        catch (NoSuchLdapGroup nslg) {
+        catch (NoSuchLdapGroup | LoginException nslg) {
                 FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                         "Error",
                         "LDAP connection seems to work, but no result found.");
@@ -292,16 +293,16 @@ public class EditLdapSettings
                 PrimeFaces.current().dialog().showMessageDynamic(msg);
             }
         }
-        catch (NamingException ex) {
+        catch (NamingException | LoginException ex) {
             logger.warning(String.format("Error testing LDAP connection: %s",
                     ex.getMessage()));
 
             StringWriter wr = new StringWriter();
             wr.append("<h2>Error connecting to LDAP server</h2>");
-            if (ex.getExplanation() != null) {
+/*            if (ex.getExplanation() != null) {
                 wr.append("<p><strong>Explanation:</strong> ");
                 wr.append(ex.getExplanation()).append("</p>");
-            }
+            }*/
             if (ex.getCause() != null) {
                 wr.append("<p><strong>Cause:</strong> ");
                 wr.append(ex.getCause().toString());
@@ -315,7 +316,7 @@ public class EditLdapSettings
     }
 
     public LdapGroup findLdapGroup(String gn)
-            throws NamingException, NoSuchLdapGroup
+            throws NamingException, NoSuchLdapGroup, LoginException
     {
         return ldapHelper.findLdapGroup(gn);
     }

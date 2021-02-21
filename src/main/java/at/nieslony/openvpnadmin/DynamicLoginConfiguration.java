@@ -7,6 +7,7 @@ package at.nieslony.openvpnadmin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 
@@ -15,16 +16,24 @@ import javax.security.auth.login.Configuration;
  * @author claas
  */
 public class DynamicLoginConfiguration extends Configuration {
+    private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
+
     Map<String, AppConfigurationEntry[]> entries = new HashMap<>();
 
-    private AppConfigurationEntry[] createNewEntry() {
+    public void updateEntry(LdapHelperUser lhu) {
+        String name = lhu.getClass().getName();
+        String keytab = lhu.getKeytabFile();
+        String principal = lhu.getKerberosPrincipal();
+        logger.info(String.format("Create config for %s, keytab=%s, principal=%s",
+                name, keytab, principal));
+
         Map<String, String> options = new HashMap<>();
-        options.put("debug", "FALSE");
+        options.put("debug", "TRUE");
         options.put("doNotPrompt", "TRUE");
         options.put("refreshKrb5Config", "TRUE");
         options.put("useKeyTab", "TRUE");
-        options.put("keyTab", "");
-        options.put("principal", "");
+        options.put("keyTab", keytab);
+        options.put("principal", principal);
 
         AppConfigurationEntry[] aces = {
             new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule",
@@ -32,27 +41,14 @@ public class DynamicLoginConfiguration extends Configuration {
                         options)
         };
 
+        entries.remove(name);
+        entries.put(name, aces);
+    }
+
+    public AppConfigurationEntry[] getAppConfigurationEntry(String name, boolean createIfNotFound) {
+        AppConfigurationEntry[] aces = getAppConfigurationEntry(name);
+
         return aces;
-    }
-
-    public void setKeytabFile(String configName, String filename) {
-        AppConfigurationEntry[] config = getAppConfigurationEntry(configName);
-        if (config == null) {
-            entries.put(configName, createNewEntry());
-        }
-
-        Map<String, Object> options = (Map<String,Object>) config[0].getOptions();
-        options.put("keyTab",  filename);
-    }
-
-    public void setPrincipal(String configName, String principal) {
-        AppConfigurationEntry[] config = getAppConfigurationEntry(configName);
-        if (config == null) {
-            entries.put(configName, createNewEntry());
-        }
-
-        Map<String, Object> options = (Map<String,Object>) config[0].getOptions();
-        options.put("keyTab",  principal);
     }
 
     @Override

@@ -31,6 +31,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.security.auth.login.LoginException;
 
 /**
  *
@@ -125,7 +126,7 @@ public class RoleRuleIsLdapUserFactory
                 groups.add(group.toString());
             }
         }
-        catch (NamingException ex) {
+        catch (NamingException | LoginException ex) {
             logger.severe(String.format("An error occured during LDAP search: %s",
                     ex.getMessage()));
         }

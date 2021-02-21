@@ -31,6 +31,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.security.auth.login.LoginException;
 
 /**
  *
@@ -115,7 +116,7 @@ public class RoleRuleIsUserFactory
                 users.add(user.toString());
             }
         }
-        catch (NamingException ex) {
+        catch (NamingException | LoginException ex) {
             logger.severe(String.format("Error while user lookup: %s", ex.getMessage()));
         }
         return users;

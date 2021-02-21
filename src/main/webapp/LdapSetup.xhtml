@@ -86,15 +86,15 @@
                                            for="keytabFile"/>
                             <p:inputText id="keytabFile"
                                            rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
-                                         value="#{ldapSettings.keytabFile}"/>
+                                         value="#{editLdapSettings.keytabFile}"/>
 
                             <p:outputLabel value="Kerberos Principal:"
                                            rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
                                            for="kerberosPrincipal"/>
                             <p:inputText id="kerberosPrincipal"
                                          rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
-                                         value="#{ldapSettings.kerberosPrincipal}"/>
-                               
+                                         value="#{editLdapSettings.kerberosPrincipal}"/>
+
                             <p:outputLabel value="Bind DN:"
                                            rendered="#{editLdapSettings.authType.description == 'simple'}"
                                            for="securityPrincipal"/>
