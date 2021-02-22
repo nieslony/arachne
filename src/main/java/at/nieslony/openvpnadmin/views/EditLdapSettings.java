@@ -207,6 +207,7 @@ public class EditLdapSettings
 
         LdapGroup ldapGroup;
         try {
+            ldapHelper.invalidateDirContext();
             ldapGroup = findLdapGroup(testGroup);
 
             if (!ldapGroup.getMemberDNs().isEmpty()) {
@@ -264,6 +265,7 @@ public class EditLdapSettings
         NamingEnumeration results;
 
         try {
+            ldapHelper.invalidateDirContext();
             ctx = ldapHelper.getLdapContext();
             SearchControls sc = new SearchControls();
             sc.setSearchScope(SearchControls.SUBTREE_SCOPE);

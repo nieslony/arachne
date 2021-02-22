@@ -278,7 +278,20 @@ public class LdapHelper
         return getDefaultGroupSearchString(groupname);
     }
 
+    private DirContext dirCtx = null;
+    public void invalidateDirContext() throws NamingException {
+        if (dirCtx != null) {
+            dirCtx.close();
+            dirCtx = null;
+        }
+    }
+
     public DirContext getLdapContext() throws NamingException, LoginException {
+        if (dirCtx != null) {
+            logger.info("Reusing active LDAP connection");
+            return dirCtx;
+        }
+
         String authType = ldapHelperUser.getAuthType().getDescription();
         logger.info(String.format("Auth type: %s", authType));
 
@@ -296,7 +309,7 @@ public class LdapHelper
             env.put(Context.SECURITY_CREDENTIALS,
                     ldapHelperUser.getSecurityCredentials()
             );
-            return new InitialDirContext(env);
+            dirCtx = new InitialDirContext(env);
         }
         if (authType.equals("GSSAPI")) {
             DynamicLoginConfiguration dlg =
@@ -306,7 +319,7 @@ public class LdapHelper
             LoginContext lctx = new LoginContext(ldapHelperUser.getClass().getName());
             lctx.login();
 
-            return (DirContext) Subject.doAs(lctx.getSubject(), new GssapiLogin());
+            dirCtx = (DirContext) Subject.doAs(lctx.getSubject(), new GssapiLogin());
         }
         else {
             Hashtable<String,String> env = new Hashtable<>();
@@ -315,8 +328,10 @@ public class LdapHelper
             env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
             env.put(Context.PROVIDER_URL, url);
 
-            return new InitialDirContext(env);
+            dirCtx = new InitialDirContext(env);
         }
+
+        return dirCtx;
     }
 
     public boolean auth(String dn, String password)
