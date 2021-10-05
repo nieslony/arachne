@@ -51,6 +51,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -484,8 +485,10 @@ public class SetupWizard implements Serializable {
 
     public StreamedContent getCsrAsFile() {
         InputStream is = new ByteArrayInputStream(csrText.getBytes());
-
-        StreamedContent sc = new DefaultStreamedContent(is, "text/plain", "arachne-ca.scr");
+        StreamedContent sc = DefaultStreamedContent.builder()
+                .contentType("text/plain")
+                .name("arachne-ca.scr")
+                .build();
 
         return sc;
     }
@@ -1214,6 +1217,6 @@ public class SetupWizard implements Serializable {
         }
 
         databasePassword = new String(passwordChars);
-        logger.info("PWD: " + databasePassword);
+        logger.log(Level.INFO, "PWD: {0}", databasePassword);
     }
 }
