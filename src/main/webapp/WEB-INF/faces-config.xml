@@ -1,9 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<faces-config version="2.2"
+<!--<faces-config version="2.2"
               xmlns="http://xmlns.jcp.org/xml/ns/javaee"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
-
+-->
+<faces-config version="3.0" xmlns="https://jakarta.ee/xml/ns/jakartaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+              https://jakarta.ee/xml/ns/jakartaee/web-facesconfig_3_0.xsd">
     <application>
         <action-listener>org.primefaces.application.DialogActionListener</action-listener>
         <navigation-handler>org.primefaces.application.DialogNavigationHandler</navigation-handler>
@@ -13,13 +17,13 @@
         </el-resolver>
     </application>
     <factory>
-        <!--
         <exception-handler-factory>
            org.primefaces.application.exceptionhandler.PrimeExceptionHandlerFactory
         </exception-handler-factory>
-        -->
-        <exception-handler-factory>
+
+
+        <!-- <exception-handler-factory>
             at.nieslony.openvpnadmin.errorhandling.ExceptionHandlerFactory
-        </exception-handler-factory>
+        </exception-handler-factory> -->
     </factory>
 </faces-config>
