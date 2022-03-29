@@ -85,7 +85,8 @@
                                            rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
                                            for="keytabFile"/>
                             <p:inputText id="keytabFile"
-                                           rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                         rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                         size="50"
                                          value="#{editLdapSettings.keytabFile}"/>
 
                             <p:outputLabel value="Kerberos Principal:"
@@ -93,6 +94,7 @@
                                            for="kerberosPrincipal"/>
                             <p:inputText id="kerberosPrincipal"
                                          rendered="#{editLdapSettings.authType.description == 'GSSAPI'}"
+                                         size="50"
                                          value="#{editLdapSettings.kerberosPrincipal}"/>
 
                             <p:outputLabel value="Bind DN:"
