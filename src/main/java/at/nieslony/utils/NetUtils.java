@@ -85,21 +85,44 @@ public class NetUtils {
             int p = Integer.parseInt(values[1]);
             if (p > prio) {
                 value = values[4].substring(0, values[4].length()-1);
+                if (value.endsWith("."))
+                    value = value.substring(0, value.length()-1);
             }
         }
 
         return value;
     }
 
+    public static String myHostname() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException ex) {
+            return "";
+        }
+    }
+
     public static String myDomain() {
-        String domain = "";
         try {
             String hostname = InetAddress.getLocalHost().getHostName();
-            domain = hostname.substring(hostname.indexOf(".") + 1);
+            return hostname.substring(hostname.indexOf(".") + 1);
         }
-        catch (Exception e) {
+        catch (UnknownHostException e) {
+            return "";
         }
+    }
 
-        return domain;
+    public static String myRealm() {
+        String domain = myDomain();
+        try {
+            Attribute attr = new InitialDirContext().getAttributes(
+                    "dns:_kerberos." + domain,
+                    new String[] {"TXT"}
+            ).get("TXT");
+
+            return attr.get(0).toString();
+        }
+        catch (NamingException ex) {
+            return "???";
+        }
     }
 }
