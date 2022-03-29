@@ -25,6 +25,7 @@ import at.nieslony.openvpnadmin.LdapUser;
 import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
+import at.nieslony.utils.NetUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -35,6 +36,9 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
+import javax.security.auth.kerberos.KerberosKey;
+import javax.security.auth.kerberos.KerberosPrincipal;
+import javax.security.auth.kerberos.KeyTab;
 import javax.security.auth.login.LoginException;
 
 @ApplicationScoped
@@ -51,6 +55,9 @@ public class LdapSettings
 
     @Inject
     private PropertiesStorageBean propertiesStorage;
+
+    @Inject
+    private FolderFactory folderFactory;
 
     private final LdapHelper ldapHelper;
 
@@ -108,15 +115,37 @@ public class LdapSettings
         return ldapHelper.auth(dn, password);
     }
 
+    public String getDefaultKerberosPrincipal() {
+        final String[] services = {
+            "HTTP",
+            "host"
+        };
+
+        File keytabFile = new File(getKeytabFile());
+        KeyTab keytab = KeyTab.getInstance(keytabFile);
+
+        String realm = NetUtils.myRealm();
+        String hostname = NetUtils.myHostname();
+        for (var service: services) {
+            String principalName = service + "/" + hostname + "@" + realm;
+            KerberosKey[] keys = keytab.getKeys(new KerberosPrincipal(principalName));
+            if (keys.length > 0)
+                return principalName;
+        }
+        return "???";
+    }
+
     @Override
     public String getDefaultKeytabFile() {
         final String[] keytabs = {
             "/etc/apache2/krb5.keytab",
-            "/etc/httpd/krb5.keytab"
+            "/etc/httpd/krb5.keytab",
+            folderFactory.getConfigDir() + "/krb5.keytab"
         };
 
-        for (String k: keytabs) {
-            if (new File(k).isFile())
+        for (var k: keytabs) {
+            File f = new File(k);
+            if (f.isFile() && f.canRead())
                 return k;
         }
 

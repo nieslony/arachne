@@ -22,7 +22,8 @@ import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.utils.NetUtils;
 import java.io.Serializable;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,8 +58,9 @@ public class LdapHelper
         Configuration.setConfiguration(config);
     }
 
-    private class GssapiLogin implements PrivilegedAction<Object> {
-        public Object run() {
+    private class GssapiLogin implements PrivilegedExceptionAction<Object> {
+        @Override
+        public Object run() throws NamingException {
             DirContext ctx = null;
 
             Hashtable env = new Hashtable(11);
@@ -66,14 +68,13 @@ public class LdapHelper
             env.put(Context.PROVIDER_URL, formLdapUrl());
             env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
 
-            try {
+//            try {
                 ctx = new InitialDirContext(env);
-
-            }
+/*            }
             catch (NamingException e) {
                 e.printStackTrace();
             }
-
+*/
             return ctx;
         }
     }
@@ -286,7 +287,8 @@ public class LdapHelper
         }
     }
 
-    public DirContext getLdapContext() throws NamingException, LoginException {
+    public DirContext getLdapContext()
+            throws NamingException, LoginException {
         if (dirCtx != null) {
             logger.info("Reusing active LDAP connection");
             return dirCtx;
@@ -312,6 +314,7 @@ public class LdapHelper
             dirCtx = new InitialDirContext(env);
         }
         if (authType.equals("GSSAPI")) {
+            System.setProperty("java.security.krb5.conf", "/home/claas/src/tmp/LdapGssapi/krb5.conf");
             DynamicLoginConfiguration dlg =
                     (DynamicLoginConfiguration) Configuration.getConfiguration();
             dlg.updateEntry(ldapHelperUser);
@@ -319,7 +322,17 @@ public class LdapHelper
             LoginContext lctx = new LoginContext(ldapHelperUser.getClass().getName());
             lctx.login();
 
-            dirCtx = (DirContext) Subject.doAs(lctx.getSubject(), new GssapiLogin());
+            try {
+                dirCtx = (DirContext) Subject.doAs(lctx.getSubject(), new GssapiLogin());
+            }
+            catch (PrivilegedActionException ex) {
+                Exception thrownException = ex.getException();
+                if (thrownException instanceof NamingException)
+                    throw (NamingException) thrownException;
+                if (thrownException instanceof LoginException)
+                    throw (LoginException) thrownException;
+            }
+
         }
         else {
             Hashtable<String,String> env = new Hashtable<>();

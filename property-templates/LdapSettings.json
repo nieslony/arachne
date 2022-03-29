@@ -45,6 +45,6 @@
         { "type": "String", "name": "securityCredentials",  "default": "", "storeBase64": "true" },
         { "type": "MemberAttrType", "name": "memberAttrType",  "default": "MAT_MEMBER_DN" },
         { "type": "String", "name": "keytabFile", "default": "getDefaultKeytabFile()" },
-        { "type": "String", "name": "kerberosPrincipal", "default": "" }
+        { "type": "String", "name": "kerberosPrincipal", "default": "getDefaultKerberosPrincipal()"}
     ]
 }
