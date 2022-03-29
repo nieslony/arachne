@@ -112,6 +112,12 @@
             <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.10.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -364,6 +370,7 @@
                     <tomeeHttpPort>8080</tomeeHttpPort>
                     <debugPort>5005</debugPort>
                     <args>-Dfoo=bar</args>
+                    <context>arachne</context>
 
                     <config>${project.basedir}/src/test/tomee/conf</config>
                     <libs>
