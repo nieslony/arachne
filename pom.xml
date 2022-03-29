@@ -11,7 +11,9 @@
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
-        <generated-sources.dir>${project.build.directory}/generated-sources</generated-sources.dir>
+        <generated-sources.dir>
+            ${project.build.directory}/generated-sources/property-templates
+        </generated-sources.dir>
         <generated-doc.dir>/home/claas/NetBeansProjects/arachne/target/mkdocs/doc</generated-doc.dir>
 
         <web-inf.dir>${project.build.directory}/${project.build.finalName}/WEB-INF</web-inf.dir>
@@ -30,59 +32,60 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>2.0.1</version>
         </dependency>
 
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
-            <version>8.0.1</version>
-            <scope>provided</scope>
+            <groupId>jakarta.el</groupId>
+            <artifactId>jakarta.el-api</artifactId>
+            <version>4.0.0</version>
         </dependency>
 
         <dependency>
-            <groupId>com.sun.faces</groupId>
-            <artifactId>jsf-api</artifactId>
-            <version>2.2.20</version>
+           <groupId>jakarta.platform</groupId>
+           <artifactId>jakarta.jakartaee-api</artifactId>
+           <version>9.1.0</version>
+           <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
-            <version>10.0.0</version>
+            <version>11.0.0</version>
+            <classifier>jakarta</classifier>
         </dependency>
 
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>primefaces-extensions</artifactId>
-            <version>10.0.6</version>
+            <version>11.0.1</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.9.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15to18</artifactId>
-            <version>1.69</version>
+            <version>1.70</version>
         </dependency>
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15to18</artifactId>
-            <version>1.69</version>
+            <version>1.70</version>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.24</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-vfs</artifactId>
-            <version>3.2.15.Final</version>
+            <version>42.3.3</version>
         </dependency>
 
         <dependency>
@@ -92,9 +95,22 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-vfs</artifactId>
+            <version>3.2.15.Final</version>
+         </dependency>
+
+         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -159,7 +175,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -178,21 +194,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.10.0</version>
                 <configuration>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>
                     <showDeprecation>true</showDeprecation>
-	            <source>1.8</source>
-	            <target>1.8</target>
+	            <source>11</source>
+	            <target>11</target>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.3.2</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
@@ -201,9 +217,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
+                        <id>copy-endorsed</id>
                         <phase>validate</phase>
                         <goals>
                             <goal>copy</goal>
@@ -219,6 +236,16 @@
                                     <type>jar</type>
                                 </artifactItem>
                             </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-javadoc</id>
+                        <goals>
+                            <goal>sources</goal>
+                            <goal>resolve</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
                         </configuration>
                     </execution>
                 </executions>
@@ -327,9 +354,31 @@
             </plugin>
 
             <plugin>
-                <groupId>org.wildfly.plugins</groupId>
-                <artifactId>wildfly-maven-plugin</artifactId>
-                <version>2.0.2.Final</version>
+                <groupId>org.apache.tomee.maven</groupId>
+                <artifactId>tomee-maven-plugin</artifactId>
+                <version>8.0.10</version> <!-- Note: No 9.0.0-M7 Maven Plugin is available yet but we can use the old one  -->
+                <configuration>
+                    <tomeeVersion>9.0.0-M7</tomeeVersion>
+                    <tomeeClassifier>plus</tomeeClassifier>
+                    <debug>false</debug>
+                    <tomeeHttpPort>8080</tomeeHttpPort>
+                    <debugPort>5005</debugPort>
+                    <args>-Dfoo=bar</args>
+
+                    <config>${project.basedir}/src/test/tomee/conf</config>
+                    <libs>
+                        <lib>remove:myfaces</lib>
+                        <!-- Adding MyFaces 3.0.0 JSF implementation  -->
+                        <lib>org.apache.myfaces.core:myfaces-impl:3.0.0</lib>
+                        <lib>org.apache.myfaces.core:myfaces-api:3.0.0</lib>
+                    </libs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
             </plugin>
         </plugins>
     </build>
