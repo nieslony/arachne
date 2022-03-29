@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
       xmlns:f="http://xmlns.jcp.org/jsf/core">
     <h:head>
         <title>Welcome to Arachne - User welcome page</title>
@@ -17,8 +18,8 @@
     <f:event listener="#{currentUser.isUser}" type="preRenderView" />
 
     <h:body>
-        <p:layout fullPage="true" stateful="true">
-            <p:layoutUnit position="west">
+        <pe:layout fullPage="true">
+            <pe:layoutPane position="west">
                 <h:form>
                     <p:menu>
                         <p:submenu label="Actions">
@@ -30,9 +31,9 @@
                         </p:submenu>
                     </p:menu>
                 </h:form>
-            </p:layoutUnit>
+            </pe:layoutPane>
 
-            <p:layoutUnit header="Arachne, an administration tool for openVPN" position="center">
+            <pe:layoutPane position="center" >
                 <h:form>
                 <p:fieldset legend="NetworkManager">
                     <p:panelGrid columns="2">
@@ -60,8 +61,8 @@
                     </p:panelGrid>
                 </p:fieldset>
                 </h:form>
-            </p:layoutUnit>
-        </p:layout>
+            </pe:layoutPane>
+        </pe:layout>
     </h:body>
 </html>
 

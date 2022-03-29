@@ -21,17 +21,17 @@
                     <p:inputText id="organizationalUnit" value="#{renewServerCertificate.organizationalUnit}"/>
                     <h:outputLabel value="Organization:" for="organization"/>
                     <p:inputText id="organization" value="#{renewServerCertificate.organization}"/>
-                    
+
                     <h:outputLabel value="City:" for="city"/>
                     <p:inputText id="city" value="#{renewServerCertificate.city}"/>
                     <h:outputLabel value="State:" for="state"/>
                     <p:inputText id="state" value="#{renewServerCertificate.state}"/>
-                    
+
                     <h:outputLabel value="Country:" for="country"/>
                     <p:inputText id="country" value="#{renewServerCertificate.country}"/>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
-                    
+
                     <h:outputLabel value="Validity time:" for="validTime"/>
                     <h:panelGroup style="vertical-align:bottom">
                         <p:spinner id="validTime" value="#{renewServerCertificate.validTime}"/>
@@ -43,7 +43,7 @@
                     </h:panelGroup>
                     <h:outputText value=" "/>
                     <h:outputText value=" "/>
-                    
+
                     <h:outputLabel value="Signature algorithm:" for="signatureAlgorithm"/>
                     <p:selectOneMenu id="signatureAlgorithm" value="#{renewServerCertificate.signatureAlgorithm}">
                         <p:ajax update="keySize"/>
@@ -53,12 +53,12 @@
                     <p:selectOneMenu id="keySize" value="#{renewServerCertificate.keySize}">
                         <f:selectItems value="#{renewServerCertificate.keySizes}"/>
                     </p:selectOneMenu>
-                    
+
                 </h:panelGrid>
-                <p:commandButton value="renew server certificate" 
+                <p:commandButton value="renew server certificate"
                                  action="#{renewServerCertificate.onRenewServerCertificate}"/>
-                
-                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+
+                <p:messages id="messages" showDetail="true" closable="true" />
             </h:form>
         </ui:define>
     </ui:composition>

@@ -32,7 +32,7 @@
                     <p:outputLabel value="Value:" for="addRuleValue"/>
                     <p:autoComplete id="addRuleValue" value="#{editRoles.addRoleRuleValue}"
                                     completeMethod="#{editRoles.onCompleteRoleValue}"
-                                    forceSelection="true" 
+                                    forceSelection="true"
                                     required="true"/>
 
                     <!-- empty cell -->
@@ -47,7 +47,7 @@
         </p:dialog>
 
         <h:form id="formRoles">
-            <p:messages showDetail="true" autoUpdate="true"/>
+            <p:messages showDetail="true"/>
             <p:accordionPanel multiple="true" activeIndex="0,1" value="#{editRoles.allRoles}" var="role" id="roles">
                 <p:tab title="Role #{role.name}">
                     <p:dataTable value="#{role.rules}" var="rule" id="ruleList">

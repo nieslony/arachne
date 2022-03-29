@@ -12,7 +12,7 @@
 
         <ui:define name="content">
             <h:form id="userStatusForm">
-                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+                <p:messages id="messages" showDetail="true" closable="true" />
                 <p:remoteCommand name="onload" action="#{showUserStatus.onRefresh()}" autoRun="true"/>
                 <p:dialog id="exceptionDialog"
                             header="Error"
