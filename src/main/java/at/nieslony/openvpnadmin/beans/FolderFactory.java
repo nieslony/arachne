@@ -17,13 +17,13 @@
 
 package at.nieslony.openvpnadmin.beans;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.context.ExternalContext;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.inject.Named;
 
 /**
  *

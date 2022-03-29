@@ -6,6 +6,8 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.FirewallDService;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -17,8 +19,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;

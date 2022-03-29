@@ -20,6 +20,10 @@ package at.nieslony.openvpnadmin.beans;
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.utils.classfinder.BeanInjector;
 import at.nieslony.utils.classfinder.ClassFinder;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Named;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -29,10 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.context.FacesContext;
-import javax.inject.Named;
 
 /**
  *

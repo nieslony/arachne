@@ -28,16 +28,16 @@ import at.nieslony.openvpnadmin.beans.NavigationBean;
 import at.nieslony.openvpnadmin.beans.Pki;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.faces.application.ConfigurableNavigationHandler;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.event.ComponentSystemEvent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
-import javax.enterprise.context.RequestScoped;
-import javax.faces.application.ConfigurableNavigationHandler;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
 import org.primefaces.PrimeFaces;
@@ -136,7 +136,7 @@ public class LoginBean implements Serializable {
     }
 
     public void requireSetup(ComponentSystemEvent event) throws IOException {
-	FacesContext fc = FacesContext.getCurrentInstance();
+	FacesContext fc = FacesContext.getCurrentInstance().getCurrentInstance();
         if (!databaseSettings.isValid() /*|| !pki.isValid() */ ) {
             ConfigurableNavigationHandler nav =
                     (ConfigurableNavigationHandler)

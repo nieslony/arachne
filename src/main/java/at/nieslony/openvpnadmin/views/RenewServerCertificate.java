@@ -23,12 +23,12 @@ import at.nieslony.openvpnadmin.beans.ServerCertificateEditor;
 import at.nieslony.openvpnadmin.beans.ServerCertificateRenewer;
 import at.nieslony.utils.pki.CaHelper;
 import at.nieslony.utils.pki.CertificateAuthority;
+import jakarta.annotation.PostConstruct;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import org.bouncycastle.asn1.x500.X500Name;
 
 /**

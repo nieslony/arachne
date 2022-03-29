@@ -17,6 +17,9 @@
 
 package at.nieslony.openvpnadmin.beans;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,9 +32,6 @@ import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Properties;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import org.postgresql.util.PSQLException;
 
 /**

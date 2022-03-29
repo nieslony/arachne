@@ -26,6 +26,11 @@ import at.nieslony.openvpnadmin.beans.base.LdapSettingsBase;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapGroup;
 import at.nieslony.openvpnadmin.views.base.EditLdapSettingsBase;
 import at.nieslony.utils.NetUtils;
+import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,12 +39,6 @@ import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -115,7 +114,7 @@ public class EditLdapSettings
         else
             logger.info("Don't write jaas.conf");
         save();
-        FacesContext.getCurrentInstance().addMessage(
+        jakarta.faces.context.FacesContext.getCurrentInstance().addMessage(
                 null, new FacesMessage(
                         FacesMessage.SEVERITY_INFO, "Info", "Settings saved."));
     }
@@ -198,7 +197,7 @@ public class EditLdapSettings
 
     public void onTestConnectionGroup() {
         if (testGroup == null || testGroup.isEmpty()) {
-            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+            jakarta.faces.application.FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Error", "Please enter groupname to search for.");
 
             PrimeFaces.current().dialog().showMessageDynamic(msg);

@@ -17,7 +17,7 @@
 
 package at.nieslony.openvpnadmin.exceptions;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  *

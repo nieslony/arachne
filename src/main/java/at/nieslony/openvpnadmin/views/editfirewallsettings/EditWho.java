@@ -9,12 +9,12 @@ import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import at.nieslony.openvpnadmin.beans.firewallzone.Who;
 import at.nieslony.openvpnadmin.views.EditFirewallSettings;
+import jakarta.faces.application.FacesMessage;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.application.FacesMessage;
 import org.primefaces.PrimeFaces;
 
 /**

@@ -22,13 +22,13 @@ import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactory;
 import at.nieslony.openvpnadmin.beans.RoleRuleFactoryCollection;
 import at.nieslony.openvpnadmin.beans.Roles;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
 /**

@@ -21,15 +21,22 @@ package at.nieslony.openvpnadmin.errorhandling;
  *
  * @author claas
  */
-public class ExceptionHandlerFactory extends javax.faces.context.ExceptionHandlerFactory {
-    private final javax.faces.context.ExceptionHandlerFactory parent;
+public class ExceptionHandlerFactory extends jakarta.faces.context.ExceptionHandlerFactory {
+    private final ExceptionHandlerFactory parent;
 
-    public ExceptionHandlerFactory(final javax.faces.context.ExceptionHandlerFactory parent) {
+    public ExceptionHandlerFactory() {
+        parent = null;
+    }
+
+    public ExceptionHandlerFactory(final ExceptionHandlerFactory parent) {
         this.parent = parent;
     }
 
     @Override
     public ExceptionHandler getExceptionHandler() {
-        return new ExceptionHandler(this.parent.getExceptionHandler());
+        if (parent != null)
+            return new ExceptionHandler(this.parent.getExceptionHandler());
+        else
+            return null;
     }
 }

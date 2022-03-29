@@ -18,6 +18,12 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.ConfigBuilder;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.faces.context.ExternalContext;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.event.ComponentSystemEvent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -26,12 +32,6 @@ import java.security.GeneralSecurityException;
 import java.security.cert.CertificateEncodingException;
 import java.sql.SQLException;
 import java.util.logging.Logger;
-import javax.enterprise.context.RequestScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
-import javax.inject.Inject;
-import javax.inject.Named;
 import org.bouncycastle.operator.OperatorCreationException;
 
 /**

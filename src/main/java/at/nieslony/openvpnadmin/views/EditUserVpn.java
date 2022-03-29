@@ -24,6 +24,12 @@ import at.nieslony.openvpnadmin.beans.UserVpn;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
 import at.nieslony.openvpnadmin.views.base.EditUserVpnBase;
+import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,12 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import org.primefaces.PrimeFaces;
 
 @ViewScoped

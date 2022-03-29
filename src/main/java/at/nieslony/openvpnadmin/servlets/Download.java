@@ -7,17 +7,17 @@ package at.nieslony.openvpnadmin.servlets;
 
 import at.nieslony.openvpnadmin.ConfigBuilder;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 
 /**

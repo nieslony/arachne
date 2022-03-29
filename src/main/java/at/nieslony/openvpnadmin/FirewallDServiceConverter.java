@@ -6,18 +6,18 @@
 package at.nieslony.openvpnadmin;
 
 import at.nieslony.openvpnadmin.beans.FirewallDServices;
+import jakarta.faces.component.UIComponent;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.convert.Converter;
+import jakarta.faces.convert.FacesConverter;
 import java.util.logging.Logger;
-import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
-import javax.faces.convert.Converter;
-import javax.faces.convert.FacesConverter;
 
 /**
  *
  * @author claas
  */
 @FacesConverter(value = "firewallDServiceConverter")
-public class FirewallDServiceConverter implements Converter {
+public class FirewallDServiceConverter implements Converter<Object> {
     private static final transient Logger logger = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
     @Override

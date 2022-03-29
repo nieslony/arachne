@@ -5,13 +5,12 @@
  */
 package at.nieslony.openvpnadmin.validators;
 
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.component.UIComponent;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.validator.FacesValidator;
+import jakarta.faces.validator.ValidatorException;
 import java.util.Map;
-import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
-import javax.faces.validator.FacesValidator;
-import javax.faces.validator.Validator;
-import javax.faces.validator.ValidatorException;
 import org.primefaces.validate.ClientValidator;
 
 /**
@@ -19,10 +18,11 @@ import org.primefaces.validate.ClientValidator;
  * @author claas
  */
 @FacesValidator("ipValidator")
-public class IpValidator  implements Validator, ClientValidator {
+public class IpValidator  implements jakarta.faces.validator.Validator<Object>, ClientValidator {
 
     @Override
-    public void validate(FacesContext fc, UIComponent uic, Object o) throws ValidatorException {
+    public void validate(FacesContext fc, UIComponent uic, Object o)
+            throws ValidatorException {
         String ip = o.toString();
 
         String[] octets = ip.split("\\.");

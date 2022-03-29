@@ -21,6 +21,15 @@ import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.exceptions.InvalidUsernameOrPassword;
 import at.nieslony.openvpnadmin.exceptions.NoSuchLdapUser;
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.context.ExternalContext;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.event.ComponentSystemEvent;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Base64;
@@ -29,17 +38,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.SessionScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ComponentSystemEvent;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  *

@@ -20,6 +20,11 @@ package at.nieslony.openvpnadmin.beans;
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import at.nieslony.openvpnadmin.beans.base.UserVpnBase;
 import at.nieslony.utils.NetUtils;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.net.Inet4Address;
 import java.net.InterfaceAddress;
@@ -32,15 +37,10 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.servlet.http.HttpServletRequest;
 
 @ApplicationScoped
 @Named

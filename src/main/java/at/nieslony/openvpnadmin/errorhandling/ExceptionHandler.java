@@ -18,23 +18,23 @@
 package at.nieslony.openvpnadmin.errorhandling;
 
 import at.nieslony.openvpnadmin.exceptions.PermissionDenied;
+import jakarta.el.ELException;
+import jakarta.faces.FacesException;
+import jakarta.faces.application.ViewExpiredException;
+import jakarta.faces.context.ExceptionHandlerWrapper;
+import jakarta.faces.context.ExternalContext;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.event.ExceptionQueuedEvent;
+import jakarta.faces.event.ExceptionQueuedEventContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.el.ELException;
-import javax.faces.FacesException;
-import javax.faces.application.ViewExpiredException;
-import javax.faces.context.ExceptionHandlerWrapper;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ExceptionQueuedEvent;
-import javax.faces.event.ExceptionQueuedEventContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -44,14 +44,14 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
 
     private static final Logger LOG = Logger.getLogger(java.util.logging.ConsoleHandler.class.toString());
 
-    private final javax.faces.context.ExceptionHandler wrapped;
+    private final ExceptionHandler wrapped;
 
-    public ExceptionHandler(final javax.faces.context.ExceptionHandler wrapped) {
+    public ExceptionHandler(final ExceptionHandler wrapped) {
         this.wrapped = wrapped;
     }
 
     @Override
-    public javax.faces.context.ExceptionHandler getWrapped() {
+    public ExceptionHandler getWrapped() {
         return this.wrapped;
     }
 
@@ -95,7 +95,7 @@ public class ExceptionHandler extends ExceptionHandlerWrapper {
                 LOG.severe(sw.toString());
                 LOG.severe("--- End of exception ---");
 
-                FacesContext context = FacesContext.getCurrentInstance();
+                FacesContext context = FacesContext.getCurrentInstance().getCurrentInstance();
                 ExternalContext extContext = context.getExternalContext();
                 Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
                 HttpServletRequest request = (HttpServletRequest) extContext.getRequest();

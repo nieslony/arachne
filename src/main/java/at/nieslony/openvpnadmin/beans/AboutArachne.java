@@ -18,9 +18,9 @@
 package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.ArachneStatics;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import java.io.Serializable;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
 
 /**
  *

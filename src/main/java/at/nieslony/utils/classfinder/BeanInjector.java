@@ -17,10 +17,10 @@
 
 package at.nieslony.utils.classfinder;
 
+import jakarta.faces.context.FacesContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import javax.faces.context.FacesContext;
 
 /**
  *

@@ -19,17 +19,17 @@ package at.nieslony.openvpnadmin.views;
 
 import at.nieslony.openvpnadmin.beans.ManagementInterface;
 import at.nieslony.openvpnadmin.exceptions.ManagementInterfaceException;
+import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  *

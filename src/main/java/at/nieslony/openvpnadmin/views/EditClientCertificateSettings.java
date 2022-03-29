@@ -20,17 +20,17 @@ package at.nieslony.openvpnadmin.views;
 import at.nieslony.openvpnadmin.beans.ClientCertificateSettings;
 import at.nieslony.openvpnadmin.views.base.EditClientCertificateSettingsBase;
 import at.nieslony.utils.pki.CertificateAuthority;
+import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.model.SelectItem;
+import jakarta.faces.model.SelectItemGroup;
+import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
-import javax.faces.model.SelectItemGroup;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 @ViewScoped
 @Named

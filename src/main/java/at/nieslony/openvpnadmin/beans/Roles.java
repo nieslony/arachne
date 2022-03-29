@@ -21,6 +21,12 @@ import at.nieslony.openvpnadmin.AbstractUser;
 import at.nieslony.openvpnadmin.Role;
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.openvpnadmin.errorhandling.RuleAlreadyExists;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -31,12 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  *

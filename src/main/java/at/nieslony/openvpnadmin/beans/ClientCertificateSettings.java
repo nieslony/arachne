@@ -19,12 +19,12 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.databasepropertiesstorage.PropertyGroup;
 import at.nieslony.openvpnadmin.beans.base.ClientCertificateSettingsBase;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 @ApplicationScoped
 @Named
