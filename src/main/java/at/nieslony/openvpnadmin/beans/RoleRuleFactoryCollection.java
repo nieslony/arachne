@@ -19,7 +19,6 @@ package at.nieslony.openvpnadmin.beans;
 
 import at.nieslony.openvpnadmin.RoleRule;
 import at.nieslony.utils.classfinder.BeanInjector;
-import at.nieslony.utils.classfinder.ClassFinder;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.faces.context.FacesContext;
@@ -28,9 +27,9 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.reflections.Reflections;
 
 /**
  *
@@ -54,15 +53,11 @@ public class RoleRuleFactoryCollection
     @PostConstruct
     public void init() {
         logger.info("Initializing RoleRuleFactoryCollection");
-        ClassFinder classFinder = new ClassFinder((getClass().getClassLoader()));
 
-        List<Class> loadedFactories = null;
-        try {
-            loadedFactories = classFinder.getAllClassesImplementing(RoleRuleFactory.class);
-        }
-        catch (Exception ex) {
-            logger.severe(String.format("Unhandled exception: %s", ex.toString()));
-        }
+        Reflections reflections = new Reflections("at.nieslony");
+        Class interfaceC = RoleRuleFactory.class;
+        Set<Class> loadedFactories = reflections.getSubTypesOf(interfaceC);
+
         if (loadedFactories == null) {
             logger.severe("No factories found");
             return;

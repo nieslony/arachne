@@ -22,7 +22,6 @@ import at.nieslony.openvpnadmin.tasks.ScheduledTask;
 import at.nieslony.openvpnadmin.tasks.TaskListEntry;
 import at.nieslony.utils.DbUtils;
 import at.nieslony.utils.classfinder.BeanInjector;
-import at.nieslony.utils.classfinder.ClassFinder;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -36,7 +35,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,11 +45,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.reflections.Reflections;
 
 /**
  *
@@ -101,33 +100,30 @@ public class TaskScheduler
 
     @PostConstruct
     public void init() {
-        try {
-            ClassFinder classFinder = new ClassFinder((getClass().getClassLoader()));
+        Reflections reflections = new Reflections("at.nieslony");
+        Class interfaceC = ScheduledTask.class;
+        Set<Class> classes = reflections.getSubTypesOf(interfaceC);
 
-            List<Class> classes = classFinder.getAllClassesImplementing(ScheduledTask.class);
-            FacesContext ctx = FacesContext.getCurrentInstance();
-            for (Class c : classes) {
-                logger.info(String.format("Found task scheduler class %s", c.getName()));
-                availableTasks.add(new AvailableTask(c));
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        for (Class c : classes) {
+            logger.info(String.format("Found task scheduler class %s", c.getName()));
+            availableTasks.add(new AvailableTask(c));
 
-                try {
-                    BeanInjector.injectStaticBeans(ctx, c);
-                }
-                catch (NoSuchMethodException ex) {
-                    logger.warning(String.format("Cannot find method in class %s: %s",
-                        c.getName(), ex.getMessage()));
-                }
-                catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                    logger.warning(String.format("Cannot invoke method: %s",
-                            c.getName(),  ex.getMessage()));
-                }
-
+            try {
+                BeanInjector.injectStaticBeans(ctx, c);
+            }
+            catch (NoSuchMethodException ex) {
+                logger.warning(String.format("Cannot find method in class %s: %s",
+                    c.getName(), ex.getMessage()));
+            }
+            catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                logger.warning(String.format("Cannot invoke method: %s",
+                        c.getName(),  ex.getMessage()));
             }
 
-            reloadTasks();
-        } catch (URISyntaxException | ClassNotFoundException | IOException ex) {
-            Logger.getLogger(TaskScheduler.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        //reloadTasks();
 
         reloadTasks();
 
