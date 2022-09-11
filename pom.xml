@@ -245,16 +245,6 @@
                             </artifactItems>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>download-javadoc</id>
-                        <goals>
-                            <goal>sources</goal>
-                            <goal>resolve</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>javadoc</classifier>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 
@@ -293,6 +283,23 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <formats>
+                        <format>tar.xz</format>
+                    </formats>
+                    <!--- <descriptorRefs>src</descriptorRefs> -->
+                    <descriptors>
+                        <descriptor>assembly.xml</descriptor>
+                    </descriptors>
+                    <overrideGid>0</overrideGid>
+                    <overrideUid>0</overrideUid>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -363,23 +370,14 @@
             <plugin>
                 <groupId>org.apache.tomee.maven</groupId>
                 <artifactId>tomee-maven-plugin</artifactId>
-                <version>8.0.10</version> <!-- Note: No 9.0.0-M7 Maven Plugin is available yet but we can use the old one  -->
+                <version>9.0.0-M8</version> <!-- 8.0.10 Note: No 9.0.0-M7 Maven Plugin is available yet but we can use the old one  -->
                 <configuration>
-                    <tomeeVersion>9.0.0-M7</tomeeVersion>
+                    <tomeeVersion>9.0.0-M8</tomeeVersion>
                     <tomeeClassifier>plus</tomeeClassifier>
                     <debug>false</debug>
                     <tomeeHttpPort>8080</tomeeHttpPort>
                     <debugPort>5005</debugPort>
                     <context>arachne</context>
-                    <config>${tomee-conf.dir}</config>
-
-                    <config>${project.basedir}/src/test/tomee/conf</config>
-                    <libs>
-                        <lib>remove:myfaces</lib>
-                        <!-- Adding MyFaces 3.0.0 JSF implementation  -->
-                        <lib>org.apache.myfaces.core:myfaces-impl:3.0.0</lib>
-                        <lib>org.apache.myfaces.core:myfaces-api:3.0.0</lib>
-                    </libs>
                 </configuration>
             </plugin>
 
