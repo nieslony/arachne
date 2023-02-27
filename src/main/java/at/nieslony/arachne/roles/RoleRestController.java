@@ -4,13 +4,11 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.users.UserMatcherDescription;
-import java.io.Serializable;
+import at.nieslony.arachne.users.UserMatcherInfo;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -77,33 +75,9 @@ public class RoleRestController {
         return new ResponseEntity<>(id, HttpStatus.OK);
     }
 
-    @Data
-    public class UserMatcherInfo implements Serializable {
-
-        private String matcherName;
-        private String parameterLabel;
-        private String className;
-    }
-
     @GetMapping("/user_matchers")
     public List<UserMatcherInfo> userMatchers() {
-        List<UserMatcherInfo> umil = new LinkedList<>();
-        for (Class c : rolesCollector.getUserMatcherClasses()) {
-            UserMatcherInfo umi = new UserMatcherInfo();
-            umi.className = c.getName();
-            if (c.isAnnotationPresent(UserMatcherDescription.class)) {
-                UserMatcherDescription umc
-                        = (UserMatcherDescription) c.getAnnotation(UserMatcherDescription.class);
-                umi.matcherName = umc.description();
-                umi.parameterLabel = umc.parameterLabel();
-            } else {
-                umi.matcherName = c.getName();
-                umi.parameterLabel = "";
-            }
-            umil.add(umi);
-        }
-
-        return umil;
+        return rolesCollector.getAllUserMatcherInfo();
     }
 
     @Getter

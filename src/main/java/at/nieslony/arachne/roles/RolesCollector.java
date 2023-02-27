@@ -6,6 +6,7 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.users.EverybodyMatcher;
 import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.users.UserMatcherInfo;
 import at.nieslony.arachne.users.UsernameMatcher;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -32,8 +33,12 @@ public class RolesCollector {
         userMatcherClasses.add(EverybodyMatcher.class);
     }
 
-    public List<Class<? extends UserMatcher>> getUserMatcherClasses() {
-        return userMatcherClasses;
+    public List<UserMatcherInfo> getAllUserMatcherInfo() {
+        List<UserMatcherInfo> umi = new LinkedList<>();
+        for (Class<? extends UserMatcher> um : userMatcherClasses) {
+            umi.add(new UserMatcherInfo(um));
+        }
+        return umi;
     }
 
     private UserMatcher buildUserMatcher(RoleRuleModel rrm) {
