@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.user.UserMatcherDescription;
+import at.nieslony.arachne.users.UserMatcherDescription;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;

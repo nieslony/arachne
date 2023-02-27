@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.user.UserMatcher;
-import at.nieslony.arachne.user.UserMatcherDescription;
+import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.users.UserMatcherDescription;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

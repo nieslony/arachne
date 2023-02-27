@@ -4,9 +4,9 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.user.EverybodyMatcher;
-import at.nieslony.arachne.user.UserMatcher;
-import at.nieslony.arachne.user.UsernameMatcher;
+import at.nieslony.arachne.users.EverybodyMatcher;
+import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.users.UsernameMatcher;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
