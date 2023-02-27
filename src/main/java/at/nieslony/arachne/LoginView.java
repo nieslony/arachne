@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne;
 
-import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
+import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -19,13 +19,18 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     private final LoginForm login = new LoginForm();
 
     public LoginView() {
+        LoginOverlay loginOverlay = new LoginOverlay();
+        loginOverlay.setTitle("Arachne");
+        loginOverlay.setDescription("Administer your openVPN");
+        loginOverlay.setOpened(true);
+
         addClassName("login-view");
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
         login.setAction("login");
         login.setForgotPasswordButtonVisible(false);
-        add(new H1("Arachne"), login);
+        add(loginOverlay, login);
 
     }
 
