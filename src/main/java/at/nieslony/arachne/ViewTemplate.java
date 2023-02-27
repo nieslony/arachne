@@ -55,11 +55,13 @@ public class ViewTemplate extends AppLayout {
 
     private void createDrawer() {
         RouterLink mainLink = new RouterLink("Home", MainView.class);
-        RouterLink usersLink = new RouterLink("All Users etc.", UsersView.class);
+        RouterLink usersLink = new RouterLink("Users", UsersView.class);
+        RouterLink rolesView = new RouterLink("Roles", RolesView.class);
 
         addToDrawer(new VerticalLayout(
                 mainLink,
-                usersLink)
+                usersLink,
+                rolesView)
         );
     }
 }
