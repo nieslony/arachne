@@ -130,7 +130,7 @@ public class RolesView extends VerticalLayout {
                         }
                 );
 
-        var parameterBinder = binder.forField(parameter)
+        binder.forField(parameter)
                 .withValidator(
                         text -> {
                             String label = userMatchers.getValue().getParameterLabel();
