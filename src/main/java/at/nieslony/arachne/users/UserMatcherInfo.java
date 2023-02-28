@@ -22,6 +22,25 @@ public class UserMatcherInfo {
     }
 
     public UserMatcherInfo(Class< ? extends UserMatcher> userMatcherClass) {
+        init(userMatcherClass);
+    }
+
+    public UserMatcherInfo(String userMatcherClassName) {
+        if (userMatcherClassName != null) {
+            try {
+                Class userMatcherClass = Class.forName(userMatcherClassName);
+                init(userMatcherClass);
+            } catch (ClassNotFoundException ex) {
+
+            }
+        }
+    }
+
+    private void init(Class< ? extends UserMatcher> userMatcherClass) {
+        if (userMatcherClass == null) {
+            return;
+        }
+
         this.className = userMatcherClass.getName();
         UserMatcherDescription umd
                 = userMatcherClass.getAnnotation(
