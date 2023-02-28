@@ -23,6 +23,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -33,8 +35,12 @@ import javax.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class RolesView extends VerticalLayout {
 
+    private static final Logger logger = LoggerFactory.getLogger(RolesView.class);
+
     final private RoleRuleRepository roleRuleRepository;
     final private RolesCollector rolesCollector;
+
+    final Grid<RoleRuleModel> roleRules;
 
     public RolesView(
             RoleRuleRepository roleRuleRepository,
@@ -50,7 +56,7 @@ public class RolesView extends VerticalLayout {
         HorizontalLayout topButtons = new HorizontalLayout();
         topButtons.add(addRole);
 
-        Grid<RoleRuleModel> roleRules = new Grid();
+        roleRules = new Grid();
         roleRules
                 .addColumn(RoleRuleModel::getRoleRuleDescription)
                 .setHeader("Rule");
@@ -76,6 +82,11 @@ public class RolesView extends VerticalLayout {
 
         Button okButton = new Button("OK", e -> {
             dialog.close();
+            RoleRuleModel roleRule = new RoleRuleModel();
+            binder.writeBeanIfValid(roleRule);
+
+            roleRuleRepository.save(roleRule);
+            roleRules.setItems(roleRuleRepository.findAll());
         });
         okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button cancelButton = new Button("Cancel", e -> {
@@ -85,7 +96,6 @@ public class RolesView extends VerticalLayout {
             okButton.setEnabled(!event.hasValidationErrors());
         });
         RoleRuleModel roleRule = new RoleRuleModel();
-        binder.setBean(roleRule);
 
         dialog.getFooter().add(cancelButton);
         dialog.getFooter().add(okButton);
@@ -110,6 +120,16 @@ public class RolesView extends VerticalLayout {
         userMatchers.setValue(allUserMatchers.get(0));
         roles.setValue(allRoles[0]);
 
+        binder.forField(userMatchers)
+                .bind(
+                        rr -> {
+                            return new UserMatcherInfo(rr.getUserMatcherClassName());
+                        },
+                        (rr, v) -> {
+                            rr.setUserMatcherClassName(v.getClassName());
+                        }
+                );
+
         var parameterBinder = binder.forField(parameter)
                 .withValidator(
                         text -> {
@@ -122,6 +142,12 @@ public class RolesView extends VerticalLayout {
                         "Value required")
                 .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter)
                 .validate();
+
+        binder.forField(roles)
+                .bind(RoleRuleModel::getRole, RoleRuleModel::setRole);
+
+        binder.forField(description)
+                .bind(RoleRuleModel::getDescription, RoleRuleModel::setDescription);
 
         userMatchers.addValueChangeListener(event -> {
             UserMatcherInfo umi = event.getValue();
