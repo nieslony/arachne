@@ -7,6 +7,7 @@ package at.nieslony.arachne;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -37,8 +38,8 @@ public class ViewTemplate extends AppLayout {
         logo.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
-        //logo.addClassName("logo");
         Button logout = new Button("Logout", click -> this.authContext.logout());
+        logout.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
