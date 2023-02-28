@@ -65,7 +65,7 @@ public class RolesView extends VerticalLayout {
                 .setHeader("Parameter");
         roleRules
                 .addColumn(RoleRuleModel::getRoleReadable)
-                .setHeader("Attached Role");
+                .setHeader("Assigned Role");
         roleRules
                 .addColumn(RoleRuleModel::getDescription)
                 .setHeader("Description");
@@ -140,8 +140,7 @@ public class RolesView extends VerticalLayout {
                             return !parameter.getValue().isEmpty();
                         },
                         "Value required")
-                .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter)
-                .validate();
+                .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
 
         binder.forField(roles)
                 .bind(RoleRuleModel::getRole, RoleRuleModel::setRole);
@@ -158,8 +157,10 @@ public class RolesView extends VerticalLayout {
                 parameter.setEnabled(true);
                 parameter.setLabel(umi.getParameterLabel());
             }
-            parameterBinder.getBinding().validate();
+            binder.validate();
         });
+
+        binder.validate();
 
         dialog.add(new FormLayout(
                 userMatchers,
