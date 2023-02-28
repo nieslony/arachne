@@ -8,8 +8,9 @@ import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.roles.RolesCollector;
-import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.users.UserMatcherInfo;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import java.util.List;
@@ -70,19 +72,68 @@ public class RolesView extends VerticalLayout {
     void addRule() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Add Role Rule");
+        Binder<RoleRuleModel> binder = new Binder<>(RoleRuleModel.class);
 
-        Select<Class<? extends UserMatcher>> userMatchers = new Select<>();
-        List<Class<? extends UserMatcher>> allUserMatchers = rolesCollector.getUserMatcherClasses();
+        Button okButton = new Button("OK", e -> {
+            dialog.close();
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button cancelButton = new Button("Cancel", e -> {
+            dialog.close();
+        });
+        binder.addStatusChangeListener((event) -> {
+            okButton.setEnabled(!event.hasValidationErrors());
+        });
+        RoleRuleModel roleRule = new RoleRuleModel();
+        binder.setBean(roleRule);
+
+        dialog.getFooter().add(cancelButton);
+        dialog.getFooter().add(okButton);
+
+        Select<UserMatcherInfo> userMatchers = new Select<>();
+        List<UserMatcherInfo> allUserMatchers = rolesCollector.getAllUserMatcherInfo();
         userMatchers.setItems(allUserMatchers);
+        userMatchers.setEmptySelectionAllowed(false);
         userMatchers.setLabel("Role Rules");
+        userMatchers.setEmptySelectionAllowed(false);
 
         TextField parameter = new TextField("Parameter");
 
         Select<Role> roles = new Select();
         roles.setLabel(("Role"));
+        Role[] allRoles = Role.values();
         roles.setItems(Role.values());
+        roles.setEmptySelectionAllowed(false);
 
         TextField description = new TextField("Description");
+
+        userMatchers.setValue(allUserMatchers.get(0));
+        roles.setValue(allRoles[0]);
+
+        var parameterBinder = binder.forField(parameter)
+                .withValidator(
+                        text -> {
+                            String label = userMatchers.getValue().getParameterLabel();
+                            if (label == null || label.isEmpty()) {
+                                return true;
+                            }
+                            return !parameter.getValue().isEmpty();
+                        },
+                        "Value required")
+                .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter)
+                .validate();
+
+        userMatchers.addValueChangeListener(event -> {
+            UserMatcherInfo umi = event.getValue();
+            if (umi.getParameterLabel().isEmpty()) {
+                parameter.setEnabled(false);
+                parameter.setLabel("Without parameter");
+            } else {
+                parameter.setEnabled(true);
+                parameter.setLabel(umi.getParameterLabel());
+            }
+            parameterBinder.getBinding().validate();
+        });
 
         dialog.add(new FormLayout(
                 userMatchers,
@@ -90,15 +141,6 @@ public class RolesView extends VerticalLayout {
                 roles,
                 description
         ));
-
-        Button okButton = new Button("OK", e -> {
-            dialog.close();
-        });
-        Button cancelButton = new Button("Cancel", e -> {
-            dialog.close();
-        });
-        dialog.getFooter().add(cancelButton);
-        dialog.getFooter().add(okButton);
 
         dialog.open();
     }
