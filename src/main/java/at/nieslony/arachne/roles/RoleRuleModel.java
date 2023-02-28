@@ -6,6 +6,7 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.users.UserMatcher;
 import at.nieslony.arachne.users.UserMatcherDescription;
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,6 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  *
@@ -23,7 +25,8 @@ import lombok.Data;
 @Entity
 @Table(name = "roleRules")
 @Data
-public class RoleRuleModel {
+@ToString
+public class RoleRuleModel implements Serializable {
 
     public RoleRuleModel(
             Class<? extends UserMatcher> userMatcherClass,
