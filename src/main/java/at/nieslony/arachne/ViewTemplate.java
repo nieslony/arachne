@@ -6,15 +6,21 @@ package at.nieslony.arachne;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.spring.security.AuthenticationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  *
@@ -22,6 +28,8 @@ import com.vaadin.flow.spring.security.AuthenticationContext;
  */
 @StyleSheet("/frontend/styles/styles.css")
 public class ViewTemplate extends AppLayout {
+
+    private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
 
@@ -33,18 +41,23 @@ public class ViewTemplate extends AppLayout {
     }
 
     private void createHeader() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userInfo = authentication.getName();
+
         H1 logo = new H1("Arachne");
-        //logo.addClassNames("text-m", "m-m");
         logo.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
-        Button logout = new Button("Logout", click -> this.authContext.logout());
-        logout.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+        MenuItem item = menuBar.addItem(userInfo);
+        SubMenu userMenu = item.getSubMenu();
+        userMenu.addItem("Logout", click -> this.authContext.logout());
 
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
                 logo,
-                logout
+                menuBar
         );
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         header.expand(logo);
@@ -57,12 +70,12 @@ public class ViewTemplate extends AppLayout {
     private void createDrawer() {
         RouterLink mainLink = new RouterLink("Home", MainView.class);
         RouterLink usersLink = new RouterLink("Users", UsersView.class);
-        RouterLink rolesView = new RouterLink("Roles", RolesView.class);
+        RouterLink rolesLink = new RouterLink("Roles", RolesView.class);
 
         addToDrawer(new VerticalLayout(
                 mainLink,
                 usersLink,
-                rolesView)
+                rolesLink)
         );
     }
 }
