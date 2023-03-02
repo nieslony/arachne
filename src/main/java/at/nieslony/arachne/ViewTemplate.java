@@ -71,11 +71,13 @@ public class ViewTemplate extends AppLayout {
         RouterLink mainLink = new RouterLink("Home", MainView.class);
         RouterLink usersLink = new RouterLink("Users", UsersView.class);
         RouterLink rolesLink = new RouterLink("Roles", RolesView.class);
+        RouterLink openVpnUsersLink = new RouterLink("OpenVPN User", OpenVpnUserView.class);
 
         addToDrawer(new VerticalLayout(
                 mainLink,
                 usersLink,
-                rolesLink)
+                rolesLink,
+                openVpnUsersLink)
         );
     }
 }
