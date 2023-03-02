@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import java.io.Serializable;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import javax.persistence.Column;
@@ -25,7 +26,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "certitificates")
-public class CertificateModel {
+public class CertificateModel implements Serializable {
 
     public enum CertType {
         CA,
@@ -69,7 +70,7 @@ public class CertificateModel {
     @Column
     private Boolean isRevoked;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "key_id")
     private KeyModel keyModel;
 }
