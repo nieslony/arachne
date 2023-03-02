@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import java.io.Serializable;
 import java.security.PrivateKey;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,7 +22,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "keys")
-public class KeyModel {
+public class KeyModel implements Serializable {
 
     public KeyModel(PrivateKey privateKey) {
         this.privateKey = privateKey;
