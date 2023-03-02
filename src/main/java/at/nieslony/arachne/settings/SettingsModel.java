@@ -50,7 +50,7 @@ public class SettingsModel implements Serializable {
     private String content;
 
     public int getIntContent() {
-        return Integer.getInteger(content);
+        return Integer.parseInt(content);
     }
 
     public SettingsModel setContent(int content) {
