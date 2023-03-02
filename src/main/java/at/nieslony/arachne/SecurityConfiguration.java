@@ -32,7 +32,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         super.configure(http);
         //setLoginView(http, LoginView.class);
         setLoginView(http, LoginOrSetupView.class);
-        http.csrf().disable();
+        http.csrf().disable().headers().frameOptions().disable();
     }
 
     @Override
