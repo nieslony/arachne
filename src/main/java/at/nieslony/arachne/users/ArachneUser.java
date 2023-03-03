@@ -13,15 +13,19 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  *
  * @author claas
  */
-@Data
+//@Data
+@Getter
+@Setter
+@ToString
 @Entity
 @Table(name = "users")
 public class ArachneUser implements Serializable {
