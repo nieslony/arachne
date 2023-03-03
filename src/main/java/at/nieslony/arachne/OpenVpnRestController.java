@@ -4,6 +4,8 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
+import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.SettingsRepository;
@@ -39,6 +41,9 @@ public class OpenVpnRestController {
 
     @Autowired
     Pki pki;
+
+    @Autowired
+    OpenVpnManagement openVpnManagement;
 
     @Value("${vpnConfigDir}")
     String vpnConfigDir;
@@ -91,11 +96,13 @@ public class OpenVpnRestController {
                             settings.getKeepaliveInterval(),
                             settings.getKeepaliveTimeout()));
             writer.write("topology subnet\n");
+            writer.write(openVpnManagement.getVpnConfigSetting() + "\n");
 
             writer.write("<ca>\n%s</ca>\n".formatted(pki.getRootCertAsBase64()));
             writer.write("<cert>\n%s</cert>\n".formatted(pki.getServerCertAsBase64()));
             writer.write("<key>\n%s</key>\n".formatted(pki.getServerKeyAsBase64()));
             writer.write("<dh>\n%s</dh>\n".formatted(pki.getDhParams()));
+            openVpnManagement.restartServer();
         } catch (PkiNotInitializedException ex) {
             logger.error("# pki not yet initialized");
         } catch (IOException ex) {
@@ -103,6 +110,8 @@ public class OpenVpnRestController {
                     "Cannot write to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
+        } catch (OpenVpnManagementException ex) {
+            logger.error("Cannot restart openVPN: " + ex.getMessage());
         }
     }
 }

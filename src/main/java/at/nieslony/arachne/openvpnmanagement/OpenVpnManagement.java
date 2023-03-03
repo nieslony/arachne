@@ -8,23 +8,20 @@ import at.nieslony.arachne.FolderFactory;
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.StandardProtocolFamily;
+import java.io.PrintWriter;
 import java.net.UnixDomainSocketAddress;
+import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +41,10 @@ public class OpenVpnManagement {
     private static final String PASSWORD_FN = "management.pwd";
     private static final String SOCKET_FN = "arachne-management.socket";
 
-    private UnixDomainSocketAddress managementSocket;
     private String socketPath;
     private SocketChannel socketChannel;
     private BufferedReader managementReader;
-    private BufferedWriter managementWriter;
+    private PrintWriter managementWriter;
 
     private String managementPassword;
 
@@ -65,23 +61,6 @@ public class OpenVpnManagement {
     @PostConstruct
     public void init() {
         managementPassword = getPassword();
-    }
-
-    @PreDestroy
-    public void destroy() {
-        logger.info("Closing and removing socket");
-        Path path = Path.of(socketPath);
-        try {
-            if (socketChannel.isOpen()) {
-                socketChannel.close();
-            }
-            Files.deleteIfExists(path);
-        } catch (IOException ex) {
-            logger.error(
-                    "Cannopt delete socket %s: %s"
-                            .formatted(socketPath, ex.getMessage())
-            );
-        }
     }
 
     private String getPassword() {
@@ -103,44 +82,53 @@ public class OpenVpnManagement {
     }
 
     public void openSocket() throws OpenVpnManagementException {
+        if (socketChannel != null && socketChannel.isOpen() && socketChannel.isConnected()) {
+            return;
+        }
+
         socketPath = getSocketPath();
         logger.info("Connecting to socket " + socketPath);
-        managementSocket = UnixDomainSocketAddress.of(socketPath);
 
+        var address = UnixDomainSocketAddress.of(getSocketPath());
         try {
-            socketChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
-            socketChannel.connect(managementSocket);
-
+            socketChannel = SocketChannel.open(address);
+            managementWriter = new PrintWriter(
+                    new OutputStreamWriter(
+                            Channels.newOutputStream(socketChannel)
+                    ),
+                    true
+            );
             managementReader = new BufferedReader(
                     new InputStreamReader(
-                            socketChannel.socket().getInputStream()
-                    )
+                            Channels.newInputStream(socketChannel))
             );
-            managementWriter = new BufferedWriter(
-                    new OutputStreamWriter(
-                            socketChannel.socket().getOutputStream()
-                    ));
 
-            managementWriter.write(getPassword());
-            managementWriter.newLine();
+            managementWriter.println(getPassword());
+
+            String line;
+            do {
+                line = managementReader.readLine();
+                logger.info("Opening management interface: " + line);
+            } while (!line.startsWith(">"));
+            logger.info("Management interface is open");
         } catch (IOException ex) {
             String msg = "Cannot connect to socket: " + ex.getMessage();
             logger.error(msg);
             managementReader = null;
-            managementReader = null;
+            managementWriter = null;
             throw new OpenVpnManagementException(msg);
         }
     }
 
     synchronized List<String> invokeCommand(String command)
             throws OpenVpnManagementException {
+        openSocket();
+
         List<String> lines = new LinkedList<>();
         logger.info("Invoking command: " + command);
 
         try {
-            managementWriter.write(command);
-            managementWriter.newLine();
-
+            managementWriter.println(command);
             String line = managementReader.readLine();
             lines.add(line);
             if (line.startsWith("SUCCESS:")) {
@@ -153,14 +141,16 @@ public class OpenVpnManagement {
                 lines.add(line);
             } while (line.equals("END"));
         } catch (IOException ex) {
-
+            String msg = "Error invoking command %s: %s".formatted(command, ex.getMessage());
+            logger.error(msg);
+            throw new OpenVpnManagementException(msg);
         }
         return lines;
     }
 
-    public void restart() throws OpenVpnManagementException {
-        List<String> result = invokeCommand("signal ");
-        logger.info("Command result: " + result.get(0));
+    public void restartServer() throws OpenVpnManagementException {
+        List<String> result = invokeCommand("signal SIGHUP");
+        logger.info("Command result: " + result.toString());
     }
 
     public void saveSettings(String socket, String password) {
@@ -221,6 +211,9 @@ public class OpenVpnManagement {
     }
 
     public String getVpnConfigSetting() {
-        return "management %s unix %s".formatted(getSocketPath(), PASSWORD_FN);
+        return "management %s unix %s"
+                .formatted(
+                        getSocketPath(),
+                        folderFactory.getVpnConfigDir(PASSWORD_FN));
     }
 }
