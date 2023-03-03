@@ -7,16 +7,22 @@ package at.nieslony.arachne;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.users.UsernameValidator;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import java.util.List;
@@ -41,6 +47,9 @@ public class UsersView extends VerticalLayout {
     final private RolesCollector rolesCollector;
 
     final Grid<ArachneUser> usersGrid;
+    final Grid.Column<ArachneUser> usernameColumn;
+    final Grid.Column<ArachneUser> displayNameColumn;
+    final Grid.Column<ArachneUser> emailColumn;
 
     public UsersView(UserRepository userRepository, RolesCollector rolesCollector) {
         this.userRepository = userRepository;
@@ -52,13 +61,13 @@ public class UsersView extends VerticalLayout {
                 event -> addUser()
         );
 
-        Grid.Column<ArachneUser> usernameColumn = usersGrid
+        usernameColumn = usersGrid
                 .addColumn(ArachneUser::getUsername)
                 .setHeader("Username");
-        Grid.Column<ArachneUser> displayNameColumn = usersGrid
+        displayNameColumn = usersGrid
                 .addColumn(ArachneUser::getDisplayName)
                 .setHeader("Displayname");
-        Grid.Column<ArachneUser> emailColumn = usersGrid
+        emailColumn = usersGrid
                 .addColumn(ArachneUser::getEmail)
                 .setHeader("E-Mail");
         usersGrid.addComponentColumn((user) -> {
@@ -69,10 +78,90 @@ public class UsersView extends VerticalLayout {
             return new Text(roles);
         }).setHeader("Roles");
 
+        editUsersGridBuffered();
+
         List<ArachneUser> users = userRepository.findAll();
         usersGrid.setItems(users);
 
         add(addUserButton, usersGrid);
+    }
+
+    final void editUsersGridBuffered() {
+        Editor<ArachneUser> editor = usersGrid.getEditor();
+        Binder<ArachneUser> binder = new Binder(ArachneUser.class);
+        editor.setBinder(binder);
+        editor.setBuffered(true);
+
+        Grid.Column<ArachneUser> editColumn = usersGrid
+                .addComponentColumn(user -> {
+                    Button editButton = new Button("Edit");
+                    editButton.addClickListener(e -> {
+                        if (editor.isOpen()) {
+                            editor.cancel();
+                        }
+                        editor.editItem(user);
+                    });
+                    return editButton;
+                })
+                .setFlexGrow(0);
+
+        TextField usernameField = new TextField();
+        UsernameValidator usernameValidator = new UsernameValidator();
+        usernameField.setWidthFull();
+        binder.forField(usernameField)
+                .withValidator(
+                        usernameValidator,
+                        UsernameValidator.getErrorMsg())
+                .bind(ArachneUser::getUsername, ArachneUser::setUsername);
+        usernameColumn.setEditorComponent(usernameField);
+
+        TextField displayNameField = new TextField();
+        displayNameField.setWidthFull();
+        binder.forField(displayNameField)
+                .asRequired("Value required")
+                .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);
+        displayNameColumn.setEditorComponent(displayNameField);
+
+        EmailField emailField = new EmailField();
+        emailField.setWidthFull();
+        binder.forField(emailField)
+                .withValidator(new EmailValidator(
+                        "This doesn't look like a valid email address")
+                )
+                .bind(ArachneUser::getEmail, ArachneUser::setEmail);
+        emailColumn.setEditorComponent(emailField);
+
+        binder.addStatusChangeListener((event) -> {
+            if (binder.isValid()) {
+                logger.info("Binder is valid");
+            } else {
+                logger.info("Binder is not valid");
+            }
+        });
+
+        editor.addSaveListener((event) -> {
+            ArachneUser user = event.getItem();
+            userRepository.save(user);
+        });
+
+        Button saveButton = new Button(
+                "Save",
+                e -> {
+                    editor.save();
+                }
+        );
+        Button cancelButton = new Button(
+                VaadinIcon.CLOSE.create(),
+                e -> editor.cancel());
+        cancelButton.addThemeVariants(
+                ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_ERROR);
+        HorizontalLayout actions = new HorizontalLayout(
+                cancelButton, saveButton
+        );
+        actions.setPadding(false);
+        editColumn.setEditorComponent(actions);
+        usersGrid.recalculateColumnWidths();
     }
 
     void addUser() {
@@ -107,14 +196,12 @@ public class UsersView extends VerticalLayout {
             okButton.setEnabled(!event.hasValidationErrors());
         });
 
+        UsernameValidator usernameValidartor = new UsernameValidator();
         binder.forField(usernameField)
                 .asRequired()
-                .withValidator(username -> {
-                    return username.matches("^[a-z].*");
-                }, "Username must start with lowercase letter")
-                .withValidator(username -> {
-                    return username.matches("^[a-z0-9_.\\-]+$");
-                }, "Allowed characters: a-z 0-9 - . -")
+                .withValidator(
+                        usernameValidartor,
+                        usernameValidartor.getLastErrorMsg())
                 .withValidator(username -> {
                     ArachneUser user = userRepository.findByUsername(username);
                     return user == null;
