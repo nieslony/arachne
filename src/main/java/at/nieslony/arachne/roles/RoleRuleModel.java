@@ -15,7 +15,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -24,7 +25,8 @@ import lombok.ToString;
  */
 @Entity
 @Table(name = "roleRules")
-@Data
+@Getter
+@Setter
 @ToString
 public class RoleRuleModel implements Serializable {
 

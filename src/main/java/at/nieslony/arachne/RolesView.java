@@ -14,6 +14,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -41,6 +43,10 @@ public class RolesView extends VerticalLayout {
     final private RolesCollector rolesCollector;
 
     final Grid<RoleRuleModel> roleRules;
+    Grid.Column<RoleRuleModel> ruleColumn;
+    Grid.Column<RoleRuleModel> parameterColumn;
+    Grid.Column<RoleRuleModel> roleColumn;
+    Grid.Column<RoleRuleModel> descriptionColumn;
 
     public RolesView(
             RoleRuleRepository roleRuleRepository,
@@ -57,22 +63,124 @@ public class RolesView extends VerticalLayout {
         topButtons.add(addRole);
 
         roleRules = new Grid();
-        roleRules
+        ruleColumn = roleRules
                 .addColumn(RoleRuleModel::getRoleRuleDescription)
                 .setHeader("Rule");
-        roleRules
+        parameterColumn = roleRules
                 .addColumn(RoleRuleModel::getParameter)
                 .setHeader("Parameter");
-        roleRules
+        roleColumn = roleRules
                 .addColumn(RoleRuleModel::getRoleReadable)
                 .setHeader("Assigned Role");
-        roleRules
+        descriptionColumn = roleRules
                 .addColumn(RoleRuleModel::getDescription)
                 .setHeader("Description");
 
         roleRules.setItems(roleRuleRepository.findAll());
 
+        editRoleBuffered();
+
         add(topButtons, roleRules);
+    }
+
+    void editRoleBuffered() {
+        Editor<RoleRuleModel> editor = roleRules.getEditor();
+        Binder<RoleRuleModel> binder = new Binder(RoleRuleModel.class);
+        editor.setBinder(binder);
+        editor.setBuffered(true);
+
+        Grid.Column<RoleRuleModel> editColumn = roleRules
+                .addComponentColumn(roleRule -> {
+                    Button editButton = new Button("Edit");
+                    editButton.addClickListener(e -> {
+                        if (editor.isOpen()) {
+                            editor.cancel();
+                        }
+                        editor.editItem(roleRule);
+                    });
+                    return editButton;
+                })
+                .setWidth("10em")
+                .setFlexGrow(0);
+
+        Select<UserMatcherInfo> userMatchersField = new Select<>();
+        List<UserMatcherInfo> allUserMatchers = rolesCollector.getAllUserMatcherInfo();
+        userMatchersField.setItems(allUserMatchers);
+        userMatchersField.setEmptySelectionAllowed(false);
+        binder.forField(userMatchersField)
+                .bind(
+                        rr -> {
+                            return new UserMatcherInfo(rr.getUserMatcherClassName());
+                        },
+                        (rr, v) -> {
+                            rr.setUserMatcherClassName(v.getClassName());
+                        }
+                );
+        ruleColumn.setEditorComponent(userMatchersField);
+
+        TextField parameterField = new TextField();
+        binder.forField(parameterField)
+                .withValidator(
+                        text -> {
+                            String label = userMatchersField.getValue().getParameterLabel();
+                            if (label == null || label.isEmpty()) {
+                                return true;
+                            }
+                            return !parameterField.getValue().isEmpty();
+                        },
+                        "Value required")
+                .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
+        parameterColumn.setEditorComponent(parameterField);
+
+        Select<Role> roles = new Select();
+        roles.setItems(Role.values());
+        roles.setEmptySelectionAllowed(false);
+        binder.forField(roles)
+                .bind(RoleRuleModel::getRole, RoleRuleModel::setRole);
+        roleColumn.setEditorComponent(roles);
+
+        TextField descriptionField = new TextField();
+        binder.forField(descriptionField)
+                .bind(RoleRuleModel::getDescription, RoleRuleModel::setDescription);
+        descriptionColumn.setEditorComponent(descriptionField);
+
+        editor.addSaveListener((event) -> {
+            RoleRuleModel roleRule = event.getItem();
+            roleRuleRepository.save(roleRule);
+        });
+
+        Button saveButton = new Button(
+                "Save",
+                e -> {
+                    editor.save();
+                }
+        );
+        Button cancelButton = new Button(
+                VaadinIcon.CLOSE.create(),
+                e -> editor.cancel());
+        cancelButton.addThemeVariants(
+                ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_ERROR);
+        HorizontalLayout actions = new HorizontalLayout(
+                saveButton,
+                cancelButton
+        );
+        actions.setPadding(false);
+        editColumn.setEditorComponent(actions);
+
+        binder.addStatusChangeListener((event) -> {
+            saveButton.setEnabled(!event.hasValidationErrors());
+        });
+
+        userMatchersField.addValueChangeListener(event -> {
+            UserMatcherInfo umi = event.getValue();
+            if (umi.getParameterLabel().isEmpty()) {
+                parameterField.setEnabled(false);
+            } else {
+                parameterField.setEnabled(true);
+            }
+            binder.validate();
+        });
     }
 
     void addRule() {
@@ -105,7 +213,6 @@ public class RolesView extends VerticalLayout {
         userMatchers.setItems(allUserMatchers);
         userMatchers.setEmptySelectionAllowed(false);
         userMatchers.setLabel("Role Rules");
-        userMatchers.setEmptySelectionAllowed(false);
 
         TextField parameter = new TextField("Parameter");
 
