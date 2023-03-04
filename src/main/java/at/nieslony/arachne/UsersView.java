@@ -7,6 +7,7 @@ package at.nieslony.arachne;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.users.UsernameUniqueValidator;
 import at.nieslony.arachne.users.UsernameValidator;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -92,26 +93,34 @@ public class UsersView extends VerticalLayout {
         editor.setBinder(binder);
         editor.setBuffered(true);
 
+        UsernameValidator usernameValidator = new UsernameValidator();
+        UsernameUniqueValidator usernameUniqueValidator
+                = new UsernameUniqueValidator(userRepository);
         Grid.Column<ArachneUser> editColumn = usersGrid
                 .addComponentColumn(user -> {
                     Button editButton = new Button("Edit");
                     editButton.addClickListener(e -> {
                         if (editor.isOpen()) {
                             editor.cancel();
+                        } else {
+                            usernameUniqueValidator.setUserId(user.getId());
                         }
                         editor.editItem(user);
                     });
                     return editButton;
                 })
+                .setWidth("10em")
                 .setFlexGrow(0);
 
         TextField usernameField = new TextField();
-        UsernameValidator usernameValidator = new UsernameValidator();
         usernameField.setWidthFull();
         binder.forField(usernameField)
                 .withValidator(
                         usernameValidator,
                         UsernameValidator.getErrorMsg())
+                .withValidator(
+                        usernameUniqueValidator,
+                        UsernameUniqueValidator.getErrorMsg())
                 .bind(ArachneUser::getUsername, ArachneUser::setUsername);
         usernameColumn.setEditorComponent(usernameField);
 
@@ -126,18 +135,11 @@ public class UsersView extends VerticalLayout {
         emailField.setWidthFull();
         binder.forField(emailField)
                 .withValidator(new EmailValidator(
-                        "This doesn't look like a valid email address")
+                        "This doesn't look like a valid email address",
+                        true)
                 )
                 .bind(ArachneUser::getEmail, ArachneUser::setEmail);
         emailColumn.setEditorComponent(emailField);
-
-        binder.addStatusChangeListener((event) -> {
-            if (binder.isValid()) {
-                logger.info("Binder is valid");
-            } else {
-                logger.info("Binder is not valid");
-            }
-        });
 
         editor.addSaveListener((event) -> {
             ArachneUser user = event.getItem();
@@ -157,11 +159,15 @@ public class UsersView extends VerticalLayout {
                 ButtonVariant.LUMO_ICON,
                 ButtonVariant.LUMO_ERROR);
         HorizontalLayout actions = new HorizontalLayout(
-                cancelButton, saveButton
+                saveButton,
+                cancelButton
         );
         actions.setPadding(false);
         editColumn.setEditorComponent(actions);
-        usersGrid.recalculateColumnWidths();
+
+        binder.addStatusChangeListener((event) -> {
+            saveButton.setEnabled(!event.hasValidationErrors());
+        });
     }
 
     void addUser() {
@@ -197,15 +203,15 @@ public class UsersView extends VerticalLayout {
         });
 
         UsernameValidator usernameValidartor = new UsernameValidator();
+        UsernameUniqueValidator usernameUniqueValidator
+                = new UsernameUniqueValidator(userRepository);
         binder.forField(usernameField)
                 .asRequired()
                 .withValidator(
                         usernameValidartor,
-                        usernameValidartor.getLastErrorMsg())
-                .withValidator(username -> {
-                    ArachneUser user = userRepository.findByUsername(username);
-                    return user == null;
-                }, "User already exists")
+                        UsernameValidator.getErrorMsg())
+                .withValidator(usernameUniqueValidator,
+                        UsernameUniqueValidator.getErrorMsg())
                 .bind(ArachneUser::getUsername, ArachneUser::setUsername);
         binder.forField(displayNameField)
                 .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);
