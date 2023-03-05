@@ -4,6 +4,9 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.ChangePasswordDialog;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.contextmenu.MenuItem;
@@ -32,9 +35,13 @@ public class ViewTemplate extends AppLayout {
     private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
+    private final UserRepository userRepository;
 
-    public ViewTemplate(AuthenticationContext authContext) {
+    public ViewTemplate(
+            UserRepository userRepositoty,
+            AuthenticationContext authContext) {
         this.authContext = authContext;
+        this.userRepository = userRepositoty;
 
         createHeader();
         createDrawer();
@@ -42,7 +49,9 @@ public class ViewTemplate extends AppLayout {
 
     private void createHeader() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userInfo = authentication.getName();
+        String username = authentication.getName();
+        ArachneUser user = userRepository.findByUsername(username);
+        String userInfo = "%s (%s)".formatted(user.getDisplayName(), username);
 
         H1 logo = new H1("Arachne");
         logo.getStyle()
@@ -53,6 +62,7 @@ public class ViewTemplate extends AppLayout {
         MenuItem item = menuBar.addItem(userInfo);
         SubMenu userMenu = item.getSubMenu();
         userMenu.addItem("Logout", click -> this.authContext.logout());
+        userMenu.addItem("Change Password...", click -> changePassword());
 
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
@@ -79,5 +89,10 @@ public class ViewTemplate extends AppLayout {
                 rolesLink,
                 openVpnUsersLink)
         );
+    }
+
+    void changePassword() {
+        ChangePasswordDialog dlg = new ChangePasswordDialog(userRepository);
+        dlg.open();
     }
 }
