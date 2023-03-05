@@ -6,17 +6,24 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsernameUniqueValidator;
 import at.nieslony.arachne.users.UsernameValidator;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -32,6 +39,8 @@ import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  *
@@ -96,24 +105,46 @@ public class UsersView extends VerticalLayout {
         UsernameValidator usernameValidator = new UsernameValidator();
         UsernameUniqueValidator usernameUniqueValidator
                 = new UsernameUniqueValidator(userRepository);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String myUsername = authentication.getName();
+
         Grid.Column<ArachneUser> editColumn = usersGrid
                 .addComponentColumn(user -> {
-                    Button editButton = new Button("Edit");
-                    editButton.addClickListener(e -> {
-                        if (editor.isOpen()) {
-                            editor.cancel();
-                        } else {
-                            usernameUniqueValidator.setUserId(user.getId());
-                        }
-                        editor.editItem(user);
-                    });
-                    return editButton;
+                    if (!user.getUsername().equals(myUsername)) {
+                        Button editButton = new Button("Edit");
+                        editButton.addClickListener(e -> {
+                            if (editor.isOpen()) {
+                                editor.cancel();
+                            } else {
+                                usernameUniqueValidator.setUserId(user.getId());
+                            }
+                            editor.editItem(user);
+                        });
+                        MenuBar menuBar = new MenuBar();
+                        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+                        MenuItem editItem = menuBar.addItem(editButton);
+                        MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                        SubMenu userMenu = menuItem.getSubMenu();
+                        userMenu.addItem(
+                                "Change Password...",
+                                event -> changePassword(user)
+                        );
+                        userMenu.addItem(
+                                "Delete...",
+                                event -> deleteUser(user)
+                        );
+                        return menuBar;
+                    } else {
+                        return new Text("");
+                    }
                 })
-                .setWidth("10em")
+                .setWidth("15em")
                 .setFlexGrow(0);
 
         TextField usernameField = new TextField();
+
         usernameField.setWidthFull();
+
         binder.forField(usernameField)
                 .withValidator(
                         usernameValidator,
@@ -125,14 +156,18 @@ public class UsersView extends VerticalLayout {
         usernameColumn.setEditorComponent(usernameField);
 
         TextField displayNameField = new TextField();
+
         displayNameField.setWidthFull();
+
         binder.forField(displayNameField)
                 .asRequired("Value required")
                 .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);
         displayNameColumn.setEditorComponent(displayNameField);
 
         EmailField emailField = new EmailField();
+
         emailField.setWidthFull();
+
         binder.forField(emailField)
                 .withValidator(new EmailValidator(
                         "This doesn't look like a valid email address",
@@ -141,10 +176,12 @@ public class UsersView extends VerticalLayout {
                 .bind(ArachneUser::getEmail, ArachneUser::setEmail);
         emailColumn.setEditorComponent(emailField);
 
-        editor.addSaveListener((event) -> {
-            ArachneUser user = event.getItem();
-            userRepository.save(user);
-        });
+        editor.addSaveListener(
+                (event) -> {
+                    ArachneUser user = event.getItem();
+                    userRepository.save(user);
+                }
+        );
 
         Button saveButton = new Button(
                 "Save",
@@ -155,6 +192,7 @@ public class UsersView extends VerticalLayout {
         Button cancelButton = new Button(
                 VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
+
         cancelButton.addThemeVariants(
                 ButtonVariant.LUMO_ICON,
                 ButtonVariant.LUMO_ERROR);
@@ -162,18 +200,23 @@ public class UsersView extends VerticalLayout {
                 saveButton,
                 cancelButton
         );
-        actions.setPadding(false);
+
+        actions.setPadding(
+                false);
         editColumn.setEditorComponent(actions);
 
-        binder.addStatusChangeListener((event) -> {
-            saveButton.setEnabled(!event.hasValidationErrors());
-        });
+        binder.addStatusChangeListener(
+                (event) -> {
+                    saveButton.setEnabled(!event.hasValidationErrors());
+                }
+        );
     }
 
     void addUser() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Add User");
-        Binder<ArachneUser> binder = new Binder(ArachneUser.class);
+        Binder<ArachneUser> binder = new Binder(ArachneUser.class
+        );
 
         Button okButton = new Button("OK",
                 event -> {
@@ -242,5 +285,33 @@ public class UsersView extends VerticalLayout {
                 retypePasswordField));
 
         dialog.open();
+    }
+
+    void changePassword(ArachneUser user) {
+        ChangePasswordDialog dlg = new ChangePasswordDialog(
+                userRepository,
+                user
+        );
+        dlg.open();
+    }
+
+    void deleteUser(ArachneUser user) {
+        ConfirmDialog confirm = new ConfirmDialog();
+        String username = user.getUsername();
+        confirm.setHeader("Delete user \"%s\"".formatted(username));
+        confirm.setText(
+                "Are you sure you want to permanently delete user \"%s\"?"
+                        .formatted(username)
+        );
+        confirm.setCancelable(true);
+        confirm.setConfirmText("Delete");
+        confirm.setConfirmButtonTheme("error primary");
+        confirm.addConfirmListener(
+                e -> {
+                    userRepository.delete(user);
+                    usersGrid.setItems(userRepository.findAll());
+                });
+
+        confirm.open();
     }
 }
