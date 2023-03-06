@@ -22,7 +22,7 @@ public class Arachne {
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
-        SpringApplication.run(Arachne.class, args);
+        context = SpringApplication.run(Arachne.class, args);
     }
 
     public static void restart() {
@@ -31,7 +31,7 @@ public class Arachne {
         Thread thread = new Thread(() -> {
             context.close();
             context = SpringApplication.run(
-                    ApplicationArguments.class,
+                    Arachne.class,
                     args.getSourceArgs()
             );
         });
