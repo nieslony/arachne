@@ -334,13 +334,69 @@ public class Pki {
         return getServerCertModel().getCertificate();
     }
 
+    public X509Certificate getUserCert(String username) throws PkiNotInitializedException {
+        return getUserCertModel(username).getCertificate();
+    }
+
     public PrivateKey getServerKey() throws PkiNotInitializedException {
         CertificateModel cm = getServerCertModel();
         return cm.getKeyModel().getPrivateKey();
     }
 
+    public PrivateKey getUserKey(String username) throws PkiNotInitializedException {
+        CertificateModel cm = getUserCertModel(username);
+        return cm.getKeyModel().getPrivateKey();
+    }
+
     public String getServerKeyAsBase64() throws PkiNotInitializedException {
         return asBase64(getServerKey());
+    }
+
+    public String getUserKeyAsBase64(String username) throws PkiNotInitializedException {
+        return asBase64(getUserKey(username));
+    }
+
+    private CertificateModel getUserCertModel(String username) throws PkiNotInitializedException {
+        String subject = settingsRepository
+                .findBySetting(setting(CertSpecType.USER_SPEC, CertSpecKey.SK_SUBJECT))
+                .orElseThrow(() -> new PkiNotInitializedException("Cannot find user cert subject"))
+                .getContent().replace("{username}", username);
+        List<CertificateModel> certModels
+                = certificateRepository.findBySubjectAndCertType(
+                        subject,
+                        CertificateModel.CertType.USER);
+        Date now = new Date();
+        for (CertificateModel cm : certModels) {
+            if (!cm.getIsRevoked() && now.compareTo(cm.getValidTo()) < 0) {
+                return cm;
+            }
+        }
+
+        String keyAlgo = settingsRepository
+                .findBySetting(setting(CertSpecType.USER_SPEC, CertSpecKey.SK_KEY_ALGO))
+                .orElseThrow(() -> new PkiNotInitializedException("Cannot find user cert keyAlgo"))
+                .getContent();
+        int keySize = Integer.parseInt(settingsRepository
+                .findBySetting(setting(CertSpecType.USER_SPEC, CertSpecKey.SK_KEY_SIZE))
+                .orElseThrow(() -> new PkiNotInitializedException("Cannot find user cert keySize"))
+                .getContent());
+        int lifetimeDays = Integer.parseInt(settingsRepository
+                .findBySetting(setting(CertSpecType.USER_SPEC, CertSpecKey.SK_CERT_LIFETIME_DAYS))
+                .orElseThrow(() -> new PkiNotInitializedException("Cannot find user cert lifetimeDays"))
+                .getContent());
+        String signatureAlgo = settingsRepository
+                .findBySetting(setting(CertSpecType.USER_SPEC, CertSpecKey.SK_SIGNATURE_ALGO))
+                .orElseThrow(() -> new PkiNotInitializedException("Cannot find user cert signatureAlgo"))
+                .getContent();
+        logger.info("Creating user certificate: " + subject);
+        CertificateModel certModel = createCertificate(
+                keyAlgo,
+                keySize,
+                lifetimeDays,
+                subject,
+                signatureAlgo);
+
+        return certModel;
     }
 
     private CertificateModel getServerCertModel() throws PkiNotInitializedException {
@@ -389,6 +445,16 @@ public class Pki {
     public String getServerCertAsBase64() {
         try {
             X509Certificate cert = getServerCert();
+            return asBase64(cert);
+        } catch (PkiNotInitializedException ex) {
+            logger.error(ex.getMessage());
+            return null;
+        }
+    }
+
+    public String getUserCertAsBase64(String username) {
+        try {
+            X509Certificate cert = getUserCert(username);
             return asBase64(cert);
         } catch (PkiNotInitializedException ex) {
             logger.error(ex.getMessage());
