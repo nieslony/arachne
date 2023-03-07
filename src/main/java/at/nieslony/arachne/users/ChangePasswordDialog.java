@@ -69,12 +69,12 @@ public class ChangePasswordDialog extends Dialog {
     }
 
     void createDialog() {
-        setHeaderTitle("Change Password");
         Binder<PasswordChanger> binder = new Binder(PasswordChanger.class);
 
         PasswordField currentPasswordField = null;
         ArachneUser user;
         if (forUser == null) {
+            setHeaderTitle("Change your Password");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             user = userRepository.findByUsername(authentication.getName());
             String currentPassword = user.getPassword();
@@ -92,6 +92,7 @@ public class ChangePasswordDialog extends Dialog {
                     .bind(PasswordChanger::getCurrentPassword, PasswordChanger::setCurrentPassword);
         } else {
             user = this.forUser;
+            setHeaderTitle("Change %s's Password".formatted(user.getUsername()));
         }
 
         PasswordField newPassword = new PasswordField("New Password");
