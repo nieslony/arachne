@@ -21,6 +21,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import java.util.List;
@@ -119,6 +120,7 @@ public class RolesView extends VerticalLayout {
         ruleColumn.setEditorComponent(userMatchersField);
 
         TextField parameterField = new TextField();
+        parameterField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -215,6 +217,7 @@ public class RolesView extends VerticalLayout {
         userMatchers.setLabel("Role Rules");
 
         TextField parameter = new TextField("Parameter");
+        parameter.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<Role> roles = new Select();
         roles.setLabel(("Role"));

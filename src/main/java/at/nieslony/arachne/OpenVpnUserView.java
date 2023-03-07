@@ -8,15 +8,19 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.SettingsRepository;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -25,6 +29,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.security.RolesAllowed;
@@ -74,7 +79,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         public NetMask(int bits) {
             this.bits = bits;
-            this.mask = OpenVpnUserSettings.bits2Subnetmask(bits);
+            this.mask = NetUtils.maskLen2Mask(bits);
         }
 
         @Override
@@ -91,9 +96,11 @@ public class OpenVpnUserView extends VerticalLayout {
             Pki pki
     ) {
         this.settingsRepository = settingsRepository;
+        OpenVpnUserSettings settings = new OpenVpnUserSettings(settingsRepository);
 
         TextField name = new TextField("Network Manager configuration name");
         name.setWidth(50, Unit.EM);
+        name.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NicInfo> ipAddresse = new Select<>();
         ipAddresse.setItems(findAllNics());
@@ -104,20 +111,24 @@ public class OpenVpnUserView extends VerticalLayout {
         port.setMin(1);
         port.setMax(65534);
         port.setStepButtonsVisible(true);
+        port.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<String> protocol = new Select<>();
         protocol.setItems("TCP", "UDP");
         protocol.setLabel("Protocol");
 
         TextField connectToHost = new TextField("Connect to host");
+        connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
         interfaceType.setLabel("Interface Type");
 
         TextField interfaceName = new TextField("Interface Name");
+        interfaceName.setValueChangeMode(ValueChangeMode.EAGER);
 
         TextField clientNetwork = new TextField("Client Network");
+        clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NetMask> clientMask = new Select<>();
         clientMask.setItems(
@@ -137,6 +148,7 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveInterval.setMin(1);
         keepaliveInterval.setStepButtonsVisible(true);
         keepaliveInterval.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
 
         IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
         suffix = new Div();
@@ -145,6 +157,54 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveTimeout.setMin(1);
         keepaliveTimeout.setStepButtonsVisible(true);
         keepaliveTimeout.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+
+        ListBox<String> pushDnsServersField = new ListBox<>();
+        pushDnsServersField.setHeight(30, Unit.EX);
+        pushDnsServersField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.Background.PRIMARY_10
+        );
+        TextField editDnsServerField = new TextField();
+        editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
+        Button addDnsServerButton = new Button(
+                "Add",
+                e -> {
+                    List<String> dnsServers = settings.getPushDnsServers();
+                    dnsServers.add(editDnsServerField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                });
+        Button updateDnsServerButton = new Button(
+                "Update",
+                e -> {
+                    List<String> dnsServers = new LinkedList<>(settings.getPushDnsServers());
+                    dnsServers.remove(pushDnsServersField.getValue());
+                    dnsServers.add(editDnsServerField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                    settings.setPushDnsServers(dnsServers);
+                });
+        updateDnsServerButton.setEnabled(false);
+        Button removeDnsServerButton = new Button(
+                "Remove",
+                e -> {
+                    var dnsServers = new LinkedList<>(settings.getPushDnsServers());
+
+                    dnsServers.remove(pushDnsServersField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                    settings.setPushDnsServers(dnsServers);
+                });
+        removeDnsServerButton.setEnabled(false);
+        VerticalLayout pushDnsServersLayout = new VerticalLayout(
+                pushDnsServersField,
+                editDnsServerField,
+                new HorizontalLayout(
+                        addDnsServerButton,
+                        updateDnsServerButton,
+                        removeDnsServerButton
+                )
+        );
+        pushDnsServersField.setWidthFull();
+        editDnsServerField.setWidthFull();
 
         Button saveSettings = new Button("Save Settings");
 
@@ -196,12 +256,24 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(keepaliveTimeout)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
-        OpenVpnUserSettings settings = new OpenVpnUserSettings(settingsRepository);
-        binder.setBean(new OpenVpnUserSettings(settingsRepository));
+
+        binder.setBean(settings);
+        pushDnsServersField.setItems(settings.getPushDnsServers());
 
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
         });
+        AtomicReference<String> editDnsServer = new AtomicReference<>("");
+        binder.forField(editDnsServerField)
+                .withValidator(new IpValidator(), "Not a valid IP Address")
+                .bind(
+                        ip -> {
+                            return editDnsServer.get();
+                        },
+                        (ip, v) -> {
+                            editDnsServer.set(v);
+                        }
+                );
 
         saveSettings.addClickListener((t) -> {
             if (binder.writeBeanIfValid(settings)) {
@@ -210,30 +282,32 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
+        pushDnsServersField.addValueChangeListener((e) -> {
+            if (e.getValue() != null) {
+                editDnsServerField.setValue(e.getValue());
+                updateDnsServerButton.setEnabled(true);
+                removeDnsServerButton.setEnabled(true);
+            } else {
+                editDnsServerField.setValue("");
+                updateDnsServerButton.setEnabled(false);
+                removeDnsServerButton.setEnabled(false);
+            }
+        });
+
         binder.validate();
 
-        add(
-                new HorizontalLayout(
-                        ipAddresse,
-                        port,
-                        protocol
-                ),
-                connectToHost,
-                new HorizontalLayout(
-                        interfaceType,
-                        interfaceName
-                ),
-                new HorizontalLayout(
-                        clientNetwork,
-                        clientMask
-                ),
-                new HorizontalLayout(
-                        keepaliveInterval,
-                        keepaliveTimeout
-                ),
-                saveSettings
+        FormLayout formLayout = new FormLayout();
+        formLayout.add(name, 2);
+        formLayout.add(
+                ipAddresse,
+                new HorizontalLayout(port, protocol)
         );
+        formLayout.add(connectToHost, 2);
+        formLayout.add(interfaceType, interfaceName);
+        formLayout.add(clientNetwork, clientMask);
+        formLayout.add(keepaliveInterval, keepaliveTimeout);
 
+        add(formLayout, pushDnsServersLayout, saveSettings);
     }
 
     public List<NicInfo> findAllNics() {
