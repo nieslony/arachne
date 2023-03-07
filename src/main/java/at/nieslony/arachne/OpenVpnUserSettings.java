@@ -179,7 +179,7 @@ public class OpenVpnUserSettings {
         if (osm.isPresent()) {
             settingsRepository.save(osm.get().setContent(keepaliveInterval));
         } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveInterval));
+            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, keepaliveInterval));
         }
 
         osm = settingsRepository
