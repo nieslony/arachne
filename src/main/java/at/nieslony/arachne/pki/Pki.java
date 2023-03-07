@@ -229,38 +229,50 @@ public class Pki {
         return asBase64(rootCert);
     }
 
+    void loadOrCreateRootCert() {
+        String rootCertSubject
+                = settingsRepository
+                        .findBySetting(setting(
+                                CertSpecType.CA_SPEC,
+                                CertSpecKey.SK_SUBJECT)
+                        )
+                        .get()
+                        .getContent();
+
+        List<CertificateModel> certModList = certificateRepository.findBySubjectAndCertType(
+                rootCertSubject,
+                CertificateModel.CertType.CA
+        );
+
+        if (certModList.isEmpty()) {
+            logger.info("Creating root certificate: " + rootCertSubject);
+            createRootCert();
+            KeyModel keyModel = keyRepository.save(new KeyModel(rootKey));
+            certificateRepository.save(new CertificateModel(
+                    rootCert,
+                    CertificateModel.CertType.CA,
+                    keyModel));
+        } else {
+            logger.info("Loading root certitificate from DB");
+            rootCert = certModList.get(0).getCertificate();
+            rootKey = certModList.get(0).getKeyModel().getPrivateKey();
+        }
+    }
+
     public X509Certificate getRootCert() {
         if (rootCert == null) {
-            String rootCertSubject
-                    = settingsRepository
-                            .findBySetting(setting(
-                                    CertSpecType.CA_SPEC,
-                                    CertSpecKey.SK_SUBJECT)
-                            )
-                            .get()
-                            .getContent();
-
-            List<CertificateModel> certModList = certificateRepository.findBySubjectAndCertType(
-                    rootCertSubject,
-                    CertificateModel.CertType.CA
-            );
-
-            if (certModList.isEmpty()) {
-                logger.info("Creating root certificate: " + rootCertSubject);
-                createRootCert();
-                KeyModel keyModel = keyRepository.save(new KeyModel(rootKey));
-                certificateRepository.save(new CertificateModel(
-                        rootCert,
-                        CertificateModel.CertType.CA,
-                        keyModel));
-            } else {
-                logger.info("Loading root certitificate from DB");
-                rootCert = certModList.get(0).getCertificate();
-                rootKey = certModList.get(0).getKeyModel().getPrivateKey();
-            }
+            loadOrCreateRootCert();
         }
 
         return rootCert;
+    }
+
+    public PrivateKey getRootKey() {
+        if (rootKey == null) {
+            loadOrCreateRootCert();
+        }
+
+        return rootKey;
     }
 
     private void createRootCert() {
@@ -368,6 +380,7 @@ public class Pki {
         Date now = new Date();
         for (CertificateModel cm : certModels) {
             if (!cm.getIsRevoked() && now.compareTo(cm.getValidTo()) < 0) {
+                logger.info("Found user certificate");
                 return cm;
             }
         }
@@ -390,11 +403,13 @@ public class Pki {
                 .getContent();
         logger.info("Creating user certificate: " + subject);
         CertificateModel certModel = createCertificate(
+                CertificateModel.CertType.USER,
                 keyAlgo,
                 keySize,
                 lifetimeDays,
                 subject,
                 signatureAlgo);
+        certificateRepository.save(certModel);
 
         return certModel;
     }
@@ -433,6 +448,7 @@ public class Pki {
                 .getContent();
         logger.info("Creating server certificate: " + subject);
         CertificateModel certModel = createCertificate(
+                CertificateModel.CertType.SERVER,
                 keyAlgo,
                 keySize,
                 lifetimeDays,
@@ -467,11 +483,12 @@ public class Pki {
     }
 
     private CertificateModel createCertificate(
+            CertificateModel.CertType certType,
             String keyAlgo,
             int keySize,
             int lifeTimeDays,
             String subjectStr,
-            String signiungAlgo)
+            String signingAlgo)
             throws PkiNotInitializedException {
         KeyPair keyPair;
         X509Certificate cert;
@@ -497,9 +514,9 @@ public class Pki {
 
             PKCS10CertificationRequestBuilder p10Builder
                     = new JcaPKCS10CertificationRequestBuilder(subject, keyPair.getPublic());
-            JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder(signiungAlgo);
+            JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder(signingAlgo);
 
-            ContentSigner csrContentSigner = csrBuilder.build(rootKey);
+            ContentSigner csrContentSigner = csrBuilder.build(getRootKey());
             PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
 
             X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
@@ -547,7 +564,7 @@ public class Pki {
         KeyModel keyModel = keyRepository.save(new KeyModel(keyPair.getPrivate()));
         CertificateModel certModel = certificateRepository.save(new CertificateModel(
                 cert,
-                CertificateModel.CertType.SERVER,
+                certType,
                 keyModel
         ));
 
