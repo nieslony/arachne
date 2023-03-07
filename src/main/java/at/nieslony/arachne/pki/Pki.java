@@ -26,7 +26,9 @@ import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -543,11 +545,32 @@ public class Pki {
                     false,
                     certUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo())
             );
-            certBuilder.addExtension(
-                    Extension.keyUsage,
-                    false,
-                    new KeyUsage(KeyUsage.keyEncipherment)
-            );
+            switch (certType) {
+                case SERVER -> {
+                    certBuilder.addExtension(
+                            Extension.keyUsage,
+                            false,
+                            new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment)
+                    );
+                    certBuilder.addExtension(
+                            Extension.extendedKeyUsage,
+                            false,
+                            new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth)
+                    );
+                }
+                case USER -> {
+                    certBuilder.addExtension(
+                            Extension.keyUsage,
+                            false,
+                            new KeyUsage(KeyUsage.digitalSignature)
+                    );
+                    certBuilder.addExtension(
+                            Extension.extendedKeyUsage,
+                            false,
+                            new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth)
+                    );
+                }
+            }
 
             X509CertificateHolder certHolder = certBuilder.build(csrContentSigner);
             cert = new JcaX509CertificateConverter()
