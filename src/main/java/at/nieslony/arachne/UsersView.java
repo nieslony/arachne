@@ -31,6 +31,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.EmailValidator;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import java.util.List;
@@ -142,6 +143,7 @@ public class UsersView extends VerticalLayout {
                 .setFlexGrow(0);
 
         TextField usernameField = new TextField();
+        usernameField.setValueChangeMode(ValueChangeMode.EAGER);
 
         usernameField.setWidthFull();
 
@@ -237,9 +239,12 @@ public class UsersView extends VerticalLayout {
 
         TextField usernameField = new TextField("Username");
         usernameField.setValue("");
+        usernameField.setValueChangeMode(ValueChangeMode.EAGER);
         TextField displayNameField = new TextField("Display Name");
         PasswordField passwordField = new PasswordField("Password");
+        passwordField.setValueChangeMode(ValueChangeMode.EAGER);
         PasswordField retypePasswordField = new PasswordField("Retype Password");
+        retypePasswordField.setValueChangeMode(ValueChangeMode.EAGER);
 
         binder.addStatusChangeListener((event) -> {
             okButton.setEnabled(!event.hasValidationErrors());

@@ -17,6 +17,7 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -80,7 +81,7 @@ public class OpenVpnUserView extends VerticalLayout {
             this.bits = bits;
             this.mask = NetUtils.maskLen2Mask(bits);
         }
-        
+
         @Override
         public String toString() {
             return "%d - %s".formatted(bits, mask);
@@ -99,6 +100,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         TextField name = new TextField("Network Manager configuration name");
         name.setWidth(50, Unit.EM);
+        name.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NicInfo> ipAddresse = new Select<>();
         ipAddresse.setItems(findAllNics());
@@ -109,20 +111,24 @@ public class OpenVpnUserView extends VerticalLayout {
         port.setMin(1);
         port.setMax(65534);
         port.setStepButtonsVisible(true);
+        port.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<String> protocol = new Select<>();
         protocol.setItems("TCP", "UDP");
         protocol.setLabel("Protocol");
 
         TextField connectToHost = new TextField("Connect to host");
+        connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
         interfaceType.setLabel("Interface Type");
 
         TextField interfaceName = new TextField("Interface Name");
+        interfaceName.setValueChangeMode(ValueChangeMode.EAGER);
 
         TextField clientNetwork = new TextField("Client Network");
+        clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NetMask> clientMask = new Select<>();
         clientMask.setItems(
@@ -142,6 +148,7 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveInterval.setMin(1);
         keepaliveInterval.setStepButtonsVisible(true);
         keepaliveInterval.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
 
         IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
         suffix = new Div();
@@ -150,6 +157,7 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveTimeout.setMin(1);
         keepaliveTimeout.setStepButtonsVisible(true);
         keepaliveTimeout.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
 
         ListBox<String> pushDnsServersField = new ListBox<>();
         pushDnsServersField.setHeight(30, Unit.EX);
@@ -158,6 +166,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 LumoUtility.Background.PRIMARY_10
         );
         TextField editDnsServerField = new TextField();
+        editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addDnsServerButton = new Button(
                 "Add",
                 e -> {
@@ -199,8 +208,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Button saveSettings = new Button("Save Settings");
 
-        Binder<OpenVpnUserSettings> binder = new Binder(OpenVpnUserSettings.class
-        );
+        Binder<OpenVpnUserSettings> binder = new Binder(OpenVpnUserSettings.class);
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
