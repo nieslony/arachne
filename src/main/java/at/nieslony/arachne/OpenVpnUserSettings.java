@@ -79,6 +79,9 @@ public class OpenVpnUserSettings {
 
         setting = settingsRepository.findBySetting(SK_OPENVPN_USER_PUSH_DNS);
         pushDnsServers = setting.isPresent() ? setting.get().getListContent() : NetUtils.getDnsServers();
+
+        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_PUSH_ROUTES);
+        pushRoutes = setting.isPresent() ? setting.get().getListContent() : NetUtils.getDefaultPushRoutes();
     }
 
     private String vpnName;
