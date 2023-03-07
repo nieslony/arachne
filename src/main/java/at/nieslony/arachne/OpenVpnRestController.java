@@ -115,6 +115,9 @@ public class OpenVpnRestController {
                             settings.getKeepaliveTimeout()));
             writer.println("topology subnet");
             writer.println(openVpnManagement.getVpnConfigSetting() + "\n");
+            for (String dnsServer : settings.getPushDnsServers()) {
+                writer.println("dhcp-option DNS " + dnsServer);
+            }
 
             writer.println("<ca>\n%s</ca>".formatted(pki.getRootCertAsBase64()));
             writer.println("<cert>\n%s</cert>".formatted(pki.getServerCertAsBase64()));
