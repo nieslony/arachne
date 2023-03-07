@@ -83,7 +83,7 @@ public class OpenVpnRestController {
             writer.write("server %s %s\n"
                     .formatted(
                             settings.getClientNetwork(),
-                            OpenVpnUserSettings.bits2Subnetmask(settings.getClientMask())
+                            NetUtils.maskLen2Mask(settings.getClientMask())
                     )
             );
             writer.write("local %s\n".formatted(settings.getListenIp()));

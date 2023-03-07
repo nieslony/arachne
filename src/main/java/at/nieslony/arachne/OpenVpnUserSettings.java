@@ -6,8 +6,8 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import lombok.Data;
 import lombok.ToString;
@@ -35,6 +35,8 @@ public class OpenVpnUserSettings {
     private static final String SK_OPENVPN_USER_CLIENT_MASK = "openvpn.user.clientMask";
     private static final String SK_OPENVPN_USER_KEEPALIVE_INTERVAL = "openvpn.user.keepaliveInterval";
     private static final String SK_OPENVPN_USER_KEEPALIVE_TIMEOUT = "openvpn.user.keepaliveTimeout";
+    private static final String SK_OPENVPN_USER_PUSH_DNS = "openvpn.user.pushdns";
+    private static final String SK_OPENVPN_USER_PUSH_ROUTES = "openvpn.user.pushroutes";
 
     public OpenVpnUserSettings() {
     }
@@ -55,7 +57,7 @@ public class OpenVpnUserSettings {
         listenProtocol = setting.isPresent() ? setting.get().getContent() : "UDP";
 
         setting = settingsRepository.findBySetting(SK_OPENVPN_USER_REMOTE);
-        remote = setting.isPresent() ? setting.get().getContent() : myHostName();
+        remote = setting.isPresent() ? setting.get().getContent() : NetUtils.myHostname();
 
         setting = settingsRepository.findBySetting(SK_OPENVPN_USER_DEVICE_TYPE);
         deviceType = setting.isPresent() ? setting.get().getContent() : "tun";
@@ -74,6 +76,9 @@ public class OpenVpnUserSettings {
 
         setting = settingsRepository.findBySetting(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT);
         keepaliveTimeout = setting.isPresent() ? setting.get().getIntContent() : 60;
+
+        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_PUSH_DNS);
+        pushDnsServers = setting.isPresent() ? setting.get().getListContent() : NetUtils.getDnsServers();
     }
 
     private String vpnName;
@@ -87,6 +92,8 @@ public class OpenVpnUserSettings {
     private int clientMask;
     private int keepaliveTimeout;
     private int keepaliveInterval;
+    private List<String> pushDnsServers;
+    private List<String> pushRoutes = new LinkedList<>();
 
     void save(SettingsRepository settingsRepository) {
         logger.info("Writing openVPN user config");
@@ -179,25 +186,28 @@ public class OpenVpnUserSettings {
         } else {
             settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveTimeout));
         }
-    }
 
-    private String myHostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException ex) {
-            logger.error("Cannot get my hostname: " + ex.getMessage());
-            return "";
+        osm = settingsRepository
+                .findBySetting(SK_OPENVPN_USER_PUSH_DNS);
+        if (osm.isPresent()) {
+            settingsRepository.save(osm.get().setContent(pushDnsServers));
+        } else {
+            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_PUSH_DNS, pushDnsServers));
+        }
+
+        osm = settingsRepository
+                .findBySetting(SK_OPENVPN_USER_PUSH_ROUTES);
+        if (osm.isPresent()) {
+            settingsRepository.save(osm.get().setContent(pushRoutes));
+        } else {
+            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_PUSH_ROUTES, pushRoutes));
         }
     }
 
-    static public String bits2Subnetmask(int bits) {
-        long m = (Long.MAX_VALUE & 0xffffffffL) << (long) (32 - bits);
-
-        return "%d.%d.%d.%d".formatted(
-                (m >> 24) & 255,
-                (m >> 16) & 255,
-                (m >> 8) & 255,
-                m & 255
-        );
+    public void setPushDnsServers(List<String> pushDnsServers) {
+        logger.info(pushDnsServers.toString());
+        this.pushDnsServers = new LinkedList<>(pushDnsServers);
+        logger.info(this.pushDnsServers.toString());
     }
+
 }
