@@ -4,15 +4,20 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.roles.Role;
+import at.nieslony.arachne.roles.RoleRuleModel;
+import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.users.UsernameMatcher;
 import at.nieslony.arachne.users.UsernameUniqueValidator;
 import at.nieslony.arachne.users.UsernameValidator;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -56,15 +61,21 @@ public class UsersView extends VerticalLayout {
 
     final private UserRepository userRepository;
     final private RolesCollector rolesCollector;
+    final private RoleRuleRepository roleRuleRepository;
 
     final Grid<ArachneUser> usersGrid;
     final Grid.Column<ArachneUser> usernameColumn;
     final Grid.Column<ArachneUser> displayNameColumn;
     final Grid.Column<ArachneUser> emailColumn;
 
-    public UsersView(UserRepository userRepository, RolesCollector rolesCollector) {
+    public UsersView(
+            UserRepository userRepository,
+            RolesCollector rolesCollector,
+            RoleRuleRepository roleRuleRepository
+    ) {
         this.userRepository = userRepository;
         this.rolesCollector = rolesCollector;
+        this.roleRuleRepository = roleRuleRepository;
 
         usersGrid = new Grid<>(ArachneUser.class, false);
 
@@ -220,23 +231,6 @@ public class UsersView extends VerticalLayout {
         Binder<ArachneUser> binder = new Binder(ArachneUser.class
         );
 
-        Button okButton = new Button("OK",
-                event -> {
-                    ArachneUser newUser = new ArachneUser();
-                    if (binder.writeBeanIfValid(newUser)) {
-                        userRepository.save(newUser);
-                        dialog.close();
-
-                        usersGrid.setItems(userRepository.findAll());
-                    }
-                });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button cancelButton = new Button("Cancel",
-                event -> {
-                    dialog.close();
-                });
-        dialog.getFooter().add(cancelButton, okButton);
-
         TextField usernameField = new TextField("Username");
         usernameField.setValue("");
         usernameField.setValueChangeMode(ValueChangeMode.EAGER);
@@ -246,9 +240,9 @@ public class UsersView extends VerticalLayout {
         PasswordField retypePasswordField = new PasswordField("Retype Password");
         retypePasswordField.setValueChangeMode(ValueChangeMode.EAGER);
 
-        binder.addStatusChangeListener((event) -> {
-            okButton.setEnabled(!event.hasValidationErrors());
-        });
+        CheckboxGroup<Role> rolesField = new CheckboxGroup<>();
+        rolesField.setLabel("Roles");
+        rolesField.setItems(Role.ADMIN, Role.USER);
 
         UsernameValidator usernameValidartor = new UsernameValidator();
         UsernameUniqueValidator usernameUniqueValidator
@@ -277,8 +271,39 @@ public class UsersView extends VerticalLayout {
                     retypePasswordStr.set(fieldvalue);
                 });
 
+        Button okButton = new Button("OK",
+                event -> {
+                    ArachneUser newUser = new ArachneUser();
+                    if (binder.writeBeanIfValid(newUser)) {
+                        userRepository.save(newUser);
+
+                        for (Role role : rolesField.getValue()) {
+                            RoleRuleModel rrm = new RoleRuleModel(
+                                    UsernameMatcher.class,
+                                    newUser.getUsername(),
+                                    role
+                            );
+                            roleRuleRepository.save(rrm);
+                        }
+
+                        dialog.close();
+
+                        usersGrid.setItems(userRepository.findAll());
+                    }
+                });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button cancelButton = new Button("Cancel",
+                event -> {
+                    dialog.close();
+                });
+        dialog.getFooter().add(cancelButton, okButton);
+
         passwordField.addValueChangeListener((event) -> {
             binder.validate();
+        });
+
+        binder.addStatusChangeListener((event) -> {
+            okButton.setEnabled(!event.hasValidationErrors());
         });
 
         binder.validate();
@@ -287,7 +312,8 @@ public class UsersView extends VerticalLayout {
                 usernameField,
                 displayNameField,
                 passwordField,
-                retypePasswordField));
+                retypePasswordField,
+                rolesField));
 
         dialog.open();
     }
