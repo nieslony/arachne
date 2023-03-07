@@ -142,7 +142,7 @@ public class NetUtils {
         return dnsServers;
     }
 
-    public static String getDefaultPushRoutes() {
+    public static List<String> getDefaultPushRoutes() {
         List<String> routes = new LinkedList<>();
 
         try {
@@ -152,8 +152,7 @@ public class NetUtils {
 
                 if (!nic.isLoopback()) {
                     for (InterfaceAddress ia : nic.getInterfaceAddresses()) {
-                        if (ia.getAddress() instanceof Inet4Address) {
-                            Inet4Address addr = (Inet4Address) ia.getAddress();
+                        if (ia.getAddress() instanceof Inet4Address addr) {
                             addr = NetUtils.maskInet4Address(addr, ia.getNetworkPrefixLength());
 
                             String route = String.format("%s/%s",
@@ -169,6 +168,6 @@ public class NetUtils {
             logger.warn(String.format("Cannot find network address: %s", ex.getMessage()));
         }
 
-        return String.join(",", routes);
+        return routes;
     }
 }
