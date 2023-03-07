@@ -10,6 +10,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -169,5 +170,12 @@ public class NetUtils {
         }
 
         return routes;
+    }
+
+    public static String defaultBaseDn() {
+        List<String> l = Arrays
+                .asList(myDomain().split(","));
+        l.replaceAll(s -> "dc=" + s);
+        return String.join(",", l);
     }
 }
