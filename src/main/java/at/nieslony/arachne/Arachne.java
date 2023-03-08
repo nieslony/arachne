@@ -22,8 +22,7 @@ public class Arachne {
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
-        //System.setProperty("server.servlet.context-path", "/baeldung");
-
+        System.setProperty("server.servlet.context-path", "/arachne");
         context = SpringApplication.run(Arachne.class, args);
     }
 

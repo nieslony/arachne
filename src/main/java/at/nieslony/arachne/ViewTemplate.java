@@ -83,14 +83,16 @@ public class ViewTemplate extends AppLayout {
         RouterLink usersLink = new RouterLink("Users", UsersView.class);
         RouterLink rolesLink = new RouterLink("Roles", RolesView.class);
         RouterLink openVpnUsersLink = new RouterLink("OpenVPN User", OpenVpnUserView.class);
-        RouterLink ldapSettings = new RouterLink("LDAP Settings", LdapView.class);
+        RouterLink ldapSettingsLink = new RouterLink("LDAP Settings", LdapView.class);
+        RouterLink tomcatSettingsLink = new RouterLink("Tomcat", TomcatView.class);
 
         addToDrawer(new VerticalLayout(
                 mainLink,
                 usersLink,
                 rolesLink,
                 openVpnUsersLink,
-                ldapSettings)
+                ldapSettingsLink,
+                tomcatSettingsLink)
         );
     }
 
