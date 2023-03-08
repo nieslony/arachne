@@ -17,9 +17,7 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.NetUtils;
-import at.nieslony.arachne.settings.SettingsModel;
-import at.nieslony.arachne.settings.SettingsRepository;
-import java.util.Optional;
+import at.nieslony.arachne.settings.Settings;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
@@ -85,42 +83,38 @@ public class LdapSettings {
     public LdapSettings() {
     }
 
-    public LdapSettings(SettingsRepository settingsRepository) {
-        Optional<SettingsModel> setting;
-        String myDomain = NetUtils.myDomain();
-
-        setting = settingsRepository.findBySetting(SK_LDAP_PROTOCOL);
-        protocol = setting.isPresent()
-                ? LdapProtocol.valueOf(setting.get().getContent())
-                : LdapProtocol.LDAP;
-
-        setting = settingsRepository.findBySetting(SK_LDAP_HOST);
+    public LdapSettings(Settings settings) {
+        protocol = LdapProtocol.valueOf(
+                settings.get(
+                        SK_LDAP_PROTOCOL,
+                        LdapProtocol.LDAP.name())
+        );
         try {
-            host = setting.isPresent()
-                    ? setting.get().getContent()
-                    : NetUtils.srvLookup("ldap");
+            host = settings.get(SK_LDAP_HOST, NetUtils.srvLookup("ldap"));
         } catch (NamingException ex) {
-            host = "ldap." + myDomain;
+            host = "ldap." + NetUtils.myDomain();
         }
+        port = settings.getInt(SK_LDAP_PORT, 389);
+        baseDn = settings.get(SK_LDAP_BASE_DN, NetUtils.defaultBaseDn());
+        bindPassword = settings.get(SK_LDAP_BIND_PASSWORD, "");
+        bindType = LdapBindType.valueOf(
+                settings.get(
+                        SK_LDAP_BIND_TYPE,
+                        LdapBindType.BIND_DN.name())
+        );
+        bindDn = settings.get(SK_LDAP_BIND_DN, NetUtils.defaultBaseDn());
+        keytabPath = settings.get(SK_LDAP_KEYTAB_PATH, "");
+    }
 
-        setting = settingsRepository.findBySetting(SK_LDAP_PORT);
-        port = setting.isPresent() ? setting.get().getIntContent() : 389;
-
-        setting = settingsRepository.findBySetting(SK_LDAP_BASE_DN);
-        baseDn = setting.isPresent()
-                ? setting.get().getContent()
-                : NetUtils.defaultBaseDn();
-
-        setting = settingsRepository.findBySetting(SK_LDAP_BIND_TYPE);
-        bindType = setting.isPresent()
-                ? LdapBindType.valueOf(setting.get().getContent())
-                : LdapBindType.BIND_DN;
-
-        setting = settingsRepository.findBySetting(SK_LDAP_BASE_DN);
-        bindDn = setting.isPresent() ? setting.get().getContent() : "";
-
-        setting = settingsRepository.findBySetting(SK_LDAP_KEYTAB_PATH);
-        keytabPath = setting.isPresent() ? setting.get().getContent() : "";
+    public void save(Settings settings) {
+        settings.put(SK_LDAP_PROTOCOL, protocol.name);
+        settings.put(SK_LDAP_HOST, host);
+        settings.put(SK_LDAP_PORT, port);
+        settings.put(SK_LDAP_BASE_DN, baseDn);
+        settings.put(SK_LDAP_BIND_PASSWORD, bindPassword);
+        settings.put(SK_LDAP_BIND_TYPE, bindType.name());
+        settings.put(SK_LDAP_BIND_DN, bindDn);
+        settings.put(SK_LDAP_KEYTAB_PATH, keytabPath);
     }
 
     private LdapProtocol protocol;

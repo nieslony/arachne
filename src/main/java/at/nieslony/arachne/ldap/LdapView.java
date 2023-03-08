@@ -17,7 +17,7 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -46,13 +46,13 @@ public class LdapView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(LdapView.class);
 
-    private final SettingsRepository settingsRepository;
+    private final Settings settings;
 
-    public LdapView(SettingsRepository settingsRepositoty) {
-        this.settingsRepository = settingsRepositoty;
+    public LdapView(Settings settings) {
+        this.settings = settings;
 
         Binder<LdapSettings> binder = new Binder<>(LdapSettings.class);
-        LdapSettings ldapSettings = new LdapSettings(settingsRepository);
+        LdapSettings ldapSettings = new LdapSettings(settings);
 
         Select<LdapSettings.LdapProtocol> protocolField = new Select<>();
         protocolField.setLabel("Protocol");

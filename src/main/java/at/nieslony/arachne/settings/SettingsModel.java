@@ -43,6 +43,11 @@ public class SettingsModel implements Serializable {
         this.content = joinList(content);
     }
 
+    public SettingsModel(String setting, boolean content) {
+        this.setting = setting;
+        this.content = String.valueOf(content);
+    }
+
     public SettingsModel() {
     }
 
@@ -56,29 +61,6 @@ public class SettingsModel implements Serializable {
     @Column
     @Lob
     private String content;
-
-    public int getIntContent() {
-        return Integer.parseInt(content);
-    }
-
-    public List<String> getListContent() {
-        return splitString(content);
-    }
-
-    public SettingsModel setContent(int content) {
-        this.content = String.valueOf(content);
-        return this;
-    }
-
-    public SettingsModel setContent(String content) {
-        this.content = content;
-        return this;
-    }
-
-    public SettingsModel setContent(List<String> content) {
-        this.content = joinList(content);
-        return this;
-    }
 
     static String encodeString(String s) {
         return s.replaceAll("\\\\", "\\\\\\\\").replaceAll(",", "\\\\,");

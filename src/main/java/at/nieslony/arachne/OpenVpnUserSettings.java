@@ -4,11 +4,9 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.settings.SettingsModel;
-import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.settings.Settings;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import lombok.Data;
 import lombok.ToString;
 import org.slf4j.Logger;
@@ -41,47 +39,20 @@ public class OpenVpnUserSettings {
     public OpenVpnUserSettings() {
     }
 
-    public OpenVpnUserSettings(SettingsRepository settingsRepository) {
-        Optional<SettingsModel> setting;
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_NAME);
-        vpnName = setting.isPresent() ? setting.get().getContent() : "Arachne OpenVPN - %u@%h";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_LISTEN_IP);
-        listenIp = setting.isPresent() ? setting.get().getContent() : "0.0.0.0";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_LISTEN_PORT);
-        listenPort = setting.isPresent() ? setting.get().getIntContent() : 1194;
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_LISTEN_PROTOCOL);
-        listenProtocol = setting.isPresent() ? setting.get().getContent() : "UDP";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_REMOTE);
-        remote = setting.isPresent() ? setting.get().getContent() : NetUtils.myHostname();
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_DEVICE_TYPE);
-        deviceType = setting.isPresent() ? setting.get().getContent() : "tun";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_DEVICE_NAME);
-        deviceName = setting.isPresent() ? setting.get().getContent() : "arachne";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_CLIENT_NETWORK);
-        clientNetwork = setting.isPresent() ? setting.get().getContent() : "192.168.100.0";
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_CLIENT_MASK);
-        clientMask = setting.isPresent() ? setting.get().getIntContent() : 24;
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_KEEPALIVE_INTERVAL);
-        keepaliveInterval = setting.isPresent() ? setting.get().getIntContent() : 10;
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT);
-        keepaliveTimeout = setting.isPresent() ? setting.get().getIntContent() : 60;
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_PUSH_DNS);
-        pushDnsServers = setting.isPresent() ? setting.get().getListContent() : NetUtils.getDnsServers();
-
-        setting = settingsRepository.findBySetting(SK_OPENVPN_USER_PUSH_ROUTES);
-        pushRoutes = setting.isPresent() ? setting.get().getListContent() : NetUtils.getDefaultPushRoutes();
+    public OpenVpnUserSettings(Settings settings) {
+        vpnName = settings.get(SK_OPENVPN_USER_NAME, "Arachne OpenVPN - %u@%h");
+        listenIp = settings.get(SK_OPENVPN_USER_LISTEN_IP, "0.0.0.0");
+        listenPort = settings.getInt(SK_OPENVPN_USER_LISTEN_PORT, 1194);
+        listenProtocol = settings.get(SK_OPENVPN_USER_LISTEN_PROTOCOL, "UDP");
+        remote = settings.get(SK_OPENVPN_USER_REMOTE, NetUtils.myHostname());
+        deviceType = settings.get(SK_OPENVPN_USER_DEVICE_TYPE, "tun");
+        deviceName = settings.get(SK_OPENVPN_USER_DEVICE_NAME, "arachne");
+        clientNetwork = settings.get(SK_OPENVPN_USER_CLIENT_NETWORK, "192.168.100.0");
+        clientMask = settings.getInt(SK_OPENVPN_USER_CLIENT_MASK, 24);
+        keepaliveInterval = settings.getInt(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, 10);
+        keepaliveTimeout = settings.getInt(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, 60);
+        pushDnsServers = settings.getList(SK_OPENVPN_USER_PUSH_DNS, NetUtils.getDnsServers());
+        pushRoutes = settings.getList(SK_OPENVPN_USER_PUSH_ROUTES, NetUtils.getDefaultPushRoutes());
     }
 
     private String vpnName;
@@ -98,113 +69,20 @@ public class OpenVpnUserSettings {
     private List<String> pushDnsServers;
     private List<String> pushRoutes = new LinkedList<>();
 
-    void save(SettingsRepository settingsRepository) {
-        logger.info("Writing openVPN user config");
-        Optional<SettingsModel> osm;
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_NAME);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(vpnName));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_NAME, vpnName));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_LISTEN_IP);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(listenIp));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_LISTEN_IP, listenIp));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_LISTEN_PORT);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(listenPort));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_LISTEN_PORT, listenPort));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_LISTEN_PROTOCOL);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(listenProtocol));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_LISTEN_PROTOCOL, listenProtocol));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_REMOTE);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(remote));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_REMOTE, remote));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_DEVICE_TYPE);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(deviceType));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_DEVICE_TYPE, deviceType));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_DEVICE_NAME);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(deviceName));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_DEVICE_NAME, deviceName));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_CLIENT_NETWORK);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(clientNetwork));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_CLIENT_NETWORK, clientNetwork));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_CLIENT_MASK);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(clientMask));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_CLIENT_MASK, clientMask));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_KEEPALIVE_INTERVAL);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(keepaliveInterval));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, keepaliveInterval));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(keepaliveTimeout));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveTimeout));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_PUSH_DNS);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(pushDnsServers));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_PUSH_DNS, pushDnsServers));
-        }
-
-        osm = settingsRepository
-                .findBySetting(SK_OPENVPN_USER_PUSH_ROUTES);
-        if (osm.isPresent()) {
-            settingsRepository.save(osm.get().setContent(pushRoutes));
-        } else {
-            settingsRepository.save(new SettingsModel(SK_OPENVPN_USER_PUSH_ROUTES, pushRoutes));
-        }
+    void save(Settings settings) {
+        settings.put(SK_OPENVPN_USER_NAME, vpnName);
+        settings.put(SK_OPENVPN_USER_LISTEN_IP, listenIp);
+        settings.put(SK_OPENVPN_USER_LISTEN_PORT, listenPort);
+        settings.put(SK_OPENVPN_USER_LISTEN_PROTOCOL, listenProtocol);
+        settings.put(SK_OPENVPN_USER_REMOTE, remote);
+        settings.put(SK_OPENVPN_USER_DEVICE_TYPE, deviceType);
+        settings.put(SK_OPENVPN_USER_DEVICE_NAME, deviceName);
+        settings.put(SK_OPENVPN_USER_CLIENT_NETWORK, clientNetwork);
+        settings.put(SK_OPENVPN_USER_CLIENT_MASK, clientMask);
+        settings.put(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, keepaliveInterval);
+        settings.put(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveTimeout);
+        settings.put(SK_OPENVPN_USER_PUSH_DNS, pushDnsServers);
+        settings.put(SK_OPENVPN_USER_PUSH_ROUTES, pushRoutes);
     }
 
     public void setPushDnsServers(List<String> pushDnsServers) {

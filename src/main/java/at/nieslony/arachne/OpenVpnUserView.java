@@ -5,7 +5,7 @@
 package at.nieslony.arachne;
 
 import at.nieslony.arachne.pki.Pki;
-import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -88,15 +88,15 @@ public class OpenVpnUserView extends VerticalLayout {
         }
     }
 
-    private SettingsRepository settingsRepository;
+    private Settings settings;
 
     public OpenVpnUserView(
-            SettingsRepository settingsRepository,
+            Settings settings,
             OpenVpnRestController openvpnRestController,
             Pki pki
     ) {
-        this.settingsRepository = settingsRepository;
-        OpenVpnUserSettings settings = new OpenVpnUserSettings(settingsRepository);
+        this.settings = settings;
+        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
 
         TextField name = new TextField("Network Manager configuration name");
         name.setWidth(50, Unit.EM);
@@ -170,28 +170,28 @@ public class OpenVpnUserView extends VerticalLayout {
         Button addDnsServerButton = new Button(
                 "Add",
                 e -> {
-                    List<String> dnsServers = settings.getPushDnsServers();
+                    List<String> dnsServers = vpnSettings.getPushDnsServers();
                     dnsServers.add(editDnsServerField.getValue());
                     pushDnsServersField.setItems(dnsServers);
                 });
         Button updateDnsServerButton = new Button(
                 "Update",
                 e -> {
-                    List<String> dnsServers = new LinkedList<>(settings.getPushDnsServers());
+                    List<String> dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
                     dnsServers.remove(pushDnsServersField.getValue());
                     dnsServers.add(editDnsServerField.getValue());
                     pushDnsServersField.setItems(dnsServers);
-                    settings.setPushDnsServers(dnsServers);
+                    vpnSettings.setPushDnsServers(dnsServers);
                 });
         updateDnsServerButton.setEnabled(false);
         Button removeDnsServerButton = new Button(
                 "Remove",
                 e -> {
-                    var dnsServers = new LinkedList<>(settings.getPushDnsServers());
+                    var dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
 
                     dnsServers.remove(pushDnsServersField.getValue());
                     pushDnsServersField.setItems(dnsServers);
-                    settings.setPushDnsServers(dnsServers);
+                    vpnSettings.setPushDnsServers(dnsServers);
                 });
         removeDnsServerButton.setEnabled(false);
         VerticalLayout pushDnsServersLayout = new VerticalLayout(
@@ -257,8 +257,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
 
-        binder.setBean(settings);
-        pushDnsServersField.setItems(settings.getPushDnsServers());
+        binder.setBean(vpnSettings);
+        pushDnsServersField.setItems(vpnSettings.getPushDnsServers());
 
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
@@ -276,9 +276,9 @@ public class OpenVpnUserView extends VerticalLayout {
                 );
 
         saveSettings.addClickListener((t) -> {
-            if (binder.writeBeanIfValid(settings)) {
-                settings.save(settingsRepository);
-                openvpnRestController.writeOpenVpnUserServerConfig(settings);
+            if (binder.writeBeanIfValid(vpnSettings)) {
+                vpnSettings.save(settings);
+                openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
             }
         });
 
