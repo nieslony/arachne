@@ -206,6 +206,55 @@ public class OpenVpnUserView extends VerticalLayout {
         pushDnsServersField.setWidthFull();
         editDnsServerField.setWidthFull();
 
+        ////////////////////////////
+        ListBox<String> pushRoutesField = new ListBox<>();
+        pushRoutesField.setHeight(30, Unit.EX);
+        pushRoutesField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.Background.PRIMARY_10
+        );
+        TextField editRoutesField = new TextField();
+        editRoutesField.setValueChangeMode(ValueChangeMode.EAGER);
+        Button addRoutesButton = new Button(
+                "Add",
+                e -> {
+                    List<String> routes = vpnSettings.getPushRoutes();
+                    routes.add(editRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                });
+        Button updateRoutesButton = new Button(
+                "Update",
+                e -> {
+                    List<String> routes = new LinkedList<>(vpnSettings.getPushRoutes());
+                    routes.remove(pushRoutesField.getValue());
+                    routes.add(editRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                    vpnSettings.setPushRoutes(routes);
+                });
+        updateRoutesButton.setEnabled(false);
+        Button removeRoutesButton = new Button(
+                "Remove",
+                e -> {
+                    var routes = new LinkedList<>(vpnSettings.getPushRoutes());
+
+                    routes.remove(pushRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                    vpnSettings.setPushRoutes(routes);
+                });
+        removeDnsServerButton.setEnabled(false);
+        VerticalLayout pushRoutesLayout = new VerticalLayout(
+                pushRoutesField,
+                editRoutesField,
+                new HorizontalLayout(
+                        addRoutesButton,
+                        updateRoutesButton,
+                        removeRoutesButton
+                )
+        );
+        pushRoutesField.setWidthFull();
+        editRoutesField.setWidthFull();
+
+        ////////////////////////////
         Button saveSettings = new Button("Save Settings");
 
         Binder<OpenVpnUserSettings> binder = new Binder(OpenVpnUserSettings.class);
@@ -259,6 +308,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         binder.setBean(vpnSettings);
         pushDnsServersField.setItems(vpnSettings.getPushDnsServers());
+        pushRoutesField.setItems(vpnSettings.getPushRoutes());
 
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
@@ -272,6 +322,16 @@ public class OpenVpnUserView extends VerticalLayout {
                         },
                         (ip, v) -> {
                             editDnsServer.set(v);
+                        }
+                );
+        AtomicReference<String> editRoutes = new AtomicReference<>("");
+        binder.forField(editRoutesField)
+                .bind(
+                        ip -> {
+                            return editRoutes.get();
+                        },
+                        (ip, v) -> {
+                            editRoutes.set(v);
                         }
                 );
 
@@ -293,6 +353,17 @@ public class OpenVpnUserView extends VerticalLayout {
                 removeDnsServerButton.setEnabled(false);
             }
         });
+        pushRoutesField.addValueChangeListener((e) -> {
+            if (e.getValue() != null) {
+                editRoutesField.setValue(e.getValue());
+                updateRoutesButton.setEnabled(true);
+                removeRoutesButton.setEnabled(true);
+            } else {
+                editRoutesField.setValue("");
+                updateRoutesButton.setEnabled(false);
+                removeRoutesButton.setEnabled(false);
+            }
+        });
 
         binder.validate();
 
@@ -306,8 +377,9 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(interfaceType, interfaceName);
         formLayout.add(clientNetwork, clientMask);
         formLayout.add(keepaliveInterval, keepaliveTimeout);
+        formLayout.add(pushDnsServersLayout, pushRoutesLayout);
 
-        add(formLayout, pushDnsServersLayout, saveSettings);
+        add(formLayout, saveSettings);
     }
 
     public List<NicInfo> findAllNics() {
