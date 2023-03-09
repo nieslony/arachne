@@ -112,10 +112,16 @@ public class OpenVpnUserView extends VerticalLayout {
         port.setMax(65534);
         port.setStepButtonsVisible(true);
         port.setValueChangeMode(ValueChangeMode.EAGER);
+        port.setWidth(8, Unit.EM);
 
         Select<String> protocol = new Select<>();
         protocol.setItems("TCP", "UDP");
         protocol.setLabel("Protocol");
+        protocol.setWidth(8, Unit.EM);
+
+        HorizontalLayout listenLayout = new HorizontalLayout();
+        listenLayout.add(ipAddresse, port, protocol);
+        listenLayout.setFlexGrow(1, ipAddresse);
 
         TextField connectToHost = new TextField("Connect to host");
         connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
@@ -123,9 +129,14 @@ public class OpenVpnUserView extends VerticalLayout {
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
         interfaceType.setLabel("Interface Type");
+        interfaceType.setWidth(8, Unit.EM);
 
         TextField interfaceName = new TextField("Interface Name");
         interfaceName.setValueChangeMode(ValueChangeMode.EAGER);
+
+        HorizontalLayout interfaceLayout = new HorizontalLayout();
+        interfaceLayout.add(interfaceType, interfaceName);
+        interfaceLayout.setFlexGrow(1, interfaceName);
 
         TextField clientNetwork = new TextField("Client Network");
         clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
@@ -139,6 +150,10 @@ public class OpenVpnUserView extends VerticalLayout {
                         .collect(Collectors.toList())
         );
         clientMask.setLabel("Subnet Mask");
+
+        HorizontalLayout clientNetLayout = new HorizontalLayout();
+        clientNetLayout.add(clientNetwork, clientMask);
+        clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
 
         IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
         Div suffix;
@@ -159,12 +174,11 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveTimeout.setWidth(12, Unit.EM);
         keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
 
+        HorizontalLayout keepaliveLayout = new HorizontalLayout();
+        keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+
         ListBox<String> pushDnsServersField = new ListBox<>();
         pushDnsServersField.setHeight(30, Unit.EX);
-        pushDnsServersField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.Background.PRIMARY_10
-        );
         TextField editDnsServerField = new TextField();
         editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addDnsServerButton = new Button(
@@ -203,10 +217,10 @@ public class OpenVpnUserView extends VerticalLayout {
                         removeDnsServerButton
                 )
         );
+        pushDnsServersLayout.setMargin(true);
         pushDnsServersField.setWidthFull();
         editDnsServerField.setWidthFull();
 
-        ////////////////////////////
         ListBox<String> pushRoutesField = new ListBox<>();
         pushRoutesField.setHeight(30, Unit.EX);
         pushRoutesField.addClassNames(
@@ -254,7 +268,6 @@ public class OpenVpnUserView extends VerticalLayout {
         pushRoutesField.setWidthFull();
         editRoutesField.setWidthFull();
 
-        ////////////////////////////
         Button saveSettings = new Button("Save Settings");
 
         Binder<OpenVpnUserSettings> binder = new Binder(OpenVpnUserSettings.class);
@@ -368,15 +381,12 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.validate();
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(name, 2);
-        formLayout.add(
-                ipAddresse,
-                new HorizontalLayout(port, protocol)
-        );
-        formLayout.add(connectToHost, 2);
-        formLayout.add(interfaceType, interfaceName);
-        formLayout.add(clientNetwork, clientMask);
-        formLayout.add(keepaliveInterval, keepaliveTimeout);
+        formLayout.add(name);
+        formLayout.add(listenLayout);
+        formLayout.add(connectToHost);
+        formLayout.add(interfaceLayout);
+        formLayout.add(clientNetLayout);
+        formLayout.add(keepaliveLayout);
         formLayout.add(pushDnsServersLayout, pushRoutesLayout);
 
         add(formLayout, saveSettings);
