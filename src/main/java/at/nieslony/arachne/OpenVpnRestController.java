@@ -114,9 +114,17 @@ public class OpenVpnRestController {
                             settings.getKeepaliveInterval(),
                             settings.getKeepaliveTimeout()));
             writer.println("topology subnet");
-            writer.println(openVpnManagement.getVpnConfigSetting() + "\n");
+            writer.println(openVpnManagement.getVpnConfigSetting());
             for (String dnsServer : settings.getPushDnsServers()) {
-                writer.println("dhcp-option DNS " + dnsServer);
+                writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
+            }
+            for (String route : settings.getPushRoutes()) {
+                String[] components = route.split("/");
+                components[1] = NetUtils.maskLen2Mask(Integer.parseInt(components[1]));
+                writer.println(
+                        "push \"route %s %s\""
+                                .formatted(components[0], components[1])
+                );
             }
 
             writer.println("<ca>\n%s</ca>".formatted(pki.getRootCertAsBase64()));
