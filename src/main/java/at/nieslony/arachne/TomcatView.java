@@ -58,10 +58,16 @@ public class TomcatView extends VerticalLayout {
 
         Checkbox enableAjpField = new Checkbox("Enable AJP Connector");
         enableAjpField.setValue(true);
+
         IntegerField ajpPortField = new IntegerField("Port");
+
         Checkbox enableAjpSecretField = new Checkbox("Enable AJP Secret");
         enableAjpSecretField.setValue(true);
         PasswordField ajpSecretField = new PasswordField();
+        HorizontalLayout secretLayout = new HorizontalLayout();
+        secretLayout.add(enableAjpSecretField, ajpSecretField);
+        secretLayout.setAlignItems(Alignment.CENTER);
+
         TextField ajpLocationField = new TextField("Outsite Location");
 
         Button saveAndRestartButton = new Button(
@@ -111,7 +117,7 @@ public class TomcatView extends VerticalLayout {
         add(
                 enableAjpField,
                 ajpPortField,
-                new HorizontalLayout(enableAjpSecretField, ajpSecretField),
+                secretLayout,
                 ajpLocationField,
                 saveAndRestartButton
         );
