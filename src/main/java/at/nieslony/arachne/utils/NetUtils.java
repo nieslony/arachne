@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.utils;
 
 import java.net.Inet4Address;
 import java.net.InterfaceAddress;
@@ -11,6 +11,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -62,11 +63,11 @@ public class NetUtils {
         return ret;
     }
 
-    public static String srvLookup(String srvType) throws NamingException {
+    public static List<SrvRecord> srvLookup(String srvType) throws NamingException {
         return srvLookup(srvType, myDomain());
     }
 
-    public static String srvLookup(String srvType, String domain)
+    public static List<SrvRecord> srvLookup(String srvType, String domain)
             throws NamingException {
         String value = null;
 
@@ -77,20 +78,15 @@ public class NetUtils {
         DirContext ctx = new InitialDirContext(env);
         Attributes attrs = ctx.getAttributes("_" + srvType + "._tcp." + domain, new String[]{"SRV"});
         NamingEnumeration en = attrs.getAll();
-        int prio = -1;
+        List<SrvRecord> srvRecords = new LinkedList<>();
         while (en.hasMore()) {
             Attribute attr = (Attribute) en.next();
-            String[] values = attr.toString().split(" ");
-            int p = Integer.parseInt(values[1]);
-            if (p > prio) {
-                value = values[4].substring(0, values[4].length() - 1);
-                if (value.endsWith(".")) {
-                    value = value.substring(0, value.length() - 1);
-                }
-            }
+            SrvRecord srvRecord = new SrvRecord(attr.toString());
+            srvRecords.add(srvRecord);
         }
+        Collections.sort(srvRecords, (r1, r2) -> r1.getPriority() - r2.getPriority());
 
-        return value;
+        return srvRecords;
     }
 
     public static String myHostname() {

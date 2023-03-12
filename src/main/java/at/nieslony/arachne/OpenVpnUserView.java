@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.component.Unit;
