@@ -28,6 +28,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
+import org.springframework.security.kerberos.client.ldap.KerberosLdapContextSource;
 
 /**
  *
@@ -121,5 +125,47 @@ public class LdapSettings {
         }
 
         return ldapServers;
+    }
+
+    public LdapContextSource getLdapContextSource() {
+        String[] urls = ldapUrls.stream()
+                .map(url -> url.toString())
+                .toArray(String[]::new);
+        return switch (bindType) {
+            case ANONYMOUS -> {
+                LdapContextSource ctxSrc = new LdapContextSource();
+                ctxSrc.setUrls(urls);
+                ctxSrc.setBase(baseDn);
+                ctxSrc.setAnonymousReadOnly(true);
+                ctxSrc.afterPropertiesSet();
+
+                yield ctxSrc;
+            }
+            case BIND_DN -> {
+                LdapContextSource ctxSrc = new LdapContextSource();
+                ctxSrc.setUrls(urls);
+                ctxSrc.setBase(baseDn);
+                ctxSrc.setUserDn(bindDn);
+                ctxSrc.setPassword(bindPassword);
+                ctxSrc.afterPropertiesSet();
+
+                yield ctxSrc;
+            }
+            case KEYTAB -> {
+                KerberosLdapContextSource ctxSrc = new KerberosLdapContextSource(
+                        ldapUrls.stream()
+                                .map(url -> url.toString())
+                                .toList(),
+                        baseDn
+                );
+                SunJaasKrb5LoginConfig loginConfig = new SunJaasKrb5LoginConfig();
+                loginConfig.setKeyTabLocation(new FileSystemResource(keytabPath));
+                loginConfig.setServicePrincipal("HTTP/" + NetUtils.myHostname());
+                loginConfig.setDebug(true);
+                loginConfig.setIsInitiator(true);
+                ctxSrc.setLoginConfig(loginConfig);
+                yield ctxSrc;
+            }
+        };
     }
 }

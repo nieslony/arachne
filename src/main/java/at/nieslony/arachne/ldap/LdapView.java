@@ -24,6 +24,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -42,6 +44,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ldap.AuthenticationException;
+import org.springframework.ldap.InvalidNameException;
+import org.springframework.ldap.NameNotFoundException;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 
 /**
@@ -66,6 +72,7 @@ public class LdapView extends FormLayout {
 
         TextField baseDnField = new TextField("Base DN");
         baseDnField.setWidthFull();
+        baseDnField.setClearButtonVisible(true);
         binder.forField(baseDnField)
                 .asRequired("Value Required")
                 .bind(LdapSettings::getBaseDn, LdapSettings::setBaseDn);
@@ -78,15 +85,20 @@ public class LdapView extends FormLayout {
 
         TextField bindDnField = new TextField("Bind DN");
         bindDnField.setWidthFull();
+        bindDnField.setClearButtonVisible(true);
+        binder.forField(bindDnField)
+                .bind(LdapSettings::getBindDn, LdapSettings::setBindDn);
+
         PasswordField bindPasswordField = new PasswordField("Bind Password");
         bindPasswordField.setWidthFull();
+        binder.forField(bindPasswordField)
+                .bind(LdapSettings::getBindPassword, LdapSettings::setBindPassword);
+
         HorizontalLayout simpleBindLayout = new HorizontalLayout(
                 bindDnField,
                 bindPasswordField
         );
         simpleBindLayout.setWidthFull();
-        binder.forField(bindDnField)
-                .bind(LdapSettings::getBindDn, LdapSettings::setBindDn);
 
         TextField keytabPath = new TextField("Keytab Path");
         binder.forField(keytabPath)
@@ -113,6 +125,11 @@ public class LdapView extends FormLayout {
             }
         });
 
+        Button testConnectionButton = new Button(
+                "Test Connection",
+                e -> testLdapConnection(ldapSettings)
+        );
+
         binder.setBean(ldapSettings);
         binder.validate();
 
@@ -122,22 +139,40 @@ public class LdapView extends FormLayout {
                         baseDnField,
                         bindType,
                         simpleBindLayout,
-                        keytabPath
+                        keytabPath,
+                        testConnectionButton
                 )
         );
     }
 
     void testLdapConnection(LdapSettings ldapSettings) {
-        /*   KerberosLdapContextSource contextSource = new KerberosLdapContextSource("");
-         */
-        LdapContextSource ctxSrc = new LdapContextSource();
-        ctxSrc.setUrl("ldap://<ldapUrl>:389");
-        ctxSrc.setBase("DC=bar,DC=test,DC=foo");
-        ctxSrc.setUserDn("CN=<...>, DC=bar, DC=test, DC=foo");
-        ctxSrc.setPassword("<password>");
-
-        ctxSrc.afterPropertiesSet();
-
+        LdapContextSource ctxSrc = ldapSettings.getLdapContextSource();
+        LdapTemplate templ = new LdapTemplate(ctxSrc);
+        Notification notification = new Notification();
+        notification.setDuration(5000);
+        String msg;
+        try {
+            var res = templ.lookup(ldapSettings.getBaseDn());
+            msg = "Connection successful";
+        } catch (AuthenticationException ex) {
+            msg = "Authentication failed: " + ex.getMessage();
+            logger.error(msg);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } catch (NameNotFoundException ex) {
+            msg = "Name not found. Maybe wrong base dn";
+            logger.error(msg);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } catch (InvalidNameException ex) {
+            msg = ex.getMessage();
+            logger.error(msg);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } catch (Exception ex) {
+            msg = ex.getMessage();
+            logger.error(msg);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+        notification.setText(msg);
+        notification.open();
     }
 
     VerticalLayout createUrlsEditor(LdapSettings ldapSettings) {
@@ -164,6 +199,7 @@ public class LdapView extends FormLayout {
         hostnameField.setPattern(
                 "[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*"
         );
+        hostnameField.setClearButtonVisible(true);
         AtomicReference<String> hostname = new AtomicReference<>("");
         binder.forField(hostnameField)
                 .withValidator(new HostnameValidator(), "Not a valid hostname")
