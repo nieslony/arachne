@@ -1,0 +1,8 @@
+@import url('./main-layout.css');
+
+a[highlight] {
+    font-weight: bold;
+    border-right-style: solid;
+    border-right-width: 3pt;
+    width: 100%;
+}

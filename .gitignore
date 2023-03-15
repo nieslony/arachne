@@ -1,6 +1,7 @@
 *~
 /target
-/frontend
+/frontend/generated
+/frontend/index.html
 /*json
 /*ts
 /node_modules
