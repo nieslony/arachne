@@ -4,6 +4,12 @@
  */
 package at.nieslony.arachne.utils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.Inet4Address;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
@@ -25,6 +31,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.function.ThrowingConsumer;
 
 /**
  *
@@ -178,5 +185,38 @@ public class NetUtils {
                 .asList(myDomain().split("\\."));
         l.replaceAll(s -> "dc=" + s);
         return String.join(",", l);
+    }
+
+    public static void concatKrb5Conf(String filename, String dest) throws Exception {
+        try (FileWriter writer = new FileWriter(dest)) {
+            writer.write(concatKrb5Conf(0, filename));
+        }
+    }
+
+    static String concatKrb5Conf(int level, String filename) throws Exception {
+        if (level > 10) {
+            return "";
+        }
+        StringWriter sw = new StringWriter();
+        PrintWriter writer = new PrintWriter(sw);
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        reader
+                .lines()
+                .forEach((ThrowingConsumer<String>) line -> {
+                    if (line.startsWith("includedir")) {
+                        String[] tokens = line.split(" ");
+
+                        File dir = new File(tokens[1]);
+                        for (File entry : dir.listFiles()) {
+                            if (entry.isFile()) {
+                                writer.println(concatKrb5Conf(level + 1, entry.getAbsolutePath()));
+                            }
+                        }
+                    } else {
+                        writer.println(line);
+                    }
+                });
+
+        return sw.toString();
     }
 }
