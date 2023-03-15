@@ -36,9 +36,11 @@ public class SrvRecord {
         // _service._proto.name. ttl IN SRV priority weight port target.
         // _sip._tcp.example.com. 86400 IN SRV 0 5 5060 sipserver.example.com.
         String[] values = dnsEntry.split(" ");
-        priority = Integer.parseInt(values[4]);
-        weight = Integer.parseInt(values[5]);
-        port = Integer.parseInt(values[6]);
-        hostname = values[7];
+        priority = Integer.parseInt(values[0]);
+        weight = Integer.parseInt(values[1]);
+        port = Integer.parseInt(values[2]);
+        hostname = values[3].endsWith(".")
+                ? values[3].substring(0, values[3].length() - 1)
+                : values[3];
     }
 }

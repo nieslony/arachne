@@ -16,12 +16,18 @@
  */
 package at.nieslony.arachne.ldap;
 
-import at.nieslony.arachne.NetUtils;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.SrvRecord;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,36 +38,14 @@ import lombok.ToString;
 @ToString
 public class LdapSettings {
 
-    private final static String SK_LDAP_PROTOCOL = "ldap.protocol";
-    private final static String SK_LDAP_HOST = "ldap.host";
-    private final static String SK_LDAP_PORT = "ldap.port";
-    private final static String SK_LDAP_BASE_DN = "ldap.basedn";
+    private static final Logger logger = LoggerFactory.getLogger(LdapSettings.class);
+
+    private final static String SK_LDAP_URLS = "ldap.urls";
+    private final static String SK_LDAP_BASE_DN = "ldap.base-dn";
     private final static String SK_LDAP_BIND_DN = "ldap.binddn";
     private final static String SK_LDAP_BIND_PASSWORD = "ldap.bind-password";
     private final static String SK_LDAP_KEYTAB_PATH = "ldap.keytab-path";
     private final static String SK_LDAP_BIND_TYPE = "ldap.bind-type";
-
-    public enum LdapProtocol {
-        LDAP("ldap", 389),
-        LDAPS("ldaps", 636);
-
-        final private String name;
-        final private int port;
-
-        LdapProtocol(String name, int port) {
-            this.name = name;
-            this.port = port;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-
-        public int getPort() {
-            return port;
-        }
-    }
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -84,17 +68,10 @@ public class LdapSettings {
     }
 
     public LdapSettings(Settings settings) {
-        protocol = LdapProtocol.valueOf(
-                settings.get(
-                        SK_LDAP_PROTOCOL,
-                        LdapProtocol.LDAP.name())
-        );
-        try {
-            host = settings.get(SK_LDAP_HOST, NetUtils.srvLookup("ldap"));
-        } catch (NamingException ex) {
-            host = "ldap." + NetUtils.myDomain();
-        }
-        port = settings.getInt(SK_LDAP_PORT, 389);
+        ldapUrls = settings.getList(SK_LDAP_URLS, findLdapUrls())
+                .stream()
+                .map(urlStr -> new LdapUrl(urlStr))
+                .toList();
         baseDn = settings.get(SK_LDAP_BASE_DN, NetUtils.defaultBaseDn());
         bindPassword = settings.get(SK_LDAP_BIND_PASSWORD, "");
         bindType = LdapBindType.valueOf(
@@ -107,9 +84,12 @@ public class LdapSettings {
     }
 
     public void save(Settings settings) {
-        settings.put(SK_LDAP_PROTOCOL, protocol.name);
-        settings.put(SK_LDAP_HOST, host);
-        settings.put(SK_LDAP_PORT, port);
+        settings.put(
+                SK_LDAP_URLS,
+                ldapUrls.stream()
+                        .map(url -> Objects.toString(url, null))
+                        .toList()
+        );
         settings.put(SK_LDAP_BASE_DN, baseDn);
         settings.put(SK_LDAP_BIND_PASSWORD, bindPassword);
         settings.put(SK_LDAP_BIND_TYPE, bindType.name());
@@ -117,12 +97,29 @@ public class LdapSettings {
         settings.put(SK_LDAP_KEYTAB_PATH, keytabPath);
     }
 
-    private LdapProtocol protocol;
-    private String host;
-    private int port;
+    List<LdapUrl> ldapUrls;
     private String baseDn;
     private LdapBindType bindType;
     private String bindDn;
     private String bindPassword;
     private String keytabPath;
+
+    List<String> findLdapUrls() {
+        List<String> ldapServers = new LinkedList<>();
+        try {
+            for (SrvRecord r : NetUtils.srvLookup("ldap")) {
+                ldapServers.add(
+                        "%s://%s:%d".formatted(
+                                r.getPort() == 636 ? "ldaps" : "ldap",
+                                r.getHostname(),
+                                r.getPort()
+                        )
+                );
+            }
+        } catch (NamingException ex) {
+            logger.error("Cannot find ldap SRV record: " + ex.getMessage());
+        }
+
+        return ldapServers;
+    }
 }

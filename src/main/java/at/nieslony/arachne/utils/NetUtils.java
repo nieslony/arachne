@@ -76,13 +76,18 @@ public class NetUtils {
         env.put("java.naming.provider.url", "dns:");
 
         DirContext ctx = new InitialDirContext(env);
-        Attributes attrs = ctx.getAttributes("_" + srvType + "._tcp." + domain, new String[]{"SRV"});
+        Attributes attrs = ctx.getAttributes(
+                "_%s._tcp.%s".formatted(srvType, domain),
+                new String[]{"SRV"});
         NamingEnumeration en = attrs.getAll();
         List<SrvRecord> srvRecords = new LinkedList<>();
         while (en.hasMore()) {
             Attribute attr = (Attribute) en.next();
-            SrvRecord srvRecord = new SrvRecord(attr.toString());
-            srvRecords.add(srvRecord);
+            String resultStr = attr.toString().split(": ")[1];
+            for (String recordStr : resultStr.split(", *")) {
+                SrvRecord srvRecord = new SrvRecord(recordStr);
+                srvRecords.add(srvRecord);
+            }
         }
         Collections.sort(srvRecords, (r1, r2) -> r1.getPriority() - r2.getPriority());
 
