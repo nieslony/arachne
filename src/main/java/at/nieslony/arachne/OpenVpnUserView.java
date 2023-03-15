@@ -4,13 +4,14 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.NetUtils;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -180,6 +181,12 @@ public class OpenVpnUserView extends VerticalLayout {
 
         ListBox<String> pushDnsServersField = new ListBox<>();
         pushDnsServersField.setHeight(30, Unit.EX);
+        pushDnsServersField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+
         TextField editDnsServerField = new TextField();
         editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addDnsServerButton = new Button(
@@ -210,6 +217,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 });
         removeDnsServerButton.setEnabled(false);
         VerticalLayout pushDnsServersLayout = new VerticalLayout(
+                new Label("Push DNS Servers"),
                 pushDnsServersField,
                 editDnsServerField,
                 new HorizontalLayout(
@@ -221,11 +229,16 @@ public class OpenVpnUserView extends VerticalLayout {
         pushDnsServersLayout.setMargin(true);
         pushDnsServersField.setWidthFull();
         editDnsServerField.setWidthFull();
+        pushDnsServersLayout.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderRadius.MEDIUM
+        );
 
         ListBox<String> pushRoutesField = new ListBox<>();
         pushRoutesField.setHeight(30, Unit.EX);
         pushRoutesField.addClassNames(
                 LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
         TextField editRoutesField = new TextField();
@@ -258,6 +271,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 });
         removeDnsServerButton.setEnabled(false);
         VerticalLayout pushRoutesLayout = new VerticalLayout(
+                new Label("Push Routes"),
                 pushRoutesField,
                 editRoutesField,
                 new HorizontalLayout(
@@ -265,6 +279,10 @@ public class OpenVpnUserView extends VerticalLayout {
                         updateRoutesButton,
                         removeRoutesButton
                 )
+        );
+        pushRoutesLayout.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderRadius.MEDIUM
         );
         pushRoutesField.setWidthFull();
         editRoutesField.setWidthFull();
