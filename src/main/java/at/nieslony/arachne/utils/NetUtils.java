@@ -175,7 +175,7 @@ public class NetUtils {
 
     public static String defaultBaseDn() {
         List<String> l = Arrays
-                .asList(myDomain().split(","));
+                .asList(myDomain().split("\\."));
         l.replaceAll(s -> "dc=" + s);
         return String.join(",", l);
     }
