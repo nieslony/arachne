@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.FolderFactory;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.SrvRecord;
@@ -23,11 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import javax.naming.NamingException;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
@@ -50,6 +53,7 @@ public class LdapSettings {
     private final static String SK_LDAP_BIND_PASSWORD = "ldap.bind-password";
     private final static String SK_LDAP_KEYTAB_PATH = "ldap.keytab-path";
     private final static String SK_LDAP_BIND_TYPE = "ldap.bind-type";
+    private final static String SK_LDAP_KERBEROS_BIND_PRINCIPAL = "ldap.kerberos-bind-princopal";
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -85,6 +89,10 @@ public class LdapSettings {
         );
         bindDn = settings.get(SK_LDAP_BIND_DN, NetUtils.defaultBaseDn());
         keytabPath = settings.get(SK_LDAP_KEYTAB_PATH, "");
+        kerberosBindPricipal = settings.get(
+                SK_LDAP_KERBEROS_BIND_PRINCIPAL,
+                "HTTP/" + NetUtils.myHostname()
+        );
     }
 
     public void save(Settings settings) {
@@ -99,7 +107,13 @@ public class LdapSettings {
         settings.put(SK_LDAP_BIND_TYPE, bindType.name());
         settings.put(SK_LDAP_BIND_DN, bindDn);
         settings.put(SK_LDAP_KEYTAB_PATH, keytabPath);
+        settings.put(SK_LDAP_KERBEROS_BIND_PRINCIPAL, kerberosBindPricipal);
     }
+
+    @Value("${arachneConfigDir}")
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private String arachneConfigDir;
 
     List<LdapUrl> ldapUrls;
     private String baseDn;
@@ -107,6 +121,7 @@ public class LdapSettings {
     private String bindDn;
     private String bindPassword;
     private String keytabPath;
+    private String kerberosBindPricipal;
 
     List<String> findLdapUrls() {
         List<String> ldapServers = new LinkedList<>();
@@ -127,7 +142,8 @@ public class LdapSettings {
         return ldapServers;
     }
 
-    public LdapContextSource getLdapContextSource() {
+    public LdapContextSource getLdapContextSource() throws Exception {
+        logger.info(toString());
         String[] urls = ldapUrls.stream()
                 .map(url -> url.toString())
                 .toArray(String[]::new);
@@ -158,12 +174,23 @@ public class LdapSettings {
                                 .toList(),
                         baseDn
                 );
+                String krb5Conf = FolderFactory.getInstance().getKrb5ConfPath();
+                System.setProperty(
+                        "java.security.krb5.conf",
+                        krb5Conf
+                );
+
                 SunJaasKrb5LoginConfig loginConfig = new SunJaasKrb5LoginConfig();
                 loginConfig.setKeyTabLocation(new FileSystemResource(keytabPath));
-                loginConfig.setServicePrincipal("HTTP/" + NetUtils.myHostname());
+                loginConfig.setServicePrincipal(kerberosBindPricipal);
                 loginConfig.setDebug(true);
+
+                loginConfig.afterPropertiesSet();
+
                 loginConfig.setIsInitiator(true);
                 ctxSrc.setLoginConfig(loginConfig);
+                ctxSrc.afterPropertiesSet();
+
                 yield ctxSrc;
             }
         };

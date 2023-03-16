@@ -101,8 +101,14 @@ public class LdapView extends FormLayout {
         simpleBindLayout.setWidthFull();
 
         TextField keytabPath = new TextField("Keytab Path");
+        keytabPath.setWidthFull();
         binder.forField(keytabPath)
                 .bind(LdapSettings::getKeytabPath, LdapSettings::setKeytabPath);
+
+        TextField bindPrincipalField = new TextField("Bind Principal");
+        bindPrincipalField.setWidthFull();
+        binder.forField(bindPrincipalField)
+                .bind(LdapSettings::getKerberosBindPricipal, LdapSettings::setKerberosBindPricipal);
 
         bindType.addValueChangeListener(e -> {
             switch (bindType.getValue()) {
@@ -110,16 +116,19 @@ public class LdapView extends FormLayout {
                     bindDnField.setVisible(false);
                     bindPasswordField.setVisible(false);
                     keytabPath.setVisible(false);
+                    bindPrincipalField.setVisible(false);
                 }
                 case BIND_DN -> {
                     bindDnField.setVisible(true);
                     bindPasswordField.setVisible(true);
                     keytabPath.setVisible(false);
+                    bindPrincipalField.setVisible(false);
                 }
                 case KEYTAB -> {
                     bindDnField.setVisible(false);
                     bindPasswordField.setVisible(false);
                     keytabPath.setVisible(true);
+                    bindPrincipalField.setVisible(true);
                 }
 
             }
@@ -140,18 +149,19 @@ public class LdapView extends FormLayout {
                         bindType,
                         simpleBindLayout,
                         keytabPath,
+                        bindPrincipalField,
                         testConnectionButton
                 )
         );
     }
 
     void testLdapConnection(LdapSettings ldapSettings) {
-        LdapContextSource ctxSrc = ldapSettings.getLdapContextSource();
-        LdapTemplate templ = new LdapTemplate(ctxSrc);
         Notification notification = new Notification();
         notification.setDuration(5000);
         String msg;
         try {
+            LdapContextSource ctxSrc = ldapSettings.getLdapContextSource();
+            LdapTemplate templ = new LdapTemplate(ctxSrc);
             var res = templ.lookup(ldapSettings.getBaseDn());
             msg = "Connection successful";
         } catch (AuthenticationException ex) {
