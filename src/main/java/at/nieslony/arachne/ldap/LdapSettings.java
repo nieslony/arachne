@@ -88,7 +88,10 @@ public class LdapSettings {
                         LdapBindType.BIND_DN.name())
         );
         bindDn = settings.get(SK_LDAP_BIND_DN, NetUtils.defaultBaseDn());
-        keytabPath = settings.get(SK_LDAP_KEYTAB_PATH, "");
+        keytabPath = settings.get(
+                SK_LDAP_KEYTAB_PATH,
+                FolderFactory.getInstance().getDefaultKeytabPath()
+        );
         kerberosBindPricipal = settings.get(
                 SK_LDAP_KERBEROS_BIND_PRINCIPAL,
                 "HTTP/" + NetUtils.myHostname()

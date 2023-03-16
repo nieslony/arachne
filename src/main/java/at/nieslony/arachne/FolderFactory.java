@@ -72,4 +72,8 @@ public class FolderFactory {
         }
         return krb5ConfPath;
     }
+
+    public String getDefaultKeytabPath() {
+        return arachneConfigDir + "/krb5.keytab";
+    }
 }
