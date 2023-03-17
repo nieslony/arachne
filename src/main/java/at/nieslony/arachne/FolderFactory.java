@@ -42,10 +42,11 @@ public class FolderFactory {
     public String getVpnConfigDir() {
         try {
             Files.createDirectories(Path.of(vpnConfigDir));
+            File f = new File(vpnConfigDir);
+            return f.getCanonicalPath();
         } catch (IOException ex) {
+            return vpnConfigDir;
         }
-
-        return vpnConfigDir;
     }
 
     public String getVpnConfigDir(String filename) {
@@ -70,10 +71,20 @@ public class FolderFactory {
                 );
             }
         }
-        return krb5ConfPath;
+        try {
+            return krb5ConfFile.getCanonicalPath();
+        } catch (IOException ey) {
+            return krb5ConfPath;
+        }
     }
 
     public String getDefaultKeytabPath() {
-        return arachneConfigDir + "/krb5.keytab";
+        String filename = arachneConfigDir + "/krb5.keytab";
+        File f = new File(filename);
+        try {
+            return f.getCanonicalPath();
+        } catch (IOException ex) {
+            return arachneConfigDir + "/krb5.keytab";
+        }
     }
 }
