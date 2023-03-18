@@ -55,7 +55,7 @@ data ::=
     length (16 bits)
     value (length bytes)
  */
-class KeytabFile {
+public class KeytabFile {
 
     public class KeytabEntry {
 
