@@ -54,6 +54,15 @@ public class LdapSettings {
     private final static String SK_LDAP_KEYTAB_PATH = "ldap.keytab-path";
     private final static String SK_LDAP_BIND_TYPE = "ldap.bind-type";
     private final static String SK_LDAP_KERBEROS_BIND_PRINCIPAL = "ldap.kerberos-bind-princopal";
+    private final static String SK_LDAP_USERS_OU = "ldap.users.ou";
+    private final static String SK_LDAP_USERS_ATTR_USERNAME = "ldap.users.attr-username";
+    private final static String SK_LDAP_USERS_ATTR_DISPLAY_NAME = "ldap.users.attr-displayname";
+    private final static String SK_LDAP_USERS_ATTR_EMAIL = "ldap.users.attr-username";
+    private final static String SK_LDAP_USERS_SEARCH_FILTER = "ldap.users.search-filter";
+    private final static String SK_LDAP_GROUPS_OU = "ldap.groups.ou";
+    private final static String SK_LDAP_GROUPS_ATTR_NAME = "ldap.groups.name";
+    private final static String SK_LDAP_GROUPS_ATTR_MEMBER = "ldap.groups.member";
+    private final static String SK_LDAP_GROUPS_SEARCH_FILTER = "ldap.groups.search-filter";
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -96,6 +105,17 @@ public class LdapSettings {
                 SK_LDAP_KERBEROS_BIND_PRINCIPAL,
                 "HTTP/" + NetUtils.myHostname()
         );
+
+        usersOu = settings.get(SK_LDAP_USERS_OU, "");
+        usersAttrUsername = settings.get(SK_LDAP_USERS_ATTR_USERNAME, "");
+        usersAttrDisplayName = settings.get(SK_LDAP_USERS_ATTR_DISPLAY_NAME, "");
+        usersAttrEmail = settings.get(SK_LDAP_USERS_ATTR_EMAIL, "");
+        usersSearchFilter = settings.get(SK_LDAP_USERS_SEARCH_FILTER, "");
+
+        groupsOu = settings.get(SK_LDAP_GROUPS_OU, "");
+        groupsAttrMember = settings.get(SK_LDAP_GROUPS_ATTR_MEMBER, "");
+        groupsAttrName = settings.get(SK_LDAP_GROUPS_ATTR_NAME, "");
+        groupsSearchFilter = settings.get(SK_LDAP_GROUPS_SEARCH_FILTER, "");
     }
 
     public void save(Settings settings) {
@@ -111,6 +131,17 @@ public class LdapSettings {
         settings.put(SK_LDAP_BIND_DN, bindDn);
         settings.put(SK_LDAP_KEYTAB_PATH, keytabPath);
         settings.put(SK_LDAP_KERBEROS_BIND_PRINCIPAL, kerberosBindPricipal);
+
+        settings.put(SK_LDAP_USERS_OU, usersOu);
+        settings.put(SK_LDAP_USERS_ATTR_USERNAME, usersAttrUsername);
+        settings.put(SK_LDAP_USERS_ATTR_DISPLAY_NAME, usersAttrDisplayName);
+        settings.put(SK_LDAP_USERS_ATTR_EMAIL, usersAttrEmail);
+        settings.put(SK_LDAP_USERS_SEARCH_FILTER, usersSearchFilter);
+
+        settings.put(SK_LDAP_GROUPS_OU, groupsOu);
+        settings.put(SK_LDAP_GROUPS_ATTR_NAME, groupsAttrName);
+        settings.put(SK_LDAP_GROUPS_ATTR_MEMBER, groupsAttrMember);
+        settings.put(SK_LDAP_GROUPS_SEARCH_FILTER, groupsSearchFilter);
     }
 
     @Value("${arachneConfigDir}")
@@ -125,6 +156,17 @@ public class LdapSettings {
     private String bindPassword;
     private String keytabPath;
     private String kerberosBindPricipal;
+
+    private String usersOu;
+    private String usersAttrUsername;
+    private String usersAttrDisplayName;
+    private String usersAttrEmail;
+    private String usersSearchFilter;
+
+    private String groupsOu;
+    private String groupsAttrName;
+    private String groupsAttrMember;
+    private String groupsSearchFilter;
 
     List<String> findLdapUrls() {
         List<String> ldapServers = new LinkedList<>();
