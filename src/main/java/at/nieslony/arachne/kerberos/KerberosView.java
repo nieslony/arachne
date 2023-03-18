@@ -73,6 +73,7 @@ public class KerberosView extends VerticalLayout {
         servicePrincipalField.setWidthFull();
         servicePrincipalField.setItems("");
         binder.forField(servicePrincipalField)
+                .asRequired("Principal expected")
                 .bind(KerberosSettings::getServicePrincipal, KerberosSettings::setServicePrincipal);
 
         Button readKeytabButton = new Button(
