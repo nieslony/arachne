@@ -70,7 +70,6 @@ import org.springframework.ldap.InvalidNameException;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
 
 /**
  *
@@ -177,9 +176,21 @@ public class LdapView extends VerticalLayout {
         binder.forField(groupsOu)
                 .bind(LdapSettings::getGroupsOu, LdapSettings::setGroupsOu);
 
+        TextField groupsObjectclass = new TextField("Groups Object Class");
+        binder.forField(groupsObjectclass)
+                .bind(LdapSettings::getGroupsObjectClass, LdapSettings::setGroupsObjectClass);
+
         TextField groupsAttrName = new TextField("Attribute Name");
         binder.forField(groupsAttrName)
                 .bind(LdapSettings::getGroupsAttrName, LdapSettings::setGroupsAttrName);
+
+        Checkbox groupsEnableCustomFilter = new Checkbox("Enable Custom Filter");
+        binder.forField(groupsEnableCustomFilter)
+                .bind(LdapSettings::isGroupsEnableCustomFilter, LdapSettings::setGroupsEnableCustomFilter);
+
+        TextField groupsSearchFilter = new TextField("Custom Search Filter");
+        binder.forField(groupsSearchFilter)
+                .bind(LdapSettings::getGroupsCustomFilter, LdapSettings::setGroupsCustomFilter);
 
         TextField groupsAttrDescription = new TextField("Attribute Description");
         binder.forField(groupsAttrDescription)
@@ -189,14 +200,10 @@ public class LdapView extends VerticalLayout {
         binder.forField(groupsAttrMember)
                 .bind(LdapSettings::getGroupsAttrMember, LdapSettings::setGroupsAttrMember);
 
-        TextField groupsSearchFilter = new TextField("Custom Search Filter");
-        binder.forField(groupsSearchFilter)
-                .bind(LdapSettings::getGroupsCustomFilter, LdapSettings::setGroupsCustomFilter);
-
         TextField testAndFindGroupField = new TextField("Test and find group");
         Button testAndFindGroupButton = new Button(
                 "Find and Test",
-                e -> testFindGroup()
+                e -> testFindGroup(testAndFindGroupField.getValue())
         );
         HorizontalLayout testAndFindGroupLayout = new HorizontalLayout(
                 testAndFindGroupField,
@@ -206,16 +213,20 @@ public class LdapView extends VerticalLayout {
         testAndFindGroupLayout.setWidthFull();
         testAndFindGroupLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
+        FormLayout groupsFormLayout = new FormLayout(
+                groupsOu,
+                groupsObjectclass,
+                groupsAttrName,
+                groupsEnableCustomFilter,
+                groupsSearchFilter,
+                groupsAttrDescription,
+                groupsAttrMember,
+                testAndFindGroupLayout
+        );
+        groupsFormLayout.setColspan(groupsOu, 2);
         VerticalLayout groupsLayout = new VerticalLayout(
                 new Label("Groups"),
-                new FormLayout(
-                        groupsOu,
-                        groupsAttrName,
-                        groupsAttrDescription,
-                        groupsAttrMember,
-                        groupsSearchFilter,
-                        testAndFindGroupLayout
-                )
+                groupsFormLayout
         );
         groupsLayout.addClassNames(
                 LumoUtility.Border.ALL,
@@ -232,6 +243,7 @@ public class LdapView extends VerticalLayout {
             emailAttrField.setValue("mail");
 
             groupsOu.setValue("cn=groups,cn=accounts");
+            groupsObjectclass.setValue("posixgroup");
             groupsAttrName.setValue("cn");
             groupsAttrMember.setValue("member");
             groupsAttrDescription.setValue("description");
@@ -250,6 +262,22 @@ public class LdapView extends VerticalLayout {
                                 ldapSettings.getUsersFilter()
                         );
                         usersSearchFilterField.setEnabled(false);
+                    }
+                }
+        );
+
+        groupsEnableCustomFilter.addValueChangeListener(
+                e -> {
+                    if (ldapSettings.isGroupsEnableCustomFilter()) {
+                        groupsSearchFilter.setValue(
+                                ldapSettings.getGroupsCustomFilter()
+                        );
+                        groupsSearchFilter.setEnabled(true);
+                    } else {
+                        groupsSearchFilter.setValue(
+                                ldapSettings.getGroupsFilter()
+                        );
+                        groupsSearchFilter.setEnabled(false);
                     }
                 }
         );
@@ -382,8 +410,7 @@ public class LdapView extends VerticalLayout {
         notification.setDuration(5000);
         String msg;
         try {
-            LdapContextSource ctxSrc = ldapSettings.getLdapContextSource();
-            LdapTemplate templ = new LdapTemplate(ctxSrc);
+            LdapTemplate templ = ldapSettings.getLdapTemplate();
             var res = templ.lookup(ldapSettings.getBaseDn());
             msg = "Connection successful";
         } catch (AuthenticationException ex) {
@@ -543,32 +570,31 @@ public class LdapView extends VerticalLayout {
         return !ldapSettings.getLdapUrls().contains(url);
     }
 
-    void testFindGroup() {
+    void testFindGroup(String groupname) {
         try {
-            LdapTemplate ldap = new LdapTemplate(
-                    ldapSettings.getLdapContextSource()
-            );
+            LdapTemplate ldap = ldapSettings.getLdapTemplate();
 
+            String filter = ldapSettings.getGroupsFilter(groupname);
             var result = ldap.search(
-                    "cn=users,cn=accounts",
-                    "uid=claas",
+                    ldapSettings.getGroupsOu(),
+                    filter,
                     (AttributesMapper<Map<String, String>>) attrs -> {
-                        Map<String, String> userInfo = new HashMap<>();
+                        Map<String, String> groupInfo = new HashMap<>();
                         logger.info(attrs.toString());
                         Attribute attr;
-                        attr = attrs.get("uid");
+                        attr = attrs.get(ldapSettings.getGroupsAttrName());
                         if (attr != null) {
-                            userInfo.put("uid", attr.get().toString());
+                            groupInfo.put("name", attr.get().toString());
                         }
-                        attr = attrs.get("displayName");
+                        attr = attrs.get(ldapSettings.getGroupsAttrDescription());
                         if (attr != null) {
-                            userInfo.put("displayName", attr.get().toString());
+                            groupInfo.put("description", attr.get().toString());
                         }
-                        attr = attrs.get("mail");
+                        attr = attrs.get(ldapSettings.getGroupsAttrMember());
                         if (attr != null) {
-                            userInfo.put("mail", attr.get().toString());
+                            groupInfo.put("mail", attr.get().toString());
                         }
-                        return userInfo;
+                        return groupInfo;
                     }
             );
 
@@ -577,17 +603,14 @@ public class LdapView extends VerticalLayout {
 
             String html = """
                         <dl>
-                            <dt<em>>Username:</em></dt>
+                            <dt>Group Name:</dt>
                             <dd>%s</dd>
-                            <dt>Display Name:</dt>
-                            <dd>%s</dd>
-                            <dt>E-Mail:</dt>
+                            <dt>Description:</dt>
                             <dd>%s</dd>
                         </dl>
                           """.formatted(
-                    result.get(0).get("uid"),
-                    result.get(0).get("displayName"),
-                    result.get(0).get("mail")
+                    result.get(0).get("name"),
+                    result.get(0).get("description")
             );
             dlg.add(new Html(html));
 
@@ -604,12 +627,8 @@ public class LdapView extends VerticalLayout {
 
     void testFindUser(String username) {
         try {
-            LdapTemplate ldap = new LdapTemplate(
-                    ldapSettings.getLdapContextSource()
-            );
+            LdapTemplate ldap = ldapSettings.getLdapTemplate();
             String filter = ldapSettings.getUsersFilter(username);
-            logger.info("Searching " + filter);
-            logger.info(ldapSettings.toString());
             var result = ldap.search(
                     ldapSettings.getUsersOu(),
                     filter,
