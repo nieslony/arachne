@@ -55,14 +55,19 @@ public class LdapSettings {
     private final static String SK_LDAP_BIND_TYPE = "ldap.bind-type";
     private final static String SK_LDAP_KERBEROS_BIND_PRINCIPAL = "ldap.kerberos-bind-princopal";
     private final static String SK_LDAP_USERS_OU = "ldap.users.ou";
+    private final static String SK_LDAP_USERS_OBJECTCLASS = "ldap.users.objectclass";
     private final static String SK_LDAP_USERS_ATTR_USERNAME = "ldap.users.attr-username";
     private final static String SK_LDAP_USERS_ATTR_DISPLAY_NAME = "ldap.users.attr-displayname";
-    private final static String SK_LDAP_USERS_ATTR_EMAIL = "ldap.users.attr-username";
-    private final static String SK_LDAP_USERS_SEARCH_FILTER = "ldap.users.search-filter";
+    private final static String SK_LDAP_USERS_ATTR_EMAIL = "ldap.users.attr-email";
+    private final static String SK_LDAP_USERS_CUSTOM_FILTER = "ldap.users.search-filter";
+    private final static String SK_LDAP_USERS_ENABLE_CUSTOM_FILTER = "ldap.users.enable-custom-filter";
     private final static String SK_LDAP_GROUPS_OU = "ldap.groups.ou";
     private final static String SK_LDAP_GROUPS_ATTR_NAME = "ldap.groups.name";
     private final static String SK_LDAP_GROUPS_ATTR_MEMBER = "ldap.groups.member";
-    private final static String SK_LDAP_GROUPS_SEARCH_FILTER = "ldap.groups.search-filter";
+    private final static String SK_LDAP_GROUPS_ATTR_DESCRIPTION = "ldap.groups.description";
+    private final static String SK_LDAP_GROUPS_CUSTOM_FILTER = "ldap.groups.search-filter";
+    private final static String SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER = "ldap.groups.enable-custom-filter";
+    private final static String SK_LDAP_GROUPS_OBJECTCLASS = "ldap.groups.objectclass";
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -110,12 +115,17 @@ public class LdapSettings {
         usersAttrUsername = settings.get(SK_LDAP_USERS_ATTR_USERNAME, "");
         usersAttrDisplayName = settings.get(SK_LDAP_USERS_ATTR_DISPLAY_NAME, "");
         usersAttrEmail = settings.get(SK_LDAP_USERS_ATTR_EMAIL, "");
-        usersSearchFilter = settings.get(SK_LDAP_USERS_SEARCH_FILTER, "");
+        usersCustomFilter = settings.get(SK_LDAP_USERS_CUSTOM_FILTER, "");
+        usersEnableCustomFilter = settings.getBoolean(SK_LDAP_USERS_ENABLE_CUSTOM_FILTER, false);
+        usersObjectClass = settings.get(SK_LDAP_USERS_OBJECTCLASS, "");
 
         groupsOu = settings.get(SK_LDAP_GROUPS_OU, "");
         groupsAttrMember = settings.get(SK_LDAP_GROUPS_ATTR_MEMBER, "");
         groupsAttrName = settings.get(SK_LDAP_GROUPS_ATTR_NAME, "");
-        groupsSearchFilter = settings.get(SK_LDAP_GROUPS_SEARCH_FILTER, "");
+        groupsAttrDescription = settings.get(SK_LDAP_GROUPS_ATTR_DESCRIPTION, "");
+        groupsCustomFilter = settings.get(SK_LDAP_GROUPS_CUSTOM_FILTER, "");
+        groupsEnableCustomFilter = settings.getBoolean(SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER, false);
+        groupsObjectClass = settings.get(SK_LDAP_GROUPS_OBJECTCLASS, "");
     }
 
     public void save(Settings settings) {
@@ -133,15 +143,20 @@ public class LdapSettings {
         settings.put(SK_LDAP_KERBEROS_BIND_PRINCIPAL, kerberosBindPricipal);
 
         settings.put(SK_LDAP_USERS_OU, usersOu);
+        settings.put(SK_LDAP_USERS_OBJECTCLASS, usersObjectClass);
         settings.put(SK_LDAP_USERS_ATTR_USERNAME, usersAttrUsername);
         settings.put(SK_LDAP_USERS_ATTR_DISPLAY_NAME, usersAttrDisplayName);
         settings.put(SK_LDAP_USERS_ATTR_EMAIL, usersAttrEmail);
-        settings.put(SK_LDAP_USERS_SEARCH_FILTER, usersSearchFilter);
+        settings.put(SK_LDAP_USERS_ENABLE_CUSTOM_FILTER, usersEnableCustomFilter);
+        settings.put(SK_LDAP_USERS_CUSTOM_FILTER, usersCustomFilter);
 
         settings.put(SK_LDAP_GROUPS_OU, groupsOu);
+        settings.put(SK_LDAP_GROUPS_OBJECTCLASS, groupsObjectClass);
         settings.put(SK_LDAP_GROUPS_ATTR_NAME, groupsAttrName);
         settings.put(SK_LDAP_GROUPS_ATTR_MEMBER, groupsAttrMember);
-        settings.put(SK_LDAP_GROUPS_SEARCH_FILTER, groupsSearchFilter);
+        settings.put(SK_LDAP_GROUPS_ATTR_DESCRIPTION, groupsAttrDescription);
+        settings.put(SK_LDAP_GROUPS_CUSTOM_FILTER, groupsCustomFilter);
+        settings.put(SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER, groupsEnableCustomFilter);
     }
 
     @Value("${arachneConfigDir}")
@@ -161,12 +176,17 @@ public class LdapSettings {
     private String usersAttrUsername;
     private String usersAttrDisplayName;
     private String usersAttrEmail;
-    private String usersSearchFilter;
+    private String usersCustomFilter;
+    private String usersObjectClass;
+    private boolean usersEnableCustomFilter;
 
     private String groupsOu;
     private String groupsAttrName;
     private String groupsAttrMember;
-    private String groupsSearchFilter;
+    private String groupsAttrDescription;
+    private String groupsCustomFilter;
+    private boolean groupsEnableCustomFilter;
+    private String groupsObjectClass;
 
     List<String> findLdapUrls() {
         List<String> ldapServers = new LinkedList<>();
@@ -239,5 +259,33 @@ public class LdapSettings {
                 yield ctxSrc;
             }
         };
+    }
+
+    public String getUsersFilter(String username) {
+        return getUsersFilter()
+                .replace("{username}", username);
+    }
+
+    public String getUsersFilter() {
+        if (usersEnableCustomFilter) {
+            return usersCustomFilter;
+        } else {
+            return "(&(objectclass=%s)(%s={username}))"
+                    .formatted(usersObjectClass, usersAttrUsername);
+        }
+    }
+
+    public String getGroupsFilter(String groupname) {
+        return getGroupsFilter()
+                .replace("{groupname}", groupname);
+    }
+
+    public String getGroupsFilter() {
+        if (groupsEnableCustomFilter) {
+            return groupsCustomFilter;
+        } else {
+            return "(&(objectclass=%s)(%s={groupname}))"
+                    .formatted(groupsObjectClass, groupsAttrName);
+        }
     }
 }
