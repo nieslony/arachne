@@ -20,8 +20,10 @@ import at.nieslony.arachne.FolderFactory;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.SrvRecord;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.naming.NamingException;
 import lombok.AccessLevel;
@@ -32,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
 import org.springframework.security.kerberos.client.ldap.KerberosLdapContextSource;
@@ -207,12 +210,12 @@ public class LdapSettings {
         return ldapServers;
     }
 
-    public LdapContextSource getLdapContextSource() throws Exception {
+    public LdapTemplate getLdapTemplate() throws Exception {
         logger.info(toString());
         String[] urls = ldapUrls.stream()
                 .map(url -> url.toString())
                 .toArray(String[]::new);
-        return switch (bindType) {
+        LdapTemplate ldapTempl = new LdapTemplate(switch (bindType) {
             case ANONYMOUS -> {
                 LdapContextSource ctxSrc = new LdapContextSource();
                 ctxSrc.setUrls(urls);
@@ -249,16 +252,22 @@ public class LdapSettings {
                 loginConfig.setKeyTabLocation(new FileSystemResource(keytabPath));
                 loginConfig.setServicePrincipal(kerberosBindPricipal);
                 loginConfig.setDebug(true);
-
                 loginConfig.afterPropertiesSet();
-
                 loginConfig.setIsInitiator(true);
                 ctxSrc.setLoginConfig(loginConfig);
+
+                Map<String, Object> environment = new HashMap<>();
+                environment.put("com.sun.jndi.ldap.connect.timeout", "1000");
+                environment.put("com.sun.jndi.ldap.read.timeout", "1000");
+                ctxSrc.setBaseEnvironmentProperties(environment);
+
                 ctxSrc.afterPropertiesSet();
 
                 yield ctxSrc;
             }
-        };
+        });
+        ldapTempl.setDefaultTimeLimit(1000);
+        return ldapTempl;
     }
 
     public String getUsersFilter(String username) {
