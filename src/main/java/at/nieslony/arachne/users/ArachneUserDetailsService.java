@@ -4,11 +4,16 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.roles.RolesCollector;
+import at.nieslony.arachne.settings.Settings;
+import com.vaadin.flow.server.VaadinSession;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,22 +34,45 @@ public class ArachneUserDetailsService implements UserDetailsService {
     @Autowired
     private RolesCollector rolesCollector;
 
+    @Autowired
+    private Settings settings;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        logger.info("Searching for user " + username);
+
+        VaadinSession session = VaadinSession.getCurrent();
+
         ArachneUser user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
+        if (user != null) {
+            Set<String> roles = rolesCollector.findRolesForUser(username);
+            logger.info("User %s has roles %s".formatted(username, roles.toString()));
+
+            UserDetails userDetails
+                    = User
+                            .withUsername(user.getUsername())
+                            .password(user.getPassword())
+                            .roles(roles.toArray(new String[0]))
+                            .build();
+            return userDetails;
         }
+        try {
 
-        Set<String> roles = rolesCollector.findRolesForUser(username);
-        logger.info("User %s has roles %s".formatted(username, roles.toString()));
+            LdapSettings ldapSettings = new LdapSettings(settings);
+            LdapTemplate ldap = ldapSettings.getLdapTemplate();
+            LdapUser ldapUser = new LdapUser(settings, username);
+            logger.info("Found " + ldapUser.toString());
 
-        UserDetails userDetails
-                = User
-                        .withUsername(user.getUsername())
-                        .password(user.getPassword())
-                        .roles(roles.toArray(new String[0]))
-                        .build();
-        return userDetails;
+            UserDetails userDetails = User
+                    .withUsername(ldapUser.getUsername())
+                    .roles("ADMIN")
+                    .password("")
+                    .build();
+            return userDetails;
+        } catch (Exception ex) {
+            throw new UsernameNotFoundException(
+                    "LDAP User %s not found".formatted(username),
+                    ex);
+        }
     }
 }

@@ -6,7 +6,6 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
-import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -52,8 +51,13 @@ public class ViewTemplate extends AppLayout {
     private void createHeader() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        ArachneUser user = userRepository.findByUsername(username);
-        String userInfo = "%s (%s)".formatted(user.getDisplayName(), username);
+        //String displayName = (String) VaadinSession.getCurrent().getAttribute("displayName");
+        String userInfo = "bla";
+        /*if (displayName != null) {
+            userInfo = "%s (%s)".formatted(displayName, username);
+        } else {
+            userInfo = username;
+        }*/
 
         H1 logo = new H1("Arachne");
         logo.getStyle()
