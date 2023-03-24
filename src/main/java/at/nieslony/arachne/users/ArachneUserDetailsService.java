@@ -9,12 +9,12 @@ import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.server.VaadinSession;
+import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -48,26 +48,20 @@ public class ArachneUserDetailsService implements UserDetailsService {
             Set<String> roles = rolesCollector.findRolesForUser(username);
             logger.info("User %s has roles %s".formatted(username, roles.toString()));
 
-            UserDetails userDetails
-                    = User
-                            .withUsername(user.getUsername())
-                            .password(user.getPassword())
-                            .roles(roles.toArray(new String[0]))
-                            .build();
+            UserDetails userDetails = new ArachneUserDetails(user, roles);
+
             return userDetails;
         }
         try {
-
             LdapSettings ldapSettings = new LdapSettings(settings);
             LdapTemplate ldap = ldapSettings.getLdapTemplate();
             LdapUser ldapUser = new LdapUser(settings, username);
             logger.info("Found " + ldapUser.toString());
 
-            UserDetails userDetails = User
-                    .withUsername(ldapUser.getUsername())
-                    .roles("ADMIN")
-                    .password("")
-                    .build();
+            Set<String> roles = new HashSet<>();
+            roles.add("ADMIN");
+
+            UserDetails userDetails = new ArachneUserDetails(ldapUser, roles);
             return userDetails;
         } catch (Exception ex) {
             throw new UsernameNotFoundException(
