@@ -55,7 +55,8 @@ public class ArachneUserDetailsService implements UserDetailsService {
         try {
             LdapSettings ldapSettings = new LdapSettings(settings);
             LdapTemplate ldap = ldapSettings.getLdapTemplate();
-            LdapUser ldapUser = new LdapUser(settings, username);
+
+            LdapUser ldapUser = ldapSettings.getUser(username);
             logger.info("Found " + ldapUser.toString());
 
             Set<String> roles = new HashSet<>();
