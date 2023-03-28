@@ -31,7 +31,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         login.setAction("login");
         login.setForgotPasswordButtonVisible(false);
         add(loginOverlay, login);
-
     }
 
     @Override

@@ -49,8 +49,15 @@ public class WwwAuthenticateFilter implements Filter {
         String path = httpRequest.getRequestURI();
         var session = httpRequest.getSession();
 
+        if (path.equals("/arachne/sso")) {
+            logger.info("Enforce sso");
+            session.setAttribute("formLogin", "no");
+            fc.doFilter(request, response);
+            return;
+        }
+
         if (path.equals("/arachne/login")
-                || session.getAttribute("formLogin") != null) {
+                || "yes".equals(session.getAttribute("formLogin"))) {
             session.setAttribute("formLogin", "yes");
             fc.doFilter(request, response);
             return;
@@ -76,7 +83,7 @@ public class WwwAuthenticateFilter implements Filter {
                     <meta http-equiv="Refresh" content="5; url='%s'" />
                 </head>
                 <body>
-                <h1>Anauthorized</h1>
+                <h1>Unauthorized</h1>
                 <p>You will be redirected to <a href="%s">login page</a>.</p>
                 </body>
                 </html>

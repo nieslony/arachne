@@ -54,7 +54,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         }
         http
                 .authorizeHttpRequests()
-                .requestMatchers("/public/**", "/error").permitAll()
+                .requestMatchers("/public/**", "/error", "/sso").permitAll()
                 .requestMatchers(HttpMethod.POST, "/setup").permitAll()
                 .and()
                 .authenticationProvider(kerberosAuthenticationProvider())
