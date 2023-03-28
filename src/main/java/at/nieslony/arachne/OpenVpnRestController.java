@@ -4,12 +4,13 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.NetUtils;
+import jakarta.annotation.security.RolesAllowed;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,11 +58,13 @@ public class OpenVpnRestController {
     String vpnConfigDir;
 
     @GetMapping("/user_settings")
+    @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings get_user_settings() {
         return new OpenVpnUserSettings(settings);
     }
 
     @PostMapping("/user_settings")
+    @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings post_user_settings(
             @RequestBody OpenVpnUserSettings vpnSettings
     ) {
@@ -70,6 +75,7 @@ public class OpenVpnRestController {
     }
 
     @GetMapping("/user_config/{username}")
+    @RolesAllowed(value = {"ADMIN"})
     public String userVpnConfig(@PathVariable String username) {
         try {
             return openVpnUserConfig(username);
@@ -79,6 +85,15 @@ public class OpenVpnRestController {
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     "Cannot get user config");
         }
+    }
+
+    @GetMapping("/user_config")
+    @RolesAllowed(value = {"USER"})
+    public String userVpnConfig() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        return userVpnConfig(username);
     }
 
     void writeOpenVpnUserServerConfig(OpenVpnUserSettings settings) {
