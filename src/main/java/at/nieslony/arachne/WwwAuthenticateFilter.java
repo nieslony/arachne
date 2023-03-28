@@ -70,7 +70,7 @@ public class WwwAuthenticateFilter implements Filter {
             return;
         }
 
-        logger.info("Return 401 - UNAUTHORIZED");
+        logger.info("Return 401 - UNAUTHORIZED for " + path);
         httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         httpResponse.setHeader("WWW-Authenticate", "Negotiate");
         session.setAttribute("tryNegotiate", "yes");
