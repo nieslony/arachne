@@ -20,7 +20,7 @@
                 <artifactId>vaadin-bom</artifactId>
                 <!-- Declare the latest Vaadin version
                 as a property or directly here -->
-                <version>24.0.0</version><!-- <1> -->
+                <version>24.0.2</version><!-- <1> -->
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -31,8 +31,8 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
+            <version>24.0.2</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -111,6 +111,12 @@
             <artifactId>bcpkix-jdk18on</artifactId>
             <version>1.72</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -132,7 +138,7 @@
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-maven-plugin</artifactId>
-                <version>24.0.0</version>
+                <version>24.0.2</version>
                 <executions>
                     <execution>
                         <goals>

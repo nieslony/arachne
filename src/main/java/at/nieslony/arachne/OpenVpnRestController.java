@@ -10,7 +10,6 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,6 +18,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -200,15 +200,16 @@ public class OpenVpnRestController {
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
-        JSONObject obj = new JSONObject();
-        obj.appendField("protocol", vpnSettings.getListenProtocol());
-        obj.appendField("remoteHost", vpnSettings.getRemote());
-        obj.appendField("port", vpnSettings.getListenPort());
-        obj.appendField("username", username);
-        obj.appendField("userCert", userCert);
-        obj.appendField("privateKey", privateKey);
-        obj.appendField("caCert", caCert);
 
-        return obj.toJSONString();
+        JSONObject obj = new JSONObject();
+        obj.put("protocol", vpnSettings.getListenProtocol());
+        obj.put("remoteHost", vpnSettings.getRemote());
+        obj.put("port", vpnSettings.getListenPort());
+        obj.put("username", username);
+        obj.put("userCert", userCert);
+        obj.put("privateKey", privateKey);
+        obj.put("caCert", caCert);
+
+        return obj.toString(2);
     }
 }
