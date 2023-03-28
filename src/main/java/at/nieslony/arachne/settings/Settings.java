@@ -28,8 +28,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class Settings {
 
+    private static Settings settings;
+
     @Autowired
     SettingsRepository settingsRepository;
+
+    public Settings() {
+        settings = this;
+    }
+
+    public static Settings getInstance() {
+        return settings;
+    }
 
     public String get(String setting, String defaultValue) {
         Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);

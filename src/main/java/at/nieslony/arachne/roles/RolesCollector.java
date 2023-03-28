@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.roles;
 
+import at.nieslony.arachne.ldap.LdapGroupUserMatcher;
 import at.nieslony.arachne.users.EverybodyMatcher;
 import at.nieslony.arachne.users.UserMatcher;
 import at.nieslony.arachne.users.UserMatcherInfo;
@@ -31,6 +32,7 @@ public class RolesCollector {
     public RolesCollector() {
         userMatcherClasses.add(UsernameMatcher.class);
         userMatcherClasses.add(EverybodyMatcher.class);
+        userMatcherClasses.add(LdapGroupUserMatcher.class);
     }
 
     public List<UserMatcherInfo> getAllUserMatcherInfo() {

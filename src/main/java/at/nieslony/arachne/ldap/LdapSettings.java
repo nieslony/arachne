@@ -330,7 +330,13 @@ public class LdapSettings {
             protected LdapUser doMapFromContext(DirContextOperations dco) {
                 logger.info("Found: " + dco.toString());
                 LdapUser ldapUser = new LdapUser();
-                ldapUser.setDn(dco.getDn().toString());
+                ldapUser.setDn(
+                        "%s,%s"
+                                .formatted(
+                                        dco.getDn().toString(),
+                                        getBaseDn()
+                                )
+                );
                 ldapUser.setUsername(
                         dco.getStringAttribute(getUsersAttrUsername())
                 );
@@ -353,5 +359,68 @@ public class LdapSettings {
             return null;
         }
         return users.get(0);
+    }
+
+    public List<LdapGroup> findGroups(String groupName, int max) {
+        LdapTemplate ldap;
+        try {
+            ldap = getLdapTemplate();
+        } catch (Exception ex) {
+            return null;
+        }
+
+        String filter = getGroupsFilter(groupName);
+        logger.info("LDAP filter: " + filter);
+        SearchControls sc = new SearchControls();
+        sc.setCountLimit(max);
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(
+                new String[]{
+                    "dn",
+                    getGroupsAttrName(),
+                    getGroupsAttrDescription(),
+                    getGroupsAttrMember()
+                }
+        );
+
+        var groups = ldap.search(
+                getGroupsOu(),
+                filter,
+                sc,
+                new AbstractContextMapper<LdapGroup>() {
+            @Override
+            protected LdapGroup doMapFromContext(DirContextOperations dco) {
+                LdapGroup ldapGroup = new LdapGroup();
+                ldapGroup.setDn(
+                        "%s,%s"
+                                .formatted(
+                                        dco.getDn().toString(),
+                                        getBaseDn()
+                                )
+                );
+                ldapGroup.setName(
+                        dco.getStringAttribute(getGroupsAttrName())
+                );
+                ldapGroup.setDescription(
+                        dco.getStringAttribute(getGroupsAttrDescription())
+                );
+                ldapGroup.setMembers(
+                        dco.getStringAttributes(getGroupsAttrMember())
+                );
+                logger.info("Found: " + ldapGroup);
+                return ldapGroup;
+
+            }
+        });
+
+        return groups;
+    }
+
+    public LdapGroup getGroup(String groupname) {
+        List<LdapGroup> groups = findGroups(groupname, 1);
+        if (groups.isEmpty()) {
+            return null;
+        }
+        return groups.get(0);
     }
 }

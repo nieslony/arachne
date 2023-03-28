@@ -9,7 +9,6 @@ import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.server.VaadinSession;
-import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +58,8 @@ public class ArachneUserDetailsService implements UserDetailsService {
             LdapUser ldapUser = ldapSettings.getUser(username);
             logger.info("Found " + ldapUser.toString());
 
-            Set<String> roles = new HashSet<>();
-            roles.add("ADMIN");
+            Set<String> roles = rolesCollector.findRolesForUser(username);
+            logger.info("User %s has roles %s".formatted(username, roles.toString()));
 
             UserDetails userDetails = new ArachneUserDetails(ldapUser, roles);
             return userDetails;
