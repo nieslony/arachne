@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.naming.NamingException;
+import javax.naming.directory.SearchControls;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,7 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.AbstractContextMapper;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
 import org.springframework.security.kerberos.client.ldap.KerberosLdapContextSource;
@@ -296,5 +299,128 @@ public class LdapSettings {
             return "(&(objectclass=%s)(%s={groupname}))"
                     .formatted(groupsObjectClass, groupsAttrName);
         }
+    }
+
+    public List<LdapUser> findUsers(String username, int max) {
+        LdapTemplate ldap;
+        try {
+            ldap = getLdapTemplate();
+        } catch (Exception ex) {
+            return null;
+        }
+        String filter = getUsersFilter(username);
+        logger.info("LDAP filter: " + filter);
+        SearchControls sc = new SearchControls();
+        sc.setCountLimit(max);
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(
+                new String[]{
+                    "dn",
+                    getUsersAttrUsername(),
+                    getUsersAttrDisplayName(),
+                    getUsersAttrEmail()
+                }
+        );
+        var result = ldap.search(
+                getUsersOu(),
+                filter,
+                sc,
+                new AbstractContextMapper<LdapUser>() {
+            @Override
+            protected LdapUser doMapFromContext(DirContextOperations dco) {
+                logger.info("Found: " + dco.toString());
+                LdapUser ldapUser = new LdapUser();
+                ldapUser.setDn(
+                        "%s,%s"
+                                .formatted(
+                                        dco.getDn().toString(),
+                                        getBaseDn()
+                                )
+                );
+                ldapUser.setUsername(
+                        dco.getStringAttribute(getUsersAttrUsername())
+                );
+                ldapUser.setDisplayName(
+                        dco.getStringAttribute(getUsersAttrDisplayName())
+                );
+                ldapUser.setEmail(
+                        dco.getStringAttribute(getUsersAttrEmail())
+                );
+                return ldapUser;
+            }
+        });
+
+        return result;
+    }
+
+    public LdapUser getUser(String username) {
+        List<LdapUser> users = findUsers(username, 1);
+        if (users.isEmpty()) {
+            return null;
+        }
+        return users.get(0);
+    }
+
+    public List<LdapGroup> findGroups(String groupName, int max) {
+        LdapTemplate ldap;
+        try {
+            ldap = getLdapTemplate();
+        } catch (Exception ex) {
+            return null;
+        }
+
+        String filter = getGroupsFilter(groupName);
+        logger.info("LDAP filter: " + filter);
+        SearchControls sc = new SearchControls();
+        sc.setCountLimit(max);
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(
+                new String[]{
+                    "dn",
+                    getGroupsAttrName(),
+                    getGroupsAttrDescription(),
+                    getGroupsAttrMember()
+                }
+        );
+
+        var groups = ldap.search(
+                getGroupsOu(),
+                filter,
+                sc,
+                new AbstractContextMapper<LdapGroup>() {
+            @Override
+            protected LdapGroup doMapFromContext(DirContextOperations dco) {
+                LdapGroup ldapGroup = new LdapGroup();
+                ldapGroup.setDn(
+                        "%s,%s"
+                                .formatted(
+                                        dco.getDn().toString(),
+                                        getBaseDn()
+                                )
+                );
+                ldapGroup.setName(
+                        dco.getStringAttribute(getGroupsAttrName())
+                );
+                ldapGroup.setDescription(
+                        dco.getStringAttribute(getGroupsAttrDescription())
+                );
+                ldapGroup.setMembers(
+                        dco.getStringAttributes(getGroupsAttrMember())
+                );
+                logger.info("Found: " + ldapGroup);
+                return ldapGroup;
+
+            }
+        });
+
+        return groups;
+    }
+
+    public LdapGroup getGroup(String groupname) {
+        List<LdapGroup> groups = findGroups(groupname, 1);
+        if (groups.isEmpty()) {
+            return null;
+        }
+        return groups.get(0);
     }
 }

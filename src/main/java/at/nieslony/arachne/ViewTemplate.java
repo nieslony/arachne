@@ -21,6 +21,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,10 @@ public class ViewTemplate extends AppLayout {
         menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
         MenuItem item = menuBar.addItem(userInfo);
         SubMenu userMenu = item.getSubMenu();
-        userMenu.addItem("Logout", click -> this.authContext.logout());
+        userMenu.addItem("Logout", click -> {
+            VaadinSession.getCurrent().close();
+            this.authContext.logout();
+        });
         userMenu.addItem("Change Password...", click -> changePassword());
 
         HorizontalLayout header = new HorizontalLayout(
