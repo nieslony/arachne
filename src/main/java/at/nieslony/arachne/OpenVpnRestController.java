@@ -10,6 +10,7 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -76,9 +78,16 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_config/{username}")
     @RolesAllowed(value = {"ADMIN"})
-    public String userVpnConfig(@PathVariable String username) {
+    public String userVpnConfig(
+            @PathVariable String username,
+            @RequestParam(required = false, name = "json") String asJson
+    ) {
         try {
-            return openVpnUserConfig(username);
+            if (asJson != null) {
+                return openVpnUserConfigJson(username);
+            } else {
+                return openVpnUserConfig(username);
+            }
         } catch (PkiNotInitializedException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
@@ -89,11 +98,13 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_config")
     @RolesAllowed(value = {"USER"})
-    public String userVpnConfig() {
+    public String userVpnConfig(
+            @RequestParam(required = false, name = "json") String asJson
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userVpnConfig(username);
+        return userVpnConfig(username, asJson);
     }
 
     void writeOpenVpnUserServerConfig(OpenVpnUserSettings settings) {
@@ -181,5 +192,23 @@ public class OpenVpnRestController {
         writer.println("<key>\n%s</key>".formatted(privateKey));
 
         return sw.toString();
+    }
+
+    String openVpnUserConfigJson(String username) throws PkiNotInitializedException {
+        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+
+        String userCert = pki.getUserCertAsBase64(username);
+        String privateKey = pki.getUserKeyAsBase64(username);
+        String caCert = pki.getRootCertAsBase64();
+        JSONObject obj = new JSONObject();
+        obj.appendField("protocol", vpnSettings.getListenProtocol());
+        obj.appendField("remoteHost", vpnSettings.getRemote());
+        obj.appendField("port", vpnSettings.getListenPort());
+        obj.appendField("username", username);
+        obj.appendField("userCert", userCert);
+        obj.appendField("privateKey", privateKey);
+        obj.appendField("caCert", caCert);
+
+        return obj.toJSONString();
     }
 }
