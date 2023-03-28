@@ -65,7 +65,8 @@ public class WwwAuthenticateFilter implements Filter {
 
         logger.info("Return 401 - UNAUTHORIZED");
         httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-        httpResponse.setHeader("WWW-Authenticate", "Negotiate");
+        httpResponse.addHeader("WWW-Authenticate", "Negotiate");
+        httpResponse.addHeader("WWW-Authenticate", "Basic realm=\"Arachne\"");
         session.setAttribute("tryNegotiate", "yes");
         var out = httpResponse.getOutputStream();
         String url = "/arachne/login";
