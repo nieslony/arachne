@@ -5,6 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.roles.RolesCollector;
+import jakarta.annotation.security.RolesAllowed;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class UserRestController {
     private RolesCollector rolesCollector;
 
     @GetMapping
+    @RolesAllowed(value = {"ADMIN"})
     public Map<String, Object> findAll() {
         Map<String, Object> root = new HashMap<>();
 
@@ -66,6 +68,7 @@ public class UserRestController {
     }
 
     @GetMapping("/{id}")
+    @RolesAllowed(value = {"ADMIN"})
     public ArachneUser findUser(@PathVariable Long id) {
         ArachneUser user = userRepository
                 .findById(id)
@@ -76,6 +79,7 @@ public class UserRestController {
     }
 
     @PostMapping
+    @RolesAllowed(value = {"ADMIN"})
     @ResponseStatus(HttpStatus.CREATED)
     public ArachneUser create(@RequestBody ArachneUser user) {
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
@@ -94,6 +98,7 @@ public class UserRestController {
     }
 
     @PutMapping("/{id}")
+    @RolesAllowed(value = {"ADMIN"})
     public ArachneUser update(@RequestBody ArachneUser newUser, @PathVariable Long id) {
         ArachneUser user = userRepository
                 .findById(id)
@@ -118,6 +123,7 @@ public class UserRestController {
     }
 
     @DeleteMapping("/{id}")
+    @RolesAllowed(value = {"ADMIN"})
     public ResponseEntity<Long> delete(@PathVariable Long id) {
         userRepository
                 .findById(id)

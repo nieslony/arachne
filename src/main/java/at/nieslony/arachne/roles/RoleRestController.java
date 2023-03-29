@@ -5,6 +5,7 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.users.UserMatcherInfo;
+import jakarta.annotation.security.RolesAllowed;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +42,7 @@ public class RoleRestController {
     private RolesCollector rolesCollector;
 
     @GetMapping("/rules")
+    @RolesAllowed(value = {"ADMIN"})
     public Map<String, Object> findAllRoleRules() {
         Map<String, Object> map = new HashMap<>();
         List<RoleRuleModel> roleRules = roleRuleRepository.findAll();
@@ -50,11 +52,13 @@ public class RoleRestController {
 
     @PostMapping("/rules")
     @ResponseStatus(HttpStatus.CREATED)
+    @RolesAllowed(value = {"ADMIN"})
     public RoleRuleModel createRoleRule(@RequestBody RoleRuleModel roleRule) {
         return roleRuleRepository.save(roleRule);
     }
 
     @PutMapping("/rules/{id}")
+    @RolesAllowed(value = {"ADMIN"})
     public RoleRuleModel updateRoleRule(@RequestBody RoleRuleModel roleRule, @PathVariable Long id) {
         roleRuleRepository
                 .findById(id)
@@ -65,6 +69,7 @@ public class RoleRestController {
     }
 
     @DeleteMapping("/rules/{id}")
+    @RolesAllowed(value = {"ADMIN"})
     public ResponseEntity<Long> deleteRoleRule(@PathVariable Long id) {
         roleRuleRepository
                 .findById(id)
@@ -76,11 +81,13 @@ public class RoleRestController {
     }
 
     @GetMapping("/user_matchers")
+    @RolesAllowed(value = {"ADMIN"})
     public List<UserMatcherInfo> userMatchers() {
         return rolesCollector.getAllUserMatcherInfo();
     }
 
     @Getter
+    @RolesAllowed(value = {"ADMIN"})
     public class RoleInfo {
 
         public RoleInfo(Role r) {
@@ -93,6 +100,7 @@ public class RoleRestController {
     }
 
     @GetMapping
+    @RolesAllowed(value = {"ADMIN"})
     public List<RoleInfo> roles() {
         List<RoleInfo> roles = new LinkedList<>();
         for (Role r : Role.values()) {

@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import jakarta.annotation.security.RolesAllowed;
 import java.security.PrivateKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/pki")
 public class PkiRestController {
+
     @Autowired
     CertificateRepository certificateRepository;
 
@@ -31,6 +33,7 @@ public class PkiRestController {
 
     @Data
     public class UserCertInfo {
+
         UserCertInfo(CertificateModel model) {
             this.subject = model.getSubject();
             this.validFrom = model.getValidFrom();
@@ -47,13 +50,14 @@ public class PkiRestController {
     }
 
     @GetMapping("/user_certs")
+    @RolesAllowed(value = {"ADMIN"})
     public Map<String, Object> findAllUserCerts() {
         Map<String, Object> result = new HashMap<>();
 
         pki.getRootCertAsBase64();
 
         List<UserCertInfo> certs = new LinkedList<>();
-        for (CertificateModel model: certificateRepository.findAll()) {
+        for (CertificateModel model : certificateRepository.findAll()) {
             certs.add(new UserCertInfo(model));
             PrivateKey pk = model.getKeyModel().getPrivateKey();
         }
