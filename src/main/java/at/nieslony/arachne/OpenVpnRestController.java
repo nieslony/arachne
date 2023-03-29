@@ -210,6 +210,6 @@ public class OpenVpnRestController {
         obj.put("privateKey", privateKey);
         obj.put("caCert", caCert);
 
-        return obj.toString(2);
+        return obj.toString(2) + "\n";
     }
 }
