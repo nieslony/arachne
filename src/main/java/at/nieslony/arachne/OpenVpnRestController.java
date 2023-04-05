@@ -201,15 +201,30 @@ public class OpenVpnRestController {
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
 
-        JSONObject obj = new JSONObject();
-        obj.put("protocol", vpnSettings.getListenProtocol());
-        obj.put("remoteHost", vpnSettings.getRemote());
-        obj.put("port", vpnSettings.getListenPort());
-        obj.put("username", username);
-        obj.put("userCert", userCert);
-        obj.put("privateKey", privateKey);
-        obj.put("caCert", caCert);
+        JSONObject certs = new JSONObject();
+        certs.put("userCert", userCert);
+        certs.put("privateKey", privateKey);
+        certs.put("caCert", caCert);
 
-        return obj.toString(2) + "\n";
+        JSONObject connection = new JSONObject();
+        connection.put("remote", vpnSettings.getRemote());
+        connection.put("username", username);
+        connection.put("cert-pass-flags", "4");
+        connection.put("connection-type", "password-tls");
+        connection.put("password-flags", "2");
+        connection.put("port", vpnSettings.getListenPort());
+        if (vpnSettings.getListenProtocol().equals("TCP")) {
+            connection.put("proto-tcp", "yes");
+        }
+
+        JSONObject json = new JSONObject();
+        String conName = vpnSettings.getVpnName()
+                .replaceAll("%h", vpnSettings.getRemote())
+                .replaceAll("%u", username);
+        json.put("name", conName);
+        json.put("certificates", certs);
+        json.put("connection", connection);
+
+        return json.toString(2) + "\n";
     }
 }
