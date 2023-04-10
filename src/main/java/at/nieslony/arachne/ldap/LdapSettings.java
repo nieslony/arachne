@@ -53,6 +53,7 @@ public class LdapSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(LdapSettings.class);
 
+    private final static String SK_LDAP_ENABLE_USER_SOURCE = "ldap.user-source";
     private final static String SK_LDAP_URLS = "ldap.urls";
     private final static String SK_LDAP_BASE_DN = "ldap.base-dn";
     private final static String SK_LDAP_BIND_DN = "ldap.binddn";
@@ -96,16 +97,16 @@ public class LdapSettings {
     }
 
     public LdapSettings(Settings settings) {
-        ldapUrls = settings.getList(SK_LDAP_URLS, findLdapUrls())
+        logger.info("BEGIN LdapSettings");
+        enableLdapUserSource = settings.getBoolean(SK_LDAP_ENABLE_USER_SOURCE, false);
+        ldapUrls = settings.getList(SK_LDAP_URLS, null)
                 .stream()
                 .map(urlStr -> new LdapUrl(urlStr))
                 .toList();
         baseDn = settings.get(SK_LDAP_BASE_DN, NetUtils.defaultBaseDn());
         bindPassword = settings.get(SK_LDAP_BIND_PASSWORD, "");
         bindType = LdapBindType.valueOf(
-                settings.get(
-                        SK_LDAP_BIND_TYPE,
-                        LdapBindType.BIND_DN.name())
+                settings.get(SK_LDAP_BIND_TYPE, LdapBindType.BIND_DN.name())
         );
         bindDn = settings.get(SK_LDAP_BIND_DN, NetUtils.defaultBaseDn());
         keytabPath = settings.get(
@@ -114,7 +115,7 @@ public class LdapSettings {
         );
         kerberosBindPricipal = settings.get(
                 SK_LDAP_KERBEROS_BIND_PRINCIPAL,
-                "HTTP/" + NetUtils.myHostname()
+                ""
         );
 
         usersOu = settings.get(SK_LDAP_USERS_OU, "");
@@ -132,9 +133,20 @@ public class LdapSettings {
         groupsCustomFilter = settings.get(SK_LDAP_GROUPS_CUSTOM_FILTER, "");
         groupsEnableCustomFilter = settings.getBoolean(SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER, false);
         groupsObjectClass = settings.get(SK_LDAP_GROUPS_OBJECTCLASS, "");
+        logger.info("END LdapSettings");
+    }
+
+    public void guessDefaultsFromDns(Settings settings) {
+        ldapUrls = findLdapUrls()
+                .stream()
+                .map(urlStr -> new LdapUrl(urlStr))
+                .toList();
+        bindDn = NetUtils.defaultBaseDn();
     }
 
     public void save(Settings settings) {
+        settings.put(SK_LDAP_ENABLE_USER_SOURCE, enableLdapUserSource);
+
         settings.put(
                 SK_LDAP_URLS,
                 ldapUrls.stream()
@@ -169,6 +181,8 @@ public class LdapSettings {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private String arachneConfigDir;
+
+    private boolean enableLdapUserSource;
 
     List<LdapUrl> ldapUrls;
     private String baseDn;

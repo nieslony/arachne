@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.settings;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,10 @@ public class Settings {
         if (settingsModel.isPresent()) {
             return SettingsModel.splitString(settingsModel.get().getContent());
         } else {
-            return defaultValue;
+            if (defaultValue != null) {
+                return defaultValue;
+            }
+            return new LinkedList<>();
         }
     }
 

@@ -92,6 +92,11 @@ public class LdapView extends VerticalLayout {
         this.ldapSettings = new LdapSettings(settings);
         this.binder = new Binder();
 
+        Checkbox enableLdapUserSource = new Checkbox("Enable LDAP user Source");
+        enableLdapUserSource.setValue(true);
+        binder.forField(enableLdapUserSource)
+                .bind(LdapSettings::isEnableLdapUserSource, LdapSettings::setEnableLdapUserSource);
+
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Basics", createBasicsPage());
         tabSheet.add("Users and Groups", createUsersAndGroupsPage());
@@ -102,16 +107,21 @@ public class LdapView extends VerticalLayout {
                 e -> binder.getBean().save(settings)
         );
 
+        enableLdapUserSource.addValueChangeListener(e -> {
+            tabSheet.setVisible(e.getValue());
+        });
+
         binder.setBean(ldapSettings);
         binder.validate();
 
         add(
+                enableLdapUserSource,
                 tabSheet,
                 saveButton
         );
     }
 
-    Component createUsersAndGroupsPage() {
+    final Component createUsersAndGroupsPage() {
         TextField usersOuField = new TextField("Users OU");
         binder.forField(usersOuField)
                 .bind(LdapSettings::getUsersOu, LdapSettings::setUsersOu);
@@ -238,7 +248,8 @@ public class LdapView extends VerticalLayout {
         SubMenu subMenu = menuItem.getSubMenu();
         subMenu.addItem("FreeIPA", e -> {
             usersOuField.setValue("cn=users,cn=accounts");
-            usersObjectClassField.setValue("person");
+            usersObjectClassField.setValue("posixaccount");
+            usersAttrUsernameField.setValue("krbCanonicalName");
             displayNameAttrField.setValue("displayName");
             emailAttrField.setValue("mail");
 
@@ -293,7 +304,7 @@ public class LdapView extends VerticalLayout {
         );
     }
 
-    Component createBasicsPage() {
+    final Component createBasicsPage() {
         var ldapUrlsEditor = createUrlsEditor(ldapSettings);
 
         TextField baseDnField = new TextField("Base DN");
@@ -437,6 +448,8 @@ public class LdapView extends VerticalLayout {
     VerticalLayout createUrlsEditor(LdapSettings ldapSettings) {
         Binder binder = new Binder();
 
+        Button guessFromDns = new Button("Guess URLs from DNS");
+
         ListBox<LdapUrl> ldapUrlsField = new ListBox<>();
         ldapUrlsField.setHeight(24, Unit.EX);
         ldapUrlsField.setItems(ldapSettings.getLdapUrls());
@@ -528,6 +541,11 @@ public class LdapView extends VerticalLayout {
                 removeUrlButton
         );
 
+        guessFromDns.addClickListener((t) -> {
+            ldapSettings.guessDefaultsFromDns(settings);
+            ldapUrlsField.setItems(ldapSettings.getLdapUrls());
+        });
+
         ldapUrlsField.addValueChangeListener(e -> {
             LdapUrl url = ldapUrlsField.getValue();
             if (url != null) {
@@ -549,6 +567,7 @@ public class LdapView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 new Label("Try LDAP URLs"),
+                guessFromDns,
                 ldapUrlsField,
                 urlsLayout,
                 buttonsLayout

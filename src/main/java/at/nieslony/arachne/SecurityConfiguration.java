@@ -8,6 +8,7 @@ import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,10 +50,16 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private FolderFactory folderFactory;
 
+    private KerberosSettings kerberosSettings;
+
+    @PostConstruct
+    public void init() {
+        kerberosSettings = new KerberosSettings(settings);
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
-        if (true) {
+        if (kerberosSettings.isEnableKrbAuth()) {
             AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
             http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
                     BasicAuthenticationFilter.class);
@@ -61,10 +68,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 .authorizeHttpRequests()
                 .requestMatchers("/public/**", "/error", "/sso").permitAll()
                 .requestMatchers(HttpMethod.POST, "/setup").permitAll()
-                .and()
-                .authenticationProvider(kerberosAuthenticationProvider())
-                .authenticationProvider(kerberosServiceAuthenticationProvider())
-                .httpBasic();
+                .and();
+        if (kerberosSettings.isEnableKrbAuth()) {
+            http
+                    .authenticationProvider(kerberosAuthenticationProvider())
+                    .authenticationProvider(kerberosServiceAuthenticationProvider());
+        }
+        http.httpBasic();
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
         http
@@ -76,6 +86,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     public SpnegoAuthenticationProcessingFilter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager
     ) {
+        logger.info("Creating SpnegoAuthenticationProcessingFilter");
         SpnegoAuthenticationProcessingFilter filter = new SpnegoAuthenticationProcessingFilter();
         filter.setAuthenticationManager(authenticationManager);
         filter.setFailureHandler((request, response, exception) -> {
@@ -98,14 +109,24 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .authenticationProvider(kerberosAuthenticationProvider())
-                .authenticationProvider(kerberosServiceAuthenticationProvider())
-                .build();
+        logger.info("Creating AuthenticationManager");
+
+        var authManBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        if (kerberosSettings.isEnableKrbAuth()) {
+            authManBuilder
+                    .authenticationProvider(kerberosAuthenticationProvider())
+                    .authenticationProvider(kerberosServiceAuthenticationProvider());
+        }
+
+        return authManBuilder.build();
     }
 
     @Bean
     public KerberosAuthenticationProvider kerberosAuthenticationProvider() {
+        logger.info("Creating kerberosAuthenticationProvider");
+        if (!kerberosSettings.isEnableKrbAuth()) {
+            return null;
+        }
         KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
         SunJaasKerberosClient client = new SunJaasKerberosClient();
         provider.setKerberosClient(client);
@@ -115,6 +136,10 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public KerberosServiceAuthenticationProvider kerberosServiceAuthenticationProvider() {
+        logger.info("Creating kerberosServiceAuthenticationProvider");
+        if (!kerberosSettings.isEnableKrbAuth()) {
+            return null;
+        }
         KerberosServiceAuthenticationProvider provider = new KerberosServiceAuthenticationProvider();
         provider.setTicketValidator(sunJaasKerberosTicketValidator());
         provider.setUserDetailsService(arachneUserDetailsService);
@@ -123,7 +148,10 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SunJaasKerberosTicketValidator sunJaasKerberosTicketValidator() {
-        KerberosSettings kerberosSettings = new KerberosSettings(settings);
+        logger.info("Creating sunJaasKerberosTicketValidator");
+        if (!kerberosSettings.isEnableKrbAuth()) {
+            return null;
+        }
 
         SunJaasKerberosTicketValidator ticketValidator = new SunJaasKerberosTicketValidator();
         ticketValidator.setServicePrincipal(kerberosSettings.getServicePrincipal());

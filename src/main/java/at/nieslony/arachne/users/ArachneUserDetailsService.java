@@ -45,7 +45,7 @@ public class ArachneUserDetailsService implements UserDetailsService {
         ArachneUser user = userRepository.findByUsername(username);
         if (user != null) {
             Set<String> roles = rolesCollector.findRolesForUser(username);
-            logger.info("User %s has roles %s".formatted(username, roles.toString()));
+            logger.info("Internal User %s has roles %s".formatted(username, roles.toString()));
 
             UserDetails userDetails = new ArachneUserDetails(user, roles);
 
@@ -59,7 +59,7 @@ public class ArachneUserDetailsService implements UserDetailsService {
             logger.info("Found " + ldapUser.toString());
 
             Set<String> roles = rolesCollector.findRolesForUser(username);
-            logger.info("User %s has roles %s".formatted(username, roles.toString()));
+            logger.info("LDAP User %s has roles %s".formatted(username, roles.toString()));
 
             UserDetails userDetails = new ArachneUserDetails(ldapUser, roles);
             return userDetails;
