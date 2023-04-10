@@ -42,6 +42,7 @@ public class WwwAuthenticateFilter implements Filter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
+            logger.info("Already authenticated.");
             fc.doFilter(request, response);
             return;
         }
@@ -73,7 +74,9 @@ public class WwwAuthenticateFilter implements Filter {
         logger.info("Return 401 - UNAUTHORIZED for " + path);
         httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         httpResponse.addHeader("WWW-Authenticate", "Negotiate");
-        httpResponse.addHeader("WWW-Authenticate", "Basic realm=\"Arachne\"");
+        if (path.startsWith("/arachne/api")) {
+            httpResponse.addHeader("WWW-Authenticate", "Basic realm=\"Arachne\"");
+        }
         session.setAttribute("tryNegotiate", "yes");
         var out = httpResponse.getOutputStream();
         String url = "/arachne/login";
