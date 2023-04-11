@@ -4,14 +4,15 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.NetUtils;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Data;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 /**
  *
@@ -36,6 +37,43 @@ public class OpenVpnUserSettings {
     private static final String SK_OPENVPN_USER_KEEPALIVE_TIMEOUT = "openvpn.user.keepaliveTimeout";
     private static final String SK_OPENVPN_USER_PUSH_DNS = "openvpn.user.pushdns";
     private static final String SK_OPENVPN_USER_PUSH_ROUTES = "openvpn.user.pushroutes";
+    private static final String SK_OPENVPN_USER_AUTH_TYPE = "openvpn.user.auth-type";
+    private static final String SK_OPENVPN_USER_PWD_VERF_TYPE = "openvpn.user.password-verification-type";
+    private static final String SK_OPENVPN_USER_AUTH_PAM_SERVICE = "openvpn.user.auth-pam-service";
+    private static final String SK_OPENVPN_USER_AUTH_HTTP_URL = "openvpn.user-auth-http-url";
+
+    public enum AuthType {
+        CERTIFICATE("Certificate"),
+        USERNAME_PASSWORD("Username/Password"),
+        USERNAME_PASSWORD_CERTIFICATE("Username/Password + Certificate");
+
+        private AuthType(String authType) {
+            this.authType = authType;
+        }
+
+        private String authType;
+
+        @Override
+        public String toString() {
+            return authType;
+        }
+    }
+
+    public enum PasswordVerificationType {
+        PAM("Pam"),
+        HTTP_URL("Http URL");
+
+        private PasswordVerificationType(String pvt) {
+            this.pvt = pvt;
+        }
+
+        private String pvt;
+
+        @Override
+        public String toString() {
+            return pvt;
+        }
+    }
 
     public OpenVpnUserSettings() {
     }
@@ -54,6 +92,22 @@ public class OpenVpnUserSettings {
         keepaliveTimeout = settings.getInt(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, 60);
         pushDnsServers = settings.getList(SK_OPENVPN_USER_PUSH_DNS, NetUtils.getDnsServers());
         pushRoutes = settings.getList(SK_OPENVPN_USER_PUSH_ROUTES, NetUtils.getDefaultPushRoutes());
+        authType = AuthType.valueOf(
+                settings.get(
+                        SK_OPENVPN_USER_AUTH_TYPE,
+                        AuthType.USERNAME_PASSWORD_CERTIFICATE.name()
+                )
+        );
+        passwordVerificationType = PasswordVerificationType.valueOf(
+                settings.get(
+                        SK_OPENVPN_USER_PWD_VERF_TYPE,
+                        PasswordVerificationType.HTTP_URL.name())
+        );
+        authPamService = settings.get(SK_OPENVPN_USER_AUTH_PAM_SERVICE, "openvpn");
+        authHttpUrl = settings.get(
+                SK_OPENVPN_USER_AUTH_HTTP_URL,
+                defaultAuthUrl(settings.getServerProperties())
+        );
     }
 
     private String vpnName;
@@ -69,6 +123,10 @@ public class OpenVpnUserSettings {
     private int keepaliveInterval;
     private List<String> pushDnsServers;
     private List<String> pushRoutes = new LinkedList<>();
+    private AuthType authType;
+    private PasswordVerificationType passwordVerificationType;
+    private String authPamService;
+    private String authHttpUrl;
 
     void save(Settings settings) {
         settings.put(SK_OPENVPN_USER_NAME, vpnName);
@@ -84,6 +142,10 @@ public class OpenVpnUserSettings {
         settings.put(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveTimeout);
         settings.put(SK_OPENVPN_USER_PUSH_DNS, pushDnsServers);
         settings.put(SK_OPENVPN_USER_PUSH_ROUTES, pushRoutes);
+        settings.put(SK_OPENVPN_USER_AUTH_TYPE, authType.name());
+        settings.put(SK_OPENVPN_USER_PWD_VERF_TYPE, passwordVerificationType.name());
+        settings.put(SK_OPENVPN_USER_AUTH_PAM_SERVICE, authPamService);
+        settings.put(SK_OPENVPN_USER_AUTH_HTTP_URL, authHttpUrl);
     }
 
     public void setPushDnsServers(List<String> pushDnsServers) {
@@ -92,4 +154,9 @@ public class OpenVpnUserSettings {
         logger.info(this.pushDnsServers.toString());
     }
 
+    private String defaultAuthUrl(ServerProperties serverProperties) {
+        //String host = serverProperties.getAddress().getHostName();
+        //int port = serverProperties.getPort();
+        return "http://%s:%d/arachne".formatted("localhost", 8080);
+    }
 }

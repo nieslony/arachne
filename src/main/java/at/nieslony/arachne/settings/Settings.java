@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,6 +34,9 @@ public class Settings {
 
     @Autowired
     SettingsRepository settingsRepository;
+
+    @Autowired
+    private ServerProperties serverProperties;
 
     public Settings() {
         settings = this;
@@ -101,5 +105,9 @@ public class Settings {
 
     public void put(String setting, boolean content) {
         put(setting, String.valueOf(content));
+    }
+
+    public ServerProperties getServerProperties() {
+        return serverProperties;
     }
 }

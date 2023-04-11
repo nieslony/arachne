@@ -7,18 +7,25 @@ package at.nieslony.arachne;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -91,6 +98,8 @@ public class OpenVpnUserView extends VerticalLayout {
     }
 
     private Settings settings;
+    private OpenVpnUserSettings vpnSettings;
+    private Binder<OpenVpnUserSettings> binder;
 
     public OpenVpnUserView(
             Settings settings,
@@ -98,8 +107,104 @@ public class OpenVpnUserView extends VerticalLayout {
             Pki pki
     ) {
         this.settings = settings;
-        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+        vpnSettings = new OpenVpnUserSettings(settings);
+        binder = new Binder(OpenVpnUserSettings.class);
 
+        Button saveSettings = new Button("Save Settings");
+        binder.addStatusChangeListener((sce) -> {
+            saveSettings.setEnabled(!sce.hasValidationErrors());
+        });
+        saveSettings.addClickListener((t) -> {
+            if (binder.writeBeanIfValid(vpnSettings)) {
+                vpnSettings.save(settings);
+                openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
+            }
+        });
+
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.add("Basics", createBasicsPage());
+        tabSheet.add("Authentication", createAuthPage());
+
+        add(
+                tabSheet,
+                saveSettings);
+
+        binder.setBean(vpnSettings);
+        binder.validate();
+    }
+
+    private Component createAuthPage() {
+        ComboBox<OpenVpnUserSettings.AuthType> authTypeField = new ComboBox<>("Authentication Type");
+        authTypeField.setItems(OpenVpnUserSettings.AuthType.values());
+        authTypeField.setWidthFull();
+
+        TextField authPamServiceField = new TextField();
+        TextField authHttpUrlField = new TextField();
+
+        RadioButtonGroup<OpenVpnUserSettings.PasswordVerificationType> passwordVerificationTypeField
+                = new RadioButtonGroup<>("Password Verification Type");
+        passwordVerificationTypeField.setItems(
+                OpenVpnUserSettings.PasswordVerificationType.values()
+        );
+        passwordVerificationTypeField.setRenderer(
+                new ComponentRenderer<>(type -> {
+                    Text typeField = new Text(type.toString());
+                    Component valueField = switch (type) {
+                        case HTTP_URL ->
+                            authHttpUrlField;
+                        case PAM ->
+                            authPamServiceField;
+                    };
+                    HorizontalLayout layout = new HorizontalLayout(
+                            typeField,
+                            valueField
+                    );
+                    layout.setAlignItems(Alignment.BASELINE);
+                    layout.setFlexGrow(1, valueField);
+                    return new Div(layout);
+                })
+        );
+        passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        passwordVerificationTypeField.setWidthFull();
+
+        authTypeField.addValueChangeListener((e) -> {
+            passwordVerificationTypeField.setEnabled(
+                    e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
+            );
+        });
+
+        passwordVerificationTypeField.addValueChangeListener(
+                (e) -> {
+                    switch (e.getValue()) {
+                        case HTTP_URL -> {
+                            authHttpUrlField.setEnabled(true);
+                            authPamServiceField.setEnabled(false);
+                        }
+                        case PAM -> {
+                            authHttpUrlField.setEnabled(false);
+                            authPamServiceField.setEnabled(true);
+                        }
+                    }
+                });
+
+        binder.forField(authTypeField)
+                .bind(OpenVpnUserSettings::getAuthType, OpenVpnUserSettings::setAuthType);
+        binder.forField(passwordVerificationTypeField)
+                .bind(OpenVpnUserSettings::getPasswordVerificationType, OpenVpnUserSettings::setPasswordVerificationType);
+        binder.forField(authPamServiceField)
+                .bind(OpenVpnUserSettings::getAuthPamService, OpenVpnUserSettings::setAuthPamService);
+        binder.forField(authHttpUrlField)
+                .bind(OpenVpnUserSettings::getAuthHttpUrl, OpenVpnUserSettings::setAuthHttpUrl);
+
+        VerticalLayout layout = new VerticalLayout(
+                authTypeField,
+                passwordVerificationTypeField
+        );
+        layout.setMinWidth(50, Unit.EM);
+        return layout;
+    }
+
+    final private Component createBasicsPage() {
         TextField name = new TextField("Network Manager configuration name");
         name.setWidth(50, Unit.EM);
         name.setValueChangeMode(ValueChangeMode.EAGER);
@@ -287,9 +392,6 @@ public class OpenVpnUserView extends VerticalLayout {
         pushRoutesField.setWidthFull();
         editRoutesField.setWidthFull();
 
-        Button saveSettings = new Button("Save Settings");
-
-        Binder<OpenVpnUserSettings> binder = new Binder(OpenVpnUserSettings.class);
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
@@ -338,13 +440,9 @@ public class OpenVpnUserView extends VerticalLayout {
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
 
-        binder.setBean(vpnSettings);
         pushDnsServersField.setItems(vpnSettings.getPushDnsServers());
         pushRoutesField.setItems(vpnSettings.getPushRoutes());
 
-        binder.addStatusChangeListener((sce) -> {
-            saveSettings.setEnabled(!sce.hasValidationErrors());
-        });
         AtomicReference<String> editDnsServer = new AtomicReference<>("");
         binder.forField(editDnsServerField)
                 .withValidator(new IpValidator(), "Not a valid IP Address")
@@ -366,13 +464,6 @@ public class OpenVpnUserView extends VerticalLayout {
                             editRoutes.set(v);
                         }
                 );
-
-        saveSettings.addClickListener((t) -> {
-            if (binder.writeBeanIfValid(vpnSettings)) {
-                vpnSettings.save(settings);
-                openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-            }
-        });
 
         pushDnsServersField.addValueChangeListener((e) -> {
             if (e.getValue() != null) {
@@ -397,8 +488,6 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
-        binder.validate();
-
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
         formLayout.add(listenLayout);
@@ -408,7 +497,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(keepaliveLayout);
         formLayout.add(pushDnsServersLayout, pushRoutesLayout);
 
-        add(formLayout, saveSettings);
+        return formLayout;
     }
 
     public List<NicInfo> findAllNics() {
