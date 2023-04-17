@@ -118,6 +118,7 @@ public class OpenVpnUserView extends VerticalLayout {
             if (binder.writeBeanIfValid(vpnSettings)) {
                 vpnSettings.save(settings);
                 openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
+                openvpnRestController.writeOpenVpnPluginConfig(vpnSettings);
             }
         });
 

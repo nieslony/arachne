@@ -45,6 +45,10 @@ public class FolderFactory {
             File f = new File(vpnConfigDir);
             return f.getCanonicalPath();
         } catch (IOException ex) {
+            logger.error(
+                    "Cannot create %s: %s"
+                            .formatted(vpnConfigDir, ex.getMessage())
+            );
             return vpnConfigDir;
         }
     }
