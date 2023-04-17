@@ -6,14 +6,16 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUser;
+import at.nieslony.arachne.ldap.LdapUserCacheModel;
+import at.nieslony.arachne.ldap.LdapUserCacheRepository;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.server.VaadinSession;
+import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,15 +38,19 @@ public class ArachneUserDetailsService implements UserDetailsService {
     @Autowired
     private Settings settings;
 
+    @Autowired
+    private LdapUserCacheRepository ldapUserCacheRepository;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         logger.info("Searching for user " + username);
+        int ldapCacheMaxMins = 60;
 
         VaadinSession session = VaadinSession.getCurrent();
 
         ArachneUser user = userRepository.findByUsername(username);
         if (user != null) {
-            Set<String> roles = rolesCollector.findRolesForUser(username);
+            Set<String> roles = rolesCollector.findRolesForUser(username, true);
             logger.info("Internal User %s has roles %s".formatted(username, roles.toString()));
 
             UserDetails userDetails = new ArachneUserDetails(user, roles);
@@ -52,18 +58,38 @@ public class ArachneUserDetailsService implements UserDetailsService {
             return userDetails;
         }
         try {
+            Optional<LdapUserCacheModel> olucm = ldapUserCacheRepository.findByUsername(username);
+            LdapUserCacheModel lucm;
+            if (olucm.isPresent()) {
+                lucm = olucm.get();
+                logger.info(
+                        "Found user %s in cache: %s"
+                                .formatted(username, lucm.toString())
+                );
+                if (!lucm.isExpired(ldapCacheMaxMins)) {
+                    logger.info("User %s is not expired".formatted(username));
+                    UserDetails userDetails = new ArachneUserDetails(lucm);
+                    return userDetails;
+                }
+            } else {
+                logger.info("User %s is expired, update required".formatted(username));
+                lucm = new LdapUserCacheModel();
+            }
             LdapSettings ldapSettings = new LdapSettings(settings);
-            LdapTemplate ldap = ldapSettings.getLdapTemplate();
 
             LdapUser ldapUser = ldapSettings.getUser(username);
-            logger.info("Found " + ldapUser.toString());
+            logger.info("Found in LDAP " + ldapUser.toString());
 
-            Set<String> roles = rolesCollector.findRolesForUser(username);
+            Set<String> roles = rolesCollector.findRolesForUser(username, false);
             logger.info("LDAP User %s has roles %s".formatted(username, roles.toString()));
+
+            lucm.update(ldapUser, roles);
+            ldapUserCacheRepository.save(lucm);
 
             UserDetails userDetails = new ArachneUserDetails(ldapUser, roles);
             return userDetails;
         } catch (Exception ex) {
+            logger.error(ex.getMessage());
             throw new UsernameNotFoundException(
                     "LDAP User %s not found".formatted(username),
                     ex);

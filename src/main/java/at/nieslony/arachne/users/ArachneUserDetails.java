@@ -5,6 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapUser;
+import at.nieslony.arachne.ldap.LdapUserCacheModel;
 import java.util.Collection;
 import java.util.Set;
 import lombok.Getter;
@@ -43,6 +44,16 @@ public class ArachneUserDetails extends User {
         );
 
         displayName = ldapUser.getDisplayName();
+    }
+
+    public ArachneUserDetails(LdapUserCacheModel lucm) {
+        super(
+                lucm.getUsername(),
+                "",
+                rolesToGrantedAuthorities(lucm.getRoles())
+        );
+
+        displayName = lucm.getDisplayName();
     }
 
     static private Collection<? extends GrantedAuthority>
