@@ -16,7 +16,8 @@ import org.slf4j.LoggerFactory;
  */
 @UserMatcherDescription(
         description = "Member of LDAP Group",
-        parameterLabel = "LDAP Group"
+        parameterLabel = "LDAP Group",
+        ignoreInternalUser = true
 )
 public class LdapGroupUserMatcher extends UserMatcher {
 

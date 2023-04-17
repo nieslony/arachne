@@ -7,6 +7,7 @@ package at.nieslony.arachne.roles;
 import at.nieslony.arachne.ldap.LdapGroupUserMatcher;
 import at.nieslony.arachne.users.EverybodyMatcher;
 import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.users.UserMatcherDescription;
 import at.nieslony.arachne.users.UserMatcherInfo;
 import at.nieslony.arachne.users.UsernameMatcher;
 import java.util.HashSet;
@@ -57,11 +58,17 @@ public class RolesCollector {
         }
     }
 
-    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(String username) {
+    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(String username, boolean isInternal) {
         Set<SimpleGrantedAuthority> auths = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
             UserMatcher userMatcher = buildUserMatcher(rrm);
+            if (isInternal && userMatcher.getClass().isAnnotationPresent(UserMatcherDescription.class)) {
+                UserMatcherDescription descr = userMatcher.getClass().getAnnotation(UserMatcherDescription.class);
+                if (descr.ignoreInternalUser()) {
+                    continue;
+                }
+            }
             if (userMatcher.isUserMatching(username)) {
                 auths.add(new SimpleGrantedAuthority(rrm.getRole().name()));
             }
@@ -69,11 +76,17 @@ public class RolesCollector {
         return auths;
     }
 
-    public Set<String> findRolesForUser(String username) {
+    public Set<String> findRolesForUser(String username, boolean isInternal) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
             UserMatcher userMatcher = buildUserMatcher(rrm);
+            if (isInternal && userMatcher.getClass().isAnnotationPresent(UserMatcherDescription.class)) {
+                UserMatcherDescription descr = userMatcher.getClass().getAnnotation(UserMatcherDescription.class);
+                if (descr.ignoreInternalUser()) {
+                    continue;
+                }
+            }
             if (userMatcher.isUserMatching(username)) {
                 roles.add(rrm.getRole().name());
             }

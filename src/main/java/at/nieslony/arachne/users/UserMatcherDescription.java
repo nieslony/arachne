@@ -20,4 +20,6 @@ public @interface UserMatcherDescription {
     String description();
 
     String parameterLabel() default "";
+
+    boolean ignoreInternalUser() default false;
 }
