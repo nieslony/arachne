@@ -10,7 +10,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <start-class>at.nieslony.arachne.Arachne</start-class>
     </properties>
 
     <dependencyManagement>
@@ -18,9 +17,7 @@
             <dependency>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-bom</artifactId>
-                <!-- Declare the latest Vaadin version
-                as a property or directly here -->
-                <version>24.0.4</version><!-- <1> -->
+                <version>24.0.4</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -31,7 +28,6 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
-            <version>24.0.4</version>
         </dependency>
 
         <dependency>
@@ -120,21 +116,26 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
-            <!-- The Spring Boot Maven plugin for easy
-            execution from CLI and packaging -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.0.5</version>
+                <configuration>
+                    <mainClass>at.nieslony.arachne.Arachne</mainClass>
+                    <layout>JAR</layout>
+                    <executable>true</executable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
-            <!--
-                Takes care of synchronizing java
-                dependencies and imports in package.json and
-                main.js files. It also creates
-                webpack.config.js if does not exist yet.
-            -->
             <plugin>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-maven-plugin</artifactId>
@@ -148,7 +149,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
