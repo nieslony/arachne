@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.setup;
 
+import at.nieslony.arachne.FolderFactory;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiSetupException;
 import at.nieslony.arachne.roles.Role;
@@ -50,6 +51,9 @@ public class SetupController {
     @Autowired
     private Pki pki;
 
+    @Autowired
+    private FolderFactory folderFactory;
+
     public boolean setupAlreadyDone() {
         Optional<SettingsModel> settingsModel
                 = settingsRepository.findBySetting(SetupController.SETUP_STATUS_KEY);
@@ -59,6 +63,7 @@ public class SetupController {
 
     public String setupArachne(SetupData setupData) {
         logger.info("Performing setup: " + setupData);
+        logger.info("Work directory: " + folderFactory.getArachneConfigDir());
 
         SettingsModel setupStatus = new SettingsModel(
                 SETUP_STATUS_KEY,
