@@ -1,0 +1,14 @@
+[Unit]
+Description=Administration server for openVPN
+After=syslog.target
+
+[Service]
+User=arachne
+ExecStart=/usr/share/arachne/Arachne.jar
+WorkingDirectory=/var/lib/arachne
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
