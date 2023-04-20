@@ -1,19 +1,17 @@
-Name:       arachne
-Version:    0.3.0
-Release:    0
-License:    GPLv3
-Source:     %{name}-%{version}.tar.gz
-Summary:    Administration server for openVPN
+Name:           arachne
+Version:        0.3.0
+Release:        %autorelease
+License:        GPLv3
+Source:         %{name}-%{version}.tar.gz
+Summary:        Administration server for openVPN
+BuildArch:      noarch
 
-%define artifactId $( xpath -q -e '/project/artifactId/text()' pom.xml )
-%define artifactVersion $( xpath -q -e '/project/version/text()' pom.xml )
-%define arachne_jar_name %{artifactId}-%{artifactVersion}.jar
-
-BuildRequires:  maven
+BuildRequires:  maven-openjdk17
 BuildRequires:  java-17-openjdk-devel
 BuildRequires:  systemd-rpm-macros
 
-Requires:       java-17-openjdk
+Requires:       java-17-openjdk-headless
+Requires:       openvpn
 
 %description
 Administration server for openVPN
@@ -22,14 +20,28 @@ Administration server for openVPN
 %setup
 
 %build
-# mvn package
+mvn package
 
 %install
 mkdir -pv %{buildroot}/%{_datadir}/%{name}
-install -v %{_builddir}/%{name}-%{version}/target/%{arachne_jar_name} %{buildroot}/%{_datadir}/%{name}
+mkdir -pv %{buildroot}/%{_unitdir}
+install -v %{_builddir}/%{name}-%{version}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
 install -v %{name}.service %{buildroot}/%{_unitdir}
+
+%post
+getent group arachne  || groupadd --system arachne
+getent passwd arachne || \
+    useradd \
+        --comment "Arachne openVPN Administrator" \
+        --home-dir /var/lib/arachne \
+        --create-home \
+        --gid arachne \
+        --system \
+        --shell /bin/false \
+        arachne
 
 %files
 %{_unitdir}/%{name}.service
-%dir %{_datadir}/%{name}
+%dir %{_datadir}/%{name}/
+%{_datadir}/%{name}/Arachne.jar
 %license LICENSE
