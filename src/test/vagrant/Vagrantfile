@@ -1,0 +1,45 @@
+hostname = "arachne"
+
+Vagrant.configure("2") do |config|
+    Dir["scriptlets/*rb"].each do |filename|
+        puts "Including #{filename}"
+        eval(IO.read(filename), binding, File.realpath(filename))
+    end
+
+    config.vm.define "arachne" do |arachne|
+        arachne.vm.box = "generic/centos9s"
+        arachne.timezone.value = :host
+
+        arachne.vm.provision "Copy RPMs",
+            type: "file",
+            source: "~/rpmbuild/RPMS/noarch/",
+            destination: "/tmp"
+
+        arachne.vm.provision "shell",
+            inline: <<-'SHELL'
+            echo "--- Install arachne ---"
+            dnf install -y /tmp/arachne-1.0_SNAPSHOT-*.noarch.rpm || exit 1
+
+            echo "--- Start arachne ---"
+            systemctl enable --now arachne
+            systemctl status arachne
+
+            if [ -e "/etc/httpd/krb5.keytab" ]; then
+                echo "--- Copy keytab ---"
+                cp -v /etc/httpd/krb5.keytab /var/lib/arachne/work/arachneconfig
+                chown arachne:arachne /var/lib/arachne/work/arachneconfig/krb5.keytab
+            else
+                echo "--- No keytab to copy ---"
+            fi
+
+            echo "--- Enable service in firewall  ---"
+            for i in http https openvpn ; do
+                echo -n "$i: "
+                firewall-cmd --add-service=openvpn --permanent
+            done
+            firewall-cmd --add-port 80/tcp --permanent
+            echo -n "--- Reloading firewalld ---"
+            firewall-cmd --reload
+            SHELL
+    end # arachne
+end # config
