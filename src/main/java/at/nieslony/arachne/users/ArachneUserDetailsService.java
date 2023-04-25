@@ -58,24 +58,27 @@ public class ArachneUserDetailsService implements UserDetailsService {
             return userDetails;
         }
         try {
-            Optional<LdapUserCacheModel> olucm = ldapUserCacheRepository.findByUsername(username);
-            LdapUserCacheModel lucm;
-            if (olucm.isPresent()) {
-                lucm = olucm.get();
-                logger.info(
-                        "Found user %s in cache: %s"
-                                .formatted(username, lucm.toString())
-                );
-                if (!lucm.isExpired(ldapCacheMaxMins)) {
-                    logger.info("User %s is not expired".formatted(username));
-                    UserDetails userDetails = new ArachneUserDetails(lucm);
-                    return userDetails;
-                }
-            } else {
-                logger.info("User %s is expired, update required".formatted(username));
-                lucm = new LdapUserCacheModel();
-            }
             LdapSettings ldapSettings = new LdapSettings(settings);
+            LdapUserCacheModel lucm = null;
+
+            if (ldapSettings.isCacheEnabled()) {
+                Optional<LdapUserCacheModel> olucm = ldapUserCacheRepository.findByUsername(username);
+                if (olucm.isPresent()) {
+                    lucm = olucm.get();
+                    logger.info(
+                            "Found user %s in cache: %s"
+                                    .formatted(username, lucm.toString())
+                    );
+                    if (!lucm.isExpired(ldapSettings.getCacheTimeOut())) {
+                        logger.info("User %s is not expired".formatted(username));
+                        UserDetails userDetails = new ArachneUserDetails(lucm);
+                        return userDetails;
+                    }
+                } else {
+                    logger.info("User %s is expired, update required".formatted(username));
+                    lucm = new LdapUserCacheModel();
+                }
+            }
 
             LdapUser ldapUser = ldapSettings.getUser(username);
             logger.info("Found in LDAP " + ldapUser.toString());
@@ -83,8 +86,10 @@ public class ArachneUserDetailsService implements UserDetailsService {
             Set<String> roles = rolesCollector.findRolesForUser(username, false);
             logger.info("LDAP User %s has roles %s".formatted(username, roles.toString()));
 
-            lucm.update(ldapUser, roles);
-            ldapUserCacheRepository.save(lucm);
+            if (ldapSettings.isCacheEnabled() && lucm != null) {
+                lucm.update(ldapUser, roles);
+                ldapUserCacheRepository.save(lucm);
+            }
 
             UserDetails userDetails = new ArachneUserDetails(ldapUser, roles);
             return userDetails;

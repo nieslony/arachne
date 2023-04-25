@@ -35,6 +35,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.menubar.MenuBar;
@@ -261,6 +262,20 @@ public class LdapView extends VerticalLayout {
             groupsSearchFilter.setValue("");
         });
 
+        Checkbox enableLdapCacheField = new Checkbox("Enable LDAP Cache");
+        binder.forField(enableLdapCacheField)
+                .bind(LdapSettings::isCacheEnabled, LdapSettings::setCacheEnabled);
+
+        IntegerField cacheTimeoutField = new IntegerField("Cache Timeout");
+        cacheTimeoutField.setMin(1);
+        cacheTimeoutField.setStepButtonsVisible(true);
+        Div suffix = new Div();
+        suffix.setText("minutes");
+        cacheTimeoutField.setSuffixComponent(suffix);
+        cacheTimeoutField.setEnabled(false);
+        binder.forField(cacheTimeoutField)
+                .bind(LdapSettings::getCacheTimeOut, LdapSettings::setCacheTimeOut);
+
         usersEnableCustomFilter.addValueChangeListener(
                 e -> {
                     if (ldapSettings.isUsersEnableCustomFilter()) {
@@ -293,6 +308,10 @@ public class LdapView extends VerticalLayout {
                 }
         );
 
+        enableLdapCacheField.addValueChangeListener((e) -> {
+            cacheTimeoutField.setEnabled(e.getValue());
+        });
+
         FormLayout layout = new FormLayout(
                 usersLayout,
                 groupsLayout
@@ -300,7 +319,9 @@ public class LdapView extends VerticalLayout {
 
         return new VerticalLayout(
                 loadDefaultsMenu,
-                layout
+                layout,
+                enableLdapCacheField,
+                cacheTimeoutField
         );
     }
 
