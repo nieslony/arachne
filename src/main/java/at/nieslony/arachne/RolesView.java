@@ -66,16 +66,23 @@ public class RolesView extends VerticalLayout {
         roleRules = new Grid();
         ruleColumn = roleRules
                 .addColumn(RoleRuleModel::getRoleRuleDescription)
-                .setHeader("Rule");
+                .setHeader("Rule")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         parameterColumn = roleRules
                 .addColumn(RoleRuleModel::getParameter)
-                .setHeader("Parameter");
+                .setHeader("Parameter")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         roleColumn = roleRules
                 .addColumn(RoleRuleModel::getRoleReadable)
-                .setHeader("Assigned Role");
+                .setHeader("Assigned Role")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         descriptionColumn = roleRules
                 .addColumn(RoleRuleModel::getDescription)
-                .setHeader("Description");
+                .setHeader("Description")
+                .setFlexGrow(1);
 
         roleRules.setItems(roleRuleRepository.findAll());
 
