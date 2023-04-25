@@ -42,7 +42,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,8 @@ public class OpenVpnUserView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
 
-    @Data
+    @Getter
+    @Setter
     public class NicInfo {
 
         private String ipAddress;
@@ -77,7 +79,8 @@ public class OpenVpnUserView extends VerticalLayout {
         }
     }
 
-    @Data
+    @Getter
+    @Setter
     public class NetMask {
 
         private int bits;

@@ -13,13 +13,17 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.security.PrivateKey;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author claas
  */
-@Data
+@Getter
+@Setter
+@ToString
 @Entity
 @Table(name = "keys")
 public class KeyModel implements Serializable {

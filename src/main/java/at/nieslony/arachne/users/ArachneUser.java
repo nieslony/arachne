@@ -22,7 +22,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
  *
  * @author claas
  */
-//@Data
 @Getter
 @Setter
 @ToString

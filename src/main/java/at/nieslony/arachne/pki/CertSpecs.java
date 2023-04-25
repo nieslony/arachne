@@ -4,13 +4,17 @@
  */
 package at.nieslony.arachne.pki;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author claas
  */
-@Data
+@Getter
+@Setter
+@ToString
 public class CertSpecs {
 
     private String keyAlgo;

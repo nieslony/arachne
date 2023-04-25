@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,8 @@ public class PkiRestController {
     @Autowired
     Pki pki;
 
-    @Data
+    @Getter
+    @Setter
     public class UserCertInfo {
 
         UserCertInfo(CertificateModel model) {

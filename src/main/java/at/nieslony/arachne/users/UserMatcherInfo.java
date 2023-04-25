@@ -4,13 +4,15 @@
  */
 package at.nieslony.arachne.users;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
  * @author claas
  */
-@Data
+@Getter
+@Setter
 public class UserMatcherInfo {
 
     private String className;
