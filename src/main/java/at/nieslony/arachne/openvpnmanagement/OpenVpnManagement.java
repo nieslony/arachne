@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpnmanagement;
 
-import at.nieslony.arachne.FolderFactory;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
 import jakarta.annotation.PostConstruct;

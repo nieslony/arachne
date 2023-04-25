@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
-import at.nieslony.arachne.FolderFactory;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.SrvRecord;

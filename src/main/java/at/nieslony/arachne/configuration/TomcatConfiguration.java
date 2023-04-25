@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.configuration;
 
+import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.settings.Settings;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.ajp.AbstractAjpProtocol;

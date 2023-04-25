@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.setup.SetupView;
 import at.nieslony.arachne.setup.SetupController;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;

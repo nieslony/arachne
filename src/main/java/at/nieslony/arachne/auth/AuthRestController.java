@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.auth;
 
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;

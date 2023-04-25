@@ -2,10 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.openvpn;
 
-import static at.nieslony.arachne.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
-import static at.nieslony.arachne.OpenVpnUserSettings.PasswordVerificationType.PAM;
+import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
+import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.Pki;
@@ -115,7 +117,7 @@ public class OpenVpnRestController {
         return userVpnConfig(username, asJson);
     }
 
-    void writeOpenVpnPluginConfig(OpenVpnUserSettings settings) {
+    public void writeOpenVpnPluginConfig(OpenVpnUserSettings settings) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_CONF);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
 
@@ -131,7 +133,7 @@ public class OpenVpnRestController {
         }
     }
 
-    void writeOpenVpnUserServerConfig(OpenVpnUserSettings settings) {
+    public void writeOpenVpnUserServerConfig(OpenVpnUserSettings settings) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_SERVER_CONF);
         logger.info("Writing openvpn user server config to " + fileName);
 

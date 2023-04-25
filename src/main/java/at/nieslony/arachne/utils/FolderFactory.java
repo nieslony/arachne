@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.utils;
 
 import at.nieslony.arachne.utils.NetUtils;
 import java.io.File;
