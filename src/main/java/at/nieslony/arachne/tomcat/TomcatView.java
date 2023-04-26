@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.tomcat;
 
+import at.nieslony.arachne.Arachne;
+import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;

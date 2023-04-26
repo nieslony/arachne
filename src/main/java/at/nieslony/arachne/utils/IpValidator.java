@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.utils;
 
 import com.vaadin.flow.function.SerializablePredicate;
 
@@ -10,7 +10,7 @@ import com.vaadin.flow.function.SerializablePredicate;
  *
  * @author claas
  */
-class IpValidator implements SerializablePredicate<String> {
+public class IpValidator implements SerializablePredicate<String> {
 
     @Override
     public boolean test(String value) {

@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne;
+package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
@@ -130,7 +130,7 @@ public class OpenVpnUserSettings {
     private String authPamService;
     private String authHttpUrl;
 
-    void save(Settings settings) {
+    public void save(Settings settings) {
         settings.put(SK_OPENVPN_USER_NAME, vpnName);
         settings.put(SK_OPENVPN_USER_LISTEN_IP, listenIp);
         settings.put(SK_OPENVPN_USER_LISTEN_PORT, listenPort);

@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.setup;
 
-import at.nieslony.arachne.FolderFactory;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiSetupException;
 import at.nieslony.arachne.roles.Role;
