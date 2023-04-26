@@ -8,7 +8,6 @@ import at.nieslony.arachne.ldap.LdapGroup;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.UserMatcherDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

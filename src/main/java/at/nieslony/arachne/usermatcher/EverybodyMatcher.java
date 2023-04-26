@@ -4,8 +4,6 @@
  */
 package at.nieslony.arachne.usermatcher;
 
-import at.nieslony.arachne.users.UserMatcherDescription;
-
 /**
  *
  * @author claas

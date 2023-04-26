@@ -6,7 +6,7 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
-import at.nieslony.arachne.users.UserMatcherDescription;
+import at.nieslony.arachne.usermatcher.UserMatcherDescription;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;

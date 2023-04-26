@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.usermatcher;
 
-import at.nieslony.arachne.users.UserMatcherDescription;
 import lombok.Getter;
 import lombok.Setter;
 
