@@ -4,8 +4,6 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.utils.FolderFactory;
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
@@ -13,6 +11,7 @@ import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.NetUtils;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.FileWriter;

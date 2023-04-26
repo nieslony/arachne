@@ -5,10 +5,6 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.roles.Role;
-import at.nieslony.arachne.roles.RoleRuleModel;
-import at.nieslony.arachne.roles.RoleRuleRepository;
-import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.users.UserMatcherInfo;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;

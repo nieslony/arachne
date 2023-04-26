@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.setup;
 
-import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiSetupException;
 import at.nieslony.arachne.roles.Role;
@@ -15,6 +14,7 @@ import at.nieslony.arachne.settings.SettingsRepository;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsernameMatcher;
+import at.nieslony.arachne.utils.FolderFactory;
 import java.util.Optional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

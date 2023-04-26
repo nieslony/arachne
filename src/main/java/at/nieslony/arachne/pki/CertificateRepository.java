@@ -11,7 +11,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author claas
  */
-public interface CertificateRepository extends JpaRepository<CertificateModel, Long>{
+public interface CertificateRepository extends JpaRepository<CertificateModel, Long> {
+
     List<CertificateModel> findBySubjectAndCertType(
             String subject,
             CertificateModel.CertType certType);

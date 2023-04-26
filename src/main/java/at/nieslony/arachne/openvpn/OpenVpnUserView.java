@@ -4,11 +4,10 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.utils.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;

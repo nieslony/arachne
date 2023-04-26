@@ -10,5 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author claas
  */
-public interface KeyRepository extends JpaRepository<KeyModel, Long>{
+public interface KeyRepository extends JpaRepository<KeyModel, Long> {
 }

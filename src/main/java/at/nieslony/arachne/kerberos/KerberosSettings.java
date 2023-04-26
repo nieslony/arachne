@@ -16,8 +16,8 @@
  */
 package at.nieslony.arachne.kerberos;
 
-import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.FolderFactory;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

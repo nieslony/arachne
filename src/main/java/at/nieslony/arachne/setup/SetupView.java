@@ -5,8 +5,6 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.pki.CertSpecs;
-import at.nieslony.arachne.setup.SetupController;
-import at.nieslony.arachne.setup.SetupData;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
