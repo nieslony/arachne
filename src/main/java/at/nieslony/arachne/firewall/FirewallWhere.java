@@ -25,7 +25,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  *
@@ -33,7 +32,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "firewallWhere")
 public class FirewallWhere {
@@ -52,7 +50,20 @@ public class FirewallWhere {
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
+    private Type type;
     private String hostname;
     private String subnet;
     private String serviceRecord;
+
+    @Override
+    public String toString() {
+        return switch (type) {
+            case Hostname ->
+                hostname;
+            case ServiceRecord ->
+                subnet;
+            case Subnet ->
+                serviceRecord;
+        };
+    }
 }

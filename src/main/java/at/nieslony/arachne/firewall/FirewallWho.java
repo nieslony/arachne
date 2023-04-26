@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.users.UserMatcher;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,7 +26,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  *
@@ -33,7 +33,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "firewallWhat")
 public class FirewallWho {
@@ -48,4 +47,11 @@ public class FirewallWho {
 
     private String userMatcherClassName;
     private String parameter;
+
+    @Override
+    public String toString() {
+        return UserMatcher.getMatcherDetails(
+                getUserMatcherClassName(),
+                getParameter());
+    }
 }

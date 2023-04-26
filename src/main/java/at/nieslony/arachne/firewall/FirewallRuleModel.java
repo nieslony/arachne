@@ -24,6 +24,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.List;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +50,7 @@ public class FirewallRuleModel {
     private boolean enabled;
 
     @OneToMany(fetch = FetchType.EAGER)
-    private Set<FirewallWho> who;
+    private List<FirewallWho> who;
 
     @OneToMany(fetch = FetchType.EAGER)
     private Set<FirewallWhere> where;

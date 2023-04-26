@@ -17,9 +17,21 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 
 /**
@@ -35,5 +47,139 @@ public class FirewallView extends VerticalLayout {
 
     public FirewallView(FirewallRuleRepository firewallRuleRepository) {
         this.firewallRuleRepository = firewallRuleRepository;
+
+        Grid<FirewallRuleModel> allowGrid = new Grid<>();
+        allowGrid
+                .addColumn(new ComponentRenderer<>(
+                        (var model) -> {
+                            return new Text(model.getDescription());
+                        }
+                ))
+                .setHeader("Who");
+
+        allowGrid
+                .addColumn(new ComponentRenderer<>(
+                        (var model) -> {
+                            return new Text(model.getDescription());
+                        }
+                ))
+                .setHeader("Where");
+
+        allowGrid
+                .addColumn(new ComponentRenderer<>(
+                        (var model) -> {
+                            return new Text(model.getDescription());
+                        }
+                ))
+                .setHeader("What");
+
+        allowGrid
+                .addColumn(FirewallRuleModel::getDescription)
+                .setHeader("Description");
+
+        Button addRule = new Button("Add...", e -> {
+            FirewallRuleModel rule = new FirewallRuleModel();
+            editRule(rule);
+        });
+
+        add(addRule, allowGrid);
+    }
+
+    private void editRule(FirewallRuleModel rule) {
+        Dialog dlg = new Dialog();
+        if (rule.getId() == null) {
+            dlg.setHeaderTitle("New rule");
+        } else {
+            dlg.setHeaderTitle("Edit rule");
+        }
+
+        Binder<FirewallRuleModel> binder = new Binder();
+        binder.setBean(rule);
+
+        Label whoLabel = new Label("Who");
+        ListBox<FirewallWho> whoList = new ListBox<>();
+        whoList.setHeight(30, Unit.EX);
+        whoList.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+        whoList.setWidthFull();
+        Button addWhoButton = new Button("Add...");
+        Button editWhoButton = new Button("Edit...");
+        Button removeWhoButton = new Button("Remove");
+        VerticalLayout editWho = new VerticalLayout(
+                whoLabel,
+                whoList,
+                new HorizontalLayout(
+                        addWhoButton,
+                        editWhoButton,
+                        removeWhoButton
+                )
+        );
+
+        Label whereLabel = new Label("Where");
+        ListBox<FirewallWhere> whereList = new ListBox<>();
+        whereList.setHeight(30, Unit.EX);
+        whereList.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+        whereList.setWidthFull();
+        Button addWhereButton = new Button("Add...");
+        Button editWhereButton = new Button("Edit...");
+        Button removeWhereButton = new Button("Remove");
+        VerticalLayout editWhere = new VerticalLayout(
+                whereLabel,
+                whereList,
+                new HorizontalLayout(
+                        addWhereButton,
+                        editWhereButton,
+                        removeWhereButton
+                )
+        );
+
+        Label whatLabel = new Label("What");
+        ListBox<FirewallWhat> whatList = new ListBox<>();
+        whatList.setHeight(30, Unit.EX);
+        whatList.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+        whatList.setWidthFull();
+        Button addWhatButton = new Button("Add...");
+        Button editWhatButton = new Button("Edit...");
+        Button removeWhatButton = new Button("Remove");
+        VerticalLayout editWhat = new VerticalLayout(
+                whatLabel,
+                whatList,
+                new HorizontalLayout(
+                        addWhatButton,
+                        editWhatButton,
+                        removeWhatButton
+                )
+        );
+
+        dlg.add(new HorizontalLayout(
+                editWho,
+                editWhere,
+                editWhat
+        ));
+
+        Button saveButton = new Button("Save", e -> {
+            firewallRuleRepository.save(rule);
+            dlg.close();
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setAutofocus(true);
+
+        Button cancelButton = new Button("Cancel", e -> dlg.close());
+
+        dlg.getFooter().add(cancelButton);
+        dlg.getFooter().add(saveButton);
+
+        dlg.open();
     }
 }

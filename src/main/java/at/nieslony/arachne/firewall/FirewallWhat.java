@@ -25,7 +25,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
  *
@@ -33,7 +32,6 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "firewallWhat")
 public class FirewallWhat {
@@ -60,5 +58,17 @@ public class FirewallWhat {
     private int portFrom;
     private int portTo;
     private Protocol protocol;
-    private String Service;
+    private String service;
+
+    @Override
+    public String toString() {
+        return switch (type) {
+            case OnePort ->
+                "%d/%s".formatted(portFrom, protocol.name());
+            case PortRange ->
+                "%d-%d/%s".formatted(portFrom, portTo, protocol.name());
+            case Service ->
+                "Service " + service;
+        };
+    }
 }
