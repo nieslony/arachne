@@ -17,4 +17,34 @@ public abstract class UserMatcher {
     }
 
     public abstract boolean isUserMatching(String username);
+
+    public static String getMatcherDetails(String className, String parameter) {
+        Class c;
+        try {
+            c = Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            return "unknown class: " + className;
+        }
+
+        return getMatcherDetails(c, parameter);
+    }
+
+    public static String getMatcherDetails(Class matcherClass, String parameter) {
+        UserMatcherInfo info
+                = (UserMatcherInfo) matcherClass.getAnnotation(UserMatcherInfo.class);
+        if (info != null) {
+            if (info.getParameterLabel() != null) {
+                return "%s %s".formatted(info.getDescription(), parameter);
+            } else {
+                return info.getDescription();
+            }
+        }
+
+        return "???";
+    }
+
+    @Override
+    public String toString() {
+        return getMatcherDetails(getClass(), parameter);
+    }
 }
