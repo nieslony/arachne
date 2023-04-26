@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.configuration;
 
-import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.tomcat.TomcatSettings;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.ajp.AbstractAjpProtocol;
 import org.springframework.beans.factory.annotation.Autowired;

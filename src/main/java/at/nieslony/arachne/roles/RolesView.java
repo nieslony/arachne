@@ -5,11 +5,8 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.roles.Role;
-import at.nieslony.arachne.roles.RoleRuleModel;
-import at.nieslony.arachne.roles.RoleRuleRepository;
-import at.nieslony.arachne.roles.RolesCollector;
-import at.nieslony.arachne.users.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -42,7 +39,7 @@ public class RolesView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(RolesView.class);
 
     final private RoleRuleRepository roleRuleRepository;
-    final private RolesCollector rolesCollector;
+    final private UserMatcherCollector userMatcherCollector;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -52,10 +49,10 @@ public class RolesView extends VerticalLayout {
 
     public RolesView(
             RoleRuleRepository roleRuleRepository,
-            RolesCollector rolesCollector
+            UserMatcherCollector userMatcherCollector
     ) {
         this.roleRuleRepository = roleRuleRepository;
-        this.rolesCollector = rolesCollector;
+        this.userMatcherCollector = userMatcherCollector;
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -92,7 +89,7 @@ public class RolesView extends VerticalLayout {
         add(topButtons, roleRules);
     }
 
-    void editRoleBuffered() {
+    private void editRoleBuffered() {
         Editor<RoleRuleModel> editor = roleRules.getEditor();
         Binder<RoleRuleModel> binder = new Binder(RoleRuleModel.class);
         editor.setBinder(binder);
@@ -113,7 +110,7 @@ public class RolesView extends VerticalLayout {
                 .setFlexGrow(0);
 
         Select<UserMatcherInfo> userMatchersField = new Select<>();
-        List<UserMatcherInfo> allUserMatchers = rolesCollector.getAllUserMatcherInfo();
+        List<UserMatcherInfo> allUserMatchers = userMatcherCollector.getAllUserMatcherInfo();
         userMatchersField.setItems(allUserMatchers);
         userMatchersField.setEmptySelectionAllowed(false);
         binder.forField(userMatchersField)
@@ -213,13 +210,12 @@ public class RolesView extends VerticalLayout {
         binder.addStatusChangeListener((event) -> {
             okButton.setEnabled(!event.hasValidationErrors());
         });
-        RoleRuleModel roleRule = new RoleRuleModel();
 
         dialog.getFooter().add(cancelButton);
         dialog.getFooter().add(okButton);
 
         Select<UserMatcherInfo> userMatchers = new Select<>();
-        List<UserMatcherInfo> allUserMatchers = rolesCollector.getAllUserMatcherInfo();
+        List<UserMatcherInfo> allUserMatchers = userMatcherCollector.getAllUserMatcherInfo();
         userMatchers.setItems(allUserMatchers);
         userMatchers.setEmptySelectionAllowed(false);
         userMatchers.setLabel("Role Rules");

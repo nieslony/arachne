@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.auth;
 
-import at.nieslony.arachne.setup.SetupView;
 import at.nieslony.arachne.setup.SetupController;
+import at.nieslony.arachne.setup.SetupView;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -34,7 +34,7 @@ public class LoginOrSetupView
     private final LoginForm login = new LoginForm();
 
     ;
-
+  
     public LoginOrSetupView(SetupController setupController) {
         loginViewInit = false;
         this.setupController = setupController;

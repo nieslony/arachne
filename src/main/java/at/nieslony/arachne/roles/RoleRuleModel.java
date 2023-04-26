@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.users.UserMatcher;
-import at.nieslony.arachne.users.UserMatcherDescription;
+import at.nieslony.arachne.usermatcher.UserMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcherDescription;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

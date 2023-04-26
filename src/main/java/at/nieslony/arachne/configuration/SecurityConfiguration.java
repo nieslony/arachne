@@ -4,11 +4,11 @@
  */
 package at.nieslony.arachne.configuration;
 
-import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
+import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;

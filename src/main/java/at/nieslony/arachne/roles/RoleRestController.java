@@ -4,7 +4,8 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.users.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,7 +40,7 @@ public class RoleRestController {
     private RoleRuleRepository roleRuleRepository;
 
     @Autowired
-    private RolesCollector rolesCollector;
+    private UserMatcherCollector userMatcherCollestor;
 
     @GetMapping("/rules")
     @RolesAllowed(value = {"ADMIN"})
@@ -83,7 +84,7 @@ public class RoleRestController {
     @GetMapping("/user_matchers")
     @RolesAllowed(value = {"ADMIN"})
     public List<UserMatcherInfo> userMatchers() {
-        return rolesCollector.getAllUserMatcherInfo();
+        return userMatcherCollestor.getAllUserMatcherInfo();
     }
 
     @Getter
