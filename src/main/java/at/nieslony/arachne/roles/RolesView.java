@@ -5,7 +5,7 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.users.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;

@@ -2,21 +2,23 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.users;
+package at.nieslony.arachne.usermatcher;
+
+import at.nieslony.arachne.users.UserMatcherDescription;
 
 /**
  *
  * @author claas
  */
-@UserMatcherDescription(description = "Everybody")
-public class EverybodyMatcher extends UserMatcher {
+@UserMatcherDescription(description = "Username is", parameterLabel = "Username")
+public class UsernameMatcher extends UserMatcher {
 
-    public EverybodyMatcher(String requiredUsername) {
+    public UsernameMatcher(String requiredUsername) {
         super(requiredUsername);
     }
 
     @Override
     public boolean isUserMatching(String username) {
-        return true;
+        return parameter.equals(username);
     }
 }

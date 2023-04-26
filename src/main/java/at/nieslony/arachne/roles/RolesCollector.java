@@ -4,12 +4,12 @@
  */
 package at.nieslony.arachne.roles;
 
-import at.nieslony.arachne.ldap.LdapGroupUserMatcher;
-import at.nieslony.arachne.users.EverybodyMatcher;
-import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
+import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.users.UserMatcherDescription;
-import at.nieslony.arachne.users.UserMatcherInfo;
-import at.nieslony.arachne.users.UsernameMatcher;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;

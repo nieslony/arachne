@@ -2,10 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.ldap;
+package at.nieslony.arachne.usermatcher;
 
+import at.nieslony.arachne.ldap.LdapGroup;
+import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.UserMatcher;
 import at.nieslony.arachne.users.UserMatcherDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
