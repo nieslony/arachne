@@ -17,14 +17,18 @@ import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author claas
  */
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
 @Table(name = "certitificates")
 public class CertificateModel implements Serializable {
 

@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.kerberos;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import com.vaadin.flow.component.Unit;
@@ -111,8 +112,11 @@ public class KerberosView extends VerticalLayout {
         servicePrincipalLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
         Button saveButton = new Button(
-                "Save",
-                e -> binder.getBean().save(settings)
+                "Save and Restart Arachne",
+                e -> {
+                    binder.getBean().save(settings);
+                    Arachne.restart();
+                }
         );
 
         binder.addStatusChangeListener(

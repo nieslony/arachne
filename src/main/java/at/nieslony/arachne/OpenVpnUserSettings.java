@@ -8,7 +8,8 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
 import java.util.LinkedList;
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,8 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
  *
  * @author claas
  */
-@Data
+@Getter
+@Setter
 @ToString
 public class OpenVpnUserSettings {
 
