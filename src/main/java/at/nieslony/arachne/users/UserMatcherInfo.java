@@ -18,7 +18,9 @@ public class UserMatcherInfo {
     private String parameterLabel;
 
     public UserMatcherInfo() {
-
+        className = null;
+        description = null;
+        parameterLabel = null;
     }
 
     public UserMatcherInfo(Class< ? extends UserMatcher> userMatcherClass) {
