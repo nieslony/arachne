@@ -21,12 +21,14 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
@@ -162,10 +164,19 @@ public class FirewallView extends VerticalLayout {
                 )
         );
 
-        dlg.add(new HorizontalLayout(
-                editWho,
-                editWhere,
-                editWhat
+        TextField descriptionField = new TextField("Description");
+        descriptionField.setWidthFull();
+        descriptionField.setClearButtonVisible(true);
+        Checkbox isEnabledField = new Checkbox("Enable Rule");
+
+        dlg.add(new VerticalLayout(
+                new HorizontalLayout(
+                        editWho,
+                        editWhere,
+                        editWhat
+                ),
+                descriptionField,
+                isEnabledField
         ));
 
         Button saveButton = new Button("Save", e -> {
@@ -181,5 +192,14 @@ public class FirewallView extends VerticalLayout {
         dlg.getFooter().add(saveButton);
 
         dlg.open();
+    }
+
+    private void editWho(FirewallWho who) {
+        Dialog dlg = new Dialog();
+        if (who.getId() == null) {
+            dlg.setHeaderTitle("Add Who");
+        } else {
+            dlg.setHeaderTitle("Edit Who");
+        }
     }
 }
