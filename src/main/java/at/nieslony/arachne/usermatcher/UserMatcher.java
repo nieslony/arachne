@@ -30,17 +30,19 @@ public abstract class UserMatcher {
     }
 
     public static String getMatcherDetails(Class matcherClass, String parameter) {
-        UserMatcherInfo info
-                = (UserMatcherInfo) matcherClass.getAnnotation(UserMatcherInfo.class);
-        if (info != null) {
-            if (info.getParameterLabel() != null) {
-                return "%s %s".formatted(info.getDescription(), parameter);
+        UserMatcherDescription desc
+                = (UserMatcherDescription) matcherClass.getAnnotation(
+                        UserMatcherDescription.class
+                );
+        if (desc != null) {
+            if (desc.description() != null) {
+                return "%s %s".formatted(desc.description(), parameter);
             } else {
-                return info.getDescription();
+                return desc.description();
             }
         }
 
-        return "???";
+        return matcherClass.getName();
     }
 
     @Override
