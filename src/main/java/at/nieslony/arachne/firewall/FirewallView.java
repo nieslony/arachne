@@ -17,6 +17,10 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -28,6 +32,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -35,6 +40,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -45,12 +55,21 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class FirewallView extends VerticalLayout {
 
+    private static final Logger logger = LoggerFactory.getLogger(FirewallView.class);
+
     final private FirewallRuleRepository firewallRuleRepository;
+    final private UserMatcherCollector userMatcherCollector;
 
-    public FirewallView(FirewallRuleRepository firewallRuleRepository) {
+    Grid<FirewallRuleModel> allowGrid;
+
+    public FirewallView(
+            FirewallRuleRepository firewallRuleRepository,
+            UserMatcherCollector userMatcherCollector
+    ) {
         this.firewallRuleRepository = firewallRuleRepository;
+        this.userMatcherCollector = userMatcherCollector;
 
-        Grid<FirewallRuleModel> allowGrid = new Grid<>();
+        allowGrid = new Grid<>();
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
@@ -107,9 +126,33 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.Background.PRIMARY_10
         );
         whoList.setWidthFull();
-        Button addWhoButton = new Button("Add...");
-        Button editWhoButton = new Button("Edit...");
-        Button removeWhoButton = new Button("Remove");
+        Button addWhoButton = new Button("Add...", (ClickEvent<Button> e) -> {
+            FirewallWho who = new FirewallWho();
+            who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+            editWho(who, (FirewallWho w) -> {
+                List<FirewallWho> l = rule.getWho();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWho(l);
+                }
+                l.add(w);
+                whoList.setItems(l);
+            });
+        });
+        Button editWhoButton = new Button("Edit...", (e) -> {
+            FirewallWho who = whoList.getValue();
+            editWho(who, (FirewallWho w) -> {
+                List<FirewallWho> l = rule.getWho();
+                whoList.setItems(l);
+            });
+        });
+        editWhoButton.setEnabled(false);
+        Button removeWhoButton = new Button("Remove", (e) -> {
+            FirewallWho who = whoList.getValue();
+            List<FirewallWho> l = rule.getWho();
+            l.remove(who);
+            whoList.setItems(l);
+        });
         VerticalLayout editWho = new VerticalLayout(
                 whoLabel,
                 whoList,
@@ -119,6 +162,7 @@ public class FirewallView extends VerticalLayout {
                         removeWhoButton
                 )
         );
+        removeWhoButton.setEnabled(false);
 
         Label whereLabel = new Label("Where");
         ListBox<FirewallWhere> whereList = new ListBox<>();
@@ -188,18 +232,88 @@ public class FirewallView extends VerticalLayout {
 
         Button cancelButton = new Button("Cancel", e -> dlg.close());
 
-        dlg.getFooter().add(cancelButton);
-        dlg.getFooter().add(saveButton);
+        whoList.addValueChangeListener((e) -> {
+            editWhoButton.setEnabled(e.getValue() != null);
+            removeWhoButton.setEnabled(e.getValue() != null);
+        });
 
+        dlg.getFooter().add(cancelButton, saveButton);
         dlg.open();
     }
 
-    private void editWho(FirewallWho who) {
+    private void editWho(FirewallWho who, Consumer<FirewallWho> onSave) {
+        logger.info("Editing who " + who.toString());
         Dialog dlg = new Dialog();
         if (who.getId() == null) {
             dlg.setHeaderTitle("Add Who");
         } else {
             dlg.setHeaderTitle("Edit Who");
         }
+
+        Binder<FirewallWho> binder = new Binder<>();
+
+        Select<UserMatcherInfo> userMatchersSelect = new Select<>();
+        userMatchersSelect.setLabel("User Matcher");
+        userMatchersSelect.setItems(userMatcherCollector.getAllUserMatcherInfo());
+        userMatchersSelect.setEmptySelectionAllowed(false);
+        binder.forField(userMatchersSelect)
+                .bind(
+                        rr -> {
+                            return new UserMatcherInfo(rr.getUserMatcherClassName());
+                        },
+                        (rr, v) -> {
+                            rr.setUserMatcherClassName(v.getClassName());
+                        }
+                );
+
+        TextField parameterField = new TextField("Parameter");
+        binder.forField(parameterField)
+                .withValidator(
+                        text -> {
+                            String label = userMatchersSelect.getValue().getParameterLabel();
+                            if (label == null || label.isEmpty()) {
+                                return true;
+                            }
+                            return !parameterField.getValue().isEmpty();
+                        },
+                        "Value required")
+                .bind(FirewallWho::getParameter, FirewallWho::setParameter);
+
+        userMatchersSelect.addValueChangeListener(
+                (e) -> {
+                    String labelTxt = e.getValue().getParameterLabel();
+                    parameterField.setLabel(labelTxt);
+                    parameterField.setVisible(labelTxt != null && !labelTxt.isEmpty());
+
+                    binder.validate();
+                }
+        );
+
+        dlg.add(new VerticalLayout(
+                userMatchersSelect,
+                parameterField
+        ));
+
+        Button saveButton = new Button("Save", (t) -> {
+            dlg.close();
+            logger.info(who.toString());
+            onSave.accept(who);
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setAutofocus(true);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        binder.addStatusChangeListener((sce) -> {
+            saveButton.setEnabled(!sce.hasValidationErrors());
+        });
+
+        binder.setBean(who);
+        binder.validate();
+
+        dlg.getFooter().add(cancelButton, saveButton);
+        dlg.open();
     }
 }

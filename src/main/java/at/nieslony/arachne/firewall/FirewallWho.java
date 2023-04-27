@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.users.UserMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcher;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
