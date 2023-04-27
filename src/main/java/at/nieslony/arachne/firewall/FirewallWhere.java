@@ -37,9 +37,20 @@ import lombok.Setter;
 public class FirewallWhere {
 
     public enum Type {
-        Hostname,
-        Subnet,
-        ServiceRecord
+        Hostname("Hostname"),
+        Subnet("Subnet"),
+        ServiceRecord("Service Record");
+
+        private final String label;
+
+        private Type(String l) {
+            label = l;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 
     @Id
@@ -50,20 +61,32 @@ public class FirewallWhere {
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
-    private Type type;
+    private Type type = Type.Hostname;
+
     private String hostname;
+
     private String subnet;
-    private String serviceRecord;
+    private int subnetMask;
+
+    private String serviceRecProtocol;
+    private String serviceRecName;
+    private String servicerecDomain;
 
     @Override
     public String toString() {
         return switch (type) {
             case Hostname ->
                 hostname;
-            case ServiceRecord ->
-                subnet;
             case Subnet ->
-                serviceRecord;
+                "%s/%d".formatted(subnet, subnetMask);
+            case ServiceRecord ->
+                "_%s._%s.%s"
+                .formatted(
+                serviceRecName,
+                serviceRecProtocol,
+                servicerecDomain
+                )
+                .toLowerCase();
         };
     }
 }

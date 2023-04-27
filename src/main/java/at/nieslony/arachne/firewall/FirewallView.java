@@ -33,6 +33,7 @@ import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -153,6 +154,7 @@ public class FirewallView extends VerticalLayout {
             l.remove(who);
             whoList.setItems(l);
         });
+        removeWhoButton.setEnabled(false);
         VerticalLayout editWho = new VerticalLayout(
                 whoLabel,
                 whoList,
@@ -162,7 +164,7 @@ public class FirewallView extends VerticalLayout {
                         removeWhoButton
                 )
         );
-        removeWhoButton.setEnabled(false);
+        editWho.setPadding(false);
 
         Label whereLabel = new Label("Where");
         ListBox<FirewallWhere> whereList = new ListBox<>();
@@ -173,9 +175,34 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.Background.PRIMARY_10
         );
         whereList.setWidthFull();
-        Button addWhereButton = new Button("Add...");
-        Button editWhereButton = new Button("Edit...");
-        Button removeWhereButton = new Button("Remove");
+        Button addWhereButton = new Button("Add...", (e) -> {
+            FirewallWhere where = new FirewallWhere();
+            editWhere(where, (FirewallWhere w) -> {
+                List<FirewallWhere> l = rule.getWhere();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWhere(l);
+                }
+                l.add(w);
+                whereList.setItems(l);
+            });
+        });
+        Button editWhereButton = new Button("Edit...", (e) -> {
+            FirewallWhere where = whereList.getValue();
+            editWhere(where, (FirewallWhere w) -> {
+                List<FirewallWhere> l = rule.getWhere();
+                whereList.setItems(l);
+            });
+        });
+        editWhereButton.setEnabled(false);
+        Button removeWhereButton = new Button("Remove", (e) -> {
+            FirewallWhere where = whereList.getValue();
+            List<FirewallWhere> l = rule.getWhere();
+            l.remove(where);
+            whereList.setItems(l);
+        });
+        removeWhereButton.setEnabled(false);
+
         VerticalLayout editWhere = new VerticalLayout(
                 whereLabel,
                 whereList,
@@ -185,6 +212,7 @@ public class FirewallView extends VerticalLayout {
                         removeWhereButton
                 )
         );
+        editWhere.setPadding(false);
 
         Label whatLabel = new Label("What");
         ListBox<FirewallWhat> whatList = new ListBox<>();
@@ -207,13 +235,14 @@ public class FirewallView extends VerticalLayout {
                         removeWhatButton
                 )
         );
+        editWhat.setPadding(false);
 
         TextField descriptionField = new TextField("Description");
         descriptionField.setWidthFull();
         descriptionField.setClearButtonVisible(true);
         Checkbox isEnabledField = new Checkbox("Enable Rule");
 
-        dlg.add(new VerticalLayout(
+        VerticalLayout layout = new VerticalLayout(
                 new HorizontalLayout(
                         editWho,
                         editWhere,
@@ -221,7 +250,9 @@ public class FirewallView extends VerticalLayout {
                 ),
                 descriptionField,
                 isEnabledField
-        ));
+        );
+        layout.setPadding(false);
+        dlg.add(layout);
 
         Button saveButton = new Button("Save", e -> {
             firewallRuleRepository.save(rule);
@@ -235,6 +266,11 @@ public class FirewallView extends VerticalLayout {
         whoList.addValueChangeListener((e) -> {
             editWhoButton.setEnabled(e.getValue() != null);
             removeWhoButton.setEnabled(e.getValue() != null);
+        });
+
+        whereList.addValueChangeListener((e) -> {
+            editWhereButton.setEnabled(e.getValue() != null);
+            removeWhereButton.setEnabled(e.getValue() != null);
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
@@ -314,6 +350,122 @@ public class FirewallView extends VerticalLayout {
         binder.validate();
 
         dlg.getFooter().add(cancelButton, saveButton);
+        dlg.open();
+    }
+
+    private void editWhere(FirewallWhere where, Consumer<FirewallWhere> onSave) {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Edit Where");
+
+        Binder<FirewallWhere> binder = new Binder();
+
+        Select<FirewallWhere.Type> whereTypeSelect = new Select<>();
+        whereTypeSelect.setLabel("Where Type");
+        whereTypeSelect.setItems(FirewallWhere.Type.values());
+        whereTypeSelect.setEmptySelectionAllowed(false);
+        binder.forField(whereTypeSelect)
+                .bind(FirewallWhere::getType, FirewallWhere::setType);
+
+        TextField hostnameField = new TextField("Hostname");
+        hostnameField.setWidthFull();
+        hostnameField.setVisible(false);
+        binder.forField(hostnameField)
+                .bind(FirewallWhere::getHostname, FirewallWhere::setHostname);
+
+        TextField networkField = new TextField("Network");
+        networkField.setPattern("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}");
+        binder.forField(networkField)
+                .bind(FirewallWhere::getSubnet, FirewallWhere::setSubnet);
+
+        IntegerField netMaskField = new IntegerField();
+        netMaskField.setValue(32);
+        netMaskField.setMin(1);
+        netMaskField.setMax(32);
+        netMaskField.setWidth(6, Unit.EM);
+        netMaskField.setStepButtonsVisible(true);
+        binder.forField(netMaskField)
+                .bind(FirewallWhere::getSubnetMask, FirewallWhere::setSubnetMask);
+
+        HorizontalLayout networkEdit = new HorizontalLayout(
+                networkField,
+                new Text("/"),
+                netMaskField
+        );
+        networkEdit.setFlexGrow(1, networkField);
+        networkEdit.setWidthFull();
+        networkEdit.setAlignItems(Alignment.BASELINE);
+        networkEdit.setVisible(false);
+
+        TextField serviceRecDomainField = new TextField("Domain");
+        serviceRecDomainField.setPattern(("[a-z][a-z9-9\\-]*(\\.[a-z][a-z0-9\\-]*)*"));
+        binder.forField(serviceRecDomainField)
+                .bind(FirewallWhere::getServicerecDomain, FirewallWhere::setServicerecDomain);
+
+        TextField serviceRecNameField = new TextField("Service");
+        serviceRecNameField.setWidth(10, Unit.EM);
+        serviceRecNameField.setPattern("[a-z]*");
+        binder.forField(serviceRecNameField)
+                .bind(FirewallWhere::getServiceRecName, FirewallWhere::setServiceRecName);
+
+        Select<String> serviceRecProtocolField = new Select<>();
+        serviceRecProtocolField.setLabel("Protocol");
+        serviceRecProtocolField.setItems("TCP", "UDP");
+        serviceRecProtocolField.setWidth(6, Unit.EM);
+        serviceRecProtocolField.setEmptySelectionAllowed(false);
+        binder.forField(serviceRecProtocolField)
+                .bind(FirewallWhere::getServiceRecProtocol, FirewallWhere::setServiceRecProtocol);
+
+        HorizontalLayout serviceRecEdit = new HorizontalLayout(
+                serviceRecDomainField,
+                serviceRecNameField,
+                serviceRecProtocolField
+        );
+        serviceRecEdit.setFlexGrow(2, serviceRecDomainField);
+        serviceRecEdit.setFlexGrow(1, serviceRecNameField);
+        serviceRecEdit.setVisible(false);
+        serviceRecEdit.setWidthFull();
+
+        VerticalLayout layout = new VerticalLayout(
+                whereTypeSelect,
+                hostnameField,
+                networkEdit,
+                serviceRecEdit
+        );
+        layout.setPadding(false);
+        layout.setSpacing(false);
+        dlg.add(layout);
+
+        Button saveButton = new Button("Save", (e) -> {
+            dlg.close();
+            onSave.accept(where);
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setAutofocus(true);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        whereTypeSelect.addValueChangeListener((e) -> {
+            hostnameField.setVisible(false);
+            networkEdit.setVisible(false);
+            serviceRecEdit.setVisible(false);
+            switch (e.getValue()) {
+                case Hostname ->
+                    hostnameField.setVisible(true);
+                case Subnet ->
+                    networkEdit.setVisible(true);
+                case ServiceRecord ->
+                    serviceRecEdit.setVisible(true);
+            }
+        });
+
+        dlg.getFooter().add(cancelButton, saveButton);
+
+        binder.setBean(where);
+        binder.validate();
+
+        dlg.setMinWidth(40, Unit.EM);
         dlg.open();
     }
 }
