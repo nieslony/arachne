@@ -13,6 +13,7 @@ import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.TransportProtocol;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -146,7 +147,9 @@ public class OpenVpnRestController {
                     )
             );
             writer.println("local %s".formatted(settings.getListenIp()));
-            writer.println("proto %s".formatted(settings.getListenProtocol().toLowerCase()));
+            writer.println("proto %s".formatted(
+                    settings.getListenProtocol().name().toLowerCase())
+            );
             writer.println("port %d".formatted(settings.getListenPort()));
             writer.println("dev-type %s".formatted(settings.getDeviceType()));
             writer.println("dev %s".formatted(settings.getDeviceName()));
@@ -226,7 +229,9 @@ public class OpenVpnRestController {
         writer.println("client");
         writer.println("dev-type %s".formatted(vpnSettings.getDeviceType()));
         writer.println("dev %s".formatted(vpnSettings.getDeviceName()));
-        writer.println("proto %s".formatted(vpnSettings.getListenProtocol().toLowerCase()));
+        writer.println("proto %s".formatted(
+                vpnSettings.getListenProtocol().name().toLowerCase())
+        );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("auth-user-pass");
@@ -258,7 +263,7 @@ public class OpenVpnRestController {
         connection.put("connection-type", "password-tls");
         connection.put("password-flags", "2");
         connection.put("port", vpnSettings.getListenPort());
-        if (vpnSettings.getListenProtocol().equals("TCP")) {
+        if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             connection.put("proto-tcp", "yes");
         }
 

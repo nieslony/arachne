@@ -6,6 +6,7 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.TransportProtocol;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
@@ -84,7 +85,10 @@ public class OpenVpnUserSettings {
         vpnName = settings.get(SK_OPENVPN_USER_NAME, "Arachne OpenVPN - %u@%h");
         listenIp = settings.get(SK_OPENVPN_USER_LISTEN_IP, "0.0.0.0");
         listenPort = settings.getInt(SK_OPENVPN_USER_LISTEN_PORT, 1194);
-        listenProtocol = settings.get(SK_OPENVPN_USER_LISTEN_PROTOCOL, "UDP");
+        listenProtocol = TransportProtocol.valueOf(
+                settings.get(SK_OPENVPN_USER_LISTEN_PROTOCOL,
+                        TransportProtocol.UDP.name())
+        );
         remote = settings.get(SK_OPENVPN_USER_REMOTE, NetUtils.myHostname());
         deviceType = settings.get(SK_OPENVPN_USER_DEVICE_TYPE, "tun");
         deviceName = settings.get(SK_OPENVPN_USER_DEVICE_NAME, "arachne");
@@ -115,7 +119,7 @@ public class OpenVpnUserSettings {
     private String vpnName;
     private String listenIp;
     private int listenPort;
-    private String listenProtocol;
+    private TransportProtocol listenProtocol;
     private String remote;
     private String deviceType;
     private String deviceName;
@@ -134,7 +138,7 @@ public class OpenVpnUserSettings {
         settings.put(SK_OPENVPN_USER_NAME, vpnName);
         settings.put(SK_OPENVPN_USER_LISTEN_IP, listenIp);
         settings.put(SK_OPENVPN_USER_LISTEN_PORT, listenPort);
-        settings.put(SK_OPENVPN_USER_LISTEN_PROTOCOL, listenProtocol);
+        settings.put(SK_OPENVPN_USER_LISTEN_PROTOCOL, listenProtocol.name());
         settings.put(SK_OPENVPN_USER_REMOTE, remote);
         settings.put(SK_OPENVPN_USER_DEVICE_TYPE, deviceType);
         settings.put(SK_OPENVPN_USER_DEVICE_NAME, deviceName);

@@ -9,6 +9,7 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -227,8 +228,8 @@ public class OpenVpnUserView extends VerticalLayout {
         port.setValueChangeMode(ValueChangeMode.EAGER);
         port.setWidth(8, Unit.EM);
 
-        Select<String> protocol = new Select<>();
-        protocol.setItems("TCP", "UDP");
+        Select<TransportProtocol> protocol = new Select<>();
+        protocol.setItems(TransportProtocol.values());
         protocol.setLabel("Protocol");
         protocol.setWidth(8, Unit.EM);
 
