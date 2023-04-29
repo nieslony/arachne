@@ -26,6 +26,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -60,6 +62,9 @@ public class FirewallView extends VerticalLayout {
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
+
+    @Value("${firewalldServicesDir}")
+    private String firewalldServiceDir;
 
     Grid<FirewallRuleModel> allowGrid;
 
@@ -223,7 +228,11 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.Background.PRIMARY_10
         );
         whatList.setWidthFull();
-        Button addWhatButton = new Button("Add...");
+        Button addWhatButton = new Button("Add...", (e) -> {
+            FirewallWhat what = new FirewallWhat();
+            editWhat(what, (w) -> {
+            });
+        });
         Button editWhatButton = new Button("Edit...");
         Button removeWhatButton = new Button("Remove");
         VerticalLayout editWhat = new VerticalLayout(
@@ -466,6 +475,43 @@ public class FirewallView extends VerticalLayout {
         binder.validate();
 
         dlg.setMinWidth(40, Unit.EM);
+        dlg.open();
+    }
+
+    private void editWhat(FirewallWhat what, Consumer<FirewallWhat> onSave) {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Edit What");
+
+        Select<FirewallWhat.Type> whatTypeSelect = new Select<>();
+        whatTypeSelect.setLabel("What Type");
+        whatTypeSelect.setItems(FirewallWhat.Type.values());
+
+        ComboBox<FirewalldService> firewalldServiceSelect = new ComboBox<>();
+        firewalldServiceSelect.setLabel("Firewalld Service");
+        firewalldServiceSelect.setItems(FirewalldService.readAll(firewalldServiceDir));
+        firewalldServiceSelect.setItemLabelGenerator(FirewalldService::getShortDescription);
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setPadding(false);
+        layout.add(
+                whatTypeSelect,
+                firewalldServiceSelect
+        );
+        dlg.add(layout);
+
+        Button saveButton = new Button("Save", (e) -> {
+            dlg.close();
+            onSave.accept(what);
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setAutofocus(true);
+
+        Button cancelButtin = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(cancelButtin, saveButton);
+
         dlg.open();
     }
 }
