@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.utils.TransportProtocol;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,10 +36,6 @@ import lombok.Setter;
 @Entity
 @Table(name = "firewallWhat")
 public class FirewallWhat {
-
-    public enum Protocol {
-        TCP, UDP
-    }
 
     public enum Type {
         OnePort("One Port"),
@@ -66,20 +63,22 @@ public class FirewallWhat {
     private FirewallRuleModel firewallRule;
 
     private Type type;
+    private int port;
+    private TransportProtocol portProtocol;
     private int portFrom;
     private int portTo;
-    private Protocol protocol;
+    private TransportProtocol portRangeProtocol;
     private String service;
 
     @Override
     public String toString() {
         return switch (type) {
             case OnePort ->
-                "%d/%s".formatted(portFrom, protocol.name());
+                "%d/%s".formatted(port, portProtocol.name());
             case PortRange ->
-                "%d-%d/%s".formatted(portFrom, portTo, protocol.name());
+                "%d-%d/%s".formatted(portFrom, portTo, portRangeProtocol.name());
             case Service ->
-                "Service " + service;
+                FirewalldService.getService(service).getShortDescription();
         };
     }
 }

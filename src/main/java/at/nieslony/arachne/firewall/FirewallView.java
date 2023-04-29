@@ -20,6 +20,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -42,12 +43,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -62,9 +63,6 @@ public class FirewallView extends VerticalLayout {
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
-
-    @Value("${firewalldServicesDir}")
-    private String firewalldServiceDir;
 
     Grid<FirewallRuleModel> allowGrid;
 
@@ -231,10 +229,30 @@ public class FirewallView extends VerticalLayout {
         Button addWhatButton = new Button("Add...", (e) -> {
             FirewallWhat what = new FirewallWhat();
             editWhat(what, (w) -> {
+                List<FirewallWhat> l = rule.getWhat();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWhat(l);
+                }
+                l.add(w);
+                whatList.setItems(l);
             });
         });
-        Button editWhatButton = new Button("Edit...");
-        Button removeWhatButton = new Button("Remove");
+        Button editWhatButton = new Button("Edit...", (e) -> {
+            FirewallWhat what = whatList.getValue();
+            editWhat(what, (FirewallWhat w) -> {
+                List<FirewallWhat> l = rule.getWhat();
+                whatList.setItems(l);
+            });
+        });
+        editWhatButton.setEnabled(false);
+        Button removeWhatButton = new Button("Remove", (e) -> {
+            FirewallWhat what = whatList.getValue();
+            List<FirewallWhat> l = rule.getWhat();
+            l.remove(what);
+            whatList.setItems(l);
+        });
+        removeWhatButton.setEnabled(false);
         VerticalLayout editWhat = new VerticalLayout(
                 whatLabel,
                 whatList,
@@ -280,6 +298,11 @@ public class FirewallView extends VerticalLayout {
         whereList.addValueChangeListener((e) -> {
             editWhereButton.setEnabled(e.getValue() != null);
             removeWhereButton.setEnabled(e.getValue() != null);
+        });
+
+        whatList.addValueChangeListener((e) -> {
+            editWhatButton.setEnabled(e.getValue() != null);
+            removeWhatButton.setEnabled(e.getValue() != null);
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
@@ -416,9 +439,9 @@ public class FirewallView extends VerticalLayout {
         binder.forField(serviceRecNameField)
                 .bind(FirewallWhere::getServiceRecName, FirewallWhere::setServiceRecName);
 
-        Select<String> serviceRecProtocolField = new Select<>();
+        Select<TransportProtocol> serviceRecProtocolField = new Select<>();
         serviceRecProtocolField.setLabel("Protocol");
-        serviceRecProtocolField.setItems("TCP", "UDP");
+        serviceRecProtocolField.setItems(TransportProtocol.values());
         serviceRecProtocolField.setWidth(6, Unit.EM);
         serviceRecProtocolField.setEmptySelectionAllowed(false);
         binder.forField(serviceRecProtocolField)
@@ -482,20 +505,90 @@ public class FirewallView extends VerticalLayout {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Edit What");
 
+        Binder<FirewallWhat> binder = new Binder<>();
+        Collection<FirewalldService> firewalldServices = FirewalldService.getAllServices();
+
         Select<FirewallWhat.Type> whatTypeSelect = new Select<>();
         whatTypeSelect.setLabel("What Type");
         whatTypeSelect.setItems(FirewallWhat.Type.values());
+        binder.forField(whatTypeSelect)
+                .bind(FirewallWhat::getType, FirewallWhat::setType);
 
         ComboBox<FirewalldService> firewalldServiceSelect = new ComboBox<>();
         firewalldServiceSelect.setLabel("Firewalld Service");
-        firewalldServiceSelect.setItems(FirewalldService.readAll(firewalldServiceDir));
+        firewalldServiceSelect.setItems(firewalldServices);
         firewalldServiceSelect.setItemLabelGenerator(FirewalldService::getShortDescription);
+        firewalldServiceSelect.setWidthFull();
+        firewalldServiceSelect.setVisible(false);
+        binder.forField(firewalldServiceSelect)
+                .bind(
+                        (FirewallWhat source)
+                        -> FirewalldService.getService(source.getService()),
+                        (FirewallWhat dest, FirewalldService value)
+                        -> dest.setService(value.getName())
+                );
+
+        IntegerField portField = new IntegerField("Port");
+        portField.setMin(1);
+        portField.setMax(65535);
+        portField.setWidth(8, Unit.EM);
+        portField.setStepButtonsVisible(true);
+        binder.forField(portField)
+                .bind(FirewallWhat::getPort, FirewallWhat::setPort);
+
+        Select<TransportProtocol> portProtocolSelect = new Select<>();
+        portProtocolSelect.setItems(TransportProtocol.values());
+        binder.forField(portProtocolSelect)
+                .bind(FirewallWhat::getPortProtocol, FirewallWhat::setPortProtocol);
+
+        HorizontalLayout portEdit = new HorizontalLayout(
+                portField,
+                new Text("/"),
+                portProtocolSelect
+        );
+        portEdit.setAlignItems(Alignment.BASELINE);
+        portEdit.setVisible(false);
+        portEdit.setWidthFull();
+
+        IntegerField portFromField = new IntegerField("Port from");
+        portFromField.setMin(1);
+        portFromField.setMax(65535);
+        portFromField.setWidth(8, Unit.EM);
+        portFromField.setStepButtonsVisible(true);
+        binder.forField(portFromField)
+                .bind(FirewallWhat::getPortFrom, FirewallWhat::setPortFrom);
+
+        IntegerField portToField = new IntegerField("Port to");
+        portToField.setMin(1);
+        portToField.setMax(65535);
+        portToField.setWidth(8, Unit.EM);
+        portToField.setStepButtonsVisible(true);
+        binder.forField(portToField)
+                .bind(FirewallWhat::getPortTo, FirewallWhat::setPortTo);
+
+        Select<TransportProtocol> portRangeProtocolSelect = new Select<>();
+        portRangeProtocolSelect.setItems(TransportProtocol.values());
+        binder.forField(portRangeProtocolSelect)
+                .bind(FirewallWhat::getPortRangeProtocol, FirewallWhat::setPortRangeProtocol);
+
+        HorizontalLayout portRangeEdit = new HorizontalLayout(
+                portFromField,
+                new Text("-"),
+                portToField,
+                new Text("/"),
+                portRangeProtocolSelect
+        );
+        portRangeEdit.setAlignItems(Alignment.BASELINE);
+        portRangeEdit.setVisible(false);
+        portRangeEdit.setWidthFull();
 
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(false);
         layout.add(
                 whatTypeSelect,
-                firewalldServiceSelect
+                firewalldServiceSelect,
+                portEdit,
+                portRangeEdit
         );
         dlg.add(layout);
 
@@ -511,6 +604,24 @@ public class FirewallView extends VerticalLayout {
         });
 
         dlg.getFooter().add(cancelButtin, saveButton);
+
+        whatTypeSelect.addValueChangeListener((e) -> {
+            firewalldServiceSelect.setVisible(false);
+            portEdit.setVisible(false);
+            portRangeEdit.setVisible(false);
+
+            switch (e.getValue()) {
+                case Service ->
+                    firewalldServiceSelect.setVisible(true);
+                case OnePort ->
+                    portEdit.setVisible(true);
+                case PortRange ->
+                    portRangeEdit.setVisible(true);
+            }
+        });
+
+        binder.setBean(what);
+        binder.validate();
 
         dlg.open();
     }
