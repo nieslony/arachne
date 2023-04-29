@@ -41,9 +41,20 @@ public class FirewallWhat {
     }
 
     public enum Type {
-        OnePort,
-        PortRange,
-        Service
+        OnePort("One Port"),
+        PortRange("Port Range"),
+        Service("Firewalld Service");
+
+        final private String label;
+
+        private Type(String l) {
+            label = l;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 
     @Id
