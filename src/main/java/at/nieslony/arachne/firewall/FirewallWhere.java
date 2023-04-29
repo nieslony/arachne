@@ -39,7 +39,8 @@ public class FirewallWhere {
     public enum Type {
         Hostname("Hostname"),
         Subnet("Subnet"),
-        ServiceRecord("Service Record");
+        ServiceRecord("Service Record"),
+        PushedDnsServers("Pushed DNS Servers");
 
         private final String label;
 
@@ -87,6 +88,8 @@ public class FirewallWhere {
                 servicerecDomain
                 )
                 .toLowerCase();
+            case PushedDnsServers ->
+                "Pushed DNS Servers";
         };
     }
 }
