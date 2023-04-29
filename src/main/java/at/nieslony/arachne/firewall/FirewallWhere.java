@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.utils.TransportProtocol;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -69,7 +70,7 @@ public class FirewallWhere {
     private String subnet;
     private int subnetMask;
 
-    private String serviceRecProtocol;
+    private TransportProtocol serviceRecProtocol;
     private String serviceRecName;
     private String servicerecDomain;
 
@@ -84,7 +85,7 @@ public class FirewallWhere {
                 "_%s._%s.%s"
                 .formatted(
                 serviceRecName,
-                serviceRecProtocol,
+                serviceRecProtocol.name().toLowerCase(),
                 servicerecDomain
                 )
                 .toLowerCase();
