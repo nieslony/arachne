@@ -71,10 +71,18 @@ public class NetUtils {
     }
 
     public static List<SrvRecord> srvLookup(String srvType) throws NamingException {
-        return srvLookup(srvType, myDomain());
+        return srvLookup(srvType, TransportProtocol.TCP, myDomain());
     }
 
     public static List<SrvRecord> srvLookup(String srvType, String domain)
+            throws NamingException {
+        return srvLookup(srvType, TransportProtocol.TCP, domain);
+    }
+
+    public static List<SrvRecord> srvLookup(
+            String srvType,
+            TransportProtocol protocol,
+            String domain)
             throws NamingException {
         String value = null;
 
@@ -84,7 +92,11 @@ public class NetUtils {
 
         DirContext ctx = new InitialDirContext(env);
         Attributes attrs = ctx.getAttributes(
-                "_%s._tcp.%s".formatted(srvType, domain),
+                "_%s._%s.%s"
+                        .formatted(
+                                srvType,
+                                protocol.name().toLowerCase(),
+                                domain),
                 new String[]{"SRV"});
         NamingEnumeration en = attrs.getAll();
         List<SrvRecord> srvRecords = new LinkedList<>();
