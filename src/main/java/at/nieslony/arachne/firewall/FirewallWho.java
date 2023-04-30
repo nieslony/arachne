@@ -26,6 +26,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 /**
  *
@@ -34,7 +36,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "firewallWhat")
+@Table(name = "firewallWho")
 public class FirewallWho {
 
     @Id
@@ -42,6 +44,7 @@ public class FirewallWho {
     private Long id;
 
     @ManyToOne
+    @Cascade(CascadeType.SAVE_UPDATE)
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 

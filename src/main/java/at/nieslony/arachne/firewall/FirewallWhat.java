@@ -26,6 +26,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 /**
  *
@@ -59,16 +61,17 @@ public class FirewallWhat {
     private Long id;
 
     @ManyToOne
+    @Cascade(CascadeType.SAVE_UPDATE)
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
-    private Type type;
-    private int port;
+    private Type type = Type.OnePort;
+    private int port = 1;
     private TransportProtocol portProtocol;
-    private int portFrom;
-    private int portTo;
+    private int portFrom = 1;
+    private int portTo = 65535;
     private TransportProtocol portRangeProtocol;
-    private String service;
+    private String service = "";
 
     @Override
     public String toString() {
