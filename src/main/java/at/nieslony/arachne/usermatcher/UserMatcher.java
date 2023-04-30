@@ -35,7 +35,7 @@ public abstract class UserMatcher {
                         UserMatcherDescription.class
                 );
         if (desc != null) {
-            if (desc.description() != null) {
+            if (desc.parameterLabel() != null && parameter != null) {
                 return "%s %s".formatted(desc.description(), parameter);
             } else {
                 return desc.description();
