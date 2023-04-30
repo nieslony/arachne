@@ -28,9 +28,11 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -77,7 +79,31 @@ public class FirewallView extends VerticalLayout {
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
-                            return new Text(model.getDescription());
+                            Collection<FirewallWho> whos = model.getWho();
+                            switch (whos.size()) {
+                                case 0 -> {
+                                    return new Text("");
+                                }
+                                case 1 -> {
+                                    String s = whos.toArray()[0].toString();
+                                    return new Text(s);
+                                }
+                                default -> {
+                                    Details details = new Details();
+                                    details.setSummaryText(
+                                            "%s...(%d)".formatted(
+                                                    whos.toArray()[0].toString(),
+                                                    whos.size()
+                                            )
+                                    );
+                                    UnorderedList detailItems = new UnorderedList();
+                                    whos.forEach((w) -> {
+                                        detailItems.add(w.toString());
+                                    });
+                                    details.setContent(detailItems);
+                                    return details;
+                                }
+                            }
                         }
                 ))
                 .setHeader("Who");
@@ -85,7 +111,31 @@ public class FirewallView extends VerticalLayout {
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
-                            return new Text(model.getDescription());
+                            Collection<FirewallWhere> wheres = model.getWhere();
+                            switch (wheres.size()) {
+                                case 0 -> {
+                                    return new Text("");
+                                }
+                                case 1 -> {
+                                    String s = wheres.toArray()[0].toString();
+                                    return new Text(s);
+                                }
+                                default -> {
+                                    Details details = new Details();
+                                    details.setSummaryText(
+                                            "%s...(%d)".formatted(
+                                                    wheres.toArray()[0].toString(),
+                                                    wheres.size()
+                                            )
+                                    );
+                                    UnorderedList detailItems = new UnorderedList();
+                                    wheres.forEach((w) -> {
+                                        detailItems.add(w.toString());
+                                    });
+                                    details.setContent(detailItems);
+                                    return details;
+                                }
+                            }
                         }
                 ))
                 .setHeader("Where");
@@ -93,10 +143,37 @@ public class FirewallView extends VerticalLayout {
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
-                            return new Text(model.getDescription());
+                            Collection<FirewallWhat> whats = model.getWhat();
+                            switch (whats.size()) {
+                                case 0 -> {
+                                    return new Text("");
+                                }
+                                case 1 -> {
+                                    String s = whats.toArray()[0].toString();
+                                    return new Text(s);
+                                }
+                                default -> {
+                                    Details details = new Details();
+                                    details.setSummaryText(
+                                            "%s...(%d)".formatted(
+                                                    whats.toArray()[0].toString(),
+                                                    whats.size()
+                                            )
+                                    );
+                                    UnorderedList detailItems = new UnorderedList();
+                                    whats.forEach((w) -> {
+                                        detailItems.add(w.toString());
+                                    });
+                                    details.setContent(detailItems);
+                                    return details;
+                                }
+                            }
                         }
                 ))
                 .setHeader("What");
+
+        allowGrid.addColumn(FirewallRuleModel::isEnabled)
+                .setHeader("Enabled");
 
         allowGrid
                 .addColumn(FirewallRuleModel::getDescription)
@@ -106,6 +183,33 @@ public class FirewallView extends VerticalLayout {
             FirewallRuleModel rule = new FirewallRuleModel();
             editRule(rule);
         });
+
+        if (firewallRuleRepository.count() == 0) {
+            FirewallRuleModel allowDns = new FirewallRuleModel();
+            allowDns.setDescription("Allow DNS acces for everybody");
+            allowDns.setEnabled(true);
+
+            FirewallWho who = new FirewallWho();
+            who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+            allowDns.setWho(new LinkedList<>());
+            allowDns.getWho().add(who);
+
+            FirewallWhere where = new FirewallWhere();
+            where.setType(FirewallWhere.Type.PushedDnsServers);
+            allowDns.setWhere(new LinkedList<>());
+            allowDns.getWhere().add(where);
+
+            FirewallWhat what = new FirewallWhat();
+            what.setType(FirewallWhat.Type.Service);
+            what.setService("dns");
+            allowDns.setWhat(new LinkedList<>());
+            allowDns.getWhat().add(what);
+            logger.info("What: " + allowDns.getWhat().toString());
+            logger.info("Rule: " + allowDns.toString());
+
+            firewallRuleRepository.save(allowDns);
+        }
+        allowGrid.setItems(firewallRuleRepository.findAll());
 
         add(addRule, allowGrid);
     }
