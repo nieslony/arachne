@@ -5,6 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.IpValidator;
@@ -122,9 +123,13 @@ public class OpenVpnUserView extends VerticalLayout {
         });
         saveSettings.addClickListener((t) -> {
             if (binder.writeBeanIfValid(vpnSettings)) {
+                FirewallBasicsSettings firewallBasicsSettings = new FirewallBasicsSettings(settings);
                 vpnSettings.save(settings);
                 openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-                openvpnRestController.writeOpenVpnPluginConfig(vpnSettings);
+                openvpnRestController.writeOpenVpnPluginConfig(
+                        vpnSettings,
+                        firewallBasicsSettings
+                );
             }
         });
 
