@@ -17,11 +17,13 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -44,7 +46,9 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -73,18 +77,64 @@ public class FirewallView extends VerticalLayout {
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
-
-    Grid<FirewallRuleModel> allowGrid;
+    final private Settings settings;
 
     public FirewallView(
             FirewallRuleRepository firewallRuleRepository,
-            UserMatcherCollector userMatcherCollector
+            UserMatcherCollector userMatcherCollector,
+            Settings settings
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
+        this.settings = settings;
 
-        allowGrid = new Grid<>();
-        allowGrid
+        TabSheet tabs = new TabSheet();
+        tabs.setWidthFull();
+        tabs.add("Basics", createBasicsTab());
+        tabs.add("Incoming Rules", createIncomingGrid());
+
+        add(tabs);
+    }
+
+    private Component createBasicsTab() {
+        VerticalLayout layout = new VerticalLayout();
+        Binder<FirewallBasicsSettings> binder = new Binder();
+        FirewallBasicsSettings firewallBasicSettings = new FirewallBasicsSettings(settings);
+
+        Checkbox enableFirewallField = new Checkbox("Enable Firewall");
+        binder.forField(enableFirewallField)
+                .bind(FirewallBasicsSettings::isEnableFirewall, FirewallBasicsSettings::setEnableFirewall);
+
+        TextField firewallZoneField = new TextField("Firewall Zone");
+        binder.forField(firewallZoneField)
+                .bind(FirewallBasicsSettings::getFirewallZone, FirewallBasicsSettings::setFirewallZone);
+
+        RadioButtonGroup<FirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
+                = new RadioButtonGroup<>("Enable Routing");
+        enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
+        binder.forField(enableRoutingMode)
+                .bind(FirewallBasicsSettings::getEnableRoutreMode, FirewallBasicsSettings::setEnableRoutreMode);
+
+        Button saveButton = new Button("Save", (e) -> {
+            firewallBasicSettings.save(settings);
+        });
+
+        binder.setBean(firewallBasicSettings);
+
+        layout.add(
+                enableFirewallField,
+                firewallZoneField,
+                enableRoutingMode,
+                saveButton
+        );
+        return layout;
+    }
+
+    private Component createIncomingGrid() {
+        Grid<FirewallRuleModel> grid = new Grid<>();
+        grid.setWidthFull();
+
+        grid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWho> whos = model.getWho();
@@ -102,7 +152,7 @@ public class FirewallView extends VerticalLayout {
                 .setAutoWidth(true)
                 .setFlexGrow(0);
 
-        allowGrid
+        grid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWhere> wheres = model.getWhere();
@@ -120,7 +170,7 @@ public class FirewallView extends VerticalLayout {
                 .setAutoWidth(true)
                 .setFlexGrow(0);
 
-        allowGrid
+        grid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWhat> whats = model.getWhat();
@@ -138,17 +188,17 @@ public class FirewallView extends VerticalLayout {
                 .setAutoWidth(true)
                 .setFlexGrow(0);
 
-        allowGrid.addColumn(FirewallRuleModel::isEnabled)
+        grid.addColumn(FirewallRuleModel::isEnabled)
                 .setHeader("Enabled")
                 .setAutoWidth(true)
                 .setFlexGrow(0);
 
-        allowGrid
+        grid
                 .addColumn(FirewallRuleModel::getDescription)
                 .setHeader("Description")
                 .setFlexGrow(1);
 
-        allowGrid
+        grid
                 .addColumn(new ComponentRenderer<>(
                         (model) -> {
                             MenuBar menuBar = new MenuBar();
@@ -157,11 +207,11 @@ public class FirewallView extends VerticalLayout {
                             SubMenu submenu = menuItem.getSubMenu();
                             submenu.addItem(
                                     "Edit...",
-                                    event -> editRule(model)
+                                    event -> editRule(grid, model)
                             );
                             submenu.addItem(
                                     "Delete...",
-                                    event -> deleteRule(model)
+                                    event -> deleteRule(grid, model)
                             );
 
                             return menuBar;
@@ -172,7 +222,7 @@ public class FirewallView extends VerticalLayout {
 
         Button addRule = new Button("Add...", e -> {
             FirewallRuleModel rule = new FirewallRuleModel();
-            editRule(rule);
+            editRule(grid, rule);
         });
 
         if (firewallRuleRepository.count()
@@ -202,12 +252,18 @@ public class FirewallView extends VerticalLayout {
             firewallRuleRepository.save(allowDns);
         }
 
-        allowGrid.setItems(firewallRuleRepository.findAll());
+        grid.setItems(firewallRuleRepository.findAll());
 
-        add(addRule, allowGrid);
+        VerticalLayout layout = new VerticalLayout(
+                addRule,
+                grid
+        );
+        layout.setWidthFull();
+
+        return layout;
     }
 
-    private void deleteRule(FirewallRuleModel rule) {
+    private void deleteRule(Grid<FirewallRuleModel> grid, FirewallRuleModel rule) {
         ConfirmDialog confirm = new ConfirmDialog();
         confirm.setHeader("Delete firewall rule");
         confirm.setText(
@@ -218,14 +274,14 @@ public class FirewallView extends VerticalLayout {
         confirm.addConfirmListener(
                 e -> {
                     firewallRuleRepository.delete(rule);
-                    allowGrid.getDataProvider().refreshAll();
+                    grid.getDataProvider().refreshAll();
                 });
 
         confirm.open();
 
     }
 
-    private void editRule(FirewallRuleModel rule) {
+    private void editRule(Grid<FirewallRuleModel> grid, FirewallRuleModel rule) {
         logger.info(rule.toString());
         Dialog dlg = new Dialog();
         if (rule.getId() == null) {
@@ -416,9 +472,9 @@ public class FirewallView extends VerticalLayout {
             firewallRuleRepository.save(rule);
             dlg.close();
             if (rule.getId() == null) {
-                allowGrid.setItems(firewallRuleRepository.findAll());
+                grid.setItems(firewallRuleRepository.findAll());
             } else {
-                allowGrid.getDataProvider().refreshItem(rule);
+                grid.getDataProvider().refreshItem(rule);
             }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
