@@ -91,13 +91,12 @@ public class NetUtils {
         env.put("java.naming.provider.url", "dns:");
 
         DirContext ctx = new InitialDirContext(env);
-        Attributes attrs = ctx.getAttributes(
-                "_%s._%s.%s"
-                        .formatted(
-                                srvType,
-                                protocol.name().toLowerCase(),
-                                domain),
-                new String[]{"SRV"});
+        String search = "_%s._%s.%s".formatted(
+                srvType,
+                protocol.name().toLowerCase(),
+                domain
+        );
+        Attributes attrs = ctx.getAttributes(search, new String[]{"SRV"});
         NamingEnumeration en = attrs.getAll();
         List<SrvRecord> srvRecords = new LinkedList<>();
         while (en.hasMore()) {
