@@ -16,6 +16,9 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.SrvRecord;
 import at.nieslony.arachne.utils.TransportProtocol;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,10 +27,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
+import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -38,6 +49,8 @@ import org.hibernate.annotations.CascadeType;
 @Entity
 @Table(name = "firewallWhere")
 public class FirewallWhere {
+
+    private static final Logger logger = LoggerFactory.getLogger(FirewallWhere.class);
 
     public enum Type {
         Hostname("Hostname"),
@@ -88,12 +101,70 @@ public class FirewallWhere {
                 "_%s._%s.%s"
                 .formatted(
                 serviceRecName,
-                serviceRecProtocol.name().toLowerCase(),
+                serviceRecProtocol.name().toLowerCase().toLowerCase(),
                 servicerecDomain
                 )
                 .toLowerCase();
             case PushedDnsServers ->
                 "Pushed DNS Servers";
         };
+    }
+
+    public List<String> resolve(OpenVpnUserSettings openvpnSettings) {
+        List<String> addresses = new LinkedList<>();
+
+        switch (type) {
+            case Hostname -> {
+                try {
+                    InetAddress[] inetAddresses = InetAddress.getAllByName(hostname);
+                    for (InetAddress addr : inetAddresses) {
+                        if (addr instanceof Inet4Address) {
+                            addresses.add(addr.getHostAddress());
+                        }
+                    }
+                } catch (UnknownHostException ex) {
+                    logger.error(
+                            "Cannot resolve %s: %s"
+                                    .formatted(hostname, ex.getMessage())
+                    );
+                }
+            }
+            case Subnet -> {
+                String addr = "%s/%d".formatted(subnet, subnetMask);
+                addresses.add(addr);
+            }
+            case ServiceRecord -> {
+                try {
+                    List<SrvRecord> srvRecs = NetUtils.srvLookup(
+                            getServiceRecName(),
+                            getServiceRecProtocol(),
+                            getServicerecDomain()
+                    );
+                    for (SrvRecord srvRec : srvRecs) {
+                        InetAddress[] addrs = InetAddress.getAllByName(srvRec.getHostname());
+                        for (InetAddress addr : addrs) {
+                            if (addr instanceof Inet4Address) {
+                                addresses.add(addr.getHostAddress());
+                            }
+                        }
+                    }
+                } catch (NamingException | UnknownHostException ex) {
+                    logger.info(
+                            "Cannot find service record _%s._%s.%s: %s"
+                                    .formatted(
+                                            serviceRecName,
+                                            serviceRecProtocol.toString(),
+                                            servicerecDomain,
+                                            ex.getMessage()
+                                    )
+                    );
+                }
+            }
+            case PushedDnsServers -> {
+                addresses.addAll(openvpnSettings.getPushDnsServers());
+            }
+        }
+
+        return addresses;
     }
 }
