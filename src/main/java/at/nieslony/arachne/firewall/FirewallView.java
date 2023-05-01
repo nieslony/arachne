@@ -28,12 +28,20 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -80,111 +88,95 @@ public class FirewallView extends VerticalLayout {
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWho> whos = model.getWho();
-                            switch (whos.size()) {
-                                case 0 -> {
-                                    return new Text("");
-                                }
-                                case 1 -> {
-                                    String s = whos.toArray()[0].toString();
-                                    return new Text(s);
-                                }
-                                default -> {
-                                    Details details = new Details();
-                                    details.setSummaryText(
-                                            "%s...(%d)".formatted(
-                                                    whos.toArray()[0].toString(),
-                                                    whos.size()
-                                            )
-                                    );
-                                    UnorderedList detailItems = new UnorderedList();
-                                    whos.forEach((w) -> {
-                                        detailItems.add(w.toString());
-                                    });
-                                    details.setContent(detailItems);
-                                    return details;
-                                }
-                            }
+                            return switch (whos.size()) {
+                        case 0 ->
+                            new Text("");
+                        case 1 ->
+                            new Text(whos.toArray()[0].toString());
+                        default ->
+                            createDetails(whos);
+                    };
                         }
                 ))
-                .setHeader("Who");
+                .setHeader("Who")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWhere> wheres = model.getWhere();
-                            switch (wheres.size()) {
-                                case 0 -> {
-                                    return new Text("");
-                                }
-                                case 1 -> {
-                                    String s = wheres.toArray()[0].toString();
-                                    return new Text(s);
-                                }
-                                default -> {
-                                    Details details = new Details();
-                                    details.setSummaryText(
-                                            "%s...(%d)".formatted(
-                                                    wheres.toArray()[0].toString(),
-                                                    wheres.size()
-                                            )
-                                    );
-                                    UnorderedList detailItems = new UnorderedList();
-                                    wheres.forEach((w) -> {
-                                        detailItems.add(w.toString());
-                                    });
-                                    details.setContent(detailItems);
-                                    return details;
-                                }
-                            }
+                            return switch (wheres.size()) {
+                        case 0 ->
+                            new Text("");
+                        case 1 ->
+                            new Text(wheres.toArray()[0].toString());
+                        default ->
+                            createDetails(wheres);
+                    };
                         }
                 ))
-                .setHeader("Where");
+                .setHeader("Where")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         allowGrid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
                             Collection<FirewallWhat> whats = model.getWhat();
-                            switch (whats.size()) {
-                                case 0 -> {
-                                    return new Text("");
-                                }
-                                case 1 -> {
-                                    String s = whats.toArray()[0].toString();
-                                    return new Text(s);
-                                }
-                                default -> {
-                                    Details details = new Details();
-                                    details.setSummaryText(
-                                            "%s...(%d)".formatted(
-                                                    whats.toArray()[0].toString(),
-                                                    whats.size()
-                                            )
-                                    );
-                                    UnorderedList detailItems = new UnorderedList();
-                                    whats.forEach((w) -> {
-                                        detailItems.add(w.toString());
-                                    });
-                                    details.setContent(detailItems);
-                                    return details;
-                                }
-                            }
+                            return switch (whats.size()) {
+                        case 0 ->
+                            new Text("");
+                        case 1 ->
+                            new Text(whats.toArray()[0].toString());
+                        default ->
+                            createDetails(whats);
+                    };
                         }
                 ))
-                .setHeader("What");
+                .setHeader("What")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         allowGrid.addColumn(FirewallRuleModel::isEnabled)
-                .setHeader("Enabled");
+                .setHeader("Enabled")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         allowGrid
                 .addColumn(FirewallRuleModel::getDescription)
-                .setHeader("Description");
+                .setHeader("Description")
+                .setFlexGrow(1);
+
+        allowGrid
+                .addColumn(new ComponentRenderer<>(
+                        (model) -> {
+                            MenuBar menuBar = new MenuBar();
+                            menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+                            MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                            SubMenu submenu = menuItem.getSubMenu();
+                            submenu.addItem(
+                                    "Edit...",
+                                    event -> editRule(model)
+                            );
+                            submenu.addItem(
+                                    "Delete...",
+                                    event -> deleteRule(model)
+                            );
+
+                            return menuBar;
+                        }
+                ))
+                .setWidth("5em")
+                .setFlexGrow(0);
 
         Button addRule = new Button("Add...", e -> {
             FirewallRuleModel rule = new FirewallRuleModel();
             editRule(rule);
         });
 
-        if (firewallRuleRepository.count() == 0) {
+        if (firewallRuleRepository.count()
+                == 0) {
             FirewallRuleModel allowDns = new FirewallRuleModel();
             allowDns.setDescription("Allow DNS acces for everybody");
             allowDns.setEnabled(true);
@@ -209,12 +201,32 @@ public class FirewallView extends VerticalLayout {
 
             firewallRuleRepository.save(allowDns);
         }
+
         allowGrid.setItems(firewallRuleRepository.findAll());
 
         add(addRule, allowGrid);
     }
 
+    private void deleteRule(FirewallRuleModel rule) {
+        ConfirmDialog confirm = new ConfirmDialog();
+        confirm.setHeader("Delete firewall rule");
+        confirm.setText(
+                "Are you sure you want to permanently firewall rule?");
+        confirm.setCancelable(true);
+        confirm.setConfirmText("Delete");
+        confirm.setConfirmButtonTheme("error primary");
+        confirm.addConfirmListener(
+                e -> {
+                    firewallRuleRepository.delete(rule);
+                    allowGrid.getDataProvider().refreshAll();
+                });
+
+        confirm.open();
+
+    }
+
     private void editRule(FirewallRuleModel rule) {
+        logger.info(rule.toString());
         Dialog dlg = new Dialog();
         if (rule.getId() == null) {
             dlg.setHeaderTitle("New rule");
@@ -223,7 +235,6 @@ public class FirewallView extends VerticalLayout {
         }
 
         Binder<FirewallRuleModel> binder = new Binder();
-        binder.setBean(rule);
 
         Label whoLabel = new Label("Who");
         ListBox<FirewallWho> whoList = new ListBox<>();
@@ -234,9 +245,14 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.Background.PRIMARY_10
         );
         whoList.setWidthFull();
+        if (rule.getWho() != null) {
+            whoList.setItems(rule.getWho());
+        }
         Button addWhoButton = new Button("Add...", (ClickEvent<Button> e) -> {
             FirewallWho who = new FirewallWho();
-            who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+            who
+                    .setUserMatcherClassName(EverybodyMatcher.class
+                            .getName());
             editWho(who, (FirewallWho w) -> {
                 List<FirewallWho> l = rule.getWho();
                 if (l == null) {
@@ -281,6 +297,9 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
+        if (rule.getWhere() != null) {
+            whereList.setItems(rule.getWhere());
+        }
         whereList.setWidthFull();
         Button addWhereButton = new Button("Add...", (e) -> {
             FirewallWhere where = new FirewallWhere();
@@ -329,6 +348,9 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
+        if (rule.getWhat() != null) {
+            whatList.setItems(rule.getWhat());
+        }
         whatList.setWidthFull();
         Button addWhatButton = new Button("Add...", (e) -> {
             FirewallWhat what = new FirewallWhat();
@@ -371,7 +393,12 @@ public class FirewallView extends VerticalLayout {
         TextField descriptionField = new TextField("Description");
         descriptionField.setWidthFull();
         descriptionField.setClearButtonVisible(true);
+        binder.forField(descriptionField)
+                .bind(FirewallRuleModel::getDescription, FirewallRuleModel::setDescription);
+
         Checkbox isEnabledField = new Checkbox("Enable Rule");
+        binder.forField(isEnabledField)
+                .bind(FirewallRuleModel::isEnabled, FirewallRuleModel::setEnabled);
 
         VerticalLayout layout = new VerticalLayout(
                 new HorizontalLayout(
@@ -388,6 +415,11 @@ public class FirewallView extends VerticalLayout {
         Button saveButton = new Button("Save", e -> {
             firewallRuleRepository.save(rule);
             dlg.close();
+            if (rule.getId() == null) {
+                allowGrid.setItems(firewallRuleRepository.findAll());
+            } else {
+                allowGrid.getDataProvider().refreshItem(rule);
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
@@ -410,6 +442,7 @@ public class FirewallView extends VerticalLayout {
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
+        binder.setBean(rule);
         dlg.open();
     }
 
@@ -728,5 +761,29 @@ public class FirewallView extends VerticalLayout {
         binder.validate();
 
         dlg.open();
+    }
+
+    private <T> Details createDetails(Collection<T> items) {
+        Details details = new Details();
+        String summaryText = "%s...(%d)".formatted(
+                items.toArray()[0].toString(),
+                items.size()
+        );
+        details.setSummaryText(summaryText);
+        UnorderedList detailItems = new UnorderedList();
+        items.forEach((w) -> {
+            detailItems.add(new ListItem(w.toString()));
+        });
+        detailItems.addClassName(LumoUtility.Padding.NONE);
+        details.addOpenedChangeListener((t) -> {
+            if (t.isOpened()) {
+                details.setSummaryText("%d rules".formatted(items.size()));
+            } else {
+                details.setSummaryText(summaryText);
+            }
+        });
+        details.setContent(detailItems);
+
+        return details;
     }
 }
