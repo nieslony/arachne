@@ -1,6 +1,6 @@
 Name:           arachne
 Version:        0.3.0
-Release:        %autorelease
+Release:        1
 License:        GPLv3
 Source:         %{name}-%{version}.tar.gz
 Summary:        Administration server for openVPN
@@ -20,7 +20,7 @@ Administration server for openVPN
 %setup
 
 %build
-mvn package
+mvn --no-transfer-progress package
 
 %install
 mkdir -pv %{buildroot}/%{_datadir}/%{name}
