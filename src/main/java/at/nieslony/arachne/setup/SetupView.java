@@ -5,11 +5,13 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.pki.CertSpecs;
+import at.nieslony.arachne.utils.NetUtils;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -18,10 +20,11 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.StringWriter;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.slf4j.LoggerFactory;
 
@@ -66,11 +69,15 @@ public class SetupView extends VerticalLayout {
 
     private Button next;
     private Button prev;
+    private Button finish;
+    private Label finishError;
 
     SetupController setupController;
+    Binder<SetupData> binder;
 
     public SetupView(SetupController setupController) {
         this.setupController = setupController;
+        binder = new Binder();
 
         H1 header = new H1("Arachne Setup Wizard");
 
@@ -110,8 +117,14 @@ public class SetupView extends VerticalLayout {
                 next
         );
 
+        binder.addStatusChangeListener((sce) -> {
+            finish.setEnabled(!sce.hasValidationErrors());
+            finishError.setVisible(sce.hasValidationErrors());
+        });
+
         add(header, tabSheet, buttons);
         setJustifyContentMode(JustifyContentMode.CENTER);
+        binder.validate();
     }
 
     private void updateCaSubject() {
@@ -135,16 +148,6 @@ public class SetupView extends VerticalLayout {
 
         X500Name subject = new X500Name(subjectWriter.toString());
         caSubject.setValue(subject.toString());
-    }
-
-    private String myHostname() {
-        try {
-            InetAddress myIp = Inet4Address.getLocalHost();
-            return myIp.getHostName();
-        } catch (UnknownHostException ex) {
-            logger.error("Cannot find my hostname: " + ex.getMessage());
-            return "unknown";
-        }
     }
 
     private void updateServerSubject() {
@@ -258,15 +261,22 @@ public class SetupView extends VerticalLayout {
     }
 
     private FormLayout createServerCertificateTab() {
-
         FormLayout subjectLayout = new FormLayout();
+
+        AtomicReference<String> cn = new AtomicReference<>();
         serverCommonName = new TextField("Common Name");
         serverCommonName.addValueChangeListener((e) -> {
             updateServerSubject();
         });
+        serverCommonName.setPattern("[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*");
         serverCommonName.setRequiredIndicatorVisible(true);
         serverCommonName.setErrorMessage("Common Name is required");
         serverCommonName.setClearButtonVisible(true);
+        binder.forField(serverCommonName)
+                .bind(
+                        (src) -> cn.get(),
+                        (dst, val) -> cn.set(val.toString())
+                );
 
         serverOrganizationalUnit = new TextField("Organizational Unit");
         serverOrganizationalUnit.addValueChangeListener((e) -> {
@@ -324,7 +334,7 @@ public class SetupView extends VerticalLayout {
         serverDhParamsLength.setLabel("DH Paramaters Length");
         serverDhParamsLength.setItems("1024", "2048");
 
-        serverCommonName.setValue(myHostname());
+        serverCommonName.setValue(NetUtils.myHostname());
         serverCertLifeTimeDays.setValue(365);
         serverKeyAlgo.setValue(("RSA"));
         serverRsaKeySize.setValue("2048");
@@ -354,13 +364,46 @@ public class SetupView extends VerticalLayout {
         FormLayout layout = new FormLayout();
 
         adminUsername = new TextField("Username");
-        adminDisplayName = new TextField("Display Name");
-        adminEmail = new EmailField("E-Mail Address");
-        adminPassword = new PasswordField("Password");
-        PasswordField retypePassword = new PasswordField("Retype Password");
-
+        adminUsername.setPattern("[a-z][a-z0-9\\-_.]*");
+        adminUsername.setRequired(true);
+        adminUsername.setRequiredIndicatorVisible(true);
         adminUsername.setValue("admin");
+        adminUsername.setErrorMessage("Username is invalid");
+        binder.forField(adminUsername)
+                .bind(SetupData::getAdminUsername, SetupData::setAdminUsername);
+
+        adminDisplayName = new TextField("Display Name");
+
+        adminEmail = new EmailField("E-Mail Address");
+        binder.forField(adminEmail)
+                .bind(SetupData::getAdminEmail, SetupData::setAdminEmail);
+
+        adminPassword = new PasswordField("Password");
+        adminPassword.setValueChangeMode(ValueChangeMode.EAGER);
+        adminPassword.setRequired(true);
+        adminPassword.setRequiredIndicatorVisible(true);
+        binder.forField(adminPassword)
+                .asRequired("Password required")
+                .bind(SetupData::getAdminPassword, SetupData::setAdminPassword);
+
+        AtomicReference<String> retypePwd = new AtomicReference<>();
+        PasswordField retypePassword = new PasswordField("Retype Password");
+        retypePassword.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(retypePassword)
+                .withValidator(
+                        v -> adminPassword.getValue().equals(retypePassword.getValue()),
+                        "Passwords don't match"
+                )
+                .bind(
+                        (src) -> retypePwd.get(),
+                        (dst, val) -> retypePwd.set(val.toString())
+                );
+
         adminDisplayName.setValue("Arachne Administrator");
+
+        adminPassword.addValueChangeListener((e) -> {
+            binder.validate();
+        });
 
         layout.add(
                 adminUsername,
@@ -381,7 +424,12 @@ public class SetupView extends VerticalLayout {
                 Now it's to time to setup Archne. Please be patient, it can
                 take a couple of minutes,
                 """);
-        Button finish = new Button("Finish");
+
+        finishError = new Label("There are errors validating input. Please check");
+        finishError.addClassName(LumoUtility.TextColor.ERROR);
+
+        finish = new Button("Finish");
+        finish.setDisableOnClick(true);
         finish.addClickListener((var t) -> {
             SetupData setupData = new SetupData();
 
@@ -420,7 +468,7 @@ public class SetupView extends VerticalLayout {
             getUI().get().navigate("");
         });
 
-        layout.add(text, finish);
+        layout.add(text, finishError, finish);
 
         return layout;
     }

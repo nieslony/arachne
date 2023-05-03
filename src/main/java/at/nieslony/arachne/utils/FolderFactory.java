@@ -28,6 +28,9 @@ public class FolderFactory {
     @Value("${arachneConfigDir}")
     private String arachneConfigDir;
 
+    @Value("${firewalldServicesDir}")
+    private String firewalldServiceDir;
+
     static private FolderFactory instance;
 
     public FolderFactory() {
@@ -89,5 +92,9 @@ public class FolderFactory {
         } catch (IOException ex) {
             return arachneConfigDir + "/krb5.keytab";
         }
+    }
+
+    public String getFirewalldServiceDir() {
+        return firewalldServiceDir;
     }
 }

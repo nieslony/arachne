@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.usermatcher;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +14,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@EqualsAndHashCode
 public class UserMatcherInfo {
 
     private String className;
@@ -20,7 +22,9 @@ public class UserMatcherInfo {
     private String parameterLabel;
 
     public UserMatcherInfo() {
-
+        className = null;
+        description = null;
+        parameterLabel = null;
     }
 
     public UserMatcherInfo(Class< ? extends UserMatcher> userMatcherClass) {
