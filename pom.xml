@@ -125,6 +125,7 @@
                 <configuration>
                     <mainClass>at.nieslony.arachne.Arachne</mainClass>
                     <layout>JAR</layout>
+                    <executable>true</executable>
                 </configuration>
                 <executions>
                     <execution>
