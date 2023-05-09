@@ -70,6 +70,39 @@ public class NetUtils {
         return ret;
     }
 
+    public static List<MxRecord> mxLookup(String domain) throws NamingException {
+        List<MxRecord> mxRecords = new LinkedList<>();
+
+        Hashtable env = new Hashtable();
+        env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+        env.put("java.naming.provider.url", "dns:");
+
+        DirContext ctx = new InitialDirContext(env);
+        Attributes attrs = ctx.getAttributes(domain, new String[]{"MX"});
+        NamingEnumeration en = attrs.getAll();
+        while (en.hasMore()) {
+            Attribute attr = (Attribute) en.next();
+            String[] splitAttr = attr.toString().split(" +");
+            if (splitAttr.length != 3) {
+                logger.warn("Doesn't look like an MX record: " + attr.toString());
+                continue;
+            }
+
+            mxRecords.add(
+                    new MxRecord(
+                            Integer.valueOf(splitAttr[1]),
+                            splitAttr[2]
+                    )
+            );
+        }
+
+        return mxRecords;
+    }
+
+    public static List<MxRecord> mxLookup() throws NamingException {
+        return mxLookup(myDomain());
+    }
+
     public static List<SrvRecord> srvLookup(String srvType) throws NamingException {
         return srvLookup(srvType, TransportProtocol.TCP, myDomain());
     }
