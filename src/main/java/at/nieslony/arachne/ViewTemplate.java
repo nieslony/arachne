@@ -7,6 +7,7 @@ package at.nieslony.arachne;
 import at.nieslony.arachne.firewall.FirewallView;
 import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
+import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.tomcat.TomcatView;
@@ -100,6 +101,7 @@ public class ViewTemplate extends AppLayout {
         RouterLink mainLink = new RouterLink("Home", MainView.class);
         RouterLink usersLink = new RouterLink("Users", UsersView.class);
         RouterLink rolesLink = new RouterLink("Roles", RolesView.class);
+        RouterLink mailSettingsLink = new RouterLink("Mail Settings", MailSettingsView.class);
         RouterLink openVpnUsersLink = new RouterLink("OpenVPN User", OpenVpnUserView.class);
         RouterLink ldapSettingsLink = new RouterLink("LDAP Settings", LdapView.class);
         RouterLink kerberosSettingsLink = new RouterLink("Kerberos Settings", KerberosView.class);
@@ -109,6 +111,7 @@ public class ViewTemplate extends AppLayout {
         addToDrawer(new VerticalLayout(
                 mainLink,
                 usersLink,
+                mailSettingsLink,
                 rolesLink,
                 openVpnUsersLink,
                 ldapSettingsLink,
