@@ -20,11 +20,14 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.MxRecord;
 import at.nieslony.arachne.utils.NetUtils;
 import java.util.List;
+import java.util.Properties;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 /**
  *
@@ -73,6 +76,35 @@ public class MailSettings {
               Best Regards,
               {sendername}
               """;
+    String tmpl
+            = """
+                  <p>Dear {displayname},</p>
+                  <p>
+                  To setup openVPN follow the instructions for you operating system.
+                  </p>
+
+                  <dl>
+                    <dt>Windows</dt>
+                    <dd>
+                  <ol>
+                  <li>Download latest openVPN client from <a href="https://openvpn.net/community-downloads/">https://openvpn.net/community-downloads/</a></li>
+                  <li>Copy attached openvpn-client.conf to C:\\Users\\YourUsername</li>
+                  </ol>
+                  </dd>
+                  <dt>Linux</dt>
+                  <dd>
+                  <ol>
+                  <li>open Terminal (konsole or ...)</li>
+                  <li>execute the following commands:</li>
+                  <pre>
+                  nmcli connection add
+                  </pre>
+                  </ol>
+                  </dd>
+                  </dl>
+                  <p>Best Regards,</p>
+                  <p>{sendername}</p>
+                  """;
 
     public MailSettings() {
     }
@@ -108,5 +140,30 @@ public class MailSettings {
         settings.put(SK_MAIL_TEMPLATE_CONFIG, templateConfig);
         settings.put(SK_MAIL_SENDER_DISPLAYNAME, senderDisplayname);
         settings.put(SK_MAIL_SENDER_EMAIL_ADDRESS, senderEmailAddress);
+    }
+
+    public MailSender getMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(getSmtpServer());
+        mailSender.setPort(getSmtpPort());
+        mailSender.setUsername(getSmtpUser());
+        mailSender.setPassword(getSmtpPassword());
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+        logger.info("Propertries; " + props.toString());
+
+        return mailSender;
+    }
+
+    public String getPrettySenderMailAddress() {
+        if ("".equals(senderDisplayname)) {
+            return senderEmailAddress;
+        } else {
+            return "%s <%s>".formatted(senderDisplayname, senderEmailAddress);
+        }
     }
 }
