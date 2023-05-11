@@ -6,20 +6,26 @@ package at.nieslony.arachne.users;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
@@ -73,7 +79,28 @@ public class ArachneUser implements Serializable {
     @Column
     private String externalProvider;
 
-    @LastModifiedDate
     @Column
     private Date lastModified;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<String> roles = new HashSet<>();
+
+    @PrePersist
+    @PreUpdate
+    public void onSave() {
+        lastModified = new Date();
+    }
+
+    public boolean isExpired(int maxAgeMins) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(lastModified);
+        cal.add(Calendar.MINUTE, maxAgeMins);
+        return cal.before(new Date());
+    }
+
+    public void update(ArachneUser user) {
+        this.displayName = user.getDisplayName();
+        this.email = user.getEmail();
+    }
 }

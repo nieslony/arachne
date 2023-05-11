@@ -44,19 +44,29 @@ public class ArachneUserDetailsService implements UserDetailsService {
 
         ArachneUser user = userRepository.findByUsername(username);
         if (user == null) {
+            logger.info("User found, try LDAP");
             user = ldapUserSource.findUser(username);
-        }
-        if (user == null) {
-            throw new UsernameNotFoundException("User %s not found".formatted(username));
-        }
-        Set<String> roles = rolesCollector.findRolesForUser(username, true);
-        logger.info("User %s has roles %s".formatted(username, roles.toString()));
-        if (user.getExternalProvider() != null) {
+            if (user == null) {
+                throw new UsernameNotFoundException("User %s not found".formatted(username));
+            }
+            Set<String> roles = rolesCollector.findRolesForUser(username);
+            user.setRoles(roles);
+            userRepository.save(user);
+        } else if (user.isExpired(ldapCacheMaxMins)) {
+            logger.info("User is expired, updating");
+            user.update(ldapUserSource.findUser(username));
+            Set<String> roles = rolesCollector.findRolesForUser(username);
+            user.setRoles(roles);
             userRepository.save(user);
         }
 
+        logger.info("User %s has roles %s".formatted(
+                username,
+                user.getRoles().toString())
+        );
+
         logger.info(user.toString());
-        UserDetails userDetails = new ArachneUserDetails(user, roles);
+        UserDetails userDetails = new ArachneUserDetails(user);
         return userDetails;
     }
 }

@@ -47,7 +47,7 @@ public class RolesCollector {
         return auths;
     }
 
-    public Set<String> findRolesForUser(String username, boolean isInternal) {
+    public Set<String> findRolesForUser(String username) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -55,12 +55,6 @@ public class RolesCollector {
                     rrm.getUserMatcherClassName(),
                     rrm.getParameter()
             );
-            if (isInternal && userMatcher.getClass().isAnnotationPresent(UserMatcherDescription.class)) {
-                UserMatcherDescription descr = userMatcher.getClass().getAnnotation(UserMatcherDescription.class);
-                if (descr.ignoreInternalUser()) {
-                    continue;
-                }
-            }
             if (userMatcher.isUserMatching(username)) {
                 roles.add(rrm.getRole().name());
             }

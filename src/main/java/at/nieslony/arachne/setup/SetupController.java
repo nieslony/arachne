@@ -9,6 +9,7 @@ import at.nieslony.arachne.pki.PkiSetupException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
+import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
@@ -54,6 +55,9 @@ public class SetupController {
     @Autowired
     private FolderFactory folderFactory;
 
+    @Autowired
+    private RolesCollector rolesCollector;
+
     public boolean setupAlreadyDone() {
         Optional<SettingsModel> settingsModel
                 = settingsRepository.findBySetting(SetupController.SETUP_STATUS_KEY);
@@ -86,6 +90,9 @@ public class SetupController {
                         "Arachne Administrator",
                         setupData.getAdminEmail()
                 );
+        adminUser.setRoles(
+                rolesCollector.findRolesForUser(setupData.getAdminUsername())
+        );
         userRepository.save(adminUser);
 
         try {

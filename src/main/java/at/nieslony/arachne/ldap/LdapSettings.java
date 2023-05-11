@@ -354,7 +354,10 @@ public class LdapSettings {
             protected ArachneUser doMapFromContext(DirContextOperations dco) {
                 logger.info("Found: " + dco.toString());
                 ArachneUser ldapUser = ArachneUser.builder()
-                        .externalId(dco.getDn().toString())
+                        .externalId("%s,%s".formatted(
+                                dco.getDn().toString(),
+                                getBaseDn()
+                        ))
                         .externalProvider(LdapUserSource.getName())
                         .username(dco.getStringAttribute(getUsersAttrUsername()))
                         .displayName(dco.getStringAttribute(getUsersAttrDisplayName()))
