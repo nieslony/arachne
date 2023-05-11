@@ -218,8 +218,12 @@ public class OpenVpnUserView extends VerticalLayout {
 
     final private Component createBasicsPage() {
         TextField name = new TextField("Network Manager configuration name");
-        name.setWidth(50, Unit.EM);
+        name.setWidthFull();
         name.setValueChangeMode(ValueChangeMode.EAGER);
+
+        TextField clientConfigName = new TextField("Client Config Filename");
+        clientConfigName.setWidthFull();
+        clientConfigName.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NicInfo> ipAddresse = new Select<>();
         ipAddresse.setItems(findAllNics());
@@ -343,7 +347,6 @@ public class OpenVpnUserView extends VerticalLayout {
                         removeDnsServerButton
                 )
         );
-        pushDnsServersLayout.setMargin(true);
         pushDnsServersField.setWidthFull();
         editDnsServerField.setWidthFull();
         pushDnsServersLayout.addClassNames(
@@ -386,7 +389,7 @@ public class OpenVpnUserView extends VerticalLayout {
                     pushRoutesField.setItems(routes);
                     vpnSettings.setPushRoutes(routes);
                 });
-        removeDnsServerButton.setEnabled(false);
+        removeRoutesButton.setEnabled(false);
         VerticalLayout pushRoutesLayout = new VerticalLayout(
                 new Label("Push Routes"),
                 pushRoutesField,
@@ -403,10 +406,18 @@ public class OpenVpnUserView extends VerticalLayout {
         );
         pushRoutesField.setWidthFull();
         editRoutesField.setWidthFull();
+        HorizontalLayout pushLayout = new HorizontalLayout(
+                pushDnsServersLayout,
+                pushRoutesLayout
+        );
+        pushLayout.setMargin(true);
 
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
+        binder.forField(clientConfigName)
+                .asRequired("Value required")
+                .bind(OpenVpnUserSettings::getClientConfigName, OpenVpnUserSettings::setClientConfigName);
         binder.forField(ipAddresse)
                 .asRequired("Value required")
                 .bind(
@@ -502,12 +513,14 @@ public class OpenVpnUserView extends VerticalLayout {
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
+        formLayout.add(clientConfigName);
         formLayout.add(listenLayout);
         formLayout.add(connectToHost);
         formLayout.add(interfaceLayout);
         formLayout.add(clientNetLayout);
         formLayout.add(keepaliveLayout);
-        formLayout.add(pushDnsServersLayout, pushRoutesLayout);
+        formLayout.add(pushLayout);
+        formLayout.setColspan(pushLayout, 2);
 
         return formLayout;
     }

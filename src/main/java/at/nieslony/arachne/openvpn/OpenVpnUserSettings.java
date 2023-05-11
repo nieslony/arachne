@@ -28,6 +28,7 @@ public class OpenVpnUserSettings {
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserSettings.class);
 
     private static final String SK_OPENVPN_USER_NAME = "openvpn.user.name";
+    private static final String SK_OPENVPN_USER_CLIENT_CFG_NAME = "openvpn.client-config-name";
     private static final String SK_OPENVPN_USER_LISTEN_IP = "openvpn.user.listenIp";
     private static final String SK_OPENVPN_USER_LISTEN_PORT = "openvpn.user.listenPort";
     private static final String SK_OPENVPN_USER_LISTEN_PROTOCOL = "openvpn.user.listenProtocol";
@@ -83,6 +84,7 @@ public class OpenVpnUserSettings {
 
     public OpenVpnUserSettings(Settings settings) {
         vpnName = settings.get(SK_OPENVPN_USER_NAME, "Arachne OpenVPN - %u@%h");
+        clientConfigName = settings.get(SK_OPENVPN_USER_CLIENT_CFG_NAME, "arachne-openVPN-client.conf");
         listenIp = settings.get(SK_OPENVPN_USER_LISTEN_IP, "0.0.0.0");
         listenPort = settings.getInt(SK_OPENVPN_USER_LISTEN_PORT, 1194);
         listenProtocol = TransportProtocol.valueOf(
@@ -117,6 +119,7 @@ public class OpenVpnUserSettings {
     }
 
     private String vpnName;
+    private String clientConfigName;
     private String listenIp;
     private int listenPort;
     private TransportProtocol listenProtocol;
@@ -136,6 +139,7 @@ public class OpenVpnUserSettings {
 
     public void save(Settings settings) {
         settings.put(SK_OPENVPN_USER_NAME, vpnName);
+        settings.put(SK_OPENVPN_USER_CLIENT_CFG_NAME, clientConfigName);
         settings.put(SK_OPENVPN_USER_LISTEN_IP, listenIp);
         settings.put(SK_OPENVPN_USER_LISTEN_PORT, listenPort);
         settings.put(SK_OPENVPN_USER_LISTEN_PROTOCOL, listenProtocol.name());
