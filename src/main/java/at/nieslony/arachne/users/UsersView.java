@@ -5,11 +5,16 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.roles.RolesCollector;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -43,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.vaadin.olli.FileDownloadWrapper;
 
 /**
  *
@@ -58,6 +64,8 @@ public class UsersView extends VerticalLayout {
     final private UserRepository userRepository;
     final private RolesCollector rolesCollector;
     final private RoleRuleRepository roleRuleRepository;
+    final private OpenVpnRestController openVpnRestController;
+    final private Settings settings;
 
     final Grid<ArachneUser> usersGrid;
     final Grid.Column<ArachneUser> usernameColumn;
@@ -67,11 +75,15 @@ public class UsersView extends VerticalLayout {
     public UsersView(
             UserRepository userRepository,
             RolesCollector rolesCollector,
-            RoleRuleRepository roleRuleRepository
+            RoleRuleRepository roleRuleRepository,
+            OpenVpnRestController openVpnRestController,
+            Settings settings
     ) {
         this.userRepository = userRepository;
         this.rolesCollector = rolesCollector;
         this.roleRuleRepository = roleRuleRepository;
+        this.openVpnRestController = openVpnRestController;
+        this.settings = settings;
 
         usersGrid = new Grid<>(ArachneUser.class, false);
 
@@ -104,6 +116,57 @@ public class UsersView extends VerticalLayout {
         add(addUserButton, usersGrid);
     }
 
+    private Component getUserEditMenu(ArachneUser user, Editor<ArachneUser> editor) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String myUsername = authentication.getName();
+
+        if (!user.getUsername().equals(myUsername)) {
+            Button editButton = new Button("Edit");
+            editButton.addClickListener(e -> {
+                if (editor.isOpen()) {
+                    editor.cancel();
+                }
+                editor.editItem(user);
+            });
+            MenuBar menuBar = new MenuBar();
+            MenuItem editItem = menuBar.addItem(editButton);
+
+            menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+            MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+            SubMenu userMenu = menuItem.getSubMenu();
+            userMenu.addItem("Change Password...", event -> changePassword(user));
+            userMenu.addItem("Delete...", event -> deleteUser(user));
+            if (rolesCollector
+                    .findRolesForUser(user.getUsername(), false)
+                    .contains("USER")) {
+                OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+                FileDownloadWrapper link = new FileDownloadWrapper(
+                        openVpnUserSettings.getClientConfigName(),
+                        () -> {
+                            try {
+                                String config = openVpnRestController
+                                        .openVpnUserConfig(user.getUsername());
+                                return config.getBytes();
+                            } catch (PkiNotInitializedException ex) {
+                                logger.error(
+                                        "Cannot send openvpn config: " + ex.getMessage());
+                                return "".getBytes();
+                            }
+                        }
+                );
+                link.setText("Download Config");
+                userMenu.addItem(link);
+
+                if (!"".equals(user.getEmail())) {
+                    userMenu.addItem("Send openVPN config as E-Mail");
+                }
+            }
+            return menuBar;
+        } else {
+            return new Text("");
+        }
+    }
+
     final void editUsersGridBuffered() {
         Editor<ArachneUser> editor = usersGrid.getEditor();
         Binder<ArachneUser> binder = new Binder(ArachneUser.class);
@@ -117,35 +180,7 @@ public class UsersView extends VerticalLayout {
         String myUsername = authentication.getName();
 
         Grid.Column<ArachneUser> editColumn = usersGrid
-                .addComponentColumn(user -> {
-                    if (!user.getUsername().equals(myUsername)) {
-                        Button editButton = new Button("Edit");
-                        editButton.addClickListener(e -> {
-                            if (editor.isOpen()) {
-                                editor.cancel();
-                            } else {
-                                usernameUniqueValidator.setUserId(user.getId());
-                            }
-                            editor.editItem(user);
-                        });
-                        MenuBar menuBar = new MenuBar();
-                        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-                        MenuItem editItem = menuBar.addItem(editButton);
-                        MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
-                        SubMenu userMenu = menuItem.getSubMenu();
-                        userMenu.addItem(
-                                "Change Password...",
-                                event -> changePassword(user)
-                        );
-                        userMenu.addItem(
-                                "Delete...",
-                                event -> deleteUser(user)
-                        );
-                        return menuBar;
-                    } else {
-                        return new Text("");
-                    }
-                })
+                .addComponentColumn((ArachneUser user) -> getUserEditMenu(user, editor))
                 .setWidth("15em")
                 .setFlexGrow(0);
 

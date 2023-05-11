@@ -227,7 +227,7 @@ public class OpenVpnRestController {
         }
     }
 
-    String openVpnUserConfig(String username) throws PkiNotInitializedException {
+    public String openVpnUserConfig(String username) throws PkiNotInitializedException {
         OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
 
         String userCert = pki.getUserCertAsBase64(username);
