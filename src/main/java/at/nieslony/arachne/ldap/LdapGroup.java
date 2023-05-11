@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.users.ArachneUser;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Getter;
@@ -32,16 +33,19 @@ public class LdapGroup {
         this.members = Arrays.asList(members);
     }
 
-    public boolean hasMember(LdapUser user) {
+    public boolean hasMember(ArachneUser user) {
+        if (!user.getExternalProvider().equals(LdapUserSource.getName())) {
+            logger.info("User %s is not a LDAP user".formatted(user.getUsername()));
+        }
         if (members.contains(user.getUsername())) {
             logger.info("User %s is member of %s".formatted(user.getUsername(), dn));
             return true;
         }
-        if (members.contains(user.getDn())) {
-            logger.info("User %s is member of %s".formatted(user.getDn(), dn));
+        if (members.contains(user.getExternalId())) {
+            logger.info("User %s is member of %s".formatted(user.getExternalId(), dn));
             return true;
         }
-        logger.info("User %s is not member of %s".formatted(user.getDn(), dn));
+        logger.info("User %s is not member of %s".formatted(user.getExternalId(), dn));
         return false;
     }
 }

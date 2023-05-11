@@ -12,10 +12,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.util.Date;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
@@ -25,7 +29,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Getter
 @Setter
 @ToString
+@Builder
 @Entity
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 public class ArachneUser implements Serializable {
 
@@ -60,4 +66,14 @@ public class ArachneUser implements Serializable {
 
     @Column
     private String email;
+
+    @Column
+    private String externalId;
+
+    @Column
+    private String externalProvider;
+
+    @LastModifiedDate
+    @Column
+    private Date lastModified;
 }
