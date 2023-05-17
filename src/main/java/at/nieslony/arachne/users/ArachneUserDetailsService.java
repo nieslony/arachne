@@ -5,6 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapUserSource;
+import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import java.util.Set;
@@ -36,6 +37,11 @@ public class ArachneUserDetailsService implements UserDetailsService {
 
     @Autowired
     private LdapUserSource ldapUserSource;
+
+    public Set<ArachneUser> findAllUsersMatchRoleRule(RoleRuleModel roleRule) {
+
+        return null;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

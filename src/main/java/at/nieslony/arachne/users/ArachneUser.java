@@ -46,9 +46,11 @@ public class ArachneUser implements Serializable {
         setPassword(password);
         this.displayName = displayName;
         this.email = email;
+        this.expirationEnforced = false;
     }
 
     public ArachneUser() {
+        this.expirationEnforced = false;
     }
 
     @Id
@@ -82,6 +84,9 @@ public class ArachneUser implements Serializable {
     @Column
     private Date lastModified;
 
+    @Column
+    private boolean expirationEnforced;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     private Set<String> roles = new HashSet<>();
@@ -93,6 +98,9 @@ public class ArachneUser implements Serializable {
     }
 
     public boolean isExpired(int maxAgeMins) {
+        if (expirationEnforced) {
+            return true;
+        }
         Calendar cal = Calendar.getInstance();
         cal.setTime(lastModified);
         cal.add(Calendar.MINUTE, maxAgeMins);
@@ -102,5 +110,6 @@ public class ArachneUser implements Serializable {
     public void update(ArachneUser user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
+        expirationEnforced = false;
     }
 }
