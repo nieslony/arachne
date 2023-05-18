@@ -120,6 +120,11 @@ public class UsersView extends VerticalLayout {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String myUsername = authentication.getName();
 
+        MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+        MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+        SubMenu userMenu = menuItem.getSubMenu();
+
         if (!user.getUsername().equals(myUsername)) {
             Button editButton = new Button("Edit");
             editButton.addClickListener(e -> {
@@ -128,39 +133,40 @@ public class UsersView extends VerticalLayout {
                 }
                 editor.editItem(user);
             });
-            MenuBar menuBar = new MenuBar();
             MenuItem editItem = menuBar.addItem(editButton);
 
-            menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-            MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
-            SubMenu userMenu = menuItem.getSubMenu();
             userMenu.addItem("Change Password...", event -> changePassword(user));
             userMenu.addItem("Delete...", event -> deleteUser(user));
-            if (rolesCollector
-                    .findRolesForUser(user.getUsername(), false)
-                    .contains("USER")) {
-                OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
-                FileDownloadWrapper link = new FileDownloadWrapper(
-                        openVpnUserSettings.getClientConfigName(),
-                        () -> {
-                            try {
-                                String config = openVpnRestController
-                                        .openVpnUserConfig(user.getUsername());
-                                return config.getBytes();
-                            } catch (PkiNotInitializedException ex) {
-                                logger.error(
-                                        "Cannot send openvpn config: " + ex.getMessage());
-                                return "".getBytes();
-                            }
+        }
+        if (rolesCollector
+                .findRolesForUser(user.getUsername(), false)
+                .contains("USER")) {
+            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+            FileDownloadWrapper link = new FileDownloadWrapper(
+                    openVpnUserSettings.getClientConfigName(),
+                    () -> {
+                        try {
+                            String config = openVpnRestController
+                                    .openVpnUserConfig(user.getUsername());
+                            return config.getBytes();
+                        } catch (PkiNotInitializedException ex) {
+                            logger.error(
+                                    "Cannot send openvpn config: " + ex.getMessage());
+                            return "".getBytes();
                         }
-                );
-                link.setText("Download Config");
-                userMenu.addItem(link);
+                    }
+            );
+            link.setText("Download Config");
+            userMenu.addItem(link);
 
-                if (!"".equals(user.getEmail())) {
-                    userMenu.addItem("Send openVPN config as E-Mail");
-                }
+            if (!"".equals(user.getEmail())) {
+                userMenu.addItem("Send openVPN config as E-Mail");
             }
+        }
+        if (!userMenu.getItems().isEmpty()) {
+            menuBar.addItem(menuItem);
+        }
+        if (menuBar.getItems().size() > 1) {
             return menuBar;
         } else {
             return new Text("");
