@@ -91,14 +91,23 @@ public class OpenVpnRestController {
     @RolesAllowed(value = {"ADMIN"})
     public String userVpnConfig(
             @PathVariable String username,
-            @RequestParam(required = false, name = "json") String asJson
+            @RequestParam(required = false, name = "format") String format
     ) {
         try {
-            if (asJson != null) {
-                return openVpnUserConfigJson(username);
-            } else {
+            if (format == null) {
                 return openVpnUserConfig(username);
             }
+            logger.info("Return format: " + format);
+            return switch (format) {
+                case "json" ->
+                    openVpnUserConfigJson(username);
+                case "shell" ->
+                    openVpnUserConfigShell(username);
+                default ->
+                    throw new ResponseStatusException(
+                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            "Cannot get user config");
+            };
         } catch (PkiNotInitializedException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
@@ -110,12 +119,12 @@ public class OpenVpnRestController {
     @GetMapping("/user_config")
     @RolesAllowed(value = {"USER"})
     public String userVpnConfig(
-            @RequestParam(required = false, name = "json") String asJson
+            @RequestParam(required = false, name = "format") String format
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userVpnConfig(username, asJson);
+        return userVpnConfig(username, format);
     }
 
     public void writeOpenVpnPluginConfig(
@@ -253,6 +262,70 @@ public class OpenVpnRestController {
         writer.println("<key>\n%s</key>".formatted(privateKey));
 
         return sw.toString();
+    }
+
+    String openVpnUserConfigShell(String username) throws PkiNotInitializedException {
+        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+        String userCert = pki.getUserCertAsBase64(username);
+        String privateKey = pki.getUserKeyAsBase64(username);
+        String caCert = pki.getRootCertAsBase64();
+        String userCertFn = "~/.certs/arachne-%s.crt".formatted(username);
+        String caCertFn = "~/.certs/arachne-%s.crt".formatted(vpnSettings.getRemote());
+        String privateKeyFn = "~/.certs/arachne-%s.key".formatted(username);
+
+        StringWriter configWriter = new StringWriter();
+        configWriter.append("mkdir -v ~/.certs\n");
+        configWriter.append("""
+                            cat <<EOF > %s
+                            %s
+                            EOF
+                            """.formatted(caCertFn, caCert));
+        configWriter.append("""
+                            cat -v <<EOF > %s
+                            %s
+                            EOF
+                            """.formatted(userCertFn, userCert));
+        configWriter.append("""
+                            cat -v <<EOF > %s
+                            %s
+                            EOF
+                            chmod -v 600 %s
+                               """.formatted(privateKeyFn, privateKey, privateKeyFn));
+        String conName = vpnSettings.getVpnName()
+                .replaceAll("%h", vpnSettings.getRemote())
+                .replaceAll("%u", username);
+        /*  ca = /home/claas/.certs/arachne-ca.crt,
+        cert = /home/claas/.certs/arachne-cert.crt,
+        cert-pass-flags = 4, connection-type = password-tls,
+        key = /home/claas/.certs/arachne-cert.key,
+        password-flags = 2, port = , remote = odysseus.nieslony.lan,
+        username = claas@NIESLONY.LAN
+         */
+        configWriter.append(
+                """
+                vpn_data="
+                    ca = %s,
+                    cert = %s,
+                    cert-pass-flags = 4,
+                    connection-type = password-tls,
+                    key = %s,
+                    password-flags = 2,
+                    port = ,
+                    remote = %s,
+                    username = %s
+                "
+                nmcli connection add type vpn vpn-type openvpn con-name "__%s" vpn.data "$vpn_data"
+                """
+                        .formatted(
+                                caCertFn,
+                                userCertFn,
+                                privateKeyFn,
+                                vpnSettings.getRemote(),
+                                username,
+                                conName
+                        )
+        );
+        return configWriter.toString();
     }
 
     String openVpnUserConfigJson(String username) throws PkiNotInitializedException {
