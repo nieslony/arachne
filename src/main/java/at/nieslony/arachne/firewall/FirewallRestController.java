@@ -80,11 +80,13 @@ public class FirewallRestController {
         for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
             logger.info(rule.toString());
             if (!rule.isEnabled()) {
+                logger.info("Ignoring disabled rule");
                 continue;
             }
             boolean matches = false;
             for (FirewallWho who : rule.getWho()) {
                 if (who.getUserMatcherClassName().equals(EverybodyMatcher.class.getName())) {
+                    logger.info("Ignoring everybody rule");
                     break;
                 }
                 UserMatcher matcher = userMatcherCollector.buildUserMatcher(
@@ -93,14 +95,23 @@ public class FirewallRestController {
                 );
                 if (matcher.isUserMatching(username)) {
                     matches = true;
+                    logger.info(
+                            "Rule %s matches user %s"
+                                    .formatted(rule.toString(), username)
+                    );
                     break;
                 }
+                logger.info(
+                        "Rule %s does not match user %s"
+                                .formatted(rule.toString(), username)
+                );
             }
             if (matches) {
                 richRules.addAll(createRichRules(rule));
             }
         }
 
+        logger.info(richRules.toString());
         return richRules;
     }
 
@@ -156,6 +167,8 @@ public class FirewallRestController {
                     case Service -> {
                         String serviceString = what.getService();
                         richRule.setServiceName(serviceString);
+                    }
+                    case Everything -> {
                     }
                 }
                 richRules.add(richRule);

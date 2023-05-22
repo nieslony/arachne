@@ -42,7 +42,8 @@ public class FirewallWhat {
     public enum Type {
         OnePort("One Port"),
         PortRange("Port Range"),
-        Service("Firewalld Service");
+        Service("Firewalld Service"),
+        Everything("Everything");
 
         final private String label;
 
@@ -82,6 +83,8 @@ public class FirewallWhat {
                 "%d-%d/%s".formatted(portFrom, portTo, portRangeProtocol.name());
             case Service ->
                 FirewalldService.getService(service).getShortDescription();
+            case Everything ->
+                "Everything";
         };
     }
 }
