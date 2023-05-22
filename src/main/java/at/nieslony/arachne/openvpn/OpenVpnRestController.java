@@ -132,6 +132,10 @@ public class OpenVpnRestController {
             writer.println("enable-firewall = " + firewallBasicsSettings.isEnableFirewall());
             if (firewallBasicsSettings.isEnableFirewall()) {
                 writer.println("firewall-zone = " + firewallBasicsSettings.getFirewallZone());
+                writer.println(
+                        "firewall-url = %s/api/firewall/rules"
+                                .formatted(openVpnSettings.getAuthHttpUrl())
+                );
             }
             writer.println("enable-routing = "
                     + firewallBasicsSettings.getEnableRoutreMode().name()
