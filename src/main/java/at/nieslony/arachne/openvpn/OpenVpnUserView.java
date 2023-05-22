@@ -165,8 +165,17 @@ public class OpenVpnUserView extends VerticalLayout {
                 new ComponentRenderer<>(type -> {
                     Text typeField = new Text(type.toString());
                     Component valueField = switch (type) {
-                        case HTTP_URL ->
-                            authHttpUrlField;
+                        case HTTP_URL -> {
+                            HorizontalLayout hl
+                                    = new HorizontalLayout(
+                                            authHttpUrlField,
+                                            new Text("/api/auth")
+                                    );
+                            hl.setAlignItems(Alignment.BASELINE);
+                            hl.setPadding(false);
+                            hl.setFlexGrow(1, authHttpUrlField);
+                            yield hl;
+                        }
                         case PAM ->
                             authPamServiceField;
                     };
