@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -64,6 +65,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
     @Getter
     @Setter
+    @EqualsAndHashCode
     public class NicInfo {
 
         private String ipAddress;
@@ -85,6 +87,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
     @Getter
     @Setter
+    @EqualsAndHashCode
     public class NetMask {
 
         private int bits;
@@ -162,8 +165,17 @@ public class OpenVpnUserView extends VerticalLayout {
                 new ComponentRenderer<>(type -> {
                     Text typeField = new Text(type.toString());
                     Component valueField = switch (type) {
-                        case HTTP_URL ->
-                            authHttpUrlField;
+                        case HTTP_URL -> {
+                            HorizontalLayout hl
+                                    = new HorizontalLayout(
+                                            authHttpUrlField,
+                                            new Text("/api/auth")
+                                    );
+                            hl.setAlignItems(Alignment.BASELINE);
+                            hl.setPadding(false);
+                            hl.setFlexGrow(1, authHttpUrlField);
+                            yield hl;
+                        }
                         case PAM ->
                             authPamServiceField;
                     };

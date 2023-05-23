@@ -33,11 +33,14 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -71,7 +74,21 @@ public class FirewallRestController {
 
     @GetMapping("/rules")
     @RolesAllowed(value = {"USER"})
-    public List<RichRule> findAllRules() {
+    public List<RichRule> findAllRules(
+            @RequestParam(required = false, name = "type") String type
+    ) {
+        if (type != null) {
+            if (type.equals("everybody")) {
+                return findEverybodyRules();
+            } else {
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_ACCEPTABLE,
+                        "%s: Unvalid rule set".formatted(type));
+            }
+        } else {
+            logger.info("No rule set type given");
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         List<RichRule> richRules = new LinkedList<>();
@@ -80,11 +97,13 @@ public class FirewallRestController {
         for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
             logger.info(rule.toString());
             if (!rule.isEnabled()) {
+                logger.info("Ignoring disabled rule");
                 continue;
             }
             boolean matches = false;
             for (FirewallWho who : rule.getWho()) {
                 if (who.getUserMatcherClassName().equals(EverybodyMatcher.class.getName())) {
+                    logger.info("Ignoring everybody rule");
                     break;
                 }
                 UserMatcher matcher = userMatcherCollector.buildUserMatcher(
@@ -93,8 +112,16 @@ public class FirewallRestController {
                 );
                 if (matcher.isUserMatching(username)) {
                     matches = true;
+                    logger.info(
+                            "Rule %s matches user %s"
+                                    .formatted(rule.toString(), username)
+                    );
                     break;
                 }
+                logger.info(
+                        "Rule %s does not match user %s"
+                                .formatted(rule.toString(), username)
+                );
             }
             if (matches) {
                 richRules.addAll(createRichRules(rule));
@@ -104,8 +131,6 @@ public class FirewallRestController {
         return richRules;
     }
 
-    @GetMapping("/everybody-rules")
-    @RolesAllowed(value = {"USER"})
     public List<RichRule> findEverybodyRules() {
         List<RichRule> richRules = new LinkedList<>();
 
@@ -156,6 +181,8 @@ public class FirewallRestController {
                     case Service -> {
                         String serviceString = what.getService();
                         richRule.setServiceName(serviceString);
+                    }
+                    case Everything -> {
                     }
                 }
                 richRules.add(richRule);
