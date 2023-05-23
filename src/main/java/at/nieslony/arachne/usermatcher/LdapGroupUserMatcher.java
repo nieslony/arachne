@@ -6,8 +6,8 @@ package at.nieslony.arachne.usermatcher;
 
 import at.nieslony.arachne.ldap.LdapGroup;
 import at.nieslony.arachne.ldap.LdapSettings;
-import at.nieslony.arachne.ldap.LdapUser;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.ArachneUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class LdapGroupUserMatcher extends UserMatcher {
                 logger.info("Group %s not found".formatted(parameter));
                 return false;
             }
-            LdapUser user = ldapSettings.getUser(username);
+            ArachneUser user = ldapSettings.getUser(username);
             if (user == null) {
                 logger.info("User %s not found".formatted(username));
                 return false;

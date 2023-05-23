@@ -17,6 +17,7 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.SrvRecord;
@@ -324,7 +325,7 @@ public class LdapSettings {
         }
     }
 
-    public List<LdapUser> findUsers(String username, int max) {
+    public List<ArachneUser> findUsers(String username, int max) {
         LdapTemplate ldap;
         try {
             ldap = getLdapTemplate();
@@ -348,27 +349,20 @@ public class LdapSettings {
                 getUsersOu(),
                 filter,
                 sc,
-                new AbstractContextMapper<LdapUser>() {
+                new AbstractContextMapper<ArachneUser>() {
             @Override
-            protected LdapUser doMapFromContext(DirContextOperations dco) {
+            protected ArachneUser doMapFromContext(DirContextOperations dco) {
                 logger.info("Found: " + dco.toString());
-                LdapUser ldapUser = new LdapUser();
-                ldapUser.setDn(
-                        "%s,%s"
-                                .formatted(
-                                        dco.getDn().toString(),
-                                        getBaseDn()
-                                )
-                );
-                ldapUser.setUsername(
-                        dco.getStringAttribute(getUsersAttrUsername())
-                );
-                ldapUser.setDisplayName(
-                        dco.getStringAttribute(getUsersAttrDisplayName())
-                );
-                ldapUser.setEmail(
-                        dco.getStringAttribute(getUsersAttrEmail())
-                );
+                ArachneUser ldapUser = ArachneUser.builder()
+                        .externalId("%s,%s".formatted(
+                                dco.getDn().toString(),
+                                getBaseDn()
+                        ))
+                        .externalProvider(LdapUserSource.getName())
+                        .username(dco.getStringAttribute(getUsersAttrUsername()))
+                        .displayName(dco.getStringAttribute(getUsersAttrDisplayName()))
+                        .email(dco.getStringAttribute(getUsersAttrEmail()))
+                        .build();
                 return ldapUser;
             }
         });
@@ -376,8 +370,8 @@ public class LdapSettings {
         return result;
     }
 
-    public LdapUser getUser(String username) {
-        List<LdapUser> users = findUsers(username, 1);
+    public ArachneUser getUser(String username) {
+        List<ArachneUser> users = findUsers(username, 1);
         if (users.isEmpty()) {
             return null;
         }

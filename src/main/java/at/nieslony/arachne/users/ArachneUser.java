@@ -6,13 +6,23 @@ package at.nieslony.arachne.users;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -25,7 +35,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Getter
 @Setter
 @ToString
+@Builder
 @Entity
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 public class ArachneUser implements Serializable {
 
@@ -34,9 +46,11 @@ public class ArachneUser implements Serializable {
         setPassword(password);
         this.displayName = displayName;
         this.email = email;
+        this.expirationEnforced = false;
     }
 
     public ArachneUser() {
+        this.expirationEnforced = false;
     }
 
     @Id
@@ -60,4 +74,42 @@ public class ArachneUser implements Serializable {
 
     @Column
     private String email;
+
+    @Column
+    private String externalId;
+
+    @Column
+    private String externalProvider;
+
+    @Column
+    private Date lastModified;
+
+    @Column
+    private boolean expirationEnforced;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<String> roles = new HashSet<>();
+
+    @PrePersist
+    @PreUpdate
+    public void onSave() {
+        lastModified = new Date();
+    }
+
+    public boolean isExpired(int maxAgeMins) {
+        if (expirationEnforced) {
+            return true;
+        }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(lastModified);
+        cal.add(Calendar.MINUTE, maxAgeMins);
+        return cal.before(new Date());
+    }
+
+    public void update(ArachneUser user) {
+        this.displayName = user.getDisplayName();
+        this.email = user.getEmail();
+        expirationEnforced = false;
+    }
 }

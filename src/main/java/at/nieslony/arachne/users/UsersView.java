@@ -101,8 +101,7 @@ public class UsersView extends VerticalLayout {
                 .addColumn(ArachneUser::getEmail)
                 .setHeader("E-Mail");
         usersGrid.addComponentColumn((user) -> {
-            String roles = rolesCollector
-                    .findRoleDescriptionsForUser(user.getUsername())
+            String roles = user.getRoles()
                     .stream()
                     .collect(Collectors.joining(", "));
             return new Text(roles);
