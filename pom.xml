@@ -132,6 +132,12 @@
             <artifactId>file-download-wrapper</artifactId>
             <version>7.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.wontlost</groupId>
+            <artifactId>ckeditor-vaadin</artifactId>
+            <version>3.2.1</version>
+        </dependency>
     </dependencies>
 
     <build>
