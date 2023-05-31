@@ -63,7 +63,7 @@ public class MailSettings {
     private String senderEmailAddress;
     private String templateConfigHtml;
     private String templateConfigPlain;
-    private TemplateConfigType templaeConfigType;
+    private TemplateConfigType templateConfigType;
 
     private final static String SK_MAIL_SMTP_SERVER = "mail.smtp-server";
     private final static String SK_MAIL_SMTP_PORT = "mail.smtp-port";
@@ -161,7 +161,7 @@ public class MailSettings {
         );
         templateConfigHtml = settings.get(SK_MAIL_TMPL_CFG_HTML, getDefaultTemplateConfigHtml());
         templateConfigPlain = settings.get(SK_MAIL_TMPL_CFG_PLAIN, getDefaultTemplateConfigPlain());
-        templaeConfigType = settings.getEnum(SK_MAIL_TMPL_CFG_TYPE, TemplateConfigType.HTML);
+        templateConfigType = settings.getEnum(SK_MAIL_TMPL_CFG_TYPE, TemplateConfigType.HTML);
     }
 
     public void save(Settings settings) {
@@ -171,7 +171,7 @@ public class MailSettings {
         settings.put(SK_MAIL_SMTP_PASSWORD, smtpPassword);
         settings.put(SK_MAIL_TMPL_CFG_HTML, templateConfigHtml);
         settings.put(SK_MAIL_TMPL_CFG_PLAIN, templateConfigPlain);
-        settings.put(SK_MAIL_TMPL_CFG_TYPE, templaeConfigType);
+        settings.put(SK_MAIL_TMPL_CFG_TYPE, templateConfigType);
         settings.put(SK_MAIL_SENDER_DISPLAYNAME, senderDisplayname);
         settings.put(SK_MAIL_SENDER_EMAIL_ADDRESS, senderEmailAddress);
     }
