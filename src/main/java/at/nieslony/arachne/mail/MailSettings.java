@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.MailSender;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 /**
@@ -39,13 +39,31 @@ public class MailSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(MailSettings.class);
 
+    enum TemplateConfigType {
+        PLAIN("Plain Text"),
+        HTML("Html");
+
+        private String typeName;
+
+        private TemplateConfigType(String tn) {
+            typeName = tn;
+        }
+
+        @Override
+        public String toString() {
+            return typeName;
+        }
+    }
+
     private String smtpServer;
     private int smtpPort;
     private String smtpUser;
     private String smtpPassword;
     private String senderDisplayname;
     private String senderEmailAddress;
-    private String templateConfig;
+    private String templateConfigHtml;
+    private String templateConfigPlain;
+    private TemplateConfigType templaeConfigType;
 
     private final static String SK_MAIL_SMTP_SERVER = "mail.smtp-server";
     private final static String SK_MAIL_SMTP_PORT = "mail.smtp-port";
@@ -53,9 +71,50 @@ public class MailSettings {
     private final static String SK_MAIL_SMTP_PASSWORD = "mail.smtp-password";
     private final static String SK_MAIL_SENDER_DISPLAYNAME = "mail.sender-displayname";
     private final static String SK_MAIL_SENDER_EMAIL_ADDRESS = "mail.sender-email-address";
-    private final static String SK_MAIL_TEMPLATE_CONFIG = "mail.template-config";
+    private final static String SK_MAIL_TMPL_CFG_HTML = "mail.template-config-html";
+    private final static String SK_MAIL_TMPL_CFG_PLAIN = "mail.template-config-plain";
+    private final static String SK_MAIL_TMPL_CFG_TYPE = "mail.template-config-type";
 
-    private final static String TEMPLATE_CONFIG_DEFAULT
+    private final static String TEMPLATE_CONFIG_HTML
+            = """
+              <p>
+                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Dear {displayname}</strong>,</span>
+              </p>
+              <p>
+                  <span style="font-family:Verdana, Geneva, sans-serif;">please follow the instructions:</span>
+              </p>
+              <p>
+                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Windows</strong></span>
+              </p>
+              <ol>
+                  <li>
+                      <span style="font-family:Verdana, Geneva, sans-serif;">Download latest openVPN client from </span><a href="https://openvpn.net/community-downloads/"><span style="font-family:Verdana, Geneva, sans-serif;">https://openvpn.net/community-downloads/</span></a>
+                  </li>
+                  <li>
+                      <span style="font-family:Verdana, Geneva, sans-serif;">Copy attached openvpn-client.conf to C:\\Users\\YourUsername</span>
+                  </li>
+              </ol>
+              <p>
+                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Linux</strong></span>
+              </p>
+              <ol>
+                  <li>
+                      <span style="font-family:Verdana, Geneva, sans-serif;">open Terminal (konsole or ...)</span>
+                  </li>
+                  <li>
+                      <span style="font-family:Verdana, Geneva, sans-serif;">execute the following commands:</span>
+                  </li>
+              </ol>
+              <pre><code class="language-plaintext">{instructions}</code></pre>
+              <p>
+                  Best regards,
+              </p>
+              <p>
+                  {sender}
+              </p>
+              """;
+
+    private final static String TEMPLATE_CONFIG_PLAIN
             = """
               Dear {displayname},
 
@@ -76,35 +135,6 @@ public class MailSettings {
               Best Regards,
               {sendername}
               """;
-    String tmpl
-            = """
-                  <p>Dear {displayname},</p>
-                  <p>
-                  To setup openVPN follow the instructions for you operating system.
-                  </p>
-
-                  <dl>
-                    <dt>Windows</dt>
-                    <dd>
-                  <ol>
-                  <li>Download latest openVPN client from <a href="https://openvpn.net/community-downloads/">https://openvpn.net/community-downloads/</a></li>
-                  <li>Copy attached openvpn-client.conf to C:\\Users\\YourUsername</li>
-                  </ol>
-                  </dd>
-                  <dt>Linux</dt>
-                  <dd>
-                  <ol>
-                  <li>open Terminal (konsole or ...)</li>
-                  <li>execute the following commands:</li>
-                  <pre>
-                  nmcli connection add
-                  </pre>
-                  </ol>
-                  </dd>
-                  </dl>
-                  <p>Best Regards,</p>
-                  <p>{sendername}</p>
-                  """;
 
     public MailSettings() {
     }
@@ -129,7 +159,9 @@ public class MailSettings {
                 SK_MAIL_SENDER_EMAIL_ADDRESS,
                 "no-reply@" + NetUtils.myDomain()
         );
-        templateConfig = settings.get(SK_MAIL_TEMPLATE_CONFIG, TEMPLATE_CONFIG_DEFAULT);
+        templateConfigHtml = settings.get(SK_MAIL_TMPL_CFG_HTML, getDefaultTemplateConfigHtml());
+        templateConfigPlain = settings.get(SK_MAIL_TMPL_CFG_PLAIN, getDefaultTemplateConfigPlain());
+        templaeConfigType = settings.getEnum(SK_MAIL_TMPL_CFG_TYPE, TemplateConfigType.HTML);
     }
 
     public void save(Settings settings) {
@@ -137,12 +169,14 @@ public class MailSettings {
         settings.put(SK_MAIL_SMTP_PORT, smtpPort);
         settings.put(SK_MAIL_SMTP_USER, smtpUser);
         settings.put(SK_MAIL_SMTP_PASSWORD, smtpPassword);
-        settings.put(SK_MAIL_TEMPLATE_CONFIG, templateConfig);
+        settings.put(SK_MAIL_TMPL_CFG_HTML, templateConfigHtml);
+        settings.put(SK_MAIL_TMPL_CFG_PLAIN, templateConfigPlain);
+        settings.put(SK_MAIL_TMPL_CFG_TYPE, templaeConfigType);
         settings.put(SK_MAIL_SENDER_DISPLAYNAME, senderDisplayname);
         settings.put(SK_MAIL_SENDER_EMAIL_ADDRESS, senderEmailAddress);
     }
 
-    public MailSender getMailSender() {
+    public JavaMailSender getMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(getSmtpServer());
         mailSender.setPort(getSmtpPort());
@@ -165,5 +199,13 @@ public class MailSettings {
         } else {
             return "%s <%s>".formatted(senderDisplayname, senderEmailAddress);
         }
+    }
+
+    final public String getDefaultTemplateConfigHtml() {
+        return TEMPLATE_CONFIG_HTML;
+    }
+
+    final public String getDefaultTemplateConfigPlain() {
+        return TEMPLATE_CONFIG_PLAIN;
     }
 }
