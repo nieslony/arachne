@@ -46,7 +46,8 @@ public class ArachneUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         logger.info("Searching for user " + username);
-        int ldapCacheMaxMins = 60;
+        UserSettings userSettings = new UserSettings(settings);
+        int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
         ArachneUser user = userRepository.findByUsername(username);
         if (user == null) {
@@ -60,7 +61,12 @@ public class ArachneUserDetailsService implements UserDetailsService {
             userRepository.save(user);
         } else if (user.isExpired(ldapCacheMaxMins)) {
             logger.info("User is expired, updating");
-            user.update(ldapUserSource.findUser(username));
+            String externalProvider = user.getExternalProvider();
+            if (externalProvider != null) {
+                if (user.getExternalProvider().equals(LdapUserSource.getName())) {
+                    user.update(ldapUserSource.findUser(username));
+                }
+            }
             Set<String> roles = rolesCollector.findRolesForUser(username);
             user.setRoles(roles);
             userRepository.save(user);
