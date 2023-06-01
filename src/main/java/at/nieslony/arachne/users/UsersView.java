@@ -8,7 +8,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
-import at.nieslony.arachne.roles.RolesCollector;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -21,6 +21,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
@@ -28,6 +29,7 @@ import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -56,8 +58,8 @@ public class UsersView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(UsersView.class);
 
     final private UserRepository userRepository;
-    final private RolesCollector rolesCollector;
     final private RoleRuleRepository roleRuleRepository;
+    final private Settings settings;
 
     final Grid<ArachneUser> usersGrid;
     final Grid.Column<ArachneUser> usernameColumn;
@@ -66,17 +68,32 @@ public class UsersView extends VerticalLayout {
 
     public UsersView(
             UserRepository userRepository,
-            RolesCollector rolesCollector,
-            RoleRuleRepository roleRuleRepository
+            RoleRuleRepository roleRuleRepository,
+            Settings settings
     ) {
         this.userRepository = userRepository;
-        this.rolesCollector = rolesCollector;
         this.roleRuleRepository = roleRuleRepository;
+        this.settings = settings;
 
         usersGrid = new Grid<>(ArachneUser.class, false);
-
         Button addUserButton = new Button("Add User...",
                 event -> addUser()
+        );
+        addUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button userSettingsButton = new Button("Settings...",
+                (e) -> openUserSettings()
+        );
+
+        Button refreshUsersButton = new Button("Refresh", (e) -> {
+            List<ArachneUser> users = userRepository.findAll();
+            usersGrid.setItems(users);
+        });
+
+        HorizontalLayout buttons = new HorizontalLayout(
+                addUserButton,
+                userSettingsButton,
+                refreshUsersButton
         );
 
         usernameColumn = usersGrid
@@ -100,7 +117,7 @@ public class UsersView extends VerticalLayout {
         List<ArachneUser> users = userRepository.findAll();
         usersGrid.setItems(users);
 
-        add(addUserButton, usersGrid);
+        add(buttons, usersGrid);
     }
 
     final void editUsersGridBuffered() {
@@ -339,5 +356,37 @@ public class UsersView extends VerticalLayout {
                 });
 
         confirm.open();
+    }
+
+    private void openUserSettings() {
+        UserSettings userSettings = new UserSettings(settings);
+
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("User Settings");
+
+        IntegerField expirationTimeoutField = new IntegerField("Expiration Timeout");
+        expirationTimeoutField.setStepButtonsVisible(true);
+        Div suffix = new Div();
+        suffix.setText("min");
+        expirationTimeoutField.setSuffixComponent(suffix);
+        expirationTimeoutField.setValue(userSettings.getExpirationTimeout());
+
+        dlg.add(expirationTimeoutField);
+
+        Button okButton = new Button("OK", (e) -> {
+            userSettings.setExpirationTimeout(expirationTimeoutField.getValue());
+            userSettings.save(settings);
+            dlg.close();
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.setAutofocus(true);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(cancelButton, okButton);
+
+        dlg.open();
     }
 }
