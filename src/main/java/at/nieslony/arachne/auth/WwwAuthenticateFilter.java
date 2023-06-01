@@ -84,7 +84,7 @@ public class WwwAuthenticateFilter implements Filter {
                 """
                 <html>
                 <head>
-                    <meta http-equiv="Refresh" content="5; url='%s'" />
+                    <meta http-equiv="Refresh" content="1; url='%s'" />
                 </head>
                 <body>
                 <h1>Unauthorized</h1>

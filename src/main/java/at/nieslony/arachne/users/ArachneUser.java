@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.roles.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -26,6 +27,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
@@ -40,6 +43,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 public class ArachneUser implements Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(ArachneUser.class);
 
     public ArachneUser(String username, String password, String displayName, String email) {
         this.username = username;
@@ -99,17 +104,29 @@ public class ArachneUser implements Serializable {
 
     public boolean isExpired(int maxAgeMins) {
         if (expirationEnforced) {
+            logger.info("User expiration enforced");
             return true;
         }
         Calendar cal = Calendar.getInstance();
         cal.setTime(lastModified);
         cal.add(Calendar.MINUTE, maxAgeMins);
-        return cal.before(new Date());
+
+        Calendar now = Calendar.getInstance();
+        return cal.before(now);
     }
 
     public void update(ArachneUser user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
         expirationEnforced = false;
+    }
+
+    public Set<String> getRolesWithName() {
+        Set<String> roleNames = new HashSet<>();
+        roles.forEach((role) -> {
+            roleNames.add(Role.valueOf(role).toString());
+        });
+
+        return roleNames;
     }
 }

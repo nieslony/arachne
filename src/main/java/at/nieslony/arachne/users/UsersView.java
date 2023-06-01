@@ -11,7 +11,6 @@ import at.nieslony.arachne.pki.PkiNotInitializedException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
-import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import com.vaadin.flow.component.Component;
@@ -26,6 +25,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
@@ -33,15 +33,17 @@ import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -62,7 +64,6 @@ public class UsersView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(UsersView.class);
 
     final private UserRepository userRepository;
-    final private RolesCollector rolesCollector;
     final private RoleRuleRepository roleRuleRepository;
     final private OpenVpnRestController openVpnRestController;
     final private Settings settings;
@@ -71,24 +72,55 @@ public class UsersView extends VerticalLayout {
     final Grid.Column<ArachneUser> usernameColumn;
     final Grid.Column<ArachneUser> displayNameColumn;
     final Grid.Column<ArachneUser> emailColumn;
+    final Grid.Column<ArachneUser> userSourceColumn;
+
+    DataProvider<ArachneUser, Void> userDataProvider;
+    final UserSettings userSettings;
 
     public UsersView(
             UserRepository userRepository,
-            RolesCollector rolesCollector,
             RoleRuleRepository roleRuleRepository,
+            ArachneUserDetailsService userDetails,
             OpenVpnRestController openVpnRestController,
             Settings settings
     ) {
         this.userRepository = userRepository;
-        this.rolesCollector = rolesCollector;
         this.roleRuleRepository = roleRuleRepository;
-        this.openVpnRestController = openVpnRestController;
         this.settings = settings;
+        this.userSettings = new UserSettings(settings);
+        this.openVpnRestController = openVpnRestController;
+
+        userDataProvider
+                = DataProvider.fromCallbacks(
+                        query -> {
+                            int offset = query.getOffset();
+                            int limit = query.getLimit();
+                            return userRepository
+                                    .findAll()
+                                    .stream()
+                                    .peek((user) -> {
+                                        userDetails.ensureUpdated(
+                                                user,
+                                                userSettings.getExpirationTimeout()
+                                        );
+                                    });
+                        },
+                        query -> (int) userRepository.count()
+                );
 
         usersGrid = new Grid<>(ArachneUser.class, false);
-
         Button addUserButton = new Button("Add User...",
                 event -> addUser()
+        );
+        addUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button userSettingsButton = new Button("Settings...",
+                (e) -> openUserSettings()
+        );
+
+        HorizontalLayout buttons = new HorizontalLayout(
+                addUserButton,
+                userSettingsButton
         );
 
         usernameColumn = usersGrid
@@ -100,8 +132,18 @@ public class UsersView extends VerticalLayout {
         emailColumn = usersGrid
                 .addColumn(ArachneUser::getEmail)
                 .setHeader("E-Mail");
+        userSourceColumn = usersGrid
+                .addColumn(new ComponentRenderer<>((ArachneUser user) -> {
+                    String source = user.getExternalProvider();
+                    if (source == null) {
+                        return new Text("Internal");
+                    } else {
+                        return new Text(source);
+                    }
+                }))
+                .setHeader("User Source");
         usersGrid.addComponentColumn((user) -> {
-            String roles = user.getRoles()
+            String roles = user.getRolesWithName()
                     .stream()
                     .collect(Collectors.joining(", "));
             return new Text(roles);
@@ -109,10 +151,9 @@ public class UsersView extends VerticalLayout {
 
         editUsersGridBuffered();
 
-        List<ArachneUser> users = userRepository.findAll();
-        usersGrid.setItems(users);
+        usersGrid.setItems(userDataProvider);
 
-        add(addUserButton, usersGrid);
+        add(buttons, usersGrid);
     }
 
     private Component getUserEditMenu(ArachneUser user, Editor<ArachneUser> editor) {
@@ -137,9 +178,7 @@ public class UsersView extends VerticalLayout {
             userMenu.addItem("Change Password...", event -> changePassword(user));
             userMenu.addItem("Delete...", event -> deleteUser(user));
         }
-        if (rolesCollector
-                .findRolesForUser(user.getUsername())
-                .contains("USER")) {
+        if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
             FileDownloadWrapper link = new FileDownloadWrapper(
                     openVpnUserSettings.getClientConfigName(),
@@ -380,5 +419,35 @@ public class UsersView extends VerticalLayout {
                 });
 
         confirm.open();
+    }
+
+    private void openUserSettings() {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("User Settings");
+
+        IntegerField expirationTimeoutField = new IntegerField("Expiration Timeout");
+        expirationTimeoutField.setStepButtonsVisible(true);
+        Div suffix = new Div();
+        suffix.setText("min");
+        expirationTimeoutField.setSuffixComponent(suffix);
+        expirationTimeoutField.setValue(userSettings.getExpirationTimeout());
+
+        dlg.add(expirationTimeoutField);
+
+        Button okButton = new Button("OK", (e) -> {
+            userSettings.setExpirationTimeout(expirationTimeoutField.getValue());
+            userSettings.save(settings);
+            dlg.close();
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.setAutofocus(true);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(cancelButton, okButton);
+
+        dlg.open();
     }
 }

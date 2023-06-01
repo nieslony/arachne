@@ -43,10 +43,26 @@ public class ArachneUserDetailsService implements UserDetailsService {
         return null;
     }
 
+    public void ensureUpdated(ArachneUser user, int expirationTimeout) {
+        if (user.isExpired(expirationTimeout)) {
+            logger.info("User is expired, updating");
+            String externalProvider = user.getExternalProvider();
+            if (externalProvider != null) {
+                if (user.getExternalProvider().equals(LdapUserSource.getName())) {
+                    user.update(ldapUserSource.findUser(user.getUsername()));
+                }
+            }
+            Set<String> roles = rolesCollector.findRolesForUser(user.getUsername());
+            user.setRoles(roles);
+            userRepository.save(user);
+        }
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         logger.info("Searching for user " + username);
-        int ldapCacheMaxMins = 60;
+        UserSettings userSettings = new UserSettings(settings);
+        int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
         ArachneUser user = userRepository.findByUsername(username);
         if (user == null) {
@@ -58,12 +74,8 @@ public class ArachneUserDetailsService implements UserDetailsService {
             Set<String> roles = rolesCollector.findRolesForUser(username);
             user.setRoles(roles);
             userRepository.save(user);
-        } else if (user.isExpired(ldapCacheMaxMins)) {
-            logger.info("User is expired, updating");
-            user.update(ldapUserSource.findUser(username));
-            Set<String> roles = rolesCollector.findRolesForUser(username);
-            user.setRoles(roles);
-            userRepository.save(user);
+        } else {
+            ensureUpdated(user, ldapCacheMaxMins);
         }
 
         logger.info("User %s has roles %s".formatted(
@@ -71,7 +83,6 @@ public class ArachneUserDetailsService implements UserDetailsService {
                 user.getRoles().toString())
         );
 
-        logger.info(user.toString());
         UserDetails userDetails = new ArachneUserDetails(user);
         return userDetails;
     }
