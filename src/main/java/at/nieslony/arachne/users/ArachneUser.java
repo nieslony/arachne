@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.roles.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -118,5 +119,14 @@ public class ArachneUser implements Serializable {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
         expirationEnforced = false;
+    }
+
+    public Set<String> getRolesWithName() {
+        Set<String> roleNames = new HashSet<>();
+        roles.forEach((role) -> {
+            roleNames.add(Role.valueOf(role).toString());
+        });
+
+        return roleNames;
     }
 }

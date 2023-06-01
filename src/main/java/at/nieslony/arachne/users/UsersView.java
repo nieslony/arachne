@@ -135,7 +135,7 @@ public class UsersView extends VerticalLayout {
                 }))
                 .setHeader("User Source");
         usersGrid.addComponentColumn((user) -> {
-            String roles = user.getRoles()
+            String roles = user.getRolesWithName()
                     .stream()
                     .collect(Collectors.joining(", "));
             return new Text(roles);
