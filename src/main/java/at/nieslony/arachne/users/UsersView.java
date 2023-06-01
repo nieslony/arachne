@@ -33,6 +33,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -65,6 +66,7 @@ public class UsersView extends VerticalLayout {
     final Grid.Column<ArachneUser> usernameColumn;
     final Grid.Column<ArachneUser> displayNameColumn;
     final Grid.Column<ArachneUser> emailColumn;
+    final Grid.Column<ArachneUser> userSourceColumn;
 
     public UsersView(
             UserRepository userRepository,
@@ -105,6 +107,16 @@ public class UsersView extends VerticalLayout {
         emailColumn = usersGrid
                 .addColumn(ArachneUser::getEmail)
                 .setHeader("E-Mail");
+        userSourceColumn = usersGrid
+                .addColumn(new ComponentRenderer<>((ArachneUser user) -> {
+                    String source = user.getExternalProvider();
+                    if (source == null) {
+                        return new Text("Internal");
+                    } else {
+                        return new Text(source);
+                    }
+                }))
+                .setHeader("User Source");
         usersGrid.addComponentColumn((user) -> {
             String roles = user.getRoles()
                     .stream()
