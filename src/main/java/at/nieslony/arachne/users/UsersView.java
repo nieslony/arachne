@@ -33,13 +33,13 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -68,14 +68,37 @@ public class UsersView extends VerticalLayout {
     final Grid.Column<ArachneUser> emailColumn;
     final Grid.Column<ArachneUser> userSourceColumn;
 
+    DataProvider<ArachneUser, Void> userDataProvider;
+    final UserSettings userSettings;
+
     public UsersView(
             UserRepository userRepository,
             RoleRuleRepository roleRuleRepository,
+            ArachneUserDetailsService userDetails,
             Settings settings
     ) {
         this.userRepository = userRepository;
         this.roleRuleRepository = roleRuleRepository;
         this.settings = settings;
+        this.userSettings = new UserSettings(settings);
+
+        userDataProvider
+                = DataProvider.fromCallbacks(
+                        query -> {
+                            int offset = query.getOffset();
+                            int limit = query.getLimit();
+                            return userRepository
+                                    .findAll()
+                                    .stream()
+                                    .peek((user) -> {
+                                        userDetails.ensureUpdated(
+                                                user,
+                                                userSettings.getExpirationTimeout()
+                                        );
+                                    });
+                        },
+                        query -> (int) userRepository.count()
+                );
 
         usersGrid = new Grid<>(ArachneUser.class, false);
         Button addUserButton = new Button("Add User...",
@@ -87,15 +110,9 @@ public class UsersView extends VerticalLayout {
                 (e) -> openUserSettings()
         );
 
-        Button refreshUsersButton = new Button("Refresh", (e) -> {
-            List<ArachneUser> users = userRepository.findAll();
-            usersGrid.setItems(users);
-        });
-
         HorizontalLayout buttons = new HorizontalLayout(
                 addUserButton,
-                userSettingsButton,
-                refreshUsersButton
+                userSettingsButton
         );
 
         usernameColumn = usersGrid
@@ -126,8 +143,7 @@ public class UsersView extends VerticalLayout {
 
         editUsersGridBuffered();
 
-        List<ArachneUser> users = userRepository.findAll();
-        usersGrid.setItems(users);
+        usersGrid.setItems(userDataProvider);
 
         add(buttons, usersGrid);
     }
@@ -371,8 +387,6 @@ public class UsersView extends VerticalLayout {
     }
 
     private void openUserSettings() {
-        UserSettings userSettings = new UserSettings(settings);
-
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("User Settings");
 
