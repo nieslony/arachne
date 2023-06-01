@@ -83,7 +83,6 @@ public class ArachneUserDetailsService implements UserDetailsService {
                 user.getRoles().toString())
         );
 
-        logger.info(user.toString());
         UserDetails userDetails = new ArachneUserDetails(user);
         return userDetails;
     }
