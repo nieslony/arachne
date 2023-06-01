@@ -1,1 +1,1 @@
-/var/lib/arachne/vpnconfig  gen_context(system_u:object_r:openvpn_etc_t,s0)
+/var/lib/arachne/vpnconfig(/.*)?  gen_context(system_u:object_r:openvpn_etc_t,s0)

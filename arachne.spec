@@ -1,3 +1,7 @@
+%global selinuxtype targeted
+%global moduletype contrib
+%global modulename arachne
+
 Name:           arachne
 Version:        0.3.0
 Release:        1
@@ -15,6 +19,7 @@ BuildRequires:  pkgconfig(systemd)
 
 Requires:       java-17-openjdk-headless
 Requires:       openvpn
+Requires:       openvpn-plugin-arachne
 
 Recommends:     httpd
 
@@ -33,6 +38,7 @@ mkdir -pv %{buildroot}/%{_datadir}/%{name}
 mkdir -pv %{buildroot}/%{_unitdir}
 install -v %{_builddir}/%{name}-%{version}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
 install -v %{name}.service %{buildroot}/%{_unitdir}
+
 install -d %{buildroot}%{_datadir}/selinux/packages
 install -m 0644 arachne.pp %{buildroot}%{_datadir}/selinux/packages
 

@@ -1,45 +1,70 @@
-hostname = "arachne"
+hostname = ENV['ARACHNE_HOSTNAME'] || "arachne"
+arachne_repo = ENV['ARACHNE_REPO'] || "http://localhost/repos"
 
 Vagrant.configure("2") do |config|
-    Dir["scriptlets/*rb"].each do |filename|
-        puts "Including #{filename}"
-        eval(IO.read(filename), binding, File.realpath(filename))
+    config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
+
+#    Dir["scriptlets/*rb"].each do |filename|
+#        puts "Including #{filename}"
+#        eval(IO.read(filename), binding, File.realpath(filename))
+#    end
+
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.cpus = 2
+        libvirt.memory = 2048
+        libvirt.clock_offset = 'utc'
+        libvirt.graphics_type = 'spice'
+        libvirt.graphics_ip = "0.0.0.0"
+        libvirt.graphics_port = -1
+        libvirt.keymap = "de"
+        libvirt.channel :type => 'unix',
+            :target_name => 'org.qemu.guest_agent.0',
+            :target_type => 'virtio'
+        libvirt.channel :type => 'spicevmc',
+            :target_name => 'com.redhat.spice.0',
+            :target_type => 'virtio'
+        libvirt.video_type = "qxl"
+        libvirt.input :type => "mouse",
+            :bus => "usb"
     end
 
     config.vm.define "arachne" do |arachne|
         arachne.vm.box = "generic/centos9s"
+        arachne.vm.hostname = hostname
         arachne.timezone.value = :host
 
-        arachne.vm.provision "Copy RPMs",
-            type: "file",
-            source: "~/rpmbuild/RPMS/noarch/",
-            destination: "/tmp"
+        arachne.vm.provision "Install arachne",
+            type: "shell",
+            args: [ arachne_repo ],
+            inline: <<-SCRIPT
+                echo "--- Install updates ---"
+                dnf update -y
 
-        arachne.vm.provision "shell",
-            inline: <<-'SHELL'
-            echo "--- Install arachne ---"
-            dnf install -y /tmp/arachne-1.0_SNAPSHOT-*.noarch.rpm || exit 1
+                REPO_URL=$1
+                echo "--- Install arachne from $REPO_URL ---"
+                dnf config-manager --add-repo $REPO_URL
+                dnf install arachne -y
 
-            echo "--- Start arachne ---"
-            systemctl enable --now arachne
-            systemctl status arachne
+                echo "--- enable services ---"
+                for i in arachne httpd ; do
+                    systemctl enable --now $i
+                done
 
-            if [ -e "/etc/httpd/krb5.keytab" ]; then
-                echo "--- Copy keytab ---"
-                cp -v /etc/httpd/krb5.keytab /var/lib/arachne/work/arachneconfig
-                chown arachne:arachne /var/lib/arachne/work/arachneconfig/krb5.keytab
-            else
-                echo "--- No keytab to copy ---"
-            fi
+                echo "--- Open firewall ---"
+                for i in http https ; do
+                    echo -n "$i: "
+                    firewall-cmd --add-service $i --permanent
+                done
+                for i in 8080/tcp ; do
+                    echo -n "$i :"
+                    firewall-cmd --add-port $i --permanent
+                done
+                echo -n "Reload: "
+                firewall-cmd --reload
 
-            echo "--- Enable service in firewall  ---"
-            for i in http https openvpn ; do
-                echo -n "$i: "
-                firewall-cmd --add-service=openvpn --permanent
-            done
-            firewall-cmd --add-port 80/tcp --permanent
-            echo -n "--- Reloading firewalld ---"
-            firewall-cmd --reload
-            SHELL
+                my_ip=$( ifconfig eth0 | awk '/inet/ { print $2; }' )
+                echo "You can now connect to http://$my_ip:8080/arachne"
+            SCRIPT
+
     end # arachne
 end # config
