@@ -20,6 +20,8 @@ import at.nieslony.arachne.ViewTemplate;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;
@@ -56,6 +58,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.pekka.WysiwygE;
 
 /**
@@ -70,6 +74,7 @@ public class MailSettingsView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(MailSettingsView.class);
 
     private final Settings settings;
+    private final UserRepository userRepository;
     private final MailSettings mailSettings;
     private final Dialog sendTestMailDialog;
     private final Binder<MailSettings> binder;
@@ -78,8 +83,9 @@ public class MailSettingsView extends VerticalLayout {
     private Button resetConfigTemplatesButton;
     private final HorizontalLayout buttons;
 
-    public MailSettingsView(Settings settings) {
+    public MailSettingsView(Settings settings, UserRepository userRepository) {
         this.settings = settings;
+        this.userRepository = userRepository;
         mailSettings = new MailSettings(this.settings);
         binder = new Binder<>();
         sendTestMailDialog = createSendTestMailDialog();
@@ -203,7 +209,12 @@ public class MailSettingsView extends VerticalLayout {
         recipiend.setWidth(20, Unit.EM);
         recipiend.setRequired(true);
         recipiend.setValueChangeMode(ValueChangeMode.EAGER);
-        recipiend.setErrorMessage("Not a valif E-Mail Address");
+        recipiend.setErrorMessage("Not a valid E-Mail Address");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        if (you != null && you.getEmail() != null) {
+            recipiend.setValue(you.getEmail());
+        }
 
         dlg.add(recipiend);
 
@@ -256,6 +267,7 @@ public class MailSettingsView extends VerticalLayout {
         templateContentHtmlField.addClassNames(
                 LumoUtility.Background.CONTRAST_10
         );
+        templateContentHtmlField.setVisible(false);
         binder.bind(
                 templateContentHtmlField,
                 MailSettings::getTemplateConfigHtml,
@@ -270,6 +282,8 @@ public class MailSettingsView extends VerticalLayout {
                 MailSettings::getTemplateConfigPlain,
                 MailSettings::setTemplateConfigPlain
         );
+        templateContentPlainField.setVisible(false);
+        templateContentPlainField.getStyle().set("font-family", "monospace");
 
         VerticalLayout templateLayout = new VerticalLayout(
                 templateType,
