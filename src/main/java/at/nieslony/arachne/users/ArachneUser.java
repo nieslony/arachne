@@ -118,7 +118,8 @@ public class ArachneUser implements Serializable {
     public void update(ArachneUser user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
-        expirationEnforced = false;
+        this.expirationEnforced = false;
+        this.lastModified = new Date();
     }
 
     public Set<String> getRolesWithName() {
