@@ -19,6 +19,8 @@ package at.nieslony.arachne.mail;
 import at.nieslony.arachne.ViewTemplate;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
+import at.nieslony.arachne.pki.PkiNotInitializedException;
+import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
@@ -53,6 +55,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.mail.MessagingException;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
@@ -75,20 +79,30 @@ public class MailSettingsView extends VerticalLayout {
 
     private final Settings settings;
     private final UserRepository userRepository;
+    private final MailSettingsRestController mailSettingsRestController;
+
     private final MailSettings mailSettings;
     private final Dialog sendTestMailDialog;
+    private final Dialog sendTestConfigDialog;
     private final Binder<MailSettings> binder;
     private Button sendTestMailButton;
     private Button sendTestConfigButton;
     private Button resetConfigTemplatesButton;
     private final HorizontalLayout buttons;
 
-    public MailSettingsView(Settings settings, UserRepository userRepository) {
+    public MailSettingsView(
+            Settings settings,
+            UserRepository userRepository,
+            MailSettingsRestController mailSettingsRestController
+    ) {
         this.settings = settings;
         this.userRepository = userRepository;
+        this.mailSettingsRestController = mailSettingsRestController;
+
         mailSettings = new MailSettings(this.settings);
         binder = new Binder<>();
         sendTestMailDialog = createSendTestMailDialog();
+        sendTestConfigDialog = createSendConfigDialog();
 
         Button saveButton = new Button("Save", (e) -> {
             mailSettings.save(settings);
@@ -220,7 +234,75 @@ public class MailSettingsView extends VerticalLayout {
 
         Button cancelButton = new Button("Cancel", (be) -> dlg.close());
         Button sendButton = new Button("Send", (be) -> {
-            sendTestMail(mailSettings, recipiend.getValue());
+            sendTestMail(recipiend.getValue());
+            dlg.close();
+        });
+        sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        sendButton.setAutofocus(true);
+        sendButton.setDisableOnClick(true);
+        sendButton.setEnabled(false);
+
+        dlg.getFooter().add(cancelButton, sendButton);
+
+        recipiend.addValueChangeListener((var vce) -> {
+            sendButton.setEnabled(
+                    !vce.getValue().isEmpty()
+                    && !recipiend.isInvalid()
+            );
+        });
+
+        dlg.addOpenedChangeListener((t) -> {
+            if (t.isOpened() && !recipiend.isEmpty() && !recipiend.isInvalid()) {
+                sendButton.setEnabled(true);
+            }
+        });
+
+        return dlg;
+    }
+
+    private Dialog createSendConfigDialog() {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Send Mail with Configuration");
+
+        EmailField recipiend = new EmailField("Recipient");
+        recipiend.setWidth(20, Unit.EM);
+        recipiend.setRequired(true);
+        recipiend.setValueChangeMode(ValueChangeMode.EAGER);
+        recipiend.setErrorMessage("Not a valid E-Mail Address");
+
+        TextField configUser = new TextField("Send Confuguration for User");
+        configUser.setWidth(20, Unit.EM);
+        configUser.setRequired(true);
+        configUser.setValueChangeMode(ValueChangeMode.EAGER);
+
+        dlg.add(new VerticalLayout(
+                recipiend,
+                configUser
+        ));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        if (you != null) {
+            if (you.getEmail() != null) {
+                recipiend.setValue(you.getEmail());
+            }
+            if (you.getRoles().contains(Role.USER.name())) {
+                configUser.setValue(you.getUsername());
+            }
+        }
+
+        Button cancelButton = new Button("Cancel", (be) -> dlg.close());
+        Button sendButton = new Button("Send", (be) -> {
+            String username = configUser.getValue();
+            ArachneUser forUser = userRepository.findByUsername(username);
+            if (!forUser.getRoles().contains(Role.USER.name())) {
+                String msg = "User %s does not have role '%s', cannot sent config"
+                        .formatted(username, Role.USER.toString());
+                logger.error(msg);
+                Notification.show(msg);
+            } else {
+                sendTestConfig(forUser, recipiend.getValue());
+            }
             dlg.close();
         });
         sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -315,7 +397,9 @@ public class MailSettingsView extends VerticalLayout {
         helperLayout.setMargin(false);
         helperLayout.setSpacing(false);
 
-        sendTestConfigButton = new Button("Send test Mail");
+        sendTestConfigButton = new Button("Send Test Configuration", (e) -> {
+            sendTestConfigDialog.open();
+        });
         resetConfigTemplatesButton = new Button("Load default Text", (e) -> {
             switch (templateType.getValue()) {
                 case HTML ->
@@ -358,7 +442,15 @@ public class MailSettingsView extends VerticalLayout {
         return layout;
     }
 
-    private void sendTestMail(MailSettings mailSettings, String to) {
+    private void sendTestConfig(ArachneUser forUser, String to) {
+        try {
+            mailSettingsRestController.sendConfigMail(mailSettings, forUser, to);
+        } catch (IOException | MessagingException | PkiNotInitializedException ex) {
+
+        }
+    }
+
+    private void sendTestMail(String to) {
         JavaMailSender mailSender = mailSettings.getMailSender();
         SimpleMailMessage message = new SimpleMailMessage();
         String from = mailSettings.getPrettySenderMailAddress();

@@ -78,34 +78,33 @@ public class MailSettings {
     private final static String TEMPLATE_CONFIG_HTML
             = """
               <p>
-                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Dear {displayname}</strong>,</span>
+                  <strong>Dear {displayname}</strong>,
               </p>
               <p>
-                  <span style="font-family:Verdana, Geneva, sans-serif;">please follow the instructions:</span>
+                  please follow the instructions:
               </p>
               <p>
-                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Windows</strong></span>
+                  <strong>Windows</strong>
               </p>
               <ol>
                   <li>
-                      <span style="font-family:Verdana, Geneva, sans-serif;">Download latest openVPN client from </span><a href="https://openvpn.net/community-downloads/"><span style="font-family:Verdana, Geneva, sans-serif;">https://openvpn.net/community-downloads/</span></a>
+                      Download latest openVPN client from <a href="https://openvpn.net/community-downloads/"><span style="font-family:Verdana, Geneva, sans-serif;">https://openvpn.net/community-downloads/</a>
                   </li>
                   <li>
-                      <span style="font-family:Verdana, Geneva, sans-serif;">Copy attached openvpn-client.conf to C:\\Users\\YourUsername</span>
+                      Copy attached openvpn-client.conf to C:\\Users\\YourUsername
                   </li>
               </ol>
               <p>
-                  <span style="font-family:Verdana, Geneva, sans-serif;"><strong>Linux</strong></span>
+                  <strong>Linux</strong>
               </p>
               <ol>
                   <li>
-                      <span style="font-family:Verdana, Geneva, sans-serif;">open Terminal (konsole or ...)</span>
+                      open Terminal (konsole or ...)
                   </li>
                   <li>
-                      <span style="font-family:Verdana, Geneva, sans-serif;">execute the following commands:</span>
+                      execute the following commands:
                   </li>
               </ol>
-              <pre><code class="language-plaintext">{instructions}</code></pre>
               <p>
                   Best regards,
               </p>
@@ -133,7 +132,7 @@ public class MailSettings {
                 2. execute the following commands:
 
               {instructions}
-              
+
               Best Regards,
               {sendername}
               """;
