@@ -268,7 +268,7 @@ public class OpenVpnRestController {
         return sw.toString();
     }
 
-    String openVpnUserConfigShell(String username) throws PkiNotInitializedException {
+    public String openVpnUserConfigShell(String username) throws PkiNotInitializedException {
         OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
