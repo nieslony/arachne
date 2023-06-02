@@ -132,6 +132,8 @@ public class MailSettings {
 
                 2. execute the following commands:
 
+              {instructions}
+              
               Best Regards,
               {sendername}
               """;
