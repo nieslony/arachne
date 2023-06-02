@@ -5,6 +5,8 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.mail.MailSettings;
+import at.nieslony.arachne.mail.MailSettingsRestController;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiNotInitializedException;
@@ -30,6 +32,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -44,6 +47,8 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.mail.MessagingException;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -67,6 +72,7 @@ public class UsersView extends VerticalLayout {
     final private RoleRuleRepository roleRuleRepository;
     final private OpenVpnRestController openVpnRestController;
     final private Settings settings;
+    final private MailSettingsRestController mailSettingsRestController;
 
     final Grid<ArachneUser> usersGrid;
     final Grid.Column<ArachneUser> usernameColumn;
@@ -82,13 +88,15 @@ public class UsersView extends VerticalLayout {
             RoleRuleRepository roleRuleRepository,
             ArachneUserDetailsService userDetails,
             OpenVpnRestController openVpnRestController,
-            Settings settings
+            Settings settings,
+            MailSettingsRestController mailSettingsRestController
     ) {
         this.userRepository = userRepository;
         this.roleRuleRepository = roleRuleRepository;
         this.settings = settings;
         this.userSettings = new UserSettings(settings);
         this.openVpnRestController = openVpnRestController;
+        this.mailSettingsRestController = mailSettingsRestController;
 
         userDataProvider
                 = DataProvider.fromCallbacks(
@@ -196,10 +204,9 @@ public class UsersView extends VerticalLayout {
             );
             link.setText("Download Config");
             userMenu.addItem(link);
-
-            if (!"".equals(user.getEmail())) {
-                userMenu.addItem("Send openVPN config as E-Mail");
-            }
+            userMenu.addItem("Send openVPN config as E-Mail...", (e) -> {
+                sendVpnConfig(user);
+            });
         }
         if (!userMenu.getItems().isEmpty()) {
             menuBar.addItem(menuItem);
@@ -448,6 +455,50 @@ public class UsersView extends VerticalLayout {
 
         dlg.getFooter().add(cancelButton, okButton);
 
+        dlg.open();
+    }
+
+    void sendVpnConfig(ArachneUser user) {
+        MailSettings mailSettings = new MailSettings(settings);
+
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Send %s' Config as E-Mail".formatted(user.getDisplayName()));
+
+        EmailField emailField = new EmailField("Destination E-Mail Address");
+        emailField.setRequired(true);
+        emailField.setErrorMessage("Invalid E-Mail Address");
+        if (user.getEmail() != null) {
+            emailField.setValue(user.getEmail());
+        }
+        emailField.setWidthFull();
+
+        dlg.add(emailField);
+
+        Button okButton = new Button("Send", (e) -> {
+            try {
+                String mailAddr = emailField.getValue();
+                mailSettingsRestController.sendConfigMail(
+                        mailSettings,
+                        user,
+                        mailAddr
+                );
+                Notification.show("Config sent to " + mailAddr);
+            } catch (IOException | MessagingException | PkiNotInitializedException ex) {
+                String msg = "Error sending e-mail to %s: %s"
+                        .formatted(user.getEmail(), ex.getMessage());
+                logger.error(msg);
+                Notification.show(msg);
+            }
+
+            dlg.close();
+        });
+        okButton.addThemeName(ButtonVariant.LUMO_PRIMARY.toString());
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(cancelButton, okButton);
         dlg.open();
     }
 }
