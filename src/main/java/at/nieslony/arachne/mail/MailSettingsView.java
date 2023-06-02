@@ -266,9 +266,9 @@ public class MailSettingsView extends VerticalLayout {
         templateContentPlainField.setHeight(64, Unit.EX);
         templateContentPlainField.setWidthFull();
         binder.bind(
-                templateContentHtmlField,
-                MailSettings::getTemplateConfigHtml,
-                MailSettings::setTemplateConfigHtml
+                templateContentPlainField,
+                MailSettings::getTemplateConfigPlain,
+                MailSettings::setTemplateConfigPlain
         );
 
         VerticalLayout templateLayout = new VerticalLayout(
@@ -339,7 +339,7 @@ public class MailSettingsView extends VerticalLayout {
         );
         layout.setWidthFull();
         layout.setFlexShrink(1, templateLayout);
-        layout.setFlexShrink(3, buttons, helperLayout);
+        layout.setFlexShrink(3, helperLayout);
 
         return layout;
     }
