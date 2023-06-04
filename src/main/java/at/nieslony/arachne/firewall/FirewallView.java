@@ -21,6 +21,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -678,10 +679,22 @@ public class FirewallView extends VerticalLayout {
             switch (e.getValue()) {
                 case Hostname ->
                     hostnameField.setVisible(true);
-                case Subnet ->
+                case Subnet -> {
                     networkEdit.setVisible(true);
-                case ServiceRecord ->
+                    if (netMaskField.getValue() == 0) {
+                        netMaskField.setValue(32);
+                    }
+                }
+                case ServiceRecord -> {
                     serviceRecEdit.setVisible(true);
+                    if (serviceRecDomainField.getValue() == null
+                            || "".equals(serviceRecDomainField.getValue())) {
+                        serviceRecDomainField.setValue(NetUtils.myDomain());
+                    }
+                    if (serviceRecProtocolField.getValue() == null) {
+                        serviceRecProtocolField.setValue(TransportProtocol.TCP);
+                    }
+                }
             }
         });
 
