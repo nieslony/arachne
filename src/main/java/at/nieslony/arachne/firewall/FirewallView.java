@@ -226,8 +226,7 @@ public class FirewallView extends VerticalLayout {
             editRule(grid, rule);
         });
 
-        if (firewallRuleRepository.count()
-                == 0) {
+        if (firewallRuleRepository.count() == 0) {
             FirewallRuleModel allowDns = new FirewallRuleModel();
             allowDns.setDescription("Allow DNS acces for everybody");
             allowDns.setEnabled(true);
@@ -275,7 +274,7 @@ public class FirewallView extends VerticalLayout {
         confirm.addConfirmListener(
                 e -> {
                     firewallRuleRepository.delete(rule);
-                    grid.getDataProvider().refreshAll();
+                    grid.setItems(firewallRuleRepository.findAll());
                 });
 
         confirm.open();
@@ -472,11 +471,7 @@ public class FirewallView extends VerticalLayout {
         Button saveButton = new Button("Save", e -> {
             firewallRuleRepository.save(rule);
             dlg.close();
-            if (rule.getId() == null) {
-                grid.setItems(firewallRuleRepository.findAll());
-            } else {
-                grid.getDataProvider().refreshItem(rule);
-            }
+            grid.setItems(firewallRuleRepository.findAll());
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
