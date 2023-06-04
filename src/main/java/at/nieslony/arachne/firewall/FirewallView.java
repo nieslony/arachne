@@ -23,7 +23,6 @@ import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.TransportProtocol;
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -304,35 +303,10 @@ public class FirewallView extends VerticalLayout {
         if (rule.getWho() != null) {
             whoList.setItems(rule.getWho());
         }
-        Button addWhoButton = new Button("Add...", (ClickEvent<Button> e) -> {
-            FirewallWho who = new FirewallWho();
-            who
-                    .setUserMatcherClassName(EverybodyMatcher.class
-                            .getName());
-            editWho(who, (FirewallWho w) -> {
-                List<FirewallWho> l = rule.getWho();
-                if (l == null) {
-                    l = new LinkedList<>();
-                    rule.setWho(l);
-                }
-                l.add(w);
-                whoList.setItems(l);
-            });
-        });
-        Button editWhoButton = new Button("Edit...", (e) -> {
-            FirewallWho who = whoList.getValue();
-            editWho(who, (FirewallWho w) -> {
-                List<FirewallWho> l = rule.getWho();
-                whoList.setItems(l);
-            });
-        });
+        Button addWhoButton = new Button("Add...");
+        Button editWhoButton = new Button("Edit...");
         editWhoButton.setEnabled(false);
-        Button removeWhoButton = new Button("Remove", (e) -> {
-            FirewallWho who = whoList.getValue();
-            List<FirewallWho> l = rule.getWho();
-            l.remove(who);
-            whoList.setItems(l);
-        });
+        Button removeWhoButton = new Button("Remove");
         removeWhoButton.setEnabled(false);
         VerticalLayout editWho = new VerticalLayout(
                 whoLabel,
@@ -357,32 +331,10 @@ public class FirewallView extends VerticalLayout {
             whereList.setItems(rule.getWhere());
         }
         whereList.setWidthFull();
-        Button addWhereButton = new Button("Add...", (e) -> {
-            FirewallWhere where = new FirewallWhere();
-            editWhere(where, (FirewallWhere w) -> {
-                List<FirewallWhere> l = rule.getWhere();
-                if (l == null) {
-                    l = new LinkedList<>();
-                    rule.setWhere(l);
-                }
-                l.add(w);
-                whereList.setItems(l);
-            });
-        });
-        Button editWhereButton = new Button("Edit...", (e) -> {
-            FirewallWhere where = whereList.getValue();
-            editWhere(where, (FirewallWhere w) -> {
-                List<FirewallWhere> l = rule.getWhere();
-                whereList.setItems(l);
-            });
-        });
+        Button addWhereButton = new Button("Add...");
+        Button editWhereButton = new Button("Edit...");
         editWhereButton.setEnabled(false);
-        Button removeWhereButton = new Button("Remove", (e) -> {
-            FirewallWhere where = whereList.getValue();
-            List<FirewallWhere> l = rule.getWhere();
-            l.remove(where);
-            whereList.setItems(l);
-        });
+        Button removeWhereButton = new Button("Remove");
         removeWhereButton.setEnabled(false);
 
         VerticalLayout editWhere = new VerticalLayout(
@@ -408,32 +360,10 @@ public class FirewallView extends VerticalLayout {
             whatList.setItems(rule.getWhat());
         }
         whatList.setWidthFull();
-        Button addWhatButton = new Button("Add...", (e) -> {
-            FirewallWhat what = new FirewallWhat();
-            editWhat(what, (w) -> {
-                List<FirewallWhat> l = rule.getWhat();
-                if (l == null) {
-                    l = new LinkedList<>();
-                    rule.setWhat(l);
-                }
-                l.add(w);
-                whatList.setItems(l);
-            });
-        });
-        Button editWhatButton = new Button("Edit...", (e) -> {
-            FirewallWhat what = whatList.getValue();
-            editWhat(what, (FirewallWhat w) -> {
-                List<FirewallWhat> l = rule.getWhat();
-                whatList.setItems(l);
-            });
-        });
+        Button addWhatButton = new Button("Add...");
+        Button editWhatButton = new Button("Edit...");
         editWhatButton.setEnabled(false);
-        Button removeWhatButton = new Button("Remove", (e) -> {
-            FirewallWhat what = whatList.getValue();
-            List<FirewallWhat> l = rule.getWhat();
-            l.remove(what);
-            whatList.setItems(l);
-        });
+        Button removeWhatButton = new Button("Remove");
         removeWhatButton.setEnabled(false);
         VerticalLayout editWhat = new VerticalLayout(
                 whatLabel,
@@ -475,7 +405,7 @@ public class FirewallView extends VerticalLayout {
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
-
+        saveButton.setEnabled(rule.isValid());
         Button cancelButton = new Button("Cancel", e -> dlg.close());
 
         whoList.addValueChangeListener((e) -> {
@@ -493,8 +423,104 @@ public class FirewallView extends VerticalLayout {
             removeWhatButton.setEnabled(e.getValue() != null);
         });
 
+        addWhoButton.addClickListener((e) -> {
+            FirewallWho who = new FirewallWho();
+            who.setUserMatcherClassName(
+                    EverybodyMatcher.class
+                            .getName()
+            );
+            editWho(who, (FirewallWho w) -> {
+                List<FirewallWho> l = rule.getWho();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWho(l);
+                }
+                l.add(w);
+                whoList.setItems(l);
+                saveButton.setEnabled(rule.isValid());
+            });
+        });
+
+        editWhoButton.addClickListener((e) -> {
+            FirewallWho who = whoList.getValue();
+            editWho(who, (FirewallWho w) -> {
+                List<FirewallWho> l = rule.getWho();
+                whoList.setItems(l);
+                saveButton.setEnabled(rule.isValid());
+            });
+        });
+
+        removeWhoButton.addClickListener((e) -> {
+            FirewallWho who = whoList.getValue();
+            List<FirewallWho> l = rule.getWho();
+            l.remove(who);
+            whoList.setItems(l);
+            saveButton.setEnabled(rule.isValid());
+        });
+
+        addWhereButton.addClickListener((e) -> {
+            FirewallWhere where = new FirewallWhere();
+            editWhere(where, (FirewallWhere w) -> {
+                List<FirewallWhere> l = rule.getWhere();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWhere(l);
+                }
+                l.add(w);
+                whereList.setItems(l);
+                saveButton.setEnabled(rule.isValid());
+            });
+        });
+        editWhereButton.addClickListener((e) -> {
+            FirewallWhere where = whereList.getValue();
+            editWhere(where, (FirewallWhere w) -> {
+                List<FirewallWhere> l = rule.getWhere();
+                whereList.setItems(l);
+            });
+        });
+
+        removeWhereButton.addClickListener((e) -> {
+            FirewallWhere where = whereList.getValue();
+            List<FirewallWhere> l = rule.getWhere();
+            l.remove(where);
+            whereList.setItems(l);
+            saveButton.setEnabled(rule.isValid());
+        });
+
+        addWhatButton.addClickListener((e) -> {
+            FirewallWhat what = new FirewallWhat();
+            editWhat(what, (w) -> {
+                List<FirewallWhat> l = rule.getWhat();
+                if (l == null) {
+                    l = new LinkedList<>();
+                    rule.setWhat(l);
+                }
+                l.add(w);
+                whatList.setItems(l);
+                saveButton.setEnabled(rule.isValid());
+            });
+        });
+
+        editWhatButton.addClickListener((e) -> {
+            FirewallWhat what = whatList.getValue();
+            editWhat(what, (FirewallWhat w) -> {
+                List<FirewallWhat> l = rule.getWhat();
+                whatList.setItems(l);
+                saveButton.setEnabled(rule.isValid());
+            });
+        });
+
+        removeWhatButton.addClickListener((e) -> {
+            FirewallWhat what = whatList.getValue();
+            List<FirewallWhat> l = rule.getWhat();
+            l.remove(what);
+            whatList.setItems(l);
+            saveButton.setEnabled(rule.isValid());
+        });
+
         dlg.getFooter().add(cancelButton, saveButton);
         binder.setBean(rule);
+
         dlg.open();
     }
 

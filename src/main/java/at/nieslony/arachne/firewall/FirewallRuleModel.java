@@ -60,4 +60,10 @@ public class FirewallRuleModel {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FirewallWhat> what;
 
+    public Boolean isValid() {
+        if (who == null || where == null || what == null) {
+            return false;
+        }
+        return !who.isEmpty() && !where.isEmpty() && !what.isEmpty();
+    }
 }
