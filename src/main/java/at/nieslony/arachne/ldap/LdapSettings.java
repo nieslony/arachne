@@ -76,8 +76,6 @@ public class LdapSettings {
     private final static String SK_LDAP_GROUPS_CUSTOM_FILTER = "ldap.groups.search-filter";
     private final static String SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER = "ldap.groups.enable-custom-filter";
     private final static String SK_LDAP_GROUPS_OBJECTCLASS = "ldap.groups.objectclass";
-    private final static String SK_LDAP_CACHE_ENABLED = "ldap.cache.enabled";
-    private final static String SK_LDAP_CACHE_TIMEOUT = "ldap.cache.timeout";
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -135,9 +133,6 @@ public class LdapSettings {
         groupsCustomFilter = settings.get(SK_LDAP_GROUPS_CUSTOM_FILTER, "");
         groupsEnableCustomFilter = settings.getBoolean(SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER, false);
         groupsObjectClass = settings.get(SK_LDAP_GROUPS_OBJECTCLASS, "");
-
-        cacheEnabled = settings.getBoolean(SK_LDAP_CACHE_ENABLED, true);
-        cacheTimeOut = settings.getInt(SK_LDAP_CACHE_TIMEOUT, 60);
     }
 
     public void guessDefaultsFromDns(Settings settings) {
@@ -179,9 +174,6 @@ public class LdapSettings {
         settings.put(SK_LDAP_GROUPS_ATTR_DESCRIPTION, groupsAttrDescription);
         settings.put(SK_LDAP_GROUPS_CUSTOM_FILTER, groupsCustomFilter);
         settings.put(SK_LDAP_GROUPS_ENABLE_CUSTOM_FILTER, groupsEnableCustomFilter);
-
-        settings.put(SK_LDAP_CACHE_ENABLED, cacheEnabled);
-        settings.put(SK_LDAP_CACHE_TIMEOUT, cacheTimeOut);
     }
 
     @Value("${arachneConfigDir}")
@@ -214,9 +206,6 @@ public class LdapSettings {
     private String groupsCustomFilter;
     private boolean groupsEnableCustomFilter;
     private String groupsObjectClass;
-
-    private boolean cacheEnabled;
-    private int cacheTimeOut;
 
     List<String> findLdapUrls() {
         List<String> ldapServers = new LinkedList<>();
