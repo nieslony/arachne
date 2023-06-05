@@ -29,7 +29,7 @@ public class HostnameValidator implements SerializablePredicate<String> {
     @Override
     public boolean test(String s) {
         Pattern pattern = Pattern.compile(
-                "[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*"
+                "^[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"
         );
         Matcher matcher = pattern.matcher(s);
         return matcher.find();
