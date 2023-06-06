@@ -19,13 +19,19 @@ package at.nieslony.arachne.mail;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.MxRecord;
 import at.nieslony.arachne.utils.NetUtils;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
+import net.htmlparser.jericho.Renderer;
+import net.htmlparser.jericho.Segment;
+import net.htmlparser.jericho.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
@@ -74,68 +80,6 @@ public class MailSettings {
     private final static String SK_MAIL_TMPL_CFG_HTML = "mail.template-config-html";
     private final static String SK_MAIL_TMPL_CFG_PLAIN = "mail.template-config-plain";
     private final static String SK_MAIL_TMPL_CFG_TYPE = "mail.template-config-type";
-
-    private final static String TEMPLATE_CONFIG_HTML
-            = """
-              <p>
-                  <strong>Dear {displayname}</strong>,
-              </p>
-              <p>
-                  please follow the instructions:
-              </p>
-              <p>
-                  <strong>Windows</strong>
-              </p>
-              <ol>
-                  <li>
-                      Download latest openVPN client from <a href="https://openvpn.net/community-downloads/"><span style="font-family:Verdana, Geneva, sans-serif;">https://openvpn.net/community-downloads/</a>
-                  </li>
-                  <li>
-                      Copy attached openvpn-client.conf to C:\\Users\\YourUsername
-                  </li>
-              </ol>
-              <p>
-                  <strong>Linux</strong>
-              </p>
-              <ol>
-                  <li>
-                      open Terminal (konsole or ...)
-                  </li>
-                  <li>
-                      execute the following commands:
-                  </li>
-              </ol>
-              <p>
-                  Best regards,
-              </p>
-              <p>
-                  {sender}
-              </p>
-              """;
-
-    private final static String TEMPLATE_CONFIG_PLAIN
-            = """
-              Dear {displayname},
-
-              Windows
-              -------
-
-                1. Download latest openVPN client from https://openvpn.net/community-downloads/
-
-                2. Copy attached openvpn-client.conf to C:\\Users\\YourUsername
-
-              Linux
-              -----
-
-                1. open Terminal (konsole or ...)
-
-                2. execute the following commands:
-
-              {instructions}
-
-              Best Regards,
-              {sendername}
-              """;
 
     public MailSettings() {
     }
@@ -203,10 +147,25 @@ public class MailSettings {
     }
 
     final public String getDefaultTemplateConfigHtml() {
-        return TEMPLATE_CONFIG_HTML;
+        final String RN = "MailTemplates/openvpn-config.html";
+        try {
+            InputStream is = new ClassPathResource(RN).getInputStream();
+            return new String(is.readAllBytes());
+        } catch (IOException ex) {
+            logger.error("Cannot load resource %s: %s"
+                    .formatted(RN, ex.getMessage())
+            );
+            return "";
+        }
     }
 
     final public String getDefaultTemplateConfigPlain() {
-        return TEMPLATE_CONFIG_PLAIN;
+        Source htmlSource = new Source(getDefaultTemplateConfigHtml());
+        Segment segment = new Segment(htmlSource, 0, htmlSource.length());
+        Renderer htmlRender = new Renderer(segment)
+                .setMaxLineLength(78)
+                .setIncludeHyperlinkURLs(false)
+                .setListIndentSize(4);
+        return htmlRender.toString();
     }
 }
