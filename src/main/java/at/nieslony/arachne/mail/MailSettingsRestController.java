@@ -72,7 +72,8 @@ public class MailSettingsRestController {
     public void sendConfigMail(
             MailSettings mailSettings,
             ArachneUser forUser,
-            String to
+            String to,
+            String subject
     ) throws IOException, MessagingException, PkiNotInitializedException {
         JavaMailSender mailSender = mailSettings.getMailSender();
         MimeMessage message = mailSender.createMimeMessage();
@@ -91,7 +92,7 @@ public class MailSettingsRestController {
         );
         helper.setFrom(from);
         helper.setTo(to);
-        helper.setSubject("Arachne Test Mail with Configuration");
+        helper.setSubject(subject);
         helper.addAttachment(
                 openVpnUserSettings.getClientConfigName(),
                 new ByteArrayDataSource(windowsConfig, "text/plain")

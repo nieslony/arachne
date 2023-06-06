@@ -477,10 +477,12 @@ public class UsersView extends VerticalLayout {
         Button okButton = new Button("Send", (e) -> {
             try {
                 String mailAddr = emailField.getValue();
+                String subject = "%s's openVPN settings".formatted(user.getDisplayName());
                 mailSettingsRestController.sendConfigMail(
                         mailSettings,
                         user,
-                        mailAddr
+                        mailAddr,
+                        subject
                 );
                 Notification.show("Config sent to " + mailAddr);
             } catch (IOException | MessagingException | PkiNotInitializedException ex) {
@@ -492,7 +494,8 @@ public class UsersView extends VerticalLayout {
 
             dlg.close();
         });
-        okButton.addThemeName(ButtonVariant.LUMO_PRIMARY.toString());
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.setAutofocus(true);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

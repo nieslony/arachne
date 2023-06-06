@@ -451,7 +451,12 @@ public class MailSettingsView extends VerticalLayout {
 
     private void sendTestConfig(ArachneUser forUser, String to) {
         try {
-            mailSettingsRestController.sendConfigMail(mailSettings, forUser, to);
+            mailSettingsRestController.sendConfigMail(
+                    mailSettings,
+                    forUser,
+                    to,
+                    "Arachne Test Mail with Configuration"
+            );
         } catch (IOException | MessagingException | PkiNotInitializedException ex) {
 
         }
