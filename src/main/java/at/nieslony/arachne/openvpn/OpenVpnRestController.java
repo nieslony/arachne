@@ -295,9 +295,7 @@ public class OpenVpnRestController {
                             EOF
                             chmod -v 600 %s
                                """.formatted(privateKeyFn, privateKey, privateKeyFn));
-        String conName = vpnSettings.getVpnName()
-                .replaceAll("%h", vpnSettings.getRemote())
-                .replaceAll("%u", username);
+        String conName = vpnSettings.getFormattedClientConfigName(username);
         /*  ca = /home/claas/.certs/arachne-ca.crt,
         cert = /home/claas/.certs/arachne-cert.crt,
         cert-pass-flags = 4, connection-type = password-tls,
@@ -318,7 +316,7 @@ public class OpenVpnRestController {
                     remote = %s,
                     username = %s
                 "
-                nmcli connection add type vpn vpn-type openvpn con-name "__%s" vpn.data "$vpn_data"
+                nmcli connection add type vpn vpn-type openvpn con-name "%s" vpn.data "$vpn_data"
                 """
                         .formatted(
                                 caCertFn,

@@ -169,4 +169,10 @@ public class OpenVpnUserSettings {
         //int port = serverProperties.getPort();
         return "http://%s:%d/arachne".formatted("localhost", 8080);
     }
+
+    public String getFormattedClientConfigName(String username) {
+        return getVpnName()
+                .replaceAll("%h", getRemote())
+                .replaceAll("%u", username);
+    }
 }
