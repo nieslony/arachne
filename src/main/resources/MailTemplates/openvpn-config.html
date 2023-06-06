@@ -2,19 +2,19 @@
     <strong>Dear {rcpt-displaname},</strong>
 </p>
 <p>
-    please follow the instructions to install openVPN.
+    please follow the instructions to install and configure openVPN.
 </p>
 <p>
     <strong>Windows</strong>
 </p>
 <ol>
     <li>
-        Download and install latest openVPN client from        <a href="https://openvpn.net/community-downloads/">
-            https://openvpn.net/community-downloads/
-        </a>
+        Download latest <a href="https://openvpn.net/community-downloads/">
+            openVPN
+        </a> client and install it
     </li>
     <li>
-        Download attached %s do C:\Users\
+        save attached <i>{attachment}</i> do C:\Users\
     </li>
 </ol>
 <p>
@@ -26,7 +26,11 @@
     </li>
     <li>
         execute the following commands:
-        <pre><code>{instructions}</code></pre>
+        <br/>
+        <pre><code>{linux-instructions}</code></pre>
+    </li>
+    <li>
+        connect to new networkwork manager connection <i>{nm-connection}</i>
     </li>
 </ol>
 <p>

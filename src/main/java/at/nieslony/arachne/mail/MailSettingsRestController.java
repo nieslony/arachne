@@ -84,7 +84,11 @@ public class MailSettingsRestController {
         String linuxConfig = openVpnRestController
                 .openVpnUserConfigShell(forUser.getUsername());
 
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(
+                message,
+                true,
+                "UTF-8"
+        );
         helper.setFrom(from);
         helper.setTo(to);
         helper.setSubject("Arachne Test Mail with Configuration");
@@ -96,15 +100,22 @@ public class MailSettingsRestController {
             case HTML -> {
                 String msg = mailSettings
                         .getTemplateConfigHtml()
-                        .replace("{displayname}", forUser.getDisplayName())
-                        .replace("{instructions}", linuxConfig)
-                        .replace("{sender}", mailSettings.getSenderDisplayname());
+                        .replace(
+                                mailSettings.getVarNmConnection(),
+                                openVpnUserSettings.getFormattedClientConfigName(
+                                        forUser.getUsername()
+                                )
+                        )
+                        .replace(mailSettings.getVarSenderName(), forUser.getDisplayName())
+                        .replace(mailSettings.getVarLinuxInstructions(), linuxConfig)
+                        .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname());
                 String style = """
                                <style>
                                code {
                                 white-space: pre-wrap;
                                 font-family: monospace;
                                 column-count: 1;
+                                background-color: #dddddd;
                                }
                                </style>
                                """;
@@ -113,9 +124,15 @@ public class MailSettingsRestController {
             case PLAIN -> {
                 String msg = mailSettings
                         .getTemplateConfigPlain()
-                        .replace("{displayname}", forUser.getDisplayName())
-                        .replace("{instructions}", linuxConfig)
-                        .replace("{sender}", mailSettings.getSenderDisplayname());
+                        .replace(
+                                mailSettings.getVarNmConnection(),
+                                openVpnUserSettings.getFormattedClientConfigName(
+                                        forUser.getUsername()
+                                )
+                        )
+                        .replace(mailSettings.getVarSenderName(), forUser.getDisplayName())
+                        .replace(mailSettings.getVarLinuxInstructions(), linuxConfig)
+                        .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname());
                 helper.setText(msg, false);
             }
         }

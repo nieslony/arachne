@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.mail;
 
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.MxRecord;
 import at.nieslony.arachne.utils.NetUtils;
@@ -104,8 +105,8 @@ public class MailSettings {
                 SK_MAIL_SENDER_EMAIL_ADDRESS,
                 "no-reply@" + NetUtils.myDomain()
         );
-        templateConfigHtml = settings.get(SK_MAIL_TMPL_CFG_HTML, getDefaultTemplateConfigHtml());
-        templateConfigPlain = settings.get(SK_MAIL_TMPL_CFG_PLAIN, getDefaultTemplateConfigPlain());
+        templateConfigHtml = settings.get(SK_MAIL_TMPL_CFG_HTML, getDefaultTemplateConfigHtml(settings));
+        templateConfigPlain = settings.get(SK_MAIL_TMPL_CFG_PLAIN, getDefaultTemplateConfigPlain(settings));
         templateConfigType = settings.getEnum(SK_MAIL_TMPL_CFG_TYPE, TemplateConfigType.HTML);
     }
 
@@ -146,11 +147,13 @@ public class MailSettings {
         }
     }
 
-    final public String getDefaultTemplateConfigHtml() {
+    final public String getDefaultTemplateConfigHtml(Settings settings) {
         final String RN = "MailTemplates/openvpn-config.html";
+        OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
         try {
             InputStream is = new ClassPathResource(RN).getInputStream();
-            return new String(is.readAllBytes());
+            return new String(is.readAllBytes())
+                    .replace("{attachment}", openVpnUserSettings.getClientConfigName());
         } catch (IOException ex) {
             logger.error("Cannot load resource %s: %s"
                     .formatted(RN, ex.getMessage())
@@ -159,13 +162,29 @@ public class MailSettings {
         }
     }
 
-    final public String getDefaultTemplateConfigPlain() {
-        Source htmlSource = new Source(getDefaultTemplateConfigHtml());
+    final public String getDefaultTemplateConfigPlain(Settings settings) {
+        Source htmlSource = new Source(getDefaultTemplateConfigHtml(settings));
         Segment segment = new Segment(htmlSource, 0, htmlSource.length());
         Renderer htmlRender = new Renderer(segment)
-                .setMaxLineLength(78)
-                .setIncludeHyperlinkURLs(false)
+                .setMaxLineLength(80)
+                .setIncludeHyperlinkURLs(true)
                 .setListIndentSize(4);
         return htmlRender.toString();
+    }
+
+    public String getVarRcptName() {
+        return "{rcpt-displayname}";
+    }
+
+    public String getVarSenderName() {
+        return "{sndr-displayname}";
+    }
+
+    public String getVarLinuxInstructions() {
+        return "{linux-instructions}";
+    }
+
+    public String getVarNmConnection() {
+        return "{nm-connection}";
     }
 }

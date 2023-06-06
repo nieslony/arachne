@@ -381,13 +381,20 @@ public class MailSettingsView extends VerticalLayout {
 
         UnorderedList helper = new UnorderedList();
         helper.add(new ListItem(new Html(
-                "<span><i>{displayname}</i> Recipient's display name</span>"
+                "<span><i>%s</i> Recipient's display name</span>"
+                        .formatted(mailSettings.getVarRcptName())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>{instructions}</i> Linux instructions</span>"
+                "<span><i>%s</i> Linux instructions</span>"
+                        .formatted(mailSettings.getVarLinuxInstructions())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>{sender}</i> Sender's display name</span>"
+                "<span><i>%s</i> Sender's display name</span>"
+                        .formatted(mailSettings.getVarLinuxInstructions())
+        )));
+        helper.add(new ListItem(new Html(
+                "<span><i>%s</i> Network Manager Configuration Name"
+                        .formatted(mailSettings.getVarNmConnection())
         )));
 
         VerticalLayout helperLayout = new VerticalLayout(
@@ -404,11 +411,11 @@ public class MailSettingsView extends VerticalLayout {
             switch (templateType.getValue()) {
                 case HTML ->
                     templateContentHtmlField.setValue(
-                            mailSettings.getDefaultTemplateConfigHtml()
+                            mailSettings.getDefaultTemplateConfigHtml(settings)
                     );
                 case PLAIN ->
                     templateContentPlainField.setValue(
-                            mailSettings.getDefaultTemplateConfigPlain()
+                            mailSettings.getDefaultTemplateConfigPlain(settings)
                     );
             }
         });
