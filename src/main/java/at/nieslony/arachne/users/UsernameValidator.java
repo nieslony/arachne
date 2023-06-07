@@ -16,29 +16,25 @@
  */
 package at.nieslony.arachne.users;
 
-import com.vaadin.flow.function.SerializablePredicate;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 
 /**
  *
  * @author claas
  */
-public class UsernameValidator implements SerializablePredicate<String> {
-
-    private static final String msg = "Must start with lowercase letter, followed by a-z 0-9 - . -";
+public class UsernameValidator implements Validator<String> {
 
     @Override
-    public boolean test(String username) {
+    public ValidationResult apply(String username, ValueContext vc) {
         if (!username.matches("^[a-z].*$")) {
-            return false;
+            return ValidationResult.error("Username does not start with letter");
         }
         if (!username.matches("^[a-z0-9_.\\-]+$")) {
-            return false;
+            return ValidationResult.error("Allowed characters: a-z, 0-9, ._-");
         }
 
-        return true;
-    }
-
-    public static String getErrorMsg() {
-        return msg;
+        return ValidationResult.ok();
     }
 }

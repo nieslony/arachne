@@ -16,7 +16,9 @@
  */
 package at.nieslony.arachne.utils;
 
-import com.vaadin.flow.function.SerializablePredicate;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,14 +26,19 @@ import java.util.regex.Pattern;
  *
  * @author claas
  */
-public class HostnameValidator implements SerializablePredicate<String> {
+public class HostnameValidator implements Validator<String> {
 
     @Override
-    public boolean test(String s) {
+    public ValidationResult apply(String hostname, ValueContext vc) {
         Pattern pattern = Pattern.compile(
                 "^[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"
         );
-        Matcher matcher = pattern.matcher(s);
-        return matcher.find();
+        Matcher matcher = pattern.matcher(hostname);
+        if (matcher.find()) {
+            return ValidationResult.ok();
+        } else {
+            return ValidationResult.error("Not a valid hostname");
+        }
     }
 }
+SerializablePredicate

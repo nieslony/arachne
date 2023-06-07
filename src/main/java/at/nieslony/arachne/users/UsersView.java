@@ -241,12 +241,8 @@ public class UsersView extends VerticalLayout {
         usernameField.setWidthFull();
 
         binder.forField(usernameField)
-                .withValidator(
-                        usernameValidator,
-                        UsernameValidator.getErrorMsg())
-                .withValidator(
-                        usernameUniqueValidator,
-                        UsernameUniqueValidator.getErrorMsg())
+                .withValidator(usernameValidator)
+                .withValidator(usernameUniqueValidator)
                 .bind(ArachneUser::getUsername, ArachneUser::setUsername);
         usernameColumn.setEditorComponent(usernameField);
 
@@ -331,11 +327,8 @@ public class UsersView extends VerticalLayout {
                 = new UsernameUniqueValidator(userRepository);
         binder.forField(usernameField)
                 .asRequired()
-                .withValidator(
-                        usernameValidartor,
-                        UsernameValidator.getErrorMsg())
-                .withValidator(usernameUniqueValidator,
-                        UsernameUniqueValidator.getErrorMsg())
+                .withValidator(usernameValidartor)
+                .withValidator(usernameUniqueValidator)
                 .bind(ArachneUser::getUsername, ArachneUser::setUsername);
         binder.forField(displayNameField)
                 .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);

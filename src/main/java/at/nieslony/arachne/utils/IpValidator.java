@@ -4,36 +4,36 @@
  */
 package at.nieslony.arachne.utils;
 
-import com.vaadin.flow.function.SerializablePredicate;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 
 /**
  *
  * @author claas
  */
-public class IpValidator implements SerializablePredicate<String> {
+public class IpValidator implements Validator<String> {
+
+    private final String ERROR_MSG = "Not a valid IP address";
 
     @Override
-    public boolean test(String value) {
-        if (value == null || value.equals("")) {
-            return true;
-        }
-
+    public ValidationResult apply(String value, ValueContext vc) {
         String[] bytes = value.split("\\.");
         if (bytes.length != 4) {
-            return false;
+            return ValidationResult.error(ERROR_MSG);
         }
         try {
             for (String b : bytes) {
                 int intVal = Integer.parseInt(b);
                 if (intVal < 0 || intVal > 255) {
-                    return false;
+                    return ValidationResult.error(ERROR_MSG);
                 }
             }
         } catch (NumberFormatException ex) {
-            return false;
+            return ValidationResult.error(ERROR_MSG);
         }
 
-        return true;
+        return ValidationResult.ok();
     }
 
 }
