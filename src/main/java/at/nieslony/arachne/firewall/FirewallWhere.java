@@ -31,8 +31,10 @@ import jakarta.persistence.Table;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
@@ -181,6 +183,25 @@ public class FirewallWhere {
             }
         }
 
-        return addresses;
+        return getWithIp(addresses);
+    }
+
+    private List<String> getWithIp(List<String> addresses) {
+        Set<String> ips = new HashSet<>();
+
+        for (String addr : addresses) {
+            try {
+                InetAddress[] as = InetAddress.getAllByName(addr);
+                for (InetAddress a : as) {
+                    if (a instanceof Inet4Address) {
+                        ips.add(a.getHostAddress());
+                    }
+                }
+            } catch (UnknownHostException ex) {
+                logger.warn("Unknown host: %s, ignoring".formatted(addr));
+            }
+        }
+
+        return new LinkedList<>(ips);
     }
 }
