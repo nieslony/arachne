@@ -9,12 +9,14 @@ import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.IpValidator;
-import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.NetMask;
+import at.nieslony.arachne.utils.SubnetValidator;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
@@ -85,28 +87,6 @@ public class OpenVpnUserView extends VerticalLayout {
         }
     }
 
-    @Getter
-    @Setter
-    @EqualsAndHashCode
-    public class NetMask {
-
-        private int bits;
-        private String mask;
-
-        public NetMask() {
-        }
-
-        public NetMask(int bits) {
-            this.bits = bits;
-            this.mask = NetUtils.maskLen2Mask(bits);
-        }
-
-        @Override
-        public String toString() {
-            return "%d - %s".formatted(bits, mask);
-        }
-    }
-
     private Settings settings;
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
@@ -121,6 +101,7 @@ public class OpenVpnUserView extends VerticalLayout {
         binder = new Binder(OpenVpnUserSettings.class);
 
         Button saveSettings = new Button("Save Settings");
+        saveSettings.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
         });
@@ -456,6 +437,14 @@ public class OpenVpnUserView extends VerticalLayout {
                 .bind(OpenVpnUserSettings::getDeviceName, OpenVpnUserSettings::setDeviceName);
         binder.forField(clientNetwork)
                 .asRequired("Value required")
+                .withValidator(new SubnetValidator(() -> {
+                    NetMask mask = clientMask.getValue();
+                    if (mask == null) {
+                        return 0;
+                    } else {
+                        return mask.getBits();
+                    }
+                }))
                 .bind(OpenVpnUserSettings::getClientNetwork, OpenVpnUserSettings::setClientNetwork);
         binder.forField(clientMask)
                 .asRequired("Value required")
@@ -511,6 +500,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 removeDnsServerButton.setEnabled(false);
             }
         });
+
         pushRoutesField.addValueChangeListener((e) -> {
             if (e.getValue() != null) {
                 editRoutesField.setValue(e.getValue());
@@ -522,6 +512,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 removeRoutesButton.setEnabled(false);
             }
         });
+
+        clientMask.addValueChangeListener((e) -> binder.validate());
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
