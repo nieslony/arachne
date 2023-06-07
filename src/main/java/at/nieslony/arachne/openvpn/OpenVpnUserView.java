@@ -480,7 +480,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         AtomicReference<String> editDnsServer = new AtomicReference<>("");
         binder.forField(editDnsServerField)
-                .withValidator(new IpValidator(), "Not a valid IP Address")
+                .withValidator(new IpValidator())
                 .bind(
                         ip -> {
                             return editDnsServer.get();

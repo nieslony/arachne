@@ -16,13 +16,15 @@
  */
 package at.nieslony.arachne.users;
 
-import com.vaadin.flow.function.SerializablePredicate;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 
 /**
  *
  * @author claas
  */
-public class UsernameUniqueValidator implements SerializablePredicate<String> {
+public class UsernameUniqueValidator implements Validator<String> {
 
     private Long userId = null;
     private UserRepository userRepository;
@@ -36,19 +38,19 @@ public class UsernameUniqueValidator implements SerializablePredicate<String> {
     }
 
     @Override
-    public boolean test(String username) {
+    public ValidationResult apply(String username, ValueContext vc) {
         ArachneUser user = userRepository.findByUsername(username);
         if (userId == null) {
             if (user != null) {
-                return false;
+                return ValidationResult.error("User already exists");
             }
         } else {
             if (user != null && user.getId() != this.userId) {
-                return false;
+                return ValidationResult.error("User already exists");
             }
         }
 
-        return true;
+        return ValidationResult.ok();
     }
 
     public static String getErrorMsg() {

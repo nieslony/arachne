@@ -474,7 +474,7 @@ public class LdapView extends VerticalLayout {
         hostnameField.setClearButtonVisible(true);
         AtomicReference<String> hostname = new AtomicReference<>("");
         binder.forField(hostnameField)
-                .withValidator(new HostnameValidator(), "Not a valid hostname")
+                .withValidator(new HostnameValidator())
                 .bind(
                         s -> hostname.get(),
                         (s, v) -> {
