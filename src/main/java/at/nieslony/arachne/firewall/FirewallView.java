@@ -21,6 +21,8 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.utils.HostnameValidator;
+import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.Component;
@@ -53,6 +55,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -550,6 +553,7 @@ public class FirewallView extends VerticalLayout {
                 );
 
         TextField parameterField = new TextField("Parameter");
+        parameterField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -562,25 +566,20 @@ public class FirewallView extends VerticalLayout {
                         "Value required")
                 .bind(FirewallWho::getParameter, FirewallWho::setParameter);
 
-        userMatchersSelect.addValueChangeListener(
-                (e) -> {
-                    String labelTxt = e.getValue().getParameterLabel();
-                    parameterField.setLabel(labelTxt);
-                    parameterField.setVisible(labelTxt != null && !labelTxt.isEmpty());
-
-                    binder.validate();
-                }
-        );
-
         dlg.add(new VerticalLayout(
                 userMatchersSelect,
                 parameterField
         ));
 
         Button saveButton = new Button("Save", (t) -> {
-            dlg.close();
             logger.info(who.toString());
-            onSave.accept(who);
+            binder.validate();
+            if (binder.isValid()) {
+                dlg.close();
+                onSave.accept(who);
+            } else {
+                t.getSource().setEnabled(false);
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
@@ -588,6 +587,21 @@ public class FirewallView extends VerticalLayout {
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();
         });
+
+        userMatchersSelect.addValueChangeListener(
+                (e) -> {
+                    String labelTxt = e.getValue().getParameterLabel();
+                    parameterField.setLabel(labelTxt);
+                    if (labelTxt != null && !labelTxt.isEmpty()) {
+                        parameterField.setVisible(true);
+                        binder.validate();
+                        saveButton.setEnabled(!parameterField.isInvalid());
+                    } else {
+                        parameterField.setVisible(false);
+                        saveButton.setEnabled(true);
+                    }
+                }
+        );
 
         binder.addStatusChangeListener((sce) -> {
             saveButton.setEnabled(!sce.hasValidationErrors());
@@ -610,21 +624,28 @@ public class FirewallView extends VerticalLayout {
         whereTypeSelect.setLabel("Where Type");
         whereTypeSelect.setItems(FirewallWhere.Type.values());
         whereTypeSelect.setEmptySelectionAllowed(false);
+        whereTypeSelect.setWidth(20, Unit.EM);
         binder.forField(whereTypeSelect)
                 .bind(FirewallWhere::getType, FirewallWhere::setType);
 
         TextField hostnameField = new TextField("Hostname");
         hostnameField.setWidthFull();
         hostnameField.setVisible(false);
+        hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(hostnameField)
+                .asRequired()
+                .withValidator(new HostnameValidator())
                 .bind(FirewallWhere::getHostname, FirewallWhere::setHostname);
 
         TextField networkField = new TextField("Network");
-        networkField.setPattern("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}");
+        networkField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(networkField)
+                .asRequired()
+                .withValidator(new IpValidator(), "Not a valid IP Address")
                 .bind(FirewallWhere::getSubnet, FirewallWhere::setSubnet);
 
         IntegerField netMaskField = new IntegerField();
+        netMaskField.setValueChangeMode(ValueChangeMode.EAGER);
         netMaskField.setValue(32);
         netMaskField.setMin(1);
         netMaskField.setMax(32);
@@ -644,14 +665,18 @@ public class FirewallView extends VerticalLayout {
         networkEdit.setVisible(false);
 
         TextField serviceRecDomainField = new TextField("Domain");
-        serviceRecDomainField.setPattern(("[a-z][a-z9-9\\-]*(\\.[a-z][a-z0-9\\-]*)*"));
+        serviceRecDomainField.setPattern(("^[a-z][a-z9-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"));
+        serviceRecDomainField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(serviceRecDomainField)
-                .bind(FirewallWhere::getServicerecDomain, FirewallWhere::setServicerecDomain);
+                .asRequired()
+                .bind(FirewallWhere::getServiceRecDomain, FirewallWhere::setServiceRecDomain);
 
         TextField serviceRecNameField = new TextField("Service");
         serviceRecNameField.setWidth(10, Unit.EM);
         serviceRecNameField.setPattern("[a-z]*");
+        serviceRecNameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(serviceRecNameField)
+                .asRequired()
                 .bind(FirewallWhere::getServiceRecName, FirewallWhere::setServiceRecName);
 
         Select<TransportProtocol> serviceRecProtocolField = new Select<>();
@@ -672,19 +697,33 @@ public class FirewallView extends VerticalLayout {
         serviceRecEdit.setVisible(false);
         serviceRecEdit.setWidthFull();
 
+        TextField mxRecDomain = new TextField("Domain");
+        mxRecDomain.setWidthFull();
+        mxRecDomain.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(mxRecDomain)
+                .asRequired()
+                .withValidator(new HostnameValidator())
+                .bind(FirewallWhere::getMxDomain, FirewallWhere::setMxDomain);
+
         VerticalLayout layout = new VerticalLayout(
                 whereTypeSelect,
                 hostnameField,
                 networkEdit,
-                serviceRecEdit
+                serviceRecEdit,
+                mxRecDomain
         );
         layout.setPadding(false);
         layout.setSpacing(false);
         dlg.add(layout);
 
         Button saveButton = new Button("Save", (e) -> {
-            dlg.close();
-            onSave.accept(where);
+            binder.validate();
+            if (binder.isValid()) {
+                dlg.close();
+                onSave.accept(where);
+            } else {
+                e.getSource().setEnabled(false);
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
@@ -697,14 +736,12 @@ public class FirewallView extends VerticalLayout {
             hostnameField.setVisible(false);
             networkEdit.setVisible(false);
             serviceRecEdit.setVisible(false);
+            mxRecDomain.setVisible(false);
             switch (e.getValue()) {
                 case Hostname ->
                     hostnameField.setVisible(true);
                 case Subnet -> {
                     networkEdit.setVisible(true);
-                    if (netMaskField.getValue() == 0) {
-                        netMaskField.setValue(32);
-                    }
                 }
                 case ServiceRecord -> {
                     serviceRecEdit.setVisible(true);
@@ -716,10 +753,23 @@ public class FirewallView extends VerticalLayout {
                         serviceRecProtocolField.setValue(TransportProtocol.TCP);
                     }
                 }
+                case MxRecord -> {
+                    mxRecDomain.setVisible(true);
+
+                    if (mxRecDomain.getValue() == null
+                            || mxRecDomain.getValue().isEmpty()) {
+                        mxRecDomain.setValue(NetUtils.myDomain());
+                    }
+                }
             }
+            binder.validate();
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
+
+        binder.addStatusChangeListener((sce) -> {
+            saveButton.setEnabled(!sce.hasValidationErrors());
+        });
 
         binder.setBean(where);
         binder.validate();

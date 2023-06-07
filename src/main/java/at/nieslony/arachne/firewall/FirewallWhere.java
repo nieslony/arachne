@@ -17,6 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.utils.MxRecord;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.SrvRecord;
 import at.nieslony.arachne.utils.TransportProtocol;
@@ -56,6 +57,7 @@ public class FirewallWhere {
         Hostname("Hostname"),
         Subnet("Subnet"),
         ServiceRecord("Service Record"),
+        MxRecord("MX (mail exchange) Record"),
         PushedDnsServers("Pushed DNS Servers");
 
         private final String label;
@@ -88,7 +90,9 @@ public class FirewallWhere {
 
     private TransportProtocol serviceRecProtocol;
     private String serviceRecName;
-    private String servicerecDomain;
+    private String serviceRecDomain;
+
+    private String mxDomain;
 
     @Override
     public String toString() {
@@ -102,11 +106,13 @@ public class FirewallWhere {
                 .formatted(
                 serviceRecName,
                 serviceRecProtocol.name().toLowerCase().toLowerCase(),
-                servicerecDomain
+                serviceRecDomain
                 )
                 .toLowerCase();
             case PushedDnsServers ->
                 "Pushed DNS Servers";
+            case MxRecord ->
+                "MX record " + mxDomain;
         };
     }
 
@@ -138,7 +144,7 @@ public class FirewallWhere {
                     List<SrvRecord> srvRecs = NetUtils.srvLookup(
                             getServiceRecName(),
                             getServiceRecProtocol(),
-                            getServicerecDomain()
+                            getServiceRecDomain()
                     );
                     for (SrvRecord srvRec : srvRecs) {
                         InetAddress[] addrs = InetAddress.getAllByName(srvRec.getHostname());
@@ -154,7 +160,7 @@ public class FirewallWhere {
                                     .formatted(
                                             serviceRecName,
                                             serviceRecProtocol.toString(),
-                                            servicerecDomain,
+                                            serviceRecDomain,
                                             ex.getMessage()
                                     )
                     );
@@ -162,6 +168,16 @@ public class FirewallWhere {
             }
             case PushedDnsServers -> {
                 addresses.addAll(openvpnSettings.getPushDnsServers());
+            }
+            case MxRecord -> {
+                try {
+                    for (MxRecord mx : NetUtils.mxLookup(mxDomain)) {
+                        addresses.add(mx.getValue());
+                    }
+                } catch (NamingException ex) {
+                    logger.error("Cannot find MX records for domain %s: %s"
+                            .formatted(mxDomain, ex.getMessage()));
+                }
             }
         }
 
