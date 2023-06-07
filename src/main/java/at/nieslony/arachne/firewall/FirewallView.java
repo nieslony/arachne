@@ -22,8 +22,10 @@ import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.utils.HostnameValidator;
+import at.nieslony.arachne.utils.IgnoringInvisibleValidator;
 import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.RequiredIfVisibleValidator;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -633,15 +635,17 @@ public class FirewallView extends VerticalLayout {
         hostnameField.setVisible(false);
         hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(hostnameField)
-                .asRequired()
-                .withValidator(new HostnameValidator())
+                .asRequired(new IgnoringInvisibleValidator<>(
+                        new HostnameValidator(false))
+                )
                 .bind(FirewallWhere::getHostname, FirewallWhere::setHostname);
 
         TextField networkField = new TextField("Network");
         networkField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(networkField)
-                .asRequired()
-                .withValidator(new IpValidator(), "Not a valid IP Address")
+                .asRequired(new IgnoringInvisibleValidator<>(
+                        new IpValidator(false))
+                )
                 .bind(FirewallWhere::getSubnet, FirewallWhere::setSubnet);
 
         IntegerField netMaskField = new IntegerField();
@@ -668,7 +672,7 @@ public class FirewallView extends VerticalLayout {
         serviceRecDomainField.setPattern(("^[a-z][a-z9-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"));
         serviceRecDomainField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(serviceRecDomainField)
-                .asRequired()
+                .asRequired(new RequiredIfVisibleValidator())
                 .bind(FirewallWhere::getServiceRecDomain, FirewallWhere::setServiceRecDomain);
 
         TextField serviceRecNameField = new TextField("Service");
@@ -676,7 +680,7 @@ public class FirewallView extends VerticalLayout {
         serviceRecNameField.setPattern("[a-z]*");
         serviceRecNameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(serviceRecNameField)
-                .asRequired()
+                .asRequired(new RequiredIfVisibleValidator())
                 .bind(FirewallWhere::getServiceRecName, FirewallWhere::setServiceRecName);
 
         Select<TransportProtocol> serviceRecProtocolField = new Select<>();
@@ -701,8 +705,9 @@ public class FirewallView extends VerticalLayout {
         mxRecDomain.setWidthFull();
         mxRecDomain.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(mxRecDomain)
-                .asRequired()
-                .withValidator(new HostnameValidator())
+                .asRequired(new IgnoringInvisibleValidator<>(
+                        new HostnameValidator())
+                )
                 .bind(FirewallWhere::getMxDomain, FirewallWhere::setMxDomain);
 
         VerticalLayout layout = new VerticalLayout(
@@ -717,13 +722,8 @@ public class FirewallView extends VerticalLayout {
         dlg.add(layout);
 
         Button saveButton = new Button("Save", (e) -> {
-            binder.validate();
-            if (binder.isValid()) {
-                dlg.close();
-                onSave.accept(where);
-            } else {
-                e.getSource().setEnabled(false);
-            }
+            dlg.close();
+            onSave.accept(where);
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
