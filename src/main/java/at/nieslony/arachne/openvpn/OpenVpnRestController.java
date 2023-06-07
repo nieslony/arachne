@@ -276,6 +276,7 @@ public class OpenVpnRestController {
         String userCertFn = "~/.certs/arachne-%s.crt".formatted(username);
         String caCertFn = "~/.certs/arachne-%s.crt".formatted(vpnSettings.getRemote());
         String privateKeyFn = "~/.certs/arachne-%s.key".formatted(username);
+        int port = vpnSettings.getListenPort();
 
         StringWriter configWriter = new StringWriter();
         configWriter.append("mkdir -v ~/.certs\n");
@@ -312,7 +313,7 @@ public class OpenVpnRestController {
                     connection-type = password-tls,
                     key = %s,
                     password-flags = 2,
-                    port = ,
+                    port = %s,
                     remote = %s,
                     username = %s
                 "
@@ -322,6 +323,7 @@ public class OpenVpnRestController {
                                 caCertFn,
                                 userCertFn,
                                 privateKeyFn,
+                                port,
                                 vpnSettings.getRemote(),
                                 username,
                                 conName
