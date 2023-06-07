@@ -23,9 +23,10 @@ import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.utils.HostnameValidator;
 import at.nieslony.arachne.utils.IgnoringInvisibleValidator;
-import at.nieslony.arachne.utils.IpValidator;
+import at.nieslony.arachne.utils.NetMask;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.RequiredIfVisibleValidator;
+import at.nieslony.arachne.utils.SubnetValidator;
 import at.nieslony.arachne.utils.TransportProtocol;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -66,6 +67,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -642,21 +645,34 @@ public class FirewallView extends VerticalLayout {
 
         TextField networkField = new TextField("Network");
         networkField.setValueChangeMode(ValueChangeMode.EAGER);
+
+        Select<NetMask> netMaskField = new Select<>();
+        netMaskField.setItems(
+                IntStream
+                        .range(1, 32)
+                        .boxed()
+                        .map(i -> new NetMask(i))
+                        .collect(Collectors.toList())
+        );
+        netMaskField.setLabel("Subnet Mask");
+        netMaskField.setWidth(20, Unit.EM);
+        binder.forField(netMaskField)
+                .bind(
+                        (source) -> new NetMask(source.getSubnetMask()),
+                        (dest, value) -> dest.setSubnetMask(value.getBits())
+                );
         binder.forField(networkField)
                 .asRequired(new IgnoringInvisibleValidator<>(
-                        new IpValidator(false))
-                )
+                        new SubnetValidator(() -> {
+                            NetMask mask = netMaskField.getValue();
+                            if (mask == null) {
+                                return 0;
+                            } else {
+                                return mask.getBits();
+                            }
+                        })
+                ))
                 .bind(FirewallWhere::getSubnet, FirewallWhere::setSubnet);
-
-        IntegerField netMaskField = new IntegerField();
-        netMaskField.setValueChangeMode(ValueChangeMode.EAGER);
-        netMaskField.setValue(32);
-        netMaskField.setMin(1);
-        netMaskField.setMax(32);
-        netMaskField.setWidth(6, Unit.EM);
-        netMaskField.setStepButtonsVisible(true);
-        binder.forField(netMaskField)
-                .bind(FirewallWhere::getSubnetMask, FirewallWhere::setSubnetMask);
 
         HorizontalLayout networkEdit = new HorizontalLayout(
                 networkField,
