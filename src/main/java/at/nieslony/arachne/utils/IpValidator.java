@@ -15,9 +15,22 @@ import com.vaadin.flow.data.binder.ValueContext;
 public class IpValidator implements Validator<String> {
 
     private final String ERROR_MSG = "Not a valid IP address";
+    private final boolean emptyAllowed;
+
+    public IpValidator() {
+        this.emptyAllowed = true;
+    }
+
+    public IpValidator(boolean emptyAllowed) {
+        this.emptyAllowed = emptyAllowed;
+    }
 
     @Override
     public ValidationResult apply(String value, ValueContext vc) {
+        if (emptyAllowed && (value == null || value.equals(""))) {
+            return ValidationResult.ok();
+        }
+
         String[] bytes = value.split("\\.");
         if (bytes.length != 4) {
             return ValidationResult.error(ERROR_MSG);

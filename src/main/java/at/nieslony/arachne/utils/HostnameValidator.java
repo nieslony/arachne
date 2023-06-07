@@ -28,8 +28,22 @@ import java.util.regex.Pattern;
  */
 public class HostnameValidator implements Validator<String> {
 
+    private final boolean emptyAllowed;
+
+    public HostnameValidator(boolean emptyAllowed) {
+        this.emptyAllowed = emptyAllowed;
+    }
+
+    public HostnameValidator() {
+        this.emptyAllowed = true;
+    }
+
     @Override
     public ValidationResult apply(String hostname, ValueContext vc) {
+        if (emptyAllowed && (hostname == null || hostname.equals(""))) {
+            return ValidationResult.ok();
+        }
+
         Pattern pattern = Pattern.compile(
                 "^[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"
         );
@@ -41,4 +55,3 @@ public class HostnameValidator implements Validator<String> {
         }
     }
 }
-SerializablePredicate
