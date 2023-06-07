@@ -85,6 +85,20 @@ public class Settings {
         }
     }
 
+    public <E extends Enum<E>> E getEnum(String setting, E defaultValue) {
+        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
+        if (settingsModel.isPresent()) {
+            String s = settingsModel.get().getContent();
+            E e = (E) E.valueOf(defaultValue.getClass(), s);
+            return e;
+        } else {
+            if (defaultValue != null) {
+                return defaultValue;
+            }
+            return defaultValue;
+        }
+    }
+
     public void put(String setting, String content) {
         Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
 
@@ -105,6 +119,10 @@ public class Settings {
 
     public void put(String setting, boolean content) {
         put(setting, String.valueOf(content));
+    }
+
+    public <E extends Enum<E>> void put(String settings, E content) {
+        put(settings, content.name());
     }
 
     public ServerProperties getServerProperties() {
