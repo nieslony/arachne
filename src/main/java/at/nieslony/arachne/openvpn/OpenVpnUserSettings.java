@@ -167,7 +167,7 @@ public class OpenVpnUserSettings {
     private String defaultAuthUrl(ServerProperties serverProperties) {
         //String host = serverProperties.getAddress().getHostName();
         //int port = serverProperties.getPort();
-        return "http://%s:%d/arachne".formatted("localhost", 8080);
+        return "http://%s:%d/arachne".formatted(NetUtils.myHostname(), 8080);
     }
 
     public String getFormattedClientConfigName(String username) {
