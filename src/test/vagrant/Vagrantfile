@@ -4,11 +4,6 @@ arachne_repo = ENV['ARACHNE_REPO'] || "http://localhost/repos"
 Vagrant.configure("2") do |config|
     config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
 
-#    Dir["scriptlets/*rb"].each do |filename|
-#        puts "Including #{filename}"
-#        eval(IO.read(filename), binding, File.realpath(filename))
-#    end
-
     config.vm.provider :libvirt do |libvirt|
         libvirt.cpus = 2
         libvirt.memory = 2048
@@ -30,8 +25,34 @@ Vagrant.configure("2") do |config|
 
     config.vm.define "arachne" do |arachne|
         arachne.vm.box = "generic/centos9s"
-        arachne.vm.hostname = hostname
         arachne.timezone.value = :host
+
+        Dir["provision.d/*"].each do |filename|
+            case File.extname(filename)
+                when ".rb"
+                    puts "Including #{filename} as Ruby"
+                    eval(IO.read(filename), binding, File.realpath(filename))
+                when ".sh"
+                    puts "Including #{filename} as Shell Provisioner"
+                    config.vm.provision "shell",
+                        path: "#{filename}"
+                when ".yml"
+                    puts "Including #{filename} as Ansible Provisioner"
+                    ansible_cfg = "#{File.dirname(File.realdirpath(filename))}/ansible.cfg"
+                    if File.exist?(ansible_cfg)
+                        config.vm.provision "ansible",
+                            playbook: filename,
+                            config_file: ansible_cfg
+                    else
+                        config.vm.provision "ansible",
+                            playbook: filename
+                    end
+                else
+                    puts "Ignoring #{filename}"
+            end
+        end
+
+        arachne.vm.hostname = hostname
 
         arachne.vm.provision "Install arachne",
             type: "shell",
@@ -44,6 +65,9 @@ Vagrant.configure("2") do |config|
                 echo "--- Install arachne from $REPO_URL ---"
                 dnf config-manager --add-repo $REPO_URL
                 dnf install arachne -y
+
+                ln -vs /var/lib/arachne/arachneconfig/arachne.conf \
+                    /etc/httpd/conf.d/$HOSTNAME.conf.inc
 
                 echo "--- enable services ---"
                 for i in arachne httpd ; do
@@ -62,9 +86,15 @@ Vagrant.configure("2") do |config|
                 echo -n "Reload: "
                 firewall-cmd --reload
 
+                if [ -e "/etc/httpd/krb5.keytab" ]; then
+                    cp -v \
+                        /etc/httpd/krb5.keytab \
+                        /var/lib/arachne/arachneconfig/krb5.keytab
+                    chown -v arachne /var/lib/arachne/arachneconfig/krb5.keytab
+                fi
+
                 my_ip=$( ifconfig eth0 | awk '/inet/ { print $2; }' )
                 echo "You can now connect to http://$my_ip:8080/arachne"
             SCRIPT
-
     end # arachne
 end # config
