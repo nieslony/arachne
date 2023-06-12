@@ -1,5 +1,10 @@
 hostname = ENV['ARACHNE_HOSTNAME'] || "arachne"
-arachne_repo = ENV['ARACHNE_REPO'] || "http://localhost/repos"
+arachne_repo = ENV['ARACHNE_REPO']
+
+if not arachne_repo
+    arachne_repo = "http://localhost/repo"
+    puts "Warning: environment variable ARACHNE_REPO not set, falling back to #{arachne_repo}"
+end
 
 Vagrant.configure("2") do |config|
     config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
