@@ -1,4 +1,4 @@
-hostname = ENV['ARACHNE_HOSTNAME'] || "arachne"
+hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
 arachne_repo = ENV['ARACHNE_REPO']
 
 if not arachne_repo
@@ -56,14 +56,13 @@ Vagrant.configure("2") do |config|
                     puts "Ignoring #{filename}"
             end
         end
-
         arachne.vm.hostname = hostname
 
-        arachne.vm.provision "Install arachne",
+        arachne.vm.provision "Install arachne #{arachne.vm.hostname}",
             type: "shell",
             args: [ arachne_repo ],
             inline: <<-SCRIPT
-                echo "--- Install updates ---"
+                echo "--- Install updates on $HOSTNAME ---"
                 dnf update -y
 
                 REPO_URL=$1
