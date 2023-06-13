@@ -4,7 +4,7 @@ After=syslog.target
 
 [Service]
 User=arachne
-ExecStart=/usr/share/arachne/Arachne.jar
+ExecStart=/usr/share/arachne/Arachne.jar  --workdir=/var/lib/arachne
 WorkingDirectory=/var/lib/arachne
 SuccessExitStatus=143
 Restart=always

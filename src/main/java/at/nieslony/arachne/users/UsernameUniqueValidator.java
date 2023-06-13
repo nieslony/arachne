@@ -26,34 +26,19 @@ import com.vaadin.flow.data.binder.ValueContext;
  */
 public class UsernameUniqueValidator implements Validator<String> {
 
-    private Long userId = null;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public UsernameUniqueValidator(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
     @Override
     public ValidationResult apply(String username, ValueContext vc) {
         ArachneUser user = userRepository.findByUsername(username);
-        if (userId == null) {
-            if (user != null) {
-                return ValidationResult.error("User already exists");
-            }
+        if (user != null) {
+            return ValidationResult.error("User already exists");
         } else {
-            if (user != null && user.getId() != this.userId) {
-                return ValidationResult.error("User already exists");
-            }
+            return ValidationResult.ok();
         }
-
-        return ValidationResult.ok();
-    }
-
-    public static String getErrorMsg() {
-        return "Username is not unique";
     }
 }
