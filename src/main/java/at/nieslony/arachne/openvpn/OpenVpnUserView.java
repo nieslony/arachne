@@ -20,7 +20,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -300,6 +300,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
+        NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
+        pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
 
         TextField editDnsServerField = new TextField();
         editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
@@ -331,7 +333,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 });
         removeDnsServerButton.setEnabled(false);
         VerticalLayout pushDnsServersLayout = new VerticalLayout(
-                new Label("Push DNS Servers"),
+                pushDnsServersLabel,
                 pushDnsServersField,
                 editDnsServerField,
                 new HorizontalLayout(
@@ -354,6 +356,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
+
+        NativeLabel pushRoutesLabel = new NativeLabel("Push Routes");
+        pushRoutesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
         TextField editRoutesField = new TextField();
         editRoutesField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addRoutesButton = new Button(
@@ -384,7 +390,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 });
         removeRoutesButton.setEnabled(false);
         VerticalLayout pushRoutesLayout = new VerticalLayout(
-                new Label("Push Routes"),
+                pushRoutesLabel,
                 pushRoutesField,
                 editRoutesField,
                 new HorizontalLayout(

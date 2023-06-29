@@ -41,8 +41,8 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -299,7 +299,8 @@ public class FirewallView extends VerticalLayout {
 
         Binder<FirewallRuleModel> binder = new Binder();
 
-        Label whoLabel = new Label("Who");
+        NativeLabel whoLabel = new NativeLabel("Who");
+        whoLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         ListBox<FirewallWho> whoList = new ListBox<>();
         whoList.setHeight(30, Unit.EX);
         whoList.addClassNames(
@@ -327,7 +328,8 @@ public class FirewallView extends VerticalLayout {
         );
         editWho.setPadding(false);
 
-        Label whereLabel = new Label("Where");
+        NativeLabel whereLabel = new NativeLabel("Where");
+        whereLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         ListBox<FirewallWhere> whereList = new ListBox<>();
         whereList.setHeight(30, Unit.EX);
         whereList.addClassNames(
@@ -356,7 +358,8 @@ public class FirewallView extends VerticalLayout {
         );
         editWhere.setPadding(false);
 
-        Label whatLabel = new Label("What");
+        NativeLabel whatLabel = new NativeLabel("What");
+        whatLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         ListBox<FirewallWhat> whatList = new ListBox<>();
         whatList.setHeight(30, Unit.EX);
         whatList.addClassNames(

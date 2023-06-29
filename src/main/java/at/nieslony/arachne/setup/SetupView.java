@@ -11,7 +11,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -70,7 +70,7 @@ public class SetupView extends VerticalLayout {
     private Button next;
     private Button prev;
     private Button finish;
-    private Label finishError;
+    private NativeLabel finishError;
 
     SetupController setupController;
     Binder<SetupData> binder;
@@ -425,7 +425,7 @@ public class SetupView extends VerticalLayout {
                 take a couple of minutes,
                 """);
 
-        finishError = new Label("There are errors validating input. Please check");
+        finishError = new NativeLabel("There are errors validating input. Please check");
         finishError.addClassName(LumoUtility.TextColor.ERROR);
 
         finish = new Button("Finish");
