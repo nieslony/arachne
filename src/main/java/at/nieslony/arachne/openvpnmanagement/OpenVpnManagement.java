@@ -63,6 +63,15 @@ public class OpenVpnManagement {
         managementPassword = getPassword();
     }
 
+    public void quit() {
+        try {
+            logger.info("Quitting management interface");
+            invokeCommand("quit");
+        } catch (OpenVpnManagementException ex) {
+            logger.error("Cannot quit management interface: " + ex.getMessage());
+        }
+    }
+
     private String getPassword() {
         Optional<SettingsModel> setting = settingsRepository.findBySetting(SK_MANAGEMENT_PASSWORD);
         if (!setting.isPresent()) {
@@ -130,6 +139,11 @@ public class OpenVpnManagement {
         try {
             managementWriter.println(command);
             String line = managementReader.readLine();
+            if (line == null) {
+                String msg = "Nothing read from management interface";
+                logger.warn(msg);
+                throw new OpenVpnManagementException(msg);
+            }
             lines.add(line);
             if (line.startsWith("SUCCESS:")) {
                 return lines;
@@ -139,13 +153,25 @@ public class OpenVpnManagement {
             do {
                 line = managementReader.readLine();
                 lines.add(line);
-            } while (line.equals("END"));
+            } while (!line.equals("END"));
         } catch (IOException ex) {
             String msg = "Error invoking command %s: %s".formatted(command, ex.getMessage());
             logger.error(msg);
             throw new OpenVpnManagementException(msg);
         }
         return lines;
+    }
+
+    public List<ConnectedClient> getConnectedUsers() throws OpenVpnManagementException {
+        List<ConnectedClient> clients = new LinkedList<>();
+        for (String s : invokeCommand("status 3")) {
+            if (s.startsWith("CLIENT_LIST")) {
+                ConnectedClient client = new ConnectedClient(s);
+                clients.add(client);
+            }
+        }
+
+        return clients;
     }
 
     public void restartServer() throws OpenVpnManagementException {
