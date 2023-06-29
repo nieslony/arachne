@@ -21,12 +21,13 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import org.slf4j.Logger;
@@ -98,27 +99,40 @@ public class ViewTemplate extends AppLayout {
     }
 
     private void createDrawer() {
-        RouterLink mainLink = new RouterLink("Home", MainView.class);
-        RouterLink usersLink = new RouterLink("Users", UsersView.class);
-        RouterLink rolesLink = new RouterLink("Roles", RolesView.class);
-        RouterLink mailSettingsLink = new RouterLink("Mail Settings", MailSettingsView.class);
-        RouterLink openVpnUsersLink = new RouterLink("OpenVPN User", OpenVpnUserView.class);
-        RouterLink ldapSettingsLink = new RouterLink("LDAP Settings", LdapView.class);
-        RouterLink kerberosSettingsLink = new RouterLink("Kerberos Settings", KerberosView.class);
-        RouterLink tomcatSettingsLink = new RouterLink("Tomcat", TomcatView.class);
-        RouterLink firewallLink = new RouterLink("Firewall", FirewallView.class);
+        SideNav nav = new SideNav();
 
-        addToDrawer(new VerticalLayout(
-                mainLink,
-                usersLink,
-                mailSettingsLink,
-                rolesLink,
-                openVpnUsersLink,
-                ldapSettingsLink,
-                kerberosSettingsLink,
-                tomcatSettingsLink,
-                firewallLink
-        ));
+        SideNavItem mainNav = new SideNavItem("Home", MainView.class,
+                VaadinIcon.HOME.create());
+        SideNavItem usersNav = new SideNavItem("Users", UsersView.class,
+                VaadinIcon.USERS.create());
+        SideNavItem rolesNav = new SideNavItem("Roles", RolesView.class,
+                VaadinIcon.GROUP.create());
+        SideNavItem mailSettingsNav = new SideNavItem("Mail Settings", MailSettingsView.class,
+                VaadinIcon.MAILBOX.create());
+        SideNavItem openVpnUsersNav = new SideNavItem("OpenVPN User", OpenVpnUserView.class,
+                VaadinIcon.CONTROLLER.create());
+        SideNavItem ldapSettingsNav = new SideNavItem("LDAP Settings", LdapView.class,
+                VaadinIcon.FOLDER.create());
+        SideNavItem kerberosSettingsNav = new SideNavItem("Kerberos Settings", KerberosView.class,
+                VaadinIcon.AUTOMATION.create());
+        SideNavItem tomcatSettingsNav = new SideNavItem("Tomcat", TomcatView.class,
+                VaadinIcon.CONNECT.create());
+        SideNavItem firewallNav = new SideNavItem("Firewall", FirewallView.class,
+                VaadinIcon.FIRE.create());
+
+        nav.addItem(
+                mainNav,
+                usersNav,
+                rolesNav,
+                ldapSettingsNav,
+                kerberosSettingsNav,
+                openVpnUsersNav,
+                firewallNav,
+                mailSettingsNav,
+                tomcatSettingsNav
+        );
+
+        addToDrawer(nav);
     }
 
     void changePassword() {
