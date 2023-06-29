@@ -35,7 +35,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
@@ -173,8 +173,10 @@ public class LdapView extends VerticalLayout {
                 testUserLayout
         );
         usersFormLayout.setColspan(usersOuField, 2);
+        NativeLabel usersFormLabel = new NativeLabel("Users");
+        usersFormLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout usersLayout = new VerticalLayout(
-                new Label("Users"),
+                usersFormLabel,
                 usersFormLayout
         );
         usersLayout.addClassNames(
@@ -234,8 +236,10 @@ public class LdapView extends VerticalLayout {
                 testAndFindGroupLayout
         );
         groupsFormLayout.setColspan(groupsOu, 2);
+        NativeLabel groupsLabel = new NativeLabel("Groups");
+        groupsLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout groupsLayout = new VerticalLayout(
-                new Label("Groups"),
+                groupsLabel,
                 groupsFormLayout
         );
         groupsLayout.addClassNames(
@@ -565,8 +569,10 @@ public class LdapView extends VerticalLayout {
             }
         });
 
+        NativeLabel tryLdapUrlsLabel = new NativeLabel("Try LDAP URLs");
+        tryLdapUrlsLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout layout = new VerticalLayout(
-                new Label("Try LDAP URLs"),
+                tryLdapUrlsLabel,
                 guessFromDns,
                 ldapUrlsField,
                 urlsLayout,
