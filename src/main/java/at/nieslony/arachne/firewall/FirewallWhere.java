@@ -79,7 +79,7 @@ public class FirewallWhere {
     private Long id;
 
     @ManyToOne
-    @Cascade(CascadeType.SAVE_UPDATE)
+    @Cascade(CascadeType.ALL)
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
