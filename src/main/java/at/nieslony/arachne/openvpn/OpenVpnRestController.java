@@ -351,6 +351,7 @@ public class OpenVpnRestController {
         connection.put("connection-type", "password-tls");
         connection.put("password-flags", "2");
         connection.put("port", vpnSettings.getListenPort());
+        connection.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             connection.put("proto-tcp", "yes");
         }
