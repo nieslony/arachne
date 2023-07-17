@@ -79,7 +79,7 @@ Vagrant.configure("2") do |config|
                 done
 
                 echo "--- Open firewall ---"
-                for i in http https ; do
+                for i in http https openvpn ; do
                     echo -n "$i: "
                     firewall-cmd --add-service $i --permanent
                 done
