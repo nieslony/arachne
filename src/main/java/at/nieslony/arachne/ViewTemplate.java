@@ -26,6 +26,7 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.server.VaadinSession;
@@ -99,40 +100,56 @@ public class ViewTemplate extends AppLayout {
     }
 
     private void createDrawer() {
-        SideNav nav = new SideNav();
-
-        SideNavItem mainNav = new SideNavItem("Home", MainView.class,
-                VaadinIcon.HOME.create());
-        SideNavItem usersNav = new SideNavItem("Users", UsersView.class,
-                VaadinIcon.USERS.create());
-        SideNavItem rolesNav = new SideNavItem("Roles", RolesView.class,
-                VaadinIcon.GROUP.create());
-        SideNavItem mailSettingsNav = new SideNavItem("Mail Settings", MailSettingsView.class,
-                VaadinIcon.MAILBOX.create());
-        SideNavItem openVpnUsersNav = new SideNavItem("OpenVPN User", OpenVpnUserView.class,
-                VaadinIcon.CONTROLLER.create());
-        SideNavItem ldapSettingsNav = new SideNavItem("LDAP Settings", LdapView.class,
-                VaadinIcon.FOLDER.create());
-        SideNavItem kerberosSettingsNav = new SideNavItem("Kerberos Settings", KerberosView.class,
-                VaadinIcon.AUTOMATION.create());
-        SideNavItem tomcatSettingsNav = new SideNavItem("Tomcat", TomcatView.class,
-                VaadinIcon.CONNECT.create());
-        SideNavItem firewallNav = new SideNavItem("Firewall", FirewallView.class,
-                VaadinIcon.FIRE.create());
-
-        nav.addItem(
-                mainNav,
-                usersNav,
-                rolesNav,
-                ldapSettingsNav,
-                kerberosSettingsNav,
-                openVpnUsersNav,
-                firewallNav,
-                mailSettingsNav,
-                tomcatSettingsNav
+        SideNav homeNav = new SideNav();
+        homeNav.addItem(
+                new SideNavItem("Home", MainView.class,
+                        VaadinIcon.HOME.create())
         );
+        homeNav.setWidthFull();;
 
-        addToDrawer(nav);
+        SideNav usersNav = new SideNav();
+        usersNav.setLabel("Users & Authentication");
+        usersNav.addItem(
+                new SideNavItem("Users", UsersView.class,
+                        VaadinIcon.USERS.create()),
+                new SideNavItem("LDAP User Source", LdapView.class,
+                        VaadinIcon.FOLDER.create()),
+                new SideNavItem("Roles", RolesView.class,
+                        VaadinIcon.GROUP.create()),
+                new SideNavItem("Kerberos Auth", KerberosView.class,
+                        VaadinIcon.AUTOMATION.create())
+        );
+        usersNav.setWidthFull();;
+
+        SideNav networkNav = new SideNav();
+        networkNav.setLabel("VPN");
+        networkNav.addItem(
+                new SideNavItem("OpenVPN User", OpenVpnUserView.class,
+                        VaadinIcon.CONTROLLER.create()),
+                new SideNavItem("Firewall", FirewallView.class,
+                        VaadinIcon.FIRE.create())
+        );
+        networkNav.setWidthFull();
+
+        SideNav servicesNav = new SideNav("Services");
+        servicesNav.addItem(
+                new SideNavItem("Mail Settings", MailSettingsView.class,
+                        VaadinIcon.MAILBOX.create()),
+                new SideNavItem("Tomcat AJP Connector", TomcatView.class,
+                        VaadinIcon.CONNECT.create())
+        );
+        servicesNav.setWidthFull();
+
+        VerticalLayout layout = new VerticalLayout(
+                homeNav,
+                usersNav,
+                networkNav,
+                servicesNav
+        );
+        layout.setSpacing(true);
+        layout.setSizeUndefined();
+
+        addToDrawer(layout);
     }
 
     void changePassword() {

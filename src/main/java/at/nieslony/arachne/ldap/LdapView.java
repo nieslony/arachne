@@ -382,18 +382,21 @@ public class LdapView extends VerticalLayout {
                     bindPasswordField.setVisible(false);
                     keytabPath.setVisible(false);
                     bindPrincipalField.setVisible(false);
+                    readPrincipalsButton.setVisible(false);
                 }
                 case BIND_DN -> {
                     bindDnField.setVisible(true);
                     bindPasswordField.setVisible(true);
                     keytabPath.setVisible(false);
                     bindPrincipalField.setVisible(false);
+                    readPrincipalsButton.setVisible(false);
                 }
                 case KEYTAB -> {
                     bindDnField.setVisible(false);
                     bindPasswordField.setVisible(false);
                     keytabPath.setVisible(true);
                     bindPrincipalField.setVisible(true);
+                    readPrincipalsButton.setVisible(true);
                 }
 
             }
