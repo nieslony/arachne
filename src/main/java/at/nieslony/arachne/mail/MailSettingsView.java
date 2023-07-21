@@ -385,11 +385,11 @@ public class MailSettingsView extends VerticalLayout {
                         .formatted(mailSettings.getVarRcptName())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Linux instructions</span>"
-                        .formatted(mailSettings.getVarLinuxInstructions())
+                "<span><i>%s</i> Sender's display name</span>"
+                        .formatted(mailSettings.getVarSenderName())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Sender's display name</span>"
+                "<span><i>%s</i> Linux instructions</span>"
                         .formatted(mailSettings.getVarLinuxInstructions())
         )));
         helper.add(new ListItem(new Html(
