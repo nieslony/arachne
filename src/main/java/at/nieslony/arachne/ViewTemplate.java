@@ -143,6 +143,7 @@ public class ViewTemplate extends AppLayout {
         VerticalLayout layout = new VerticalLayout(
                 homeNav,
                 usersNav,
+                networkNav,
                 servicesNav
         );
         layout.setSpacing(true);
