@@ -68,20 +68,23 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         }
         http
                 .authorizeHttpRequests()
-                .requestMatchers("/public/**", "/error", "/sso").permitAll()
-                .requestMatchers(HttpMethod.POST, "/setup").permitAll()
+                .requestMatchers("/public/**", "/error", "/sso").anonymous()
+                .requestMatchers(HttpMethod.POST, "/setup").anonymous()
                 .and();
         if (kerberosSettings.isEnableKrbAuth()) {
             http
                     .authenticationProvider(kerberosAuthenticationProvider())
                     .authenticationProvider(kerberosServiceAuthenticationProvider());
         }
-        http.httpBasic();
+        http.httpBasic((configurator) -> {
+            configurator.realmName("Arachne openVPN Administrator");
+        });
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
         http
-                .csrf().disable()
-                .headers().frameOptions().disable();
+                .csrf((csrf) -> csrf.disable())
+                .headers((headers) -> headers.frameOptions((fro) -> fro.disable())
+                );
     }
 
     @Bean
