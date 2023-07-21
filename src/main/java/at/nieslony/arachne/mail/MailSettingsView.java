@@ -49,6 +49,10 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ErrorLevel;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -57,6 +61,11 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.IOException;
+import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
@@ -350,20 +359,22 @@ public class MailSettingsView extends VerticalLayout {
                 LumoUtility.Background.CONTRAST_10
         );
         templateContentHtmlField.setVisible(false);
-        binder.bind(
-                templateContentHtmlField,
-                MailSettings::getTemplateConfigHtml,
-                MailSettings::setTemplateConfigHtml
-        );
+        binder.forField(templateContentHtmlField)
+                .withValidator(contentValidator())
+                .bind(
+                        MailSettings::getTemplateConfigHtml,
+                        MailSettings::setTemplateConfigHtml
+                );
 
         TextArea templateContentPlainField = new TextArea();
         templateContentPlainField.setHeight(64, Unit.EX);
         templateContentPlainField.setWidthFull();
-        binder.bind(
-                templateContentPlainField,
-                MailSettings::getTemplateConfigPlain,
-                MailSettings::setTemplateConfigPlain
-        );
+        binder.forField(templateContentPlainField)
+                .withValidator(contentValidator())
+                .bind(
+                        MailSettings::getTemplateConfigPlain,
+                        MailSettings::setTemplateConfigPlain
+                );
         templateContentPlainField.setVisible(false);
         templateContentPlainField.getStyle().set("font-family", "monospace");
 
@@ -491,5 +502,40 @@ public class MailSettingsView extends VerticalLayout {
             Notification notification = Notification.show(msg);
             notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    private Validator<String> contentValidator() {
+        return (String content, ValueContext vc) -> {
+            Matcher m = Pattern.compile("\\{[^{}]*\\}")
+                    .matcher(content);
+            List<String> unknownVars
+                    = m.results()
+                            .map(MatchResult::group)
+                            .filter((t)
+                                    -> !t.equals(mailSettings.getVarSenderName())
+                            )
+                            .filter((t)
+                                    -> !t.equals(mailSettings.getVarRcptName())
+                            )
+                            .filter((t)
+                                    -> !t.equals(mailSettings.getVarNmConnection())
+                            )
+                            .filter((t)
+                                    -> !t.equals(mailSettings.getVarLinuxInstructions())
+                            )
+                            .collect(Collectors.toList());
+
+            if (!unknownVars.isEmpty()) {
+                String msg = "Unknown place holders found: "
+                        + String.join(", ", unknownVars);
+                return ValidationResult.error(msg);
+            }
+            if (!content.contains(mailSettings.getVarLinuxInstructions())) {
+                return ValidationResult.create(
+                        "Dont't forget about Linux instructions",
+                        ErrorLevel.WARNING);
+            }
+            return ValidationResult.ok();
+        };
     }
 }
