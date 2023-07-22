@@ -39,6 +39,7 @@ public class ConnectedClient {
         );
         String[] splitStatusLine = statusLine.split("\t");
         int i = 1;
+        // CLIENT_LIST|claas@NIESLONY.LAN|172.24.71.152:54062|192.168.100.2||3570|3179|2023-07-22 22:24:49|1690057489|claas|1|0|AES-256-GCM
         commonName = splitStatusLine[i++];
         realAddress = splitStatusLine[i++];
         virtualAddress = splitStatusLine[i++];
@@ -46,7 +47,9 @@ public class ConnectedClient {
         bytesReceived = Long.parseLong(splitStatusLine[i++]);
         bytesSent = Long.parseLong(splitStatusLine[i++]);
         i++;
-        connectedSince = new Date(Long.parseLong(splitStatusLine[i++]));
+        connectedSince = new Date(
+                Long.parseLong(splitStatusLine[i++]) * 1000
+        );
         username = splitStatusLine[i++];
         clientId = Integer.parseInt(splitStatusLine[i++]);
         peerId = Integer.parseInt(splitStatusLine[i++]);
