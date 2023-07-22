@@ -10,9 +10,11 @@ import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,9 @@ public class MainView extends VerticalLayout {
 
     private Component createConnectedUsersView() {
         VerticalLayout layout = new VerticalLayout();
+        NativeLabel connectedUsersLabel = new NativeLabel("Connected Users");
+        connectedUsersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
         Grid<ConnectedClient> grid = new Grid<>();
         grid.addColumn(ConnectedClient::getUsername)
                 .setHeader("Username");
@@ -60,7 +65,7 @@ public class MainView extends VerticalLayout {
             logger.error(ex.getMessage());
         }
 
-        layout.add(grid);
+        layout.add(connectedUsersLabel, grid);
 
         return layout;
     }
