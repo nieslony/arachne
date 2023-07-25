@@ -17,6 +17,8 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -85,15 +87,18 @@ public class FirewallView extends VerticalLayout {
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
+    final private OpenVpnRestController openVpnRestController;
     final private Settings settings;
 
     public FirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
+            OpenVpnRestController openVpnRestController,
             Settings settings
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
+        this.openVpnRestController = openVpnRestController;
         this.settings = settings;
 
         TabSheet tabs = new TabSheet();
@@ -124,7 +129,14 @@ public class FirewallView extends VerticalLayout {
                 .bind(FirewallBasicsSettings::getEnableRoutreMode, FirewallBasicsSettings::setEnableRoutreMode);
 
         Button saveButton = new Button("Save", (e) -> {
+            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+
+            logger.info("Saving firewall settings");
             firewallBasicSettings.save(settings);
+            openVpnRestController.writeOpenVpnPluginConfig(
+                    openVpnUserSettings,
+                    firewallBasicSettings
+            );
         });
 
         binder.setBean(firewallBasicSettings);
