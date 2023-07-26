@@ -344,12 +344,17 @@ public class OpenVpnRestController {
         certs.put("caCert", caCert);
 
         JSONObject connection = new JSONObject();
-        connection.put("remote", vpnSettings.getRemote());
+        connection.put("remote",
+                "%s:%d"
+                        .formatted(
+                                vpnSettings.getRemote(),
+                                vpnSettings.getListenPort()
+                        )
+        );
         connection.put("username", username);
         connection.put("cert-pass-flags", "4");
         connection.put("connection-type", "password-tls");
         connection.put("password-flags", "2");
-        connection.put("port", vpnSettings.getListenPort());
         connection.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             connection.put("proto-tcp", "yes");
