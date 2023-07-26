@@ -47,28 +47,44 @@ public class FirewallBasicsSettings {
         }
     }
 
+    public enum IcmpRules {
+        ALLOW_ALL("Allow all Pings"),
+        ALLOW_ALL_GRANTED("Allow Pings to all granted hosts"),
+        DENY("Deny All");
+
+        final private String label;
+
+        private IcmpRules(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     private final static String SK_FIREWALL_ENABLE = "firewall.enable";
     private final static String SK_FIREFALL_ZONE = "firewall.zone";
     private final static String SK_FIREWALL_ROUTINGMODE = "firewall.eńable-routing-mode";
+    private final static String SK_ICMP_RULES = "firewall.icmp-rules";
 
     private boolean enableFirewall;
     private String firewallZone;
-    private EnableRoutingMode enableRoutreMode;
+    private EnableRoutingMode enableRoutingMode;
+    private IcmpRules icmpRules;
 
     public FirewallBasicsSettings(Settings settings) {
         enableFirewall = settings.getBoolean(SK_FIREWALL_ENABLE, false);
         firewallZone = settings.get(SK_FIREFALL_ZONE, "arachne");
-        enableRoutreMode = EnableRoutingMode.valueOf(
-                settings.get(
-                        SK_FIREWALL_ROUTINGMODE,
-                        EnableRoutingMode.RESTORE_ON_EXIT.name()
-                )
-        );
+        enableRoutingMode = settings.getEnum(SK_FIREWALL_ROUTINGMODE, EnableRoutingMode.RESTORE_ON_EXIT);
+        icmpRules = settings.getEnum(SK_ICMP_RULES, IcmpRules.ALLOW_ALL);
     }
 
     public void save(Settings settings) {
         settings.put(SK_FIREWALL_ENABLE, enableFirewall);
         settings.put(SK_FIREFALL_ZONE, firewallZone);
-        settings.put(SK_FIREWALL_ROUTINGMODE, enableRoutreMode.name());
+        settings.put(SK_FIREWALL_ROUTINGMODE, enableRoutingMode);
+        settings.put(SK_ICMP_RULES, icmpRules);
     }
 }

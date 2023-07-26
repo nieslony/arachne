@@ -33,14 +33,12 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -72,23 +70,11 @@ public class FirewallRestController {
         private String port;
     }
 
-    @GetMapping("/rules")
+    @GetMapping("/user_rules")
     @RolesAllowed(value = {"USER"})
-    public List<RichRule> findAllRules(
+    public List<RichRule> getUserRules(
             @RequestParam(required = false, name = "type") String type
     ) {
-        if (type != null) {
-            if (type.equals("everybody")) {
-                return findEverybodyRules();
-            } else {
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_ACCEPTABLE,
-                        "%s: Unvalid rule set".formatted(type));
-            }
-        } else {
-            logger.info("No rule set type given");
-        }
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         List<RichRule> richRules = new LinkedList<>();
@@ -131,7 +117,9 @@ public class FirewallRestController {
         return richRules;
     }
 
-    public List<RichRule> findEverybodyRules() {
+    @GetMapping("/everybody_rules")
+    public FirewallEverybodyRules getEverybodyRules() {
+        FirewallEverybodyRules firewallEveryBodyRules = new FirewallEverybodyRules();
         List<RichRule> richRules = new LinkedList<>();
 
         for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
@@ -143,8 +131,12 @@ public class FirewallRestController {
                 }
             }
         }
+        firewallEveryBodyRules.setRichRules(richRules);
 
-        return richRules;
+        FirewallBasicsSettings firewallBasicsSettings = new FirewallBasicsSettings(settings);
+        firewallEveryBodyRules.setIcmpRules(firewallBasicsSettings.getIcmpRules());
+        
+        return firewallEveryBodyRules;
     }
 
     private List<RichRule> createRichRules(FirewallRuleModel rule) {

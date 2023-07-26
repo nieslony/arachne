@@ -87,8 +87,9 @@ public class FirewallView extends VerticalLayout {
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
-    final private OpenVpnRestController openVpnRestController;
-    final private Settings settings;
+
+    private final Binder<FirewallBasicsSettings> binder;
+    private FirewallBasicsSettings firewallBasicSettings;
 
     public FirewallView(
             FirewallRuleRepository firewallRuleRepository,
@@ -98,21 +99,32 @@ public class FirewallView extends VerticalLayout {
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.openVpnRestController = openVpnRestController;
-        this.settings = settings;
+
+        binder = new Binder();
+        firewallBasicSettings = new FirewallBasicsSettings(settings);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
         tabs.add("Basics", createBasicsTab());
-        tabs.add("Incoming Rules", createIncomingGrid());
+        tabs.add("Incoming Rules", createIncomingTab());
 
-        add(tabs);
+        Button saveButton = new Button("Save", (e) -> {
+            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+
+            logger.info("Saving firewall settings");
+            firewallBasicSettings.save(settings);
+            openVpnRestController.writeOpenVpnPluginConfig(
+                    openVpnUserSettings,
+                    firewallBasicSettings
+            );
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        add(tabs, saveButton);
     }
 
     private Component createBasicsTab() {
         VerticalLayout layout = new VerticalLayout();
-        Binder<FirewallBasicsSettings> binder = new Binder();
-        FirewallBasicsSettings firewallBasicSettings = new FirewallBasicsSettings(settings);
 
         Checkbox enableFirewallField = new Checkbox("Enable Firewall");
         binder.forField(enableFirewallField)
@@ -126,31 +138,29 @@ public class FirewallView extends VerticalLayout {
                 = new RadioButtonGroup<>("Enable Routing");
         enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
-                .bind(FirewallBasicsSettings::getEnableRoutreMode, FirewallBasicsSettings::setEnableRoutreMode);
-
-        Button saveButton = new Button("Save", (e) -> {
-            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
-
-            logger.info("Saving firewall settings");
-            firewallBasicSettings.save(settings);
-            openVpnRestController.writeOpenVpnPluginConfig(
-                    openVpnUserSettings,
-                    firewallBasicSettings
-            );
-        });
+                .bind(FirewallBasicsSettings::getEnableRoutingMode, FirewallBasicsSettings::setEnableRoutingMode);
 
         binder.setBean(firewallBasicSettings);
 
         layout.add(
                 enableFirewallField,
                 firewallZoneField,
-                enableRoutingMode,
-                saveButton
+                enableRoutingMode
         );
         return layout;
     }
 
-    private Component createIncomingGrid() {
+    private Component createIncomingTab() {
+        Select<FirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
+        icmpRules.setItems(FirewallBasicsSettings.IcmpRules.values());
+        icmpRules.setMinWidth("20em");
+        binder.bind(
+                icmpRules,
+                FirewallBasicsSettings::getIcmpRules,
+                FirewallBasicsSettings::setIcmpRules
+        );
+        icmpRules.setLabel("Allow PING");
+
         Grid<FirewallRuleModel> grid = new Grid<>();
         grid.setWidthFull();
 
@@ -274,6 +284,7 @@ public class FirewallView extends VerticalLayout {
         grid.setItems(firewallRuleRepository.findAll());
 
         VerticalLayout layout = new VerticalLayout(
+                icmpRules,
                 addRule,
                 grid
         );
