@@ -152,6 +152,9 @@ public class OpenVpnManagement {
             }
             do {
                 line = managementReader.readLine();
+                if (line == null) {
+                    break;
+                }
                 lines.add(line);
             } while (!line.equals("END"));
         } catch (IOException ex) {
@@ -159,6 +162,7 @@ public class OpenVpnManagement {
             logger.error(msg);
             throw new OpenVpnManagementException(msg);
         }
+        logger.info(lines.toString());
         return lines;
     }
 
