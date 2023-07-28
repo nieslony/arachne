@@ -24,8 +24,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import lombok.Getter;
@@ -34,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -61,14 +65,26 @@ public class FirewalldService {
         }
     }
 
+    public record ProtocolPort(String protocol, String port) {
+
+        @Override
+        public String toString() {
+            return "%s/%s".formatted(port, protocol);
+        }
+    }
+
     private String name;
     private String shortDescription;
     private String longDescription;
     private List<Port> ports;
     private List<PortRange> portRanges;
+    private List<String> includes;
+    private List<ProtocolPort> protocolPorts;
 
     private FirewalldService(String name, Document doc) throws Exception {
         this.name = name;
+        this.includes = new LinkedList<>();
+        this.protocolPorts = new LinkedList<>();
 
         String rootName = doc.getDocumentElement().getNodeName();
         if (!rootName.equals("service")) {
@@ -82,13 +98,35 @@ public class FirewalldService {
             shortDescription = shortNode.getTextContent();
         }
 
-        Node descriptionNode = doc.getElementsByTagName("short").item(0);
-        if (shortNode == null) {
+        Node descriptionNode = doc.getElementsByTagName("description").item(0);
+        if (descriptionNode == null) {
             throw new Exception("Service has no tag description");
         } else {
             longDescription = descriptionNode.getTextContent();
         }
 
+        NodeList incs = doc.getElementsByTagName("include");
+        if (incs != null) {
+            for (int i = 0; i < incs.getLength(); i++) {
+                includes.add(
+                        incs
+                                .item(i)
+                                .getAttributes()
+                                .getNamedItem("service")
+                                .getNodeValue()
+                );
+            }
+        }
+
+        NodeList ports = doc.getElementsByTagName("port");
+        if (ports != null) {
+            for (int i = 0; i < ports.getLength(); i++) {
+                var attrs = ports.item(i).getAttributes();
+                String protocol = attrs.getNamedItem("protocol").getNodeValue();
+                String port = attrs.getNamedItem("port").getNodeValue();
+                protocolPorts.add(new ProtocolPort(protocol, port));
+            }
+        }
     }
 
     static private Map<String, FirewalldService> allServices = null;
@@ -108,6 +146,31 @@ public class FirewalldService {
         }
 
         return allServices.get(name);
+    }
+
+    static private Set<FirewalldService> getServiceRecursive(String name, int count) {
+        Set<FirewalldService> services = new HashSet<>();
+        FirewalldService srv = getService(name);
+
+        if (srv == null) {
+            return services;
+        }
+
+        if (srv.protocolPorts != null && !srv.protocolPorts.isEmpty()) {
+            services.add(srv);
+        }
+
+        if (count > 0 && srv.includes != null) {
+            for (String inc : srv.includes) {
+                services.addAll(getServiceRecursive(inc, count - 1));
+            }
+        }
+
+        return services;
+    }
+
+    static public Set<FirewalldService> getServiceRecursive(String name) {
+        return getServiceRecursive(name, 10);
     }
 
     public static void readAll() {

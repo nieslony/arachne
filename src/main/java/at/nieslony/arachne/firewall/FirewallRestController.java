@@ -135,7 +135,7 @@ public class FirewallRestController {
 
         FirewallBasicsSettings firewallBasicsSettings = new FirewallBasicsSettings(settings);
         firewallEveryBodyRules.setIcmpRules(firewallBasicsSettings.getIcmpRules());
-        
+
         return firewallEveryBodyRules;
     }
 
@@ -150,18 +150,21 @@ public class FirewallRestController {
 
         for (String addr : addresses) {
             for (FirewallWhat what : rule.getWhat()) {
-                RichRule richRule = new RichRule();
-                richRule.setDestinationAddress(addr);
                 switch (what.getType()) {
                     case OnePort -> {
+                        RichRule richRule = new RichRule();
+                        richRule.setDestinationAddress(addr);
                         String portString = "port=\"%d\" protocol=\"%s\""
                                 .formatted(
                                         what.getPort(),
                                         what.getPortProtocol().toString().toLowerCase()
                                 );
                         richRule.setPort(portString);
+                        richRules.add(richRule);
                     }
                     case PortRange -> {
+                        RichRule richRule = new RichRule();
+                        richRule.setDestinationAddress(addr);
                         String portsString = "port=\"%d-%d\" protocol=\"%s\""
                                 .formatted(
                                         what.getPortFrom(),
@@ -169,15 +172,20 @@ public class FirewallRestController {
                                         what.getPortRangeProtocol().toString().toLowerCase()
                                 );
                         richRule.setPort(portsString);
+                        richRules.add(richRule);
                     }
                     case Service -> {
-                        String serviceString = what.getService();
-                        richRule.setServiceName(serviceString);
+                        var services = FirewalldService.getServiceRecursive(what.getService());
+                        for (FirewalldService service : services) {
+                            RichRule richRule = new RichRule();
+                            richRule.setDestinationAddress(addr);
+                            richRule.setServiceName(service.getName());
+                            richRules.add(richRule);
+                        }
                     }
                     case Everything -> {
                     }
                 }
-                richRules.add(richRule);
             }
         }
 
