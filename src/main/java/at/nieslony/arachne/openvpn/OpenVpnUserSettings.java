@@ -7,6 +7,7 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.TransportProtocol;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class OpenVpnUserSettings {
     private static final String SK_OPENVPN_USER_KEEPALIVE_INTERVAL = "openvpn.user.keepaliveInterval";
     private static final String SK_OPENVPN_USER_KEEPALIVE_TIMEOUT = "openvpn.user.keepaliveTimeout";
     private static final String SK_OPENVPN_USER_PUSH_DNS = "openvpn.user.pushdns";
+    private static final String SK_OPENVPN_USER_DNS_SEARCH = "openvpn.user.dns-search";
     private static final String SK_OPENVPN_USER_PUSH_ROUTES = "openvpn.user.pushroutes";
     private static final String SK_OPENVPN_USER_INTERNET_THROUGH_VPN = "openvpn.user.internet-through-vpn";
     private static final String SK_OPENVPN_USER_AUTH_TYPE = "openvpn.user.auth-type";
@@ -102,6 +104,10 @@ public class OpenVpnUserSettings {
         keepaliveInterval = settings.getInt(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, 10);
         keepaliveTimeout = settings.getInt(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, 60);
         pushDnsServers = settings.getList(SK_OPENVPN_USER_PUSH_DNS, NetUtils.getDnsServers());
+        dnsSearch = settings.getList(
+                SK_OPENVPN_USER_DNS_SEARCH,
+                Arrays.asList(NetUtils.myDomain())
+        );
         pushRoutes = settings.getList(SK_OPENVPN_USER_PUSH_ROUTES, NetUtils.getDefaultPushRoutes());
         internetThrouphVpn = settings.getBoolean(SK_OPENVPN_USER_INTERNET_THROUGH_VPN, false);
         authType = settings.getEnum(
@@ -134,6 +140,8 @@ public class OpenVpnUserSettings {
     private int keepaliveTimeout;
     private int keepaliveInterval;
     private List<String> pushDnsServers;
+    // no gui
+    private List<String> dnsSearch;
     private List<String> pushRoutes = new LinkedList<>();
     // no gui
     private Boolean internetThrouphVpn;
@@ -157,6 +165,7 @@ public class OpenVpnUserSettings {
         settings.put(SK_OPENVPN_USER_KEEPALIVE_INTERVAL, keepaliveInterval);
         settings.put(SK_OPENVPN_USER_KEEPALIVE_TIMEOUT, keepaliveTimeout);
         settings.put(SK_OPENVPN_USER_PUSH_DNS, pushDnsServers);
+        settings.put(SK_OPENVPN_USER_DNS_SEARCH, dnsSearch);
         settings.put(SK_OPENVPN_USER_PUSH_ROUTES, pushRoutes);
         settings.put(SK_OPENVPN_USER_INTERNET_THROUGH_VPN, internetThrouphVpn);
         settings.put(SK_OPENVPN_USER_AUTH_TYPE, authType.name());

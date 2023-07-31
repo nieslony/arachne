@@ -306,10 +306,19 @@ public class OpenVpnRestController {
         password-flags = 2, port = , remote = odysseus.nieslony.lan,
         username = claas@NIESLONY.LAN
          */
-        configWriter.append("vpn_opts=\"\"");
+        configWriter.append("vpn_opts=\"\"\n");
         if (!vpnSettings.getInternetThrouphVpn()) {
-            configWriter.append("vpn_opts=\"$vpn_opts ipv4.never-default=yes\"");
+            configWriter.append("vpn_opts=\"$vpn_opts ipv4.never-default yes\"\n");
         }
+        configWriter.append(
+                "vpn_opts=\"$vpn_opts ipv4.dns-search %s\"\n"
+                        .formatted(String.join(",", vpnSettings.getDnsSearch()))
+        );
+        configWriter.append(
+                "vpn_opts=\"$vpn_opts ipv4.dns %s\"\n"
+                        .formatted(String.join(",", vpnSettings.getPushDnsServers()))
+        );
+
         configWriter.append(
                 """
                 vpn_data="
@@ -369,6 +378,8 @@ public class OpenVpnRestController {
 
         JSONObject ipv4 = new JSONObject();
         ipv4.put("never-default", !vpnSettings.getInternetThrouphVpn());
+        ipv4.put("dns-search", vpnSettings.getDnsSearch());
+        ipv4.put("dns", vpnSettings.getPushDnsServers());
 
         JSONObject json = new JSONObject();
         String conName = vpnSettings.getVpnName()
