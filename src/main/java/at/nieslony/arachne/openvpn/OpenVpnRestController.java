@@ -69,7 +69,7 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
-    public OpenVpnUserSettings get_user_settings() {
+    public OpenVpnUserSettings getUserSettings() {
         return new OpenVpnUserSettings(settings);
     }
 
@@ -78,7 +78,7 @@ public class OpenVpnRestController {
 
     @PostMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
-    public OpenVpnUserSettings post_user_settings(
+    public OpenVpnUserSettings postUserSettings(
             @RequestBody OpenVpnUserSettings vpnSettings
     ) {
         logger.info("Set new openVPN user server config: " + settings.toString());
@@ -89,7 +89,7 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_config/{username}")
     @RolesAllowed(value = {"ADMIN"})
-    public String userVpnConfig(
+    public String getUserVpnConfig(
             @PathVariable String username,
             @RequestParam(required = false, name = "format") String format
     ) {
@@ -118,13 +118,13 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_config")
     @RolesAllowed(value = {"USER"})
-    public String userVpnConfig(
+    public String getUserVpnConfig(
             @RequestParam(required = false, name = "format") String format
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userVpnConfig(username, format);
+        return getUserVpnConfig(username, format);
     }
 
     public void writeOpenVpnPluginConfig(
@@ -182,6 +182,9 @@ public class OpenVpnRestController {
                             settings.getKeepaliveInterval(),
                             settings.getKeepaliveTimeout()));
             writer.println("topology subnet");
+            if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
+                writer.println("mtu-test");
+            }
             writer.println(openVpnManagement.getVpnConfigSetting());
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
@@ -303,6 +306,10 @@ public class OpenVpnRestController {
         password-flags = 2, port = , remote = odysseus.nieslony.lan,
         username = claas@NIESLONY.LAN
          */
+        configWriter.append("vpn_opts=\"\"");
+        if (!vpnSettings.getInternetThrouphVpn()) {
+            configWriter.append("vpn_opts=\"$vpn_opts ipv4.never-default=yes\"");
+        }
         configWriter.append(
                 """
                 vpn_data="
@@ -316,7 +323,7 @@ public class OpenVpnRestController {
                     remote = %s,
                     username = %s
                 "
-                nmcli connection add type vpn vpn-type openvpn con-name "%s" vpn.data "$vpn_data"
+                nmcli connection add type vpn vpn-type openvpn con-name "%s" $vpn_opts vpn.data "$vpn_data"
                 """
                         .formatted(
                                 caCertFn,
@@ -343,22 +350,25 @@ public class OpenVpnRestController {
         certs.put("privateKey", privateKey);
         certs.put("caCert", caCert);
 
-        JSONObject connection = new JSONObject();
-        connection.put("remote",
+        JSONObject data = new JSONObject();
+        data.put("remote",
                 "%s:%d"
                         .formatted(
                                 vpnSettings.getRemote(),
                                 vpnSettings.getListenPort()
                         )
         );
-        connection.put("username", username);
-        connection.put("cert-pass-flags", "4");
-        connection.put("connection-type", "password-tls");
-        connection.put("password-flags", "2");
-        connection.put("dev-type", vpnSettings.getDeviceType());
+        data.put("username", username);
+        data.put("cert-pass-flags", "4");
+        data.put("connection-type", "password-tls");
+        data.put("password-flags", "2");
+        data.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
-            connection.put("proto-tcp", "yes");
+            data.put("proto-tcp", "yes");
         }
+
+        JSONObject ipv4 = new JSONObject();
+        ipv4.put("never-default", !vpnSettings.getInternetThrouphVpn());
 
         JSONObject json = new JSONObject();
         String conName = vpnSettings.getVpnName()
@@ -366,7 +376,8 @@ public class OpenVpnRestController {
                 .replaceAll("%u", username);
         json.put("name", conName);
         json.put("certificates", certs);
-        json.put("connection", connection);
+        json.put("data", data);
+        json.put("ipv4", ipv4);
 
         return json.toString(2) + "\n";
     }
