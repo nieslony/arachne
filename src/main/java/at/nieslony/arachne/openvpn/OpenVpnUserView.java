@@ -119,6 +119,8 @@ public class OpenVpnUserView extends VerticalLayout {
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Basics", createBasicsPage());
+        tabSheet.add("DNS", createDnsPage());
+        tabSheet.add("Routing", createRoutingPage());
         tabSheet.add("Authentication", createAuthPage());
 
         add(
@@ -293,124 +295,6 @@ public class OpenVpnUserView extends VerticalLayout {
         HorizontalLayout keepaliveLayout = new HorizontalLayout();
         keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
 
-        ListBox<String> pushDnsServersField = new ListBox<>();
-        pushDnsServersField.setHeight(30, Unit.EX);
-        pushDnsServersField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
-        NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
-        pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-
-        TextField editDnsServerField = new TextField();
-        editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
-        Button addDnsServerButton = new Button(
-                "Add",
-                e -> {
-                    List<String> dnsServers = vpnSettings.getPushDnsServers();
-                    dnsServers.add(editDnsServerField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                });
-        Button updateDnsServerButton = new Button(
-                "Update",
-                e -> {
-                    List<String> dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
-                    dnsServers.remove(pushDnsServersField.getValue());
-                    dnsServers.add(editDnsServerField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                    vpnSettings.setPushDnsServers(dnsServers);
-                });
-        updateDnsServerButton.setEnabled(false);
-        Button removeDnsServerButton = new Button(
-                "Remove",
-                e -> {
-                    var dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
-
-                    dnsServers.remove(pushDnsServersField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                    vpnSettings.setPushDnsServers(dnsServers);
-                });
-        removeDnsServerButton.setEnabled(false);
-        VerticalLayout pushDnsServersLayout = new VerticalLayout(
-                pushDnsServersLabel,
-                pushDnsServersField,
-                editDnsServerField,
-                new HorizontalLayout(
-                        addDnsServerButton,
-                        updateDnsServerButton,
-                        removeDnsServerButton
-                )
-        );
-        pushDnsServersField.setWidthFull();
-        editDnsServerField.setWidthFull();
-        pushDnsServersLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
-
-        ListBox<String> pushRoutesField = new ListBox<>();
-        pushRoutesField.setHeight(30, Unit.EX);
-        pushRoutesField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
-
-        NativeLabel pushRoutesLabel = new NativeLabel("Push Routes");
-        pushRoutesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-
-        TextField editRoutesField = new TextField();
-        editRoutesField.setValueChangeMode(ValueChangeMode.EAGER);
-        Button addRoutesButton = new Button(
-                "Add",
-                e -> {
-                    List<String> routes = vpnSettings.getPushRoutes();
-                    routes.add(editRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                });
-        Button updateRoutesButton = new Button(
-                "Update",
-                e -> {
-                    List<String> routes = new LinkedList<>(vpnSettings.getPushRoutes());
-                    routes.remove(pushRoutesField.getValue());
-                    routes.add(editRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                    vpnSettings.setPushRoutes(routes);
-                });
-        updateRoutesButton.setEnabled(false);
-        Button removeRoutesButton = new Button(
-                "Remove",
-                e -> {
-                    var routes = new LinkedList<>(vpnSettings.getPushRoutes());
-
-                    routes.remove(pushRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                    vpnSettings.setPushRoutes(routes);
-                });
-        removeRoutesButton.setEnabled(false);
-        VerticalLayout pushRoutesLayout = new VerticalLayout(
-                pushRoutesLabel,
-                pushRoutesField,
-                editRoutesField,
-                new HorizontalLayout(
-                        addRoutesButton,
-                        updateRoutesButton,
-                        removeRoutesButton
-                )
-        );
-        pushRoutesLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
-        pushRoutesField.setWidthFull();
-        editRoutesField.setWidthFull();
-        HorizontalLayout pushLayout = new HorizontalLayout(
-                pushDnsServersLayout,
-                pushRoutesLayout
-        );
-        pushLayout.setMargin(true);
-
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
@@ -470,8 +354,80 @@ public class OpenVpnUserView extends VerticalLayout {
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
 
+        clientMask.addValueChangeListener((e) -> binder.validate());
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.add(name);
+        formLayout.add(clientConfigName);
+        formLayout.add(listenLayout);
+        formLayout.add(connectToHost);
+        formLayout.add(interfaceLayout);
+        formLayout.add(clientNetLayout);
+        formLayout.add(keepaliveLayout);
+
+        return formLayout;
+    }
+
+    private Component createDnsPage() {
+        HorizontalLayout layout = new HorizontalLayout();
+
+        ListBox<String> pushDnsServersField = new ListBox<>();
+        pushDnsServersField.setHeight(30, Unit.EX);
+        pushDnsServersField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+        NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
+        pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
+        TextField editDnsServerField = new TextField();
+        editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
+        Button addDnsServerButton = new Button(
+                "Add",
+                e -> {
+                    List<String> dnsServers = vpnSettings.getPushDnsServers();
+                    dnsServers.add(editDnsServerField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                });
+        Button updateDnsServerButton = new Button(
+                "Update",
+                e -> {
+                    List<String> dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
+                    dnsServers.remove(pushDnsServersField.getValue());
+                    dnsServers.add(editDnsServerField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                    vpnSettings.setPushDnsServers(dnsServers);
+                });
+        updateDnsServerButton.setEnabled(false);
+        Button removeDnsServerButton = new Button(
+                "Remove",
+                e -> {
+                    var dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
+
+                    dnsServers.remove(pushDnsServersField.getValue());
+                    pushDnsServersField.setItems(dnsServers);
+                    vpnSettings.setPushDnsServers(dnsServers);
+                });
+        removeDnsServerButton.setEnabled(false);
+        VerticalLayout pushDnsServersLayout = new VerticalLayout(
+                pushDnsServersLabel,
+                pushDnsServersField,
+                editDnsServerField,
+                new HorizontalLayout(
+                        addDnsServerButton,
+                        updateDnsServerButton,
+                        removeDnsServerButton
+                )
+        );
+        pushDnsServersField.setWidthFull();
+        editDnsServerField.setWidthFull();
+        pushDnsServersLayout.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderRadius.MEDIUM
+        );
+
         pushDnsServersField.setItems(vpnSettings.getPushDnsServers());
-        pushRoutesField.setItems(vpnSettings.getPushRoutes());
 
         AtomicReference<String> editDnsServer = new AtomicReference<>("");
         binder.forField(editDnsServerField)
@@ -482,16 +438,6 @@ public class OpenVpnUserView extends VerticalLayout {
                         },
                         (ip, v) -> {
                             editDnsServer.set(v);
-                        }
-                );
-        AtomicReference<String> editRoutes = new AtomicReference<>("");
-        binder.forField(editRoutesField)
-                .bind(
-                        ip -> {
-                            return editRoutes.get();
-                        },
-                        (ip, v) -> {
-                            editRoutes.set(v);
                         }
                 );
 
@@ -507,6 +453,84 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
+        layout.add(pushDnsServersLayout);
+
+        return layout;
+    }
+
+    private Component createRoutingPage() {
+        VerticalLayout layout = new VerticalLayout();
+
+        ListBox<String> pushRoutesField = new ListBox<>();
+        pushRoutesField.setHeight(30, Unit.EX);
+        pushRoutesField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
+
+        NativeLabel pushRoutesLabel = new NativeLabel("Push Routes");
+        pushRoutesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
+        TextField editRoutesField = new TextField();
+        editRoutesField.setValueChangeMode(ValueChangeMode.EAGER);
+        Button addRoutesButton = new Button(
+                "Add",
+                e -> {
+                    List<String> routes = vpnSettings.getPushRoutes();
+                    routes.add(editRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                });
+        Button updateRoutesButton = new Button(
+                "Update",
+                e -> {
+                    List<String> routes = new LinkedList<>(vpnSettings.getPushRoutes());
+                    routes.remove(pushRoutesField.getValue());
+                    routes.add(editRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                    vpnSettings.setPushRoutes(routes);
+                });
+        updateRoutesButton.setEnabled(false);
+        Button removeRoutesButton = new Button(
+                "Remove",
+                e -> {
+                    var routes = new LinkedList<>(vpnSettings.getPushRoutes());
+
+                    routes.remove(pushRoutesField.getValue());
+                    pushRoutesField.setItems(routes);
+                    vpnSettings.setPushRoutes(routes);
+                });
+        removeRoutesButton.setEnabled(false);
+        VerticalLayout pushRoutesLayout = new VerticalLayout(
+                pushRoutesLabel,
+                pushRoutesField,
+                editRoutesField,
+                new HorizontalLayout(
+                        addRoutesButton,
+                        updateRoutesButton,
+                        removeRoutesButton
+                )
+        );
+        pushRoutesLayout.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderRadius.MEDIUM
+        );
+        pushRoutesField.setWidthFull();
+        editRoutesField.setWidthFull();
+
+        pushRoutesField.setItems(vpnSettings.getPushRoutes());
+
+        AtomicReference<String> editRoutes = new AtomicReference<>("");
+        binder.forField(editRoutesField)
+                .bind(
+                        ip -> {
+                            return editRoutes.get();
+                        },
+                        (ip, v) -> {
+                            editRoutes.set(v);
+                        }
+                );
+
         pushRoutesField.addValueChangeListener((e) -> {
             if (e.getValue() != null) {
                 editRoutesField.setValue(e.getValue());
@@ -519,20 +543,9 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
-        clientMask.addValueChangeListener((e) -> binder.validate());
+        layout.add(pushRoutesLayout);
 
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(name);
-        formLayout.add(clientConfigName);
-        formLayout.add(listenLayout);
-        formLayout.add(connectToHost);
-        formLayout.add(interfaceLayout);
-        formLayout.add(clientNetLayout);
-        formLayout.add(keepaliveLayout);
-        formLayout.add(pushLayout);
-        formLayout.setColspan(pushLayout, 2);
-
-        return formLayout;
+        return layout;
     }
 
     public List<NicInfo> findAllNics() {
