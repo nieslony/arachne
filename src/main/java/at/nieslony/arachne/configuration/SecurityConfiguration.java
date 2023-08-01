@@ -66,11 +66,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
                     BasicAuthenticationFilter.class);
         }
-        http
-                .authorizeHttpRequests()
-                .requestMatchers("/public/**", "/error", "/sso").anonymous()
-                .requestMatchers(HttpMethod.POST, "/setup").anonymous()
-                .and();
+        http.authorizeHttpRequests((authUrl) -> {
+            authUrl
+                    .requestMatchers("/public/**", "/error", "/sso")
+                    .anonymous()
+                    .requestMatchers(HttpMethod.POST, "/setup")
+                    .anonymous();
+        });
         if (kerberosSettings.isEnableKrbAuth()) {
             http
                     .authenticationProvider(kerberosAuthenticationProvider())
