@@ -299,6 +299,8 @@ public class OpenVpnUserView extends VerticalLayout {
         HorizontalLayout keepaliveLayout = new HorizontalLayout();
         keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
 
+        Checkbox mtuTestField = new Checkbox("MTU Test");
+
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
@@ -357,9 +359,17 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(keepaliveTimeout)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
+        binder.bind(
+                mtuTestField,
+                OpenVpnUserSettings::getMtuTest,
+                OpenVpnUserSettings::setMtuTest
+        );
 
         clientMask.addValueChangeListener((e) -> binder.validate());
-
+        protocol.addValueChangeListener((e) -> {
+            mtuTestField.setEnabled(e.getValue() == TransportProtocol.UDP);
+        });
+        
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
         formLayout.add(clientConfigName);
@@ -368,6 +378,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(interfaceLayout);
         formLayout.add(clientNetLayout);
         formLayout.add(keepaliveLayout);
+        formLayout.add(mtuTestField);
 
         return formLayout;
     }
