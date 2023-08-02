@@ -61,6 +61,7 @@ public class EditableListBox
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
+
         NativeLabel elbLabel = new NativeLabel(label);
         elbLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
 
@@ -130,12 +131,14 @@ public class EditableListBox
         });
     }
 
+    @Override
     public void setValue(List<String> items) {
         this.items.clear();
         this.items.addAll(items);
         itemsField.setItems(this.items);
     }
 
+    @Override
     public List<String> getValue() {
         logger.info(items.toString());
         return new LinkedList<>(items);

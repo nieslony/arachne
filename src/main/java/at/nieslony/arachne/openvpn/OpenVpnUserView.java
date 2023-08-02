@@ -8,6 +8,8 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.EditableListBox;
+import at.nieslony.arachne.utils.HostnameValidator;
 import at.nieslony.arachne.utils.IpValidator;
 import at.nieslony.arachne.utils.NetMask;
 import at.nieslony.arachne.utils.SubnetValidator;
@@ -17,6 +19,7 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
@@ -31,6 +34,7 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -453,7 +457,23 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
-        layout.add(pushDnsServersLayout);
+        EditableListBox searchDomainsField = new EditableListBox("Search Domains") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new HostnameValidator();
+            }
+
+        };
+        binder.bind(
+                searchDomainsField,
+                OpenVpnUserSettings::getDnsSearch,
+                OpenVpnUserSettings::setDnsSearch
+        );
+
+        layout.add(
+                pushDnsServersLayout,
+                searchDomainsField
+        );
 
         return layout;
     }
@@ -543,7 +563,14 @@ public class OpenVpnUserView extends VerticalLayout {
             }
         });
 
-        layout.add(pushRoutesLayout);
+        Checkbox routeInternetThroughVpn
+                = new Checkbox("Route Internet Traffic through VPN");
+        binder.bind(routeInternetThroughVpn, "internetThrouphVpn");
+
+        layout.add(
+                pushRoutesLayout,
+                routeInternetThroughVpn
+        );
 
         return layout;
     }
