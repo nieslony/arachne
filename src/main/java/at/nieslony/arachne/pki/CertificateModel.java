@@ -33,9 +33,20 @@ import lombok.ToString;
 public class CertificateModel implements Serializable {
 
     public enum CertType {
-        CA,
-        SERVER,
-        USER
+        CA("Certificate Authority"),
+        SERVER("Server"),
+        USER("User");
+
+        private final String description;
+
+        private CertType(String d) {
+            description = d;
+        }
+
+        @Override
+        public String toString() {
+            return description;
+        }
     }
 
     public CertificateModel(X509Certificate cert, CertType certType, KeyModel keyModel) {

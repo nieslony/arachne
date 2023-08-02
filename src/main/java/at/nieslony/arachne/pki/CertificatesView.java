@@ -17,10 +17,14 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /**
  *
@@ -31,4 +35,36 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class CertificatesView extends VerticalLayout {
 
+    public CertificatesView(CertificateRepository certificateReposttory) {
+        Grid<CertificateModel> grid = new Grid<>();
+        grid
+                .addColumn(CertificateModel::getSubject)
+                .setHeader("Subject");
+        grid
+                .addColumn(CertificateModel::getValidFrom)
+                .setHeader("Valid from");
+        grid
+                .addColumn(CertificateModel::getValidTo)
+                .setHeader("Valid to");
+        grid
+                .addColumn(CertificateModel::getIsRevoked)
+                .setHeader("Is Revoked");
+        grid
+                .addColumn(CertificateModel::getCertType)
+                .setHeader("Type");
+        DataProvider<CertificateModel, Void> dataProvider = DataProvider.fromCallbacks(
+                (query) -> {
+                    Pageable pageable = PageRequest.of(
+                            query.getOffset(),
+                            query.getLimit()
+                    );
+                    var page = certificateReposttory.findAll(pageable);
+                    return page.stream();
+                },
+                (query) -> (int) certificateReposttory.count()
+        );
+        grid.setDataProvider(dataProvider);
+
+        add(grid);
+    }
 }
