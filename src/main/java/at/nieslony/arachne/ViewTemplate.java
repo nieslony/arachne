@@ -9,6 +9,7 @@ import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
+import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
@@ -105,7 +106,7 @@ public class ViewTemplate extends AppLayout {
                 new SideNavItem("Home", MainView.class,
                         VaadinIcon.HOME.create())
         );
-        homeNav.setWidthFull();;
+        homeNav.setWidthFull();
 
         SideNav usersNav = new SideNav();
         usersNav.setLabel("Users & Authentication");
@@ -119,7 +120,7 @@ public class ViewTemplate extends AppLayout {
                 new SideNavItem("Kerberos Auth", KerberosView.class,
                         VaadinIcon.AUTOMATION.create())
         );
-        usersNav.setWidthFull();;
+        usersNav.setWidthFull();
 
         SideNav networkNav = new SideNav();
         networkNav.setLabel("VPN");
@@ -130,6 +131,12 @@ public class ViewTemplate extends AppLayout {
                         VaadinIcon.FIRE.create())
         );
         networkNav.setWidthFull();
+
+        SideNav certificatesNav = new SideNav("Certificates");
+        certificatesNav.addItem(
+                new SideNavItem("All Certificates", CertificatesView.class,
+                        VaadinIcon.DIPLOMA.create())
+        );
 
         SideNav servicesNav = new SideNav("Services");
         servicesNav.addItem(
@@ -144,6 +151,7 @@ public class ViewTemplate extends AppLayout {
                 homeNav,
                 usersNav,
                 networkNav,
+                certificatesNav,
                 servicesNav
         );
         layout.setSpacing(true);
