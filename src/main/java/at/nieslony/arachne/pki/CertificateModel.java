@@ -89,6 +89,14 @@ public class CertificateModel implements Serializable {
     @Column
     private BigInteger serial;
 
+    public BigInteger getSerial() {
+        if (serial != null) {
+            return serial;
+        } else {
+            return certificate.getSerialNumber();
+        }
+    }
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "key_id")
     private KeyModel keyModel;
