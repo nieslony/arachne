@@ -50,6 +50,13 @@ public class WwwAuthenticateFilter implements Filter {
         String path = httpRequest.getRequestURI();
         var session = httpRequest.getSession();
 
+        logger.info("Processing path " + path);
+        if (path.equals("/arachne/crl.pem")) {
+            logger.info("crl.pem without auth");
+            fc.doFilter(request, response);
+            return;
+        }
+
         if (path.equals("/arachne/sso")) {
             logger.info("Enforce sso");
             session.setAttribute("formLogin", "no");

@@ -18,4 +18,6 @@ public interface CertificateRepository extends JpaRepository<CertificateModel, L
             CertificateModel.CertType certType);
 
     List<CertificateModel> findBySubject(String subject);
+
+    List<CertificateModel> findByRevocationDateIsNotNull();
 }

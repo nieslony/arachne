@@ -15,6 +15,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import lombok.Getter;
@@ -55,7 +56,7 @@ public class CertificateModel implements Serializable {
         this.certType = certType;
         this.validFrom = cert.getNotBefore();
         this.validTo = cert.getNotAfter();
-        this.isRevoked = false;
+        this.revocationDate = null;
         this.keyModel = keyModel;
     }
 
@@ -83,7 +84,10 @@ public class CertificateModel implements Serializable {
     private Date validTo;
 
     @Column
-    private Boolean isRevoked;
+    private Date revocationDate;
+
+    @Column
+    private BigInteger serial;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "key_id")

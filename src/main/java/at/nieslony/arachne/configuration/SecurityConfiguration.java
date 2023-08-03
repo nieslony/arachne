@@ -68,10 +68,16 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         }
         http.authorizeHttpRequests((authUrl) -> {
             authUrl
-                    .requestMatchers("/public/**", "/error", "/sso")
-                    .anonymous()
-                    .requestMatchers(HttpMethod.POST, "/setup")
-                    .anonymous();
+                    .requestMatchers(
+                            "/public/**",
+                            "/error",
+                            "/sso",
+                            "/crl.pem"
+                    ).anonymous()
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/setup"
+                    ).anonymous();
         });
         if (kerberosSettings.isEnableKrbAuth()) {
             http

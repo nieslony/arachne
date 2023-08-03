@@ -6,6 +6,7 @@ package at.nieslony.arachne.pki;
 
 import jakarta.annotation.security.RolesAllowed;
 import java.security.PrivateKey;
+import java.security.cert.X509CRL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
  * @author claas
  */
 @RestController
-@RequestMapping("/api/pki")
 public class PkiRestController {
 
     @Autowired
@@ -40,7 +39,7 @@ public class PkiRestController {
             this.subject = model.getSubject();
             this.validFrom = model.getValidFrom();
             this.validTo = model.getValidTo();
-            this.isRevoked = model.getIsRevoked();
+            this.isRevoked = model.getRevocationDate() == null;
             this.certType = model.getCertType();
         }
 
@@ -51,9 +50,9 @@ public class PkiRestController {
         private CertificateModel.CertType certType;
     }
 
-    @GetMapping("/user_certs")
+    @GetMapping("/api/pki/user_certs")
     @RolesAllowed(value = {"ADMIN"})
-    public Map<String, Object> findAllUserCerts() {
+    public Map<String, Object> getAllUserCerts() {
         Map<String, Object> result = new HashMap<>();
 
         pki.getRootCertAsBase64();
@@ -66,5 +65,14 @@ public class PkiRestController {
 
         result.put("data", certs);
         return result;
+    }
+
+    @GetMapping("/crl.pem")
+    public String getCrl() {
+        X509CRL crl = pki.getCrl(() -> {
+            return certificateRepository.findByRevocationDateIsNotNull();
+        });
+
+        return Pki.asBase64(crl);
     }
 }

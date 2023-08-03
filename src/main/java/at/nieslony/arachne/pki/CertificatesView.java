@@ -17,12 +17,19 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.Date;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -47,11 +54,35 @@ public class CertificatesView extends VerticalLayout {
                 .addColumn(CertificateModel::getValidTo)
                 .setHeader("Valid to");
         grid
-                .addColumn(CertificateModel::getIsRevoked)
+                .addColumn((source) -> {
+                    if (source.getRevocationDate() == null) {
+                        return "no";
+                    } else {
+                        return source.getRevocationDate().toString();
+                    }
+                })
                 .setHeader("Is Revoked");
         grid
                 .addColumn(CertificateModel::getCertType)
                 .setHeader("Type");
+
+        grid
+                .addComponentColumn((source) -> {
+                    MenuBar menuBar = new MenuBar();
+                    menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+                    MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                    SubMenu actionsMenu = menuItem.getSubMenu();
+                    actionsMenu.addItem("Revoke", (e) -> {
+                        if (source.getRevocationDate() == null) {
+                            source.setRevocationDate(new Date());
+                            certificateReposttory.save(source);
+                            grid.getDataProvider().refreshItem(source);
+                        }
+                    });
+                    
+                    return menuBar;
+                });
+
         DataProvider<CertificateModel, Void> dataProvider = DataProvider.fromCallbacks(
                 (query) -> {
                     Pageable pageable = PageRequest.of(

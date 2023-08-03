@@ -16,28 +16,39 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.CRLException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.generators.DHParametersGenerator;
 import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -111,12 +122,17 @@ public class Pki {
         }
     }
 
+    public Pki() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     private static String setting(CertSpecType certSpecType, CertSpecKey field) {
         return SK_PREFIX + "." + certSpecType + "." + field;
     }
 
     private PrivateKey rootKey = null;
     private X509Certificate rootCert = null;
+    private X509CRL crl = null;
 
     public void fromSetupData(SetupData setupData) throws PkiSetupException {
         logger.info("Verify and save PKI settings");
@@ -213,7 +229,7 @@ public class Pki {
         return sw.toString();
     }
 
-    private String asBase64(Object obj) {
+    public static String asBase64(Object obj) {
         StringWriter sw = new StringWriter();
 
         try (JcaPEMWriter jpw = new JcaPEMWriter(sw)) {
@@ -381,7 +397,7 @@ public class Pki {
                         CertificateModel.CertType.USER);
         Date now = new Date();
         for (CertificateModel cm : certModels) {
-            if (!cm.getIsRevoked() && now.compareTo(cm.getValidTo()) < 0) {
+            if (cm.getRevocationDate() == null && now.compareTo(cm.getValidTo()) < 0) {
                 logger.info("Found user certificate");
                 return cm;
             }
@@ -427,7 +443,7 @@ public class Pki {
                         CertificateModel.CertType.SERVER);
         Date now = new Date();
         for (CertificateModel cm : certModels) {
-            if (!cm.getIsRevoked() && now.compareTo(cm.getValidTo()) < 0) {
+            if (cm.getRevocationDate() == null && now.compareTo(cm.getValidTo()) < 0) {
                 return cm;
             }
         }
@@ -503,7 +519,8 @@ public class Pki {
             );
 
             X500Name subject = new X500Name(subjectStr);
-            BigInteger serial = new BigInteger(Long.toString(new SecureRandom().nextLong()));
+            long serialLong = new SecureRandom().nextLong();
+            BigInteger serial = new BigInteger(Long.toString(serialLong));
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(keyAlgo);
             keyPairGenerator.initialize(keySize);
             keyPair = keyPairGenerator.generateKeyPair();
@@ -628,5 +645,47 @@ public class Pki {
                 .findBySetting(SK_DH_PARAMS)
                 .orElseThrow(() -> new PkiNotInitializedException("Cannot find DH params"))
                 .getContent();
+    }
+
+    public X509CRL getCrl(Supplier<List<CertificateModel>> getCerts) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, 7);
+        try {
+            // https://doc.primekey.com/bouncycastle/how-to-guides-pki-at-the-edge/how-to-generate-certificates-and-crls
+            X509v2CRLBuilder crlGen = new JcaX509v2CRLBuilder(
+                    getRootCert().getSubjectX500Principal(),
+                    new Date()
+            );
+            crlGen.setNextUpdate(cal.getTime());
+            JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+            crlGen.addExtension(
+                    Extension.authorityKeyIdentifier,
+                    false,
+                    extUtils.createAuthorityKeyIdentifier(getRootCert())
+            );
+            for (var cm : getCerts.get()) {
+                CRLReason crlReason = CRLReason.lookup(CRLReason.privilegeWithdrawn);
+                ExtensionsGenerator extGen = new ExtensionsGenerator();
+                extGen.addExtension(Extension.reasonCode, false, crlReason);
+                crlGen.addCRLEntry(
+                        cm.getSerial(),
+                        cm.getRevocationDate(),
+                        extGen.generate());
+            }
+            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+                    .setProvider("BC").build(rootKey);
+            JcaX509CRLConverter converter = new JcaX509CRLConverter()
+                    .setProvider("BC");
+
+            return converter.getCRL(crlGen.build(signer));
+        } catch (CRLException
+                | IOException
+                | OperatorCreationException
+                | CertificateEncodingException
+                | NoSuchAlgorithmException ex) {
+            logger.error("Cannot create CRL: " + ex.getMessage());
+        }
+
+        return crl;
     }
 }
