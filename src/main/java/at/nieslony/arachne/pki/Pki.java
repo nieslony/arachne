@@ -673,7 +673,7 @@ public class Pki {
                         extGen.generate());
             }
             ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
-                    .setProvider("BC").build(rootKey);
+                    .setProvider("BC").build(getRootKey());
             JcaX509CRLConverter converter = new JcaX509CRLConverter()
                     .setProvider("BC");
 

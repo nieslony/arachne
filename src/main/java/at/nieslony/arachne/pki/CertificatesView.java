@@ -17,6 +17,7 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
@@ -42,7 +43,10 @@ import org.springframework.data.domain.Pageable;
 @RolesAllowed("ADMIN")
 public class CertificatesView extends VerticalLayout {
 
-    public CertificatesView(CertificateRepository certificateReposttory) {
+    public CertificatesView(
+            CertificateRepository certificateReposttory,
+            OpenVpnRestController openVpnRestController
+    ) {
         Grid<CertificateModel> grid = new Grid<>();
         grid
                 .addColumn(CertificateModel::getSubject)
@@ -77,9 +81,10 @@ public class CertificatesView extends VerticalLayout {
                             source.setRevocationDate(new Date());
                             certificateReposttory.save(source);
                             grid.getDataProvider().refreshItem(source);
+                            openVpnRestController.writeCrl();
                         }
                     });
-                    
+
                     return menuBar;
                 });
 
