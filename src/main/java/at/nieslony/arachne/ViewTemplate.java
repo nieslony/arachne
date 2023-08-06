@@ -11,6 +11,7 @@ import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.roles.RolesView;
+import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
@@ -143,7 +144,9 @@ public class ViewTemplate extends AppLayout {
                 new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
                 new SideNavItem("Tomcat AJP Connector", TomcatView.class,
-                        VaadinIcon.CONNECT.create())
+                        VaadinIcon.CONNECT.create()),
+                new SideNavItem("Tasks", TaskView.class,
+                        VaadinIcon.AUTOMATION.create())
         );
         servicesNav.setWidthFull();
 
