@@ -121,8 +121,8 @@ public class Settings {
         put(setting, String.valueOf(content));
     }
 
-    public <E extends Enum<E>> void put(String settings, E content) {
-        put(settings, content.name());
+    public <E extends Enum<E>> void put(String setting, E content) {
+        put(setting, content.name());
     }
 
     public ServerProperties getServerProperties() {
