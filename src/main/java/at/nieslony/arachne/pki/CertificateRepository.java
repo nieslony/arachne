@@ -13,11 +13,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface CertificateRepository extends JpaRepository<CertificateModel, Long> {
 
-    List<CertificateModel> findBySubjectAndCertType(
+    List<CertificateModel> findBySubjectIgnoreCaseAndCertType(
             String subject,
             CertificateModel.CertType certType);
 
-    List<CertificateModel> findBySubject(String subject);
+    List<CertificateModel> findBySubjectIgnoreCase(
+            String subject);
 
     List<CertificateModel> findByRevocationDateIsNotNull();
 }

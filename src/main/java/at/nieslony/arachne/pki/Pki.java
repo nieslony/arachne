@@ -140,10 +140,11 @@ public class Pki {
         CertSpecs caCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
         String rootCertSubject = caCertSpecs.getSubject();
 
-        List<CertificateModel> certModList = certificateRepository.findBySubjectAndCertType(
-                rootCertSubject,
-                CertificateModel.CertType.CA
-        );
+        List<CertificateModel> certModList
+                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
+                        rootCertSubject,
+                        CertificateModel.CertType.CA
+                );
 
         if (certModList.isEmpty()) {
             logger.info("Creating root certificate: " + rootCertSubject);
@@ -268,7 +269,7 @@ public class Pki {
                 .getSubject()
                 .replace("{username}", username);
         List<CertificateModel> certModels
-                = certificateRepository.findBySubjectAndCertType(
+                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
                         subject,
                         CertificateModel.CertType.USER);
         Date now = new Date();
@@ -302,7 +303,7 @@ public class Pki {
         serverCertSpecs.validate();
         String subject = serverCertSpecs.getSubject();
         List<CertificateModel> certModels
-                = certificateRepository.findBySubjectAndCertType(
+                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
                         subject,
                         CertificateModel.CertType.SERVER);
         Date now = new Date();
