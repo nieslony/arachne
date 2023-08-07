@@ -9,7 +9,7 @@ import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.pki.PkiNotInitializedException;
+import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
@@ -195,7 +195,7 @@ public class UsersView extends VerticalLayout {
                             String config = openVpnRestController
                                     .openVpnUserConfig(user.getUsername());
                             return config.getBytes();
-                        } catch (PkiNotInitializedException ex) {
+                        } catch (PkiException ex) {
                             logger.error(
                                     "Cannot send openvpn config: " + ex.getMessage());
                             return "".getBytes();
@@ -478,7 +478,7 @@ public class UsersView extends VerticalLayout {
                         subject
                 );
                 Notification.show("Config sent to " + mailAddr);
-            } catch (IOException | MessagingException | PkiNotInitializedException ex) {
+            } catch (IOException | MessagingException | PkiException ex) {
                 String msg = "Error sending e-mail to %s: %s"
                         .formatted(user.getEmail(), ex.getMessage());
                 logger.error(msg);

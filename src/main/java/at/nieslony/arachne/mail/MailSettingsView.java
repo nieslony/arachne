@@ -19,7 +19,7 @@ package at.nieslony.arachne.mail;
 import at.nieslony.arachne.ViewTemplate;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
-import at.nieslony.arachne.pki.PkiNotInitializedException;
+import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUser;
@@ -468,8 +468,11 @@ public class MailSettingsView extends VerticalLayout {
                     to,
                     "Arachne Test Mail with Configuration"
             );
-        } catch (IOException | MessagingException | PkiNotInitializedException ex) {
-
+        } catch (IOException | MessagingException | PkiException ex) {
+            String msg = "Cannot send Test Mail: " + ex.getMessage();
+            logger.error(msg);
+            Notification notification = Notification.show(msg);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
 

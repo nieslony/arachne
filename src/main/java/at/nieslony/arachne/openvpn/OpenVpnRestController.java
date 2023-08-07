@@ -11,7 +11,7 @@ import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
-import at.nieslony.arachne.pki.PkiNotInitializedException;
+import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.NetUtils;
@@ -135,7 +135,7 @@ public class OpenVpnRestController {
                             HttpStatus.UNPROCESSABLE_ENTITY,
                             "Cannot get user config");
             };
-        } catch (PkiNotInitializedException ex) {
+        } catch (PkiException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -261,7 +261,7 @@ public class OpenVpnRestController {
             writer.println("<key>\n%s</key>".formatted(pki.getServerKeyAsBase64()));
             writer.println("<dh>\n%s</dh>".formatted(pki.getDhParams()));
             openVpnManagement.restartServer();
-        } catch (PkiNotInitializedException ex) {
+        } catch (PkiException ex) {
             logger.error("# pki not yet initialized");
         } catch (IOException ex) {
             logger.error(
@@ -273,7 +273,7 @@ public class OpenVpnRestController {
         }
     }
 
-    public String openVpnUserConfig(String username) throws PkiNotInitializedException {
+    public String openVpnUserConfig(String username) throws PkiException {
         OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
 
         String userCert = pki.getUserCertAsBase64(username);
@@ -300,7 +300,7 @@ public class OpenVpnRestController {
         return sw.toString();
     }
 
-    public String openVpnUserConfigShell(String username) throws PkiNotInitializedException {
+    public String openVpnUserConfigShell(String username) throws PkiException {
         OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
@@ -377,7 +377,7 @@ public class OpenVpnRestController {
         return configWriter.toString();
     }
 
-    String openVpnUserConfigJson(String username) throws PkiNotInitializedException {
+    String openVpnUserConfigJson(String username) throws PkiException {
         OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
 
         String userCert = pki.getUserCertAsBase64(username);

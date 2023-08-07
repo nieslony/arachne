@@ -20,7 +20,7 @@ import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.pki.PkiNotInitializedException;
+import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUser;
 import jakarta.annotation.security.RolesAllowed;
@@ -74,7 +74,7 @@ public class MailSettingsRestController {
             ArachneUser forUser,
             String to,
             String subject
-    ) throws IOException, MessagingException, PkiNotInitializedException {
+    ) throws IOException, MessagingException, PkiException {
         JavaMailSender mailSender = mailSettings.getMailSender();
         MimeMessage message = mailSender.createMimeMessage();
         String from = mailSettings.getPrettySenderMailAddress();

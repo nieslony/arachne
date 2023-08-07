@@ -8,7 +8,7 @@ package at.nieslony.arachne.pki;
  *
  * @author claas
  */
-public class PkiNotInitializedException extends Exception {
+public class PkiNotInitializedException extends PkiException {
 
     public PkiNotInitializedException(String msg) {
         super("msg: " + "pki not yes initialized");
