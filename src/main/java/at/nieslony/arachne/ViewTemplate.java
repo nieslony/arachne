@@ -9,6 +9,7 @@ import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
+import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.tasks.TaskView;
@@ -31,6 +32,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import org.slf4j.Logger;
@@ -134,9 +136,25 @@ public class ViewTemplate extends AppLayout {
         networkNav.setWidthFull();
 
         SideNav certificatesNav = new SideNav("Certificates");
+        SideNavItem userCertSpecItem = new SideNavItem(
+                "User Cert Specs",
+                RouteConfiguration
+                        .forSessionScope()
+                        .getUrl(CertSpecsView.class, "user_spec")
+        );
+        userCertSpecItem.setPrefixComponent(VaadinIcon.USER.create());
+        SideNavItem serverCertSpecItem = new SideNavItem(
+                "Server Cert Specs",
+                RouteConfiguration
+                        .forSessionScope()
+                        .getUrl(CertSpecsView.class, "server_spec")
+        );
+        serverCertSpecItem.setPrefixComponent(VaadinIcon.CLOUD.create());
         certificatesNav.addItem(
                 new SideNavItem("All Certificates", CertificatesView.class,
-                        VaadinIcon.DIPLOMA.create())
+                        VaadinIcon.DIPLOMA.create()),
+                userCertSpecItem,
+                serverCertSpecItem
         );
 
         SideNav servicesNav = new SideNav("Services");
