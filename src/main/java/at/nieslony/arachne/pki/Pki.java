@@ -463,7 +463,7 @@ public class Pki {
     }
 
     public void generateDhParams(int bits) {
-        logger.info("Generating DH params");
+        logger.info("Generating DH params (%d bits)".formatted(bits));
         DHParametersGenerator dhGen = new DHParametersGenerator();
         try {
             dhGen.init(bits, 80, SecureRandom.getInstance("NativePRNG"));
