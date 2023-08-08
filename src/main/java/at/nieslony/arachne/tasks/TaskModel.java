@@ -38,20 +38,22 @@ import lombok.ToString;
 @ToString
 public class TaskModel {
 
-    public enum TimeUnit {
-        MIN("min"),
-        HOUR("hours"),
-        DAYS("days");
+    public enum Status {
+        WAITING("Waiting"),
+        SCHEDULED("Scheduled"),
+        RUNNING("Running"),
+        SUCCESS("Success"),
+        ERROR("Error");
 
-        private String unit;
+        private String status;
 
-        private TimeUnit(String u) {
-            unit = u;
+        private Status(String status) {
+            this.status = status;
         }
 
         @Override
         public String toString() {
-            return unit;
+            return status;
         }
     }
 
@@ -59,24 +61,21 @@ public class TaskModel {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column
-    private Boolean enabled;
-
-    @Column
-    private TimeUnit delayUnit;
-
-    @Column
-    private Integer delay;
-
-    @Column
-    private TimeUnit intervalUnit;
-
-    @Column
-    private Integer interval;
-
     @Column(nullable = false)
     private String taskClassName;
 
     @Column
-    private Date lastRun;
+    private Date scheduled;
+
+    @Column
+    private Date started;
+
+    @Column
+    private Date stopped;
+
+    @Column(nullable = false)
+    private Status status;
+
+    @Column
+    private String statusMsg;
 }

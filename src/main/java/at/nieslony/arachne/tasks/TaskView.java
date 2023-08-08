@@ -17,11 +17,19 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /**
  *
@@ -32,46 +40,98 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class TaskView extends VerticalLayout {
 
-    public TaskView(TaskRepository taskRepository) {
+    public TaskView(TaskRepository taskRepository, TaskScheduler taskScheduler) {
         Grid<TaskModel> grid = new Grid<>();
+        MenuBar createTaskMenu = new MenuBar();
+        MenuItem taskTypeItem
+                = createTaskMenu.addItem("Create Task");
+        taskTypeItem.add(new Icon(VaadinIcon.CHEVRON_DOWN));
+        SubMenu taskTypeMenu = taskTypeItem.getSubMenu();
+        for (var task : taskScheduler.getTaskTypes()) {
+            taskTypeMenu.addItem(getTaskName(task), (e) -> {
+                taskScheduler.runTask(
+                        task,
+                        () -> grid.getDataProvider().refreshAll(),
+                        () -> grid.getDataProvider().refreshAll()
+                );
+                grid.getDataProvider().refreshAll();
+            });
+        }
 
         grid
-                .addColumn((task) -> {
+                .addColumn((source) -> {
                     try {
-                        String className = task.getTaskClassName();
-                        Class cls = getClass().getClassLoader().loadClass(
-                                className
-                        );
-                        if (cls.isAnnotationPresent(TaskDescription.class)) {
-                            TaskDescription desc
-                                    = (TaskDescription) cls.getAnnotation(TaskDescription.class);
-                            return desc.name();
-                        } else {
-                            return className;
-                        }
+                        Class c = Class.forName(source.getTaskClassName());
+                        return getTaskName(c);
                     } catch (ClassNotFoundException ex) {
-
+                        return "Unknown Class: " + source.getTaskClassName();
                     }
-                    return "";
                 })
                 .setHeader("Name");
-
         grid
-                .addColumn((task) -> {
-                    return String.valueOf(task.getDelay() + task.getDelayUnit().toString());
+                .addColumn((source) -> {
+                    if (source.getScheduled() == null) {
+                        return "";
+                    } else {
+                        return source.getScheduled();
+                    }
                 })
-                .setHeader("Startup Delay");
-
+                .setHeader("Scheduled");
         grid
-                .addColumn((task) -> {
-                    return String.valueOf(task.getInterval() + task.getIntervalUnit().toString());
+                .addColumn((source) -> {
+                    if (source.getStarted() == null) {
+                        return "";
+                    } else {
+                        return source.getStarted();
+                    }
                 })
-                .setHeader("Interval");
-
+                .setHeader("Started");
         grid
-                .addColumn(TaskModel::getEnabled)
-                .setHeader("Is Enabled");
+                .addColumn((source) -> {
+                    if (source.getStopped() == null) {
+                        return "";
+                    } else {
+                        return source.getStopped();
+                    }
+                })
+                .setHeader("Stopped");
+        grid
+                .addColumn((source) -> source.getStatus())
+                .setTooltipGenerator((source) -> {
+                    if (source.getStatusMsg() == null) {
+                        return null;
+                    }
+                    if (source.getStatusMsg().isEmpty()) {
+                        return null;
+                    }
+                    return source.getStatusMsg();
+                })
+                .setHeader("Status");
+        DataProvider<TaskModel, Void> dataProvider = DataProvider.fromCallbacks(
+                (query) -> {
+                    Pageable pageable = PageRequest.of(
+                            query.getOffset(),
+                            query.getLimit()
+                    );
+                    var page = taskRepository.findAll(pageable);
+                    return page.stream();
+                },
+                (query) -> (int) taskRepository.count()
+        );
+        grid.setDataProvider(dataProvider);
 
-        add(grid);
+        add(
+                createTaskMenu,
+                grid
+        );
+    }
+
+    private String getTaskName(Class<? extends Task> c) {
+        if (c.isAnnotationPresent(TaskDescription.class)) {
+            TaskDescription descr = c.getAnnotation(TaskDescription.class);
+            return descr.name();
+        } else {
+            return c.getSimpleName();
+        }
     }
 }

@@ -16,16 +16,13 @@
  */
 package at.nieslony.arachne.tasks;
 
-import java.util.List;
-import java.util.Map;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
-public interface Task {
+abstract public class Task {
 
-    public List<String> getRequiredBeanNames();
-
-    public void run(Map<String, Object> beans);
+    abstract public void run(BeanFactory beanFactory);
 }

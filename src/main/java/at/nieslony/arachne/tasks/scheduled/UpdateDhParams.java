@@ -14,12 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.tasks;
+package at.nieslony.arachne.tasks.scheduled;
+
+import at.nieslony.arachne.pki.Pki;
+import at.nieslony.arachne.pki.PkiSettings;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.tasks.Task;
+import at.nieslony.arachne.tasks.TaskDescription;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
-public class UpdateServerCert {
+@TaskDescription(name = "Create DH Params")
+public class UpdateDhParams extends Task {
 
+    @Override
+    public void run(BeanFactory beanFactory) {
+        Pki pki = beanFactory.getBean(Pki.class);
+        Settings settings = beanFactory.getBean(Settings.class);
+        PkiSettings pkiSettings = new PkiSettings(settings);
+        pki.generateDhParams(pkiSettings.getDhParamsBits());
+    }
 }

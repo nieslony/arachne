@@ -14,18 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.tasks;
+package at.nieslony.arachne.tasks.scheduled;
 
-import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
+import at.nieslony.arachne.tasks.Task;
+import at.nieslony.arachne.tasks.TaskDescription;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
-public interface TaskRepository extends JpaRepository<TaskModel, Long> {
+@TaskDescription(name = "Update Server Certificate")
+public class UpdateServerCert extends Task {
 
-    public List<TaskModel> findByTaskClassNameAndStatus(String taskClassName, TaskModel.Status status);
+    @Override
+    public void run(BeanFactory beanFactory) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 
-    public List<TaskModel> findByStatus(TaskModel.Status status);
 }
