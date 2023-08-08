@@ -11,6 +11,7 @@ import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
+import at.nieslony.arachne.pki.PkiSettingsView;
 import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
@@ -136,25 +137,29 @@ public class ViewTemplate extends AppLayout {
         networkNav.setWidthFull();
 
         SideNav certificatesNav = new SideNav("Certificates");
-        SideNavItem userCertSpecItem = new SideNavItem(
-                "User Cert Specs",
-                RouteConfiguration
-                        .forSessionScope()
-                        .getUrl(CertSpecsView.class, "user_spec")
-        );
-        userCertSpecItem.setPrefixComponent(VaadinIcon.USER.create());
-        SideNavItem serverCertSpecItem = new SideNavItem(
-                "Server Cert Specs",
-                RouteConfiguration
-                        .forSessionScope()
-                        .getUrl(CertSpecsView.class, "server_spec")
-        );
-        serverCertSpecItem.setPrefixComponent(VaadinIcon.CLOUD.create());
         certificatesNav.addItem(
                 new SideNavItem("All Certificates", CertificatesView.class,
-                        VaadinIcon.DIPLOMA.create()),
-                userCertSpecItem,
-                serverCertSpecItem
+                        VaadinIcon.DIPLOMA.create()
+                ),
+                new SideNavItem(
+                        "User Cert Specs",
+                        RouteConfiguration
+                                .forSessionScope()
+                                .getUrl(CertSpecsView.class, "user_spec"),
+                        VaadinIcon.USER.create()
+                ),
+                new SideNavItem(
+                        "Server Cert Specs",
+                        RouteConfiguration
+                                .forSessionScope()
+                                .getUrl(CertSpecsView.class, "server_spec"),
+                        VaadinIcon.CLOUD.create()
+                ),
+                new SideNavItem(
+                        "Pki Settings",
+                        PkiSettingsView.class,
+                        VaadinIcon.KEY.create()
+                )
         );
 
         SideNav servicesNav = new SideNav("Services");
