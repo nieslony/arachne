@@ -26,4 +26,6 @@ public class SetupData {
     private CertSpecs caCertSpecs;
     private CertSpecs serverCertSpecs;
     private CertSpecs userCertSpecs;
+
+    private int dhParamsBits;
 }

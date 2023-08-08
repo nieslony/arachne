@@ -101,7 +101,10 @@ public class Pki {
         } catch (PkiException ex) {
             throw new CertSpecsValidationException(ex);
         }
-        generateDhParams(2048);
+        PkiSettings pkiSettings = new PkiSettings(settings);
+        pkiSettings.setDhParamsBits(setupData.getDhParamsBits());
+        pkiSettings.save(settings);
+        generateDhParams(pkiSettings.getDhParamsBits());
     }
 
     public String getRootCertAsBase64() {

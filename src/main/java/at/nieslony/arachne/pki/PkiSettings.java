@@ -31,17 +31,25 @@ import lombok.ToString;
 public class PkiSettings {
 
     private final static String SK_DH_PARAMS = "pki.dhParams";
+    private final static String SK_DH_PARAMS_BITS = "pki.dh-params-bits";
+    private final static String SK_CRL_LIFETIME_DAYS = "pki.crl-lifetime-days";
 
     private String dhParams;
+    private int dhParamsBits;
+    private int crlLifeTimeDays;
 
     public PkiSettings() {
     }
 
     public PkiSettings(Settings settings) {
         dhParams = settings.get(SK_DH_PARAMS, "");
+        dhParamsBits = settings.getInt(SK_DH_PARAMS_BITS, 2048);
+        crlLifeTimeDays = settings.getInt(SK_CRL_LIFETIME_DAYS, 7);
     }
 
     public void save(Settings settings) {
         settings.put(SK_DH_PARAMS, dhParams);
+        settings.put(SK_DH_PARAMS_BITS, dhParamsBits);
+        settings.put(SK_CRL_LIFETIME_DAYS, crlLifeTimeDays);
     }
 }

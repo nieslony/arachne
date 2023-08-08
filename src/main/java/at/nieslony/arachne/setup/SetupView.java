@@ -60,7 +60,7 @@ public class SetupView extends VerticalLayout {
     private Select<String> serverKeyAlgo;
     private Select<String> serverRsaKeySize;
     private Select<String> serverSignatureAlgo;
-    private Select<String> serverDhParamsLength;
+    private Select<Integer> serverDhParamsLength;
 
     private TextField adminUsername;
     private TextField adminDisplayName;
@@ -327,19 +327,19 @@ public class SetupView extends VerticalLayout {
         serverRsaKeySize.setItems("2048", "4096");
 
         serverSignatureAlgo = new Select<>();
-        serverSignatureAlgo.setLabel("Siognature Algorithm");
+        serverSignatureAlgo.setLabel("Signature Algorithm");
         serverSignatureAlgo.setItems("SHA256withRSA");
 
         serverDhParamsLength = new Select<>();
         serverDhParamsLength.setLabel("DH Paramaters Length");
-        serverDhParamsLength.setItems("1024", "2048");
+        serverDhParamsLength.setItems(1024, 2048, 4096);
 
         serverCommonName.setValue(NetUtils.myHostname());
         serverCertLifeTimeDays.setValue(365);
         serverKeyAlgo.setValue(("RSA"));
         serverRsaKeySize.setValue("2048");
         serverSignatureAlgo.setValue("SHA256withRSA");
-        serverDhParamsLength.setValue("2048");
+        serverDhParamsLength.setValue(2048);
 
         subjectLayout.add(
                 serverCommonName,
@@ -446,6 +446,7 @@ public class SetupView extends VerticalLayout {
             serverCertSpecs.setKeySize(Integer.parseInt(serverRsaKeySize.getValue()));
             serverCertSpecs.setCertLifeTimeDays(serverCertLifeTimeDays.getValue());
             serverCertSpecs.setSignatureAlgo(serverSignatureAlgo.getValue());
+            setupData.setDhParamsBits(serverDhParamsLength.getValue());
 
             CertSpecs userCertSpecs = new CertSpecs();
             userCertSpecs.setSubject("cn={username}");
