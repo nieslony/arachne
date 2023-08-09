@@ -144,7 +144,7 @@ public class Pki {
         String rootCertSubject = caCertSpecs.getSubject();
 
         List<CertificateModel> certModList
-                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
+                = certificateRepository.findBySubjectIgnoreCaseAndCertTypeOrderByValidToDesc(
                         rootCertSubject,
                         CertificateModel.CertType.CA
                 );
@@ -272,7 +272,7 @@ public class Pki {
                 .getSubject()
                 .replace("{username}", username);
         List<CertificateModel> certModels
-                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
+                = certificateRepository.findBySubjectIgnoreCaseAndCertTypeOrderByValidToDesc(
                         subject,
                         CertificateModel.CertType.USER);
         Date now = new Date();
@@ -306,7 +306,7 @@ public class Pki {
         serverCertSpecs.validate();
         String subject = serverCertSpecs.getSubject();
         List<CertificateModel> certModels
-                = certificateRepository.findBySubjectIgnoreCaseAndCertType(
+                = certificateRepository.findBySubjectIgnoreCaseAndCertTypeOrderByValidToDesc(
                         subject,
                         CertificateModel.CertType.SERVER);
         Date now = new Date();
@@ -316,10 +316,23 @@ public class Pki {
             }
         }
 
+        return createServerCert(serverCertSpecs);
+    }
+
+    public void createServerCert()
+            throws CertSpecsValidationException, PkiNotInitializedException {
+        CertSpecs serverCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.SERVER_SPEC);
+        serverCertSpecs.validate();
+        createServerCert(serverCertSpecs);
+    }
+
+    private CertificateModel createServerCert(CertSpecs serverCertSpecs)
+            throws PkiNotInitializedException {
         String keyAlgo = serverCertSpecs.getKeyAlgo();
         int keySize = serverCertSpecs.getKeySize();
         int lifetimeDays = serverCertSpecs.getCertLifeTimeDays();
         String signatureAlgo = serverCertSpecs.getSignatureAlgo();
+        String subject = serverCertSpecs.getSubject();
         logger.info("Creating server certificate: " + subject);
         CertificateModel certModel = createCertificate(
                 CertificateModel.CertType.SERVER,

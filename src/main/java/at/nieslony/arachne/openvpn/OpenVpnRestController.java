@@ -90,7 +90,7 @@ public class OpenVpnRestController {
     public void writeCrl() {
         if (certificateRepository.count() > 0) {
             X509CRL crl = pki.getCrl(() -> {
-                return certificateRepository.findByRevocationDateIsNotNull();
+                return certificateRepository.findByRevocationDateIsNotNullOrderByValidToDesc();
             });
 
             String crlString = Pki.asBase64(crl);

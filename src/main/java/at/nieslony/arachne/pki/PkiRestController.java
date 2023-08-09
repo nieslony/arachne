@@ -70,7 +70,7 @@ public class PkiRestController {
     @GetMapping("/crl.pem")
     public String getCrl() {
         X509CRL crl = pki.getCrl(() -> {
-            return certificateRepository.findByRevocationDateIsNotNull();
+            return certificateRepository.findByRevocationDateIsNotNullOrderByValidToDesc();
         });
 
         return Pki.asBase64(crl);
