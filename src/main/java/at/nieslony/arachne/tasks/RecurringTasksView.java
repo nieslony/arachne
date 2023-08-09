@@ -17,11 +17,27 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.utils.TimeUnit;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.timepicker.TimePicker;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,7 +48,13 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class RecurringTasksView extends VerticalLayout {
 
+    private static final Logger logger = LoggerFactory.getLogger(RecurringTaskModel.class);
+
+    private RecurringTasksRepository recurringTaskRepository;
+
     public RecurringTasksView(RecurringTasksRepository recurringTaskRepository) {
+        this.recurringTaskRepository = recurringTaskRepository;
+
         Grid<RecurringTaskModel> grid = new Grid<>();
         grid
                 .addColumn((source) -> {
@@ -60,6 +82,10 @@ public class RecurringTasksView extends VerticalLayout {
                 .setHeader("Recurring Interval");
         grid
                 .addColumn((source) -> {
+                    Boolean startAtFixTime = source.getStartAtFixTime();
+                    if (startAtFixTime == null || !startAtFixTime) {
+                        return "";
+                    }
                     String startAt = source.getStartAt();
                     if (startAt != null && !startAt.isEmpty()) {
                         return startAt;
@@ -68,6 +94,16 @@ public class RecurringTasksView extends VerticalLayout {
                     }
                 })
                 .setHeader("Start at");
+        grid.addComponentColumn((source) -> {
+            Button editButton = new Button("Edit", (t) -> {
+                Dialog editDialog = createEditDialog(source, (m) -> {
+                    recurringTaskRepository.save(m);
+                    grid.getDataProvider().refreshItem(m);
+                });
+                editDialog.open();
+            });
+            return editButton;
+        });
 
         grid.setItems(recurringTaskRepository.findAll());
 
@@ -81,5 +117,134 @@ public class RecurringTasksView extends VerticalLayout {
         } else {
             return c.getSimpleName();
         }
+    }
+
+    private Dialog createEditDialog(
+            RecurringTaskModel model,
+            Consumer<RecurringTaskModel> onSave) {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Edit Task");
+
+        Binder<RecurringTaskModel> binder = new Binder<>();
+
+        Checkbox repeatTaskField = new Checkbox("Repeat Task");
+        repeatTaskField.setWidthFull();
+        repeatTaskField.setValue(Boolean.TRUE);
+        binder.bind(
+                repeatTaskField,
+                RecurringTaskModel::getRepeatTask,
+                RecurringTaskModel::setRepeatTask
+        );
+
+        IntegerField intervalField = new IntegerField("Interval");
+        intervalField.setStepButtonsVisible(true);
+        binder.bind(
+                intervalField,
+                RecurringTaskModel::getRecurringInterval,
+                RecurringTaskModel::setRecurringInterval
+        );
+
+        Select<TimeUnit> timeUnitField = new Select<>();
+        timeUnitField.setItems(TimeUnit.values());
+        binder.bind(
+                timeUnitField,
+                RecurringTaskModel::getTimeUnit,
+                RecurringTaskModel::setTimeUnit
+        );
+
+        HorizontalLayout intervalLayout
+                = new HorizontalLayout(intervalField, timeUnitField);
+        intervalLayout.setAlignItems(Alignment.BASELINE);
+        intervalLayout.setWidthFull();
+        intervalLayout.setFlexGrow(
+                1.0,
+                intervalField,
+                timeUnitField
+        );
+
+        Checkbox fixStartTimeField = new Checkbox("Start at fix time:");
+        fixStartTimeField.setValue(Boolean.TRUE);
+        binder.bind(
+                fixStartTimeField,
+                RecurringTaskModel::getStartAtFixTime,
+                RecurringTaskModel::setStartAtFixTime
+        );
+
+        TimePicker startAtField = new TimePicker();
+        startAtField.setStep(Duration.ofMinutes(15));
+        binder.bind(
+                startAtField,
+                (source) -> {
+                    RecurringTaskModel.Time time = source.getStartAtAsTime();
+                    if (time != null) {
+                        return LocalTime.of(
+                                time.hour(),
+                                time.min(),
+                                time.sec()
+                        );
+                    }
+                    return null;
+                },
+                (source, value) -> {
+                    source.setStartAt(
+                            "%02d:%02d:%02d"
+                                    .formatted(value.getHour(),
+                                            value.getMinute(),
+                                            value.getSecond()
+                                    )
+                    );
+                }
+        );
+
+        HorizontalLayout startTimeLayout = new HorizontalLayout(
+                fixStartTimeField,
+                startAtField
+        );
+        startTimeLayout.setAlignItems(Alignment.BASELINE);
+        startTimeLayout.setWidthFull();
+        startTimeLayout.setFlexGrow(
+                1.0,
+                fixStartTimeField,
+                startAtField
+        );
+
+        Button okButton = new Button("OK", (e) -> {
+            try {
+                binder.writeBean(model);
+            } catch (ValidationException ex) {
+                logger.error("Cannot write recurring task settings: " + ex.getMessage());
+            }
+            onSave.accept(model);
+            dlg.close();
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        repeatTaskField.addValueChangeListener((e) -> {
+            boolean enabled = e.getValue();
+            intervalField.setEnabled(enabled);
+            timeUnitField.setEnabled(enabled);
+            fixStartTimeField.setEnabled(enabled);
+            startAtField.setEnabled(enabled && fixStartTimeField.getValue());
+        });
+
+        fixStartTimeField.addValueChangeListener((e) -> {
+            startAtField.setEnabled(e.getValue());
+        });
+
+        binder.setBean(model);
+
+        dlg.add(new VerticalLayout(
+                repeatTaskField,
+                intervalLayout,
+                startTimeLayout
+        ));
+
+        dlg.getFooter().add(okButton, cancelButton);
+
+        return dlg;
     }
 }

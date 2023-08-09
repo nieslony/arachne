@@ -38,6 +38,10 @@ import lombok.ToString;
 @ToString
 public class RecurringTaskModel {
 
+    public record Time(byte hour, byte min, byte sec) {
+
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -46,11 +50,32 @@ public class RecurringTaskModel {
     private String className;
 
     @Column
+    private Boolean repeatTask;
+
+    @Column
     private Integer recurringInterval;
 
     @Column
     private TimeUnit timeUnit;
 
     @Column
+    private Boolean startAtFixTime;
+
+    @Column
     private String startAt;
+
+    public Time getStartAtAsTime() {
+        if (startAt == null) {
+            return null;
+        }
+        String[] t = startAt.split(":");
+        if (t.length != 3) {
+            return null;
+        }
+        byte hour = Byte.parseByte(t[0]);
+        byte min = Byte.parseByte(t[1]);
+        byte sec = Byte.parseByte(t[2]);
+
+        return new Time(hour, min, sec);
+    }
 }

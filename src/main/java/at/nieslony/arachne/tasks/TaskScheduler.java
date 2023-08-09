@@ -83,7 +83,14 @@ public class TaskScheduler implements BeanFactoryAware {
                 if (descr != null) {
                     model.setRecurringInterval(descr.defaulnterval());
                     model.setTimeUnit(descr.timeUnit());
+                    model.setRepeatTask(
+                            model.getRecurringInterval() != 0
+                            && model.getRecurringInterval() != 0
+                    );
                     model.setStartAt(descr.startAt());
+                    model.setStartAtFixTime(
+                            !model.getStartAt().isEmpty()
+                    );
                 }
                 recurringTaskrepository.save(model);
             }
