@@ -28,6 +28,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.Date;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -114,7 +115,15 @@ public class TaskView extends VerticalLayout {
                             query.getLimit()
                     );
                     var page = taskRepository.findAll(pageable);
-                    return page.stream();
+                    return page
+                            .stream()
+                            .sorted((t1, t2) -> {
+                                int ret = compareDate(t2.getStarted(), t1.getStarted());
+                                if (ret != 0) {
+                                    return ret;
+                                }
+                                return compareDate(t2.getScheduled(), t1.getScheduled());
+                            });
                 },
                 (query) -> (int) taskRepository.count()
         );
@@ -124,6 +133,19 @@ public class TaskView extends VerticalLayout {
                 createTaskMenu,
                 grid
         );
+    }
+
+    static private int compareDate(Date d1, Date d2) {
+        if (d1 != null && d2 != null) {
+            return d1.compareTo(d2);
+        }
+        if (d1 != null && d2 == null) {
+            return 1;
+        }
+        if (d1 == null && d2 != null) {
+            return -1;
+        }
+        return 0;
     }
 
     private String getTaskName(Class<? extends Task> c) {
