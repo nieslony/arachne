@@ -83,6 +83,16 @@ public class PkiSettingsView extends VerticalLayout {
                 PkiSettings::setCrlLifeTimeDays
         );
 
+        IntegerField serverCertRenewDaysField
+                = new IntegerField("Renew Server Certificate before Expiration");
+        serverCertRenewDaysField.setStepButtonsVisible(true);
+        serverCertRenewDaysField.setSuffixComponent(new Div(new Text("days")));
+        binder.bind(
+                serverCertRenewDaysField,
+                PkiSettings::getServerCertRenewDays,
+                PkiSettings::setServerCertRenewDays
+        );
+
         Button createCrlButton = new Button("Recreate CRL", (e) -> {
             openVpnRestController.writeCrl();
             Notification.show("CRL written");
@@ -90,7 +100,8 @@ public class PkiSettingsView extends VerticalLayout {
 
         HorizontalLayout crlLayout = new HorizontalLayout(
                 crlLifetimeDaysField,
-                createCrlButton
+                createCrlButton,
+                serverCertRenewDaysField
         );
         crlLayout.setAlignItems(Alignment.BASELINE);
 
