@@ -14,28 +14,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.tasks.scheduled;
+package at.nieslony.arachne.tasks;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
-import at.nieslony.arachne.tasks.RecurringTaskDescription;
-import at.nieslony.arachne.tasks.Task;
-import at.nieslony.arachne.tasks.TaskDescription;
 import at.nieslony.arachne.utils.TimeUnit;
-import org.springframework.beans.factory.BeanFactory;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author claas
  */
-@TaskDescription(name = "Update CRL")
-@RecurringTaskDescription(timeUnit = TimeUnit.DAY, defaulnterval = 6)
-public class UpdateCrl extends Task {
+@Entity
+@Table(name = "recurring-tasks")
+@Getter
+@Setter
+@ToString
+public class RecurringTaskModel {
 
-    @Override
-    public String run(BeanFactory beanFactory) {
-        OpenVpnRestController openVpnRestController
-                = beanFactory.getBean(OpenVpnRestController.class);
-        openVpnRestController.writeCrl();
-        return null;
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String className;
+
+    @Column
+    private Integer recurringInterval;
+
+    @Column
+    private TimeUnit timeUnit;
+
+    @Column
+    private String startAt;
 }

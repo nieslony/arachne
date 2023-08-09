@@ -13,6 +13,7 @@ import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.pki.PkiSettingsView;
 import at.nieslony.arachne.roles.RolesView;
+import at.nieslony.arachne.tasks.RecurringTasksView;
 import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
@@ -169,7 +170,9 @@ public class ViewTemplate extends AppLayout {
                 new SideNavItem("Tomcat AJP Connector", TomcatView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
-                        VaadinIcon.AUTOMATION.create())
+                        VaadinIcon.AUTOMATION.create()),
+                new SideNavItem("Recurring Tasks", RecurringTasksView.class,
+                        VaadinIcon.CLOCK.create())
         );
         servicesNav.setWidthFull();
 

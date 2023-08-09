@@ -14,28 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.tasks.scheduled;
-
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
-import at.nieslony.arachne.tasks.RecurringTaskDescription;
-import at.nieslony.arachne.tasks.Task;
-import at.nieslony.arachne.tasks.TaskDescription;
-import at.nieslony.arachne.utils.TimeUnit;
-import org.springframework.beans.factory.BeanFactory;
+package at.nieslony.arachne.utils;
 
 /**
  *
  * @author claas
  */
-@TaskDescription(name = "Update CRL")
-@RecurringTaskDescription(timeUnit = TimeUnit.DAY, defaulnterval = 6)
-public class UpdateCrl extends Task {
+public enum TimeUnit {
+    MIN("min"), HOUR("hours"), DAY("days");
+    private String timeUnit;
+
+    private TimeUnit(String timeUnit) {
+        this.timeUnit = timeUnit;
+    }
 
     @Override
-    public String run(BeanFactory beanFactory) {
-        OpenVpnRestController openVpnRestController
-                = beanFactory.getBean(OpenVpnRestController.class);
-        openVpnRestController.writeCrl();
-        return null;
+    public String toString() {
+        return timeUnit;
     }
 }

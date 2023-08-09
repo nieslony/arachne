@@ -48,6 +48,9 @@ public class TaskScheduler implements BeanFactoryAware {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private RecurringTasksRepository recurringTaskrepository;
+
     @Getter
     private List<Class<? extends Task>> taskTypes;
 
@@ -66,6 +69,24 @@ public class TaskScheduler implements BeanFactoryAware {
             task.setStatus(TaskModel.Status.ERROR);
             task.setStatusMsg("Killed during Server Termination");
             taskRepository.save(task);
+        }
+
+        for (var task : taskTypes) {
+            String className = task.getName();
+            RecurringTaskModel model
+                    = recurringTaskrepository.findByClassName(className);
+            if (model == null) {
+                model = new RecurringTaskModel();
+                model.setClassName(className);
+                RecurringTaskDescription descr
+                        = task.getAnnotation(RecurringTaskDescription.class);
+                if (descr != null) {
+                    model.setRecurringInterval(descr.defaulnterval());
+                    model.setTimeUnit(descr.timeUnit());
+                    model.setStartAt(descr.startAt());
+                }
+                recurringTaskrepository.save(model);
+            }
         }
     }
 
