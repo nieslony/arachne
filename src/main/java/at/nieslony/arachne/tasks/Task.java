@@ -24,5 +24,5 @@ import org.springframework.beans.factory.BeanFactory;
  */
 abstract public class Task {
 
-    abstract public void run(BeanFactory beanFactory);
+    abstract public String run(BeanFactory beanFactory) throws Exception;
 }

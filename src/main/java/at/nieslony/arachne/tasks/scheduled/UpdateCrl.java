@@ -29,9 +29,10 @@ import org.springframework.beans.factory.BeanFactory;
 public class UpdateCrl extends Task {
 
     @Override
-    public void run(BeanFactory beanFactory) {
+    public String run(BeanFactory beanFactory) {
         OpenVpnRestController openVpnRestController
                 = beanFactory.getBean(OpenVpnRestController.class);
         openVpnRestController.writeCrl();
+        return null;
     }
 }

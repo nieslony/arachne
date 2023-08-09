@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.tasks;
 
+import at.nieslony.arachne.tasks.scheduled.UpdateCrl;
 import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
 import at.nieslony.arachne.tasks.scheduled.UpdateServerCert;
 import jakarta.annotation.PostConstruct;
@@ -59,6 +60,7 @@ public class TaskScheduler implements BeanFactoryAware {
     public void init() {
         taskTypes.add(UpdateServerCert.class);
         taskTypes.add(UpdateDhParams.class);
+        taskTypes.add(UpdateCrl.class);
 
         for (TaskModel task : taskRepository.findByStatus(TaskModel.Status.RUNNING)) {
             task.setStatus(TaskModel.Status.ERROR);
@@ -94,8 +96,11 @@ public class TaskScheduler implements BeanFactoryAware {
                             onStart.run();
                         }
                         task = taskClass.getDeclaredConstructor().newInstance();
-                        task.run(beanFactory);
+                        String msg = task.run(beanFactory);
                         taskModel.setStatus(TaskModel.Status.SUCCESS);
+                        if (msg != null && !msg.isEmpty()) {
+                            taskModel.setStatusMsg(msg);
+                        }
                     } catch (Exception ex) {
                         String msg = ex.getMessage();
                         logger.error(msg);

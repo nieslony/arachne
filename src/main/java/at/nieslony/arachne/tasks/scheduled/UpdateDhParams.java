@@ -31,10 +31,12 @@ import org.springframework.beans.factory.BeanFactory;
 public class UpdateDhParams extends Task {
 
     @Override
-    public void run(BeanFactory beanFactory) {
+    public String run(BeanFactory beanFactory) {
         Pki pki = beanFactory.getBean(Pki.class);
         Settings settings = beanFactory.getBean(Settings.class);
         PkiSettings pkiSettings = new PkiSettings(settings);
         pki.generateDhParams(pkiSettings.getDhParamsBits());
+
+        return null;
     }
 }
