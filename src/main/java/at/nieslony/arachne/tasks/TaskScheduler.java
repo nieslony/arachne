@@ -19,7 +19,9 @@ package at.nieslony.arachne.tasks;
 import at.nieslony.arachne.tasks.scheduled.UpdateCrl;
 import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
 import at.nieslony.arachne.tasks.scheduled.UpdateServerCert;
+import at.nieslony.arachne.utils.TimeUnit;
 import jakarta.annotation.PostConstruct;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,7 +51,7 @@ public class TaskScheduler implements BeanFactoryAware {
     private TaskRepository taskRepository;
 
     @Autowired
-    private RecurringTasksRepository recurringTaskrepository;
+    private RecurringTasksRepository recurringTaskRepository;
 
     @Getter
     private List<Class<? extends Task>> taskTypes;
@@ -59,22 +61,22 @@ public class TaskScheduler implements BeanFactoryAware {
         threadGroup = new ThreadGroup("arachne-tasks");
     }
 
-    @PostConstruct
-    public void init() {
-        taskTypes.add(UpdateServerCert.class);
-        taskTypes.add(UpdateDhParams.class);
-        taskTypes.add(UpdateCrl.class);
-
-        for (TaskModel task : taskRepository.findByStatus(TaskModel.Status.RUNNING)) {
+    private void killTerminatedTasks() {
+        logger.info("Kill terminated tasks");
+        for (TaskModel task : taskRepository.findAllByStatus(TaskModel.Status.RUNNING)) {
             task.setStatus(TaskModel.Status.ERROR);
             task.setStatusMsg("Killed during Server Termination");
+            logger.info("Killing " + task.getTaskClassName());
             taskRepository.save(task);
         }
+    }
 
+    private void registerTaskTypes() {
+        logger.info("Registering task types");
         for (var task : taskTypes) {
             String className = task.getName();
             RecurringTaskModel model
-                    = recurringTaskrepository.findByClassName(className);
+                    = recurringTaskRepository.findByClassName(className);
             if (model == null) {
                 model = new RecurringTaskModel();
                 model.setClassName(className);
@@ -92,9 +94,86 @@ public class TaskScheduler implements BeanFactoryAware {
                             !model.getStartAt().isEmpty()
                     );
                 }
-                recurringTaskrepository.save(model);
+                logger.info("Registering task " + model.getClassName());
+                recurringTaskRepository.save(model);
             }
         }
+    }
+
+    private Date getNextSchedulingDate(RecurringTaskModel model) {
+        if (model.getRepeatTask() != null && !model.getRepeatTask()) {
+            return null;
+        }
+        if (model.getTimeUnit() == null
+                || model.getRecurringInterval() == null
+                || model.getRecurringInterval() < 1) {
+            return null;
+        }
+        Calendar cal = Calendar.getInstance();
+        switch (model.getTimeUnit()) {
+            case MIN ->
+                cal.add(Calendar.MINUTE, model.getRecurringInterval());
+            case HOUR ->
+                cal.add(Calendar.HOUR, model.getRecurringInterval());
+            case DAY ->
+                cal.add(Calendar.DATE, model.getRecurringInterval());
+        }
+        if (model.getTimeUnit() == TimeUnit.DAY
+                && model.getStartAtFixTime() != null
+                && model.getStartAtFixTime()) {
+            var time = model.getStartAtAsTime();
+            cal.set(Calendar.HOUR, time.hour());
+            cal.set(Calendar.MINUTE, time.min());
+        }
+        if (cal.before(Calendar.getInstance())) {
+            cal.add(Calendar.DATE, 1);
+        }
+        return cal.getTime();
+    }
+
+    private void scheduleTasks() {
+        logger.info("Scheduling tasks");
+        var alreadyScheduledTasks = taskRepository.findAllByStatus(
+                TaskModel.Status.SCHEDULED
+        );
+        for (var recurringTask : recurringTaskRepository.findAll()) {
+            String taskClassName = recurringTask.getClassName();
+            boolean alreadyScheduled = false;
+            for (var t : alreadyScheduledTasks) {
+                if (t.getTaskClassName().equals(taskClassName)) {
+                    alreadyScheduled = true;
+                }
+                //break;
+            }
+            if (!alreadyScheduled) {
+                Date next = getNextSchedulingDate(recurringTask);
+                if (next != null) {
+                    TaskModel model = new TaskModel();
+                    model.setScheduled(next);
+                    model.setTaskClassName(taskClassName);
+                    model.setStatus(TaskModel.Status.SCHEDULED);
+                    logger.info("Scheduling task %s for %s".formatted(
+                            model.getTaskClassName(), next.toString()
+                    ));
+                    taskRepository.save(model);
+                } else {
+                    logger.info("Task %s is not repeated".formatted(taskClassName));
+                }
+            } else {
+                logger.info("Task %s is already scheduled".formatted(taskClassName));
+            }
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        taskTypes.add(UpdateServerCert.class);
+        taskTypes.add(UpdateDhParams.class);
+        taskTypes.add(UpdateCrl.class);
+
+        killTerminatedTasks();
+        registerTaskTypes();
+        scheduleTasks();
     }
 
     public void runTask(Class<? extends Task> taskClass, Runnable onStart, Runnable onStop) {
