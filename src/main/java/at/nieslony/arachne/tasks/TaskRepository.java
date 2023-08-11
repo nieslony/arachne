@@ -25,7 +25,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface TaskRepository extends JpaRepository<TaskModel, Long> {
 
-    public List<TaskModel> findByTaskClassNameAndStatus(String taskClassName, TaskModel.Status status);
+    public List<TaskModel> findAllByTaskClassNameAndStatus(String taskClassName, TaskModel.Status status);
 
-    public List<TaskModel> findByStatus(TaskModel.Status status);
+    public List<TaskModel> findAllByStatus(TaskModel.Status status);
 }
