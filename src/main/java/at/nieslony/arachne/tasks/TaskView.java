@@ -125,6 +125,7 @@ public class TaskView extends VerticalLayout {
                     Dialog dlg = createRescheduleDialog(source, () -> {
                         taskRepository.save(source);
                         grid.getDataProvider().refreshItem(source);
+                        taskScheduler.scheduleTask(source);
                     });
                     dlg.open();
                 });

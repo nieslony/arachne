@@ -23,8 +23,10 @@ import at.nieslony.arachne.utils.ArachneTimeUnit;
 import jakarta.annotation.PostConstruct;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -53,6 +55,7 @@ public class TaskScheduler implements BeanFactoryAware {
     private final ThreadGroup threadGroup;
     private BeanFactory beanFactory;
     private int taskNr = 0;
+    private Map<String, ScheduledFuture<?>> scheduledTasks;
 
     @Getter
     ScheduledExecutorService scheduler;
@@ -70,6 +73,7 @@ public class TaskScheduler implements BeanFactoryAware {
         taskTypes = new LinkedList<>();
         threadGroup = new ThreadGroup("arachne-tasks");
         scheduler = Executors.newScheduledThreadPool(5);
+        scheduledTasks = new HashMap<>();
     }
 
     private void killTerminatedTasks() {
@@ -177,12 +181,16 @@ public class TaskScheduler implements BeanFactoryAware {
         }
     }
 
-    void scheduleTask(TaskModel model) {
+    public void scheduleTask(TaskModel model) {
         RecurringTaskModel recurringTaskModel
                 = recurringTaskRepository.findByClassName(
                         model.getTaskClassName()
                 );
-
+        if (scheduledTasks.containsKey(model.getTaskClassName())) {
+            logger.info("Cancelling job to reschedule it");
+            var futureTask = scheduledTasks.remove(model.getTaskClassName());
+            futureTask.cancel(false);
+        }
         AtomicReference<ScheduledFuture<?>> future = new AtomicReference<>();
         ArachneTimerTask arachneTimerTask;
         try {
@@ -227,6 +235,7 @@ public class TaskScheduler implements BeanFactoryAware {
                     TimeUnit.SECONDS
             ));
         }
+        scheduledTasks.put(model.getTaskClassName(), future.get());
     }
 
     @PostConstruct

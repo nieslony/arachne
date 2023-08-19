@@ -76,14 +76,16 @@ public class ArachneTimerTask extends TimerTask {
 
         taskScheduler.getScheduler().schedule(
                 () -> {
+                    logger.info("Creating next scheduled entry");
                     long nextRun
                     = new Date().getTime()
                     + future.get().getDelay(TimeUnit.MILLISECONDS);
-                    taskModel = new TaskModel();
-                    taskModel.setStatus(TaskModel.Status.SCHEDULED);
-                    taskModel.setScheduled(new Date(nextRun));
-                    taskModel.setTaskClassName(taskModel.getTaskClassName());
-                    taskRepository.save(taskModel);
+                    TaskModel newTaskModel = new TaskModel();
+                    newTaskModel.setStatus(TaskModel.Status.SCHEDULED);
+                    newTaskModel.setScheduled(new Date(nextRun));
+                    newTaskModel.setTaskClassName(taskModel.getTaskClassName());
+                    taskRepository.save(newTaskModel);
+                    taskModel = newTaskModel;
                 },
                 10,
                 java.util.concurrent.TimeUnit.MILLISECONDS
