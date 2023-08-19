@@ -19,12 +19,17 @@ package at.nieslony.arachne.tasks;
 import at.nieslony.arachne.tasks.scheduled.UpdateCrl;
 import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
 import at.nieslony.arachne.tasks.scheduled.UpdateServerCert;
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
 import jakarta.annotation.PostConstruct;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +37,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -43,9 +50,12 @@ public class TaskScheduler implements BeanFactoryAware {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
-    private ThreadGroup threadGroup;
+    private final ThreadGroup threadGroup;
     private BeanFactory beanFactory;
     private int taskNr = 0;
+
+    @Getter
+    ScheduledExecutorService scheduler;
 
     @Autowired
     private TaskRepository taskRepository;
@@ -54,11 +64,12 @@ public class TaskScheduler implements BeanFactoryAware {
     private RecurringTasksRepository recurringTaskRepository;
 
     @Getter
-    private List<Class<? extends Task>> taskTypes;
+    private final List<Class<? extends Task>> taskTypes;
 
     public TaskScheduler() {
         taskTypes = new LinkedList<>();
         threadGroup = new ThreadGroup("arachne-tasks");
+        scheduler = Executors.newScheduledThreadPool(5);
     }
 
     private void killTerminatedTasks() {
@@ -118,7 +129,7 @@ public class TaskScheduler implements BeanFactoryAware {
             case DAY ->
                 cal.add(Calendar.DATE, model.getRecurringInterval());
         }
-        if (model.getTimeUnit() == TimeUnit.DAY
+        if (model.getTimeUnit() == ArachneTimeUnit.DAY
                 && model.getStartAtFixTime() != null
                 && model.getStartAtFixTime()) {
             var time = model.getStartAtAsTime();
@@ -131,21 +142,21 @@ public class TaskScheduler implements BeanFactoryAware {
         return cal.getTime();
     }
 
-    private void scheduleTasks() {
+    @EventListener(ApplicationReadyEvent.class)
+    public void scheduleTasks() {
         logger.info("Scheduling tasks");
         var alreadyScheduledTasks = taskRepository.findAllByStatus(
                 TaskModel.Status.SCHEDULED
         );
         for (var recurringTask : recurringTaskRepository.findAll()) {
             String taskClassName = recurringTask.getClassName();
-            boolean alreadyScheduled = false;
-            for (var t : alreadyScheduledTasks) {
+            TaskModel alreadyScheduledTask = null;
+            for (TaskModel t : alreadyScheduledTasks) {
                 if (t.getTaskClassName().equals(taskClassName)) {
-                    alreadyScheduled = true;
+                    alreadyScheduledTask = t;
                 }
-                //break;
             }
-            if (!alreadyScheduled) {
+            if (alreadyScheduledTask == null) {
                 Date next = getNextSchedulingDate(recurringTask);
                 if (next != null) {
                     TaskModel model = new TaskModel();
@@ -161,7 +172,60 @@ public class TaskScheduler implements BeanFactoryAware {
                 }
             } else {
                 logger.info("Task %s is already scheduled".formatted(taskClassName));
+                scheduleTask(alreadyScheduledTask);
             }
+        }
+    }
+
+    void scheduleTask(TaskModel model) {
+        RecurringTaskModel recurringTaskModel
+                = recurringTaskRepository.findByClassName(
+                        model.getTaskClassName()
+                );
+
+        AtomicReference<ScheduledFuture<?>> future = new AtomicReference<>();
+        ArachneTimerTask arachneTimerTask;
+        try {
+            arachneTimerTask = new ArachneTimerTask(beanFactory, model, future);
+        } catch (Exception ex) {
+            String msg = "Cannot create task %s: %s"
+                    .formatted(
+                            model.getTaskClassName(),
+                            ex.getMessage());
+            logger.error(msg);
+            model.setStatusMsg(msg);
+            model.setStatus(TaskModel.Status.ERROR);
+            taskRepository.save(model);
+            return;
+        }
+
+        if (recurringTaskModel.getStartAtFixTime()) {
+            Calendar now = Calendar.getInstance();
+            Date startAt = new Date(
+                    now.get(Calendar.YEAR),
+                    now.get(Calendar.MONTH),
+                    now.get(Calendar.DAY_OF_MONTH),
+                    recurringTaskModel.getStartAtAsTime().hour(),
+                    recurringTaskModel.getStartAtAsTime().min()
+            );
+            long delay;
+            if (now.after(startAt)) {
+
+            } else {
+
+            }
+        } else {
+            Date startAt = model.getScheduled();
+            Date now = new Date();
+            long delay = (startAt.getTime() - now.getTime()) / 1000;
+            long interval = recurringTaskModel.getRecurringIntervalInSecs();
+
+            future.set(scheduler.scheduleAtFixedRate(
+                    arachneTimerTask,
+                    delay,
+                    interval,
+                    TimeUnit.SECONDS
+            ));
         }
     }
 
@@ -173,7 +237,6 @@ public class TaskScheduler implements BeanFactoryAware {
 
         killTerminatedTasks();
         registerTaskTypes();
-        scheduleTasks();
     }
 
     public void runTask(Class<? extends Task> taskClass, Runnable onStart, Runnable onStop) {

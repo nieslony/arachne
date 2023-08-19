@@ -20,11 +20,11 @@ package at.nieslony.arachne.utils;
  *
  * @author claas
  */
-public enum TimeUnit {
+public enum ArachneTimeUnit {
     MIN("min"), HOUR("hours"), DAY("days");
     private String timeUnit;
 
-    private TimeUnit(String timeUnit) {
+    private ArachneTimeUnit(String timeUnit) {
         this.timeUnit = timeUnit;
     }
 

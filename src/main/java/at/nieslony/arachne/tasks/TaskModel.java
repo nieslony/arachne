@@ -78,4 +78,16 @@ public class TaskModel {
 
     @Column
     private String statusMsg;
+
+    public Class<? extends Task> getTaskClass() throws ClassNotFoundException {
+        return (Class<? extends Task>) Class.forName(taskClassName);
+    }
+
+    public void setStarted() {
+        started = new Date();
+    }
+
+    public void setStopped() {
+        stopped = new Date();
+    }
 }

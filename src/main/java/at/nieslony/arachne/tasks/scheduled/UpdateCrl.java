@@ -20,7 +20,7 @@ import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
 import at.nieslony.arachne.tasks.Task;
 import at.nieslony.arachne.tasks.TaskDescription;
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -28,7 +28,7 @@ import org.springframework.beans.factory.BeanFactory;
  * @author claas
  */
 @TaskDescription(name = "Update CRL")
-@RecurringTaskDescription(timeUnit = TimeUnit.DAY, defaulnterval = 6)
+@RecurringTaskDescription(timeUnit = ArachneTimeUnit.DAY, defaulnterval = 6)
 public class UpdateCrl extends Task {
 
     @Override

@@ -17,7 +17,7 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -95,7 +95,7 @@ public class RecurringTasksView extends VerticalLayout {
                 })
                 .setHeader("Start at");
         grid.addComponentColumn((source) -> {
-            Button editButton = new Button("Edit", (t) -> {
+            Button editButton = new Button("Edit...", (t) -> {
                 Dialog editDialog = createEditDialog(source, (m) -> {
                     recurringTaskRepository.save(m);
                     grid.getDataProvider().refreshItem(m);
@@ -144,8 +144,8 @@ public class RecurringTasksView extends VerticalLayout {
                 RecurringTaskModel::setRecurringInterval
         );
 
-        Select<TimeUnit> timeUnitField = new Select<>();
-        timeUnitField.setItems(TimeUnit.values());
+        Select<ArachneTimeUnit> timeUnitField = new Select<>();
+        timeUnitField.setItems(ArachneTimeUnit.values());
         binder.bind(
                 timeUnitField,
                 RecurringTaskModel::getTimeUnit,

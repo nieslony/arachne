@@ -16,7 +16,10 @@
  */
 package at.nieslony.arachne.tasks;
 
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
+import static at.nieslony.arachne.utils.ArachneTimeUnit.DAY;
+import static at.nieslony.arachne.utils.ArachneTimeUnit.HOUR;
+import static at.nieslony.arachne.utils.ArachneTimeUnit.MIN;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -56,7 +59,7 @@ public class RecurringTaskModel {
     private Integer recurringInterval;
 
     @Column
-    private TimeUnit timeUnit;
+    private ArachneTimeUnit timeUnit;
 
     @Column
     private Boolean startAtFixTime;
@@ -77,5 +80,16 @@ public class RecurringTaskModel {
         byte sec = Byte.parseByte(t[2]);
 
         return new Time(hour, min, sec);
+    }
+
+    public long getRecurringIntervalInSecs() {
+        return switch (timeUnit) {
+            case DAY ->
+                recurringInterval * 60 * 60 * 24;
+            case HOUR ->
+                recurringInterval * 60 * 50;
+            case MIN ->
+                recurringInterval * 60;
+        };
     }
 }

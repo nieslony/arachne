@@ -17,17 +17,28 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Date;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -108,6 +119,19 @@ public class TaskView extends VerticalLayout {
                     return source.getStatusMsg();
                 })
                 .setHeader("Status");
+        grid.addComponentColumn((source) -> {
+            if (source.getStatus() == TaskModel.Status.SCHEDULED) {
+                return new Button("Reschedule...", (t) -> {
+                    Dialog dlg = createRescheduleDialog(source, () -> {
+                        taskRepository.save(source);
+                        grid.getDataProvider().refreshItem(source);
+                    });
+                    dlg.open();
+                });
+            } else {
+                return new Text("");
+            }
+        });
         DataProvider<TaskModel, Void> dataProvider = DataProvider.fromCallbacks(
                 (query) -> {
                     Pageable pageable = PageRequest.of(
@@ -155,5 +179,72 @@ public class TaskView extends VerticalLayout {
         } else {
             return c.getSimpleName();
         }
+    }
+
+    private Dialog createRescheduleDialog(TaskModel taskModel, Runnable onOk) {
+        Dialog dlg = new Dialog();
+        try {
+            Class<? extends Task> taskClass = taskModel.getTaskClass();
+            dlg.setHeaderTitle(
+                    "Reschedule Task \"%s\""
+                            .formatted(getTaskName(taskClass))
+            );
+        } catch (ClassNotFoundException ex) {
+            dlg.setHeaderTitle("Reschedule invalid task class");
+        }
+
+        DatePicker datePicker = new DatePicker("Date");
+        LocalDate scheduledDate = taskModel
+                .getScheduled()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        LocalTime scheduledTime = taskModel
+                .getScheduled()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+        datePicker.setValue(scheduledDate);
+
+        TimePicker timePicker = new TimePicker("Time");
+        timePicker.setValue(scheduledTime);
+
+        Button nowButton = new Button("Now", (e) -> {
+            datePicker.setValue(LocalDate.now());
+            timePicker.setValue(LocalTime.now());
+        });
+
+        HorizontalLayout layout = new HorizontalLayout(
+                datePicker,
+                timePicker,
+                nowButton
+        );
+        layout.setAlignItems(Alignment.BASELINE);
+        dlg.add(layout);
+
+        Button okButton = new Button("OK", (t) -> {
+            dlg.close();
+            LocalDate newDate = datePicker.getValue();
+            LocalTime newTime = timePicker.getValue();
+            LocalDateTime ldt = LocalDateTime.of(newDate, newTime);
+            Date date = Date.from(
+                    ldt
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+            );
+            taskModel.setScheduled(date);
+            onOk.run();
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(
+                cancelButton,
+                okButton
+        );
+        return dlg;
     }
 }

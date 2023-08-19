@@ -26,7 +26,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
 import at.nieslony.arachne.tasks.Task;
 import at.nieslony.arachne.tasks.TaskDescription;
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.springframework.beans.factory.BeanFactory;
 @TaskDescription(name = "Update Server Certificate")
 @RecurringTaskDescription(
         defaulnterval = 7,
-        timeUnit = TimeUnit.DAY,
+        timeUnit = ArachneTimeUnit.DAY,
         startAt = "01:00:00"
 )
 public class UpdateServerCert extends Task {

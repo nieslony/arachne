@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.tasks;
 
-import at.nieslony.arachne.utils.TimeUnit;
+import at.nieslony.arachne.utils.ArachneTimeUnit;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,7 +32,7 @@ public @interface RecurringTaskDescription {
 
     public int defaulnterval() default 0;
 
-    public TimeUnit timeUnit() default TimeUnit.DAY;
+    public ArachneTimeUnit timeUnit() default ArachneTimeUnit.DAY;
 
     public String startAt() default "";
 }
