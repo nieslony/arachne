@@ -90,4 +90,37 @@ public class TaskModel {
     public void setStopped() {
         stopped = new Date();
     }
+
+    public static int compare(TaskModel t1, TaskModel t2) {
+        Date t1Date = null;
+        if (t1.getStarted() != null) {
+            t1Date = t1.getStarted();
+        } else if (t1.getScheduled() != null) {
+            t1Date = t1.getStarted();
+        }
+        Date t2Date = null;
+        if (t2.getStarted() != null) {
+            t2Date = t2.getStarted();
+        } else if (t2.getScheduled() != null) {
+            t2Date = t2.getStarted();
+        }
+
+        if (t1Date == null && t2Date == null) {
+            return 0;
+        }
+        if (t1Date == null) {
+            return 1;
+        }
+        if (t2Date == null) {
+            return -1;
+        }
+        if (t1Date.before(t2Date)) {
+            return -1;
+        }
+        if (t1Date.after(t2Date)) {
+            return 1;
+        }
+
+        return 0;
+    }
 }
