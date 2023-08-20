@@ -1,0 +1,104 @@
+hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
+arachne_repo = ENV['ARACHNE_REPO']
+
+if not arachne_repo
+    arachne_repo = "http://localhost/repo"
+    puts "Warning: environment variable ARACHNE_REPO not set, falling back to #{arachne_repo}"
+end
+
+Vagrant.configure("2") do |config|
+    config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
+
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.cpus = 2
+        libvirt.memory = 2048
+        libvirt.clock_offset = 'utc'
+        libvirt.graphics_type = 'spice'
+        libvirt.graphics_ip = "0.0.0.0"
+        libvirt.graphics_port = -1
+        libvirt.keymap = "de"
+        libvirt.channel :type => 'unix',
+            :target_name => 'org.qemu.guest_agent.0',
+            :target_type => 'virtio'
+        libvirt.channel :type => 'spicevmc',
+            :target_name => 'com.redhat.spice.0',
+            :target_type => 'virtio'
+        libvirt.video_type = "qxl"
+        libvirt.input :type => "mouse",
+            :bus => "usb"
+    end
+
+    config.vm.define "arachne" do |arachne|
+        arachne.vm.box = "generic/centos9s"
+        arachne.timezone.value = :host
+
+        Dir["provision.d/*"].each do |filename|
+            case File.extname(filename)
+                when ".rb"
+                    puts "Including #{filename} as Ruby"
+                    eval(IO.read(filename), binding, File.realpath(filename))
+                when ".sh"
+                    puts "Including #{filename} as Shell Provisioner"
+                    config.vm.provision "shell",
+                        path: "#{filename}"
+                when ".yml"
+                    puts "Including #{filename} as Ansible Provisioner"
+                    ansible_cfg = "#{File.dirname(File.realdirpath(filename))}/ansible.cfg"
+                    if File.exist?(ansible_cfg)
+                        config.vm.provision "ansible",
+                            playbook: filename,
+                            config_file: ansible_cfg
+                    else
+                        config.vm.provision "ansible",
+                            playbook: filename
+                    end
+                else
+                    puts "Ignoring #{filename}"
+            end
+        end
+        arachne.vm.hostname = hostname
+
+        arachne.vm.provision "Install arachne #{arachne.vm.hostname}",
+            type: "shell",
+            args: [ arachne_repo ],
+            inline: <<-SCRIPT
+                echo "--- Install updates on $HOSTNAME ---"
+                dnf update -y
+
+                REPO_URL=$1
+                echo "--- Install arachne from $REPO_URL ---"
+                dnf config-manager --add-repo $REPO_URL
+                dnf install arachne -y
+
+                ln -vs /var/lib/arachne/arachneconfig/arachne.conf \
+                    /etc/httpd/conf.d/$HOSTNAME.conf.inc
+
+                echo "--- enable services ---"
+                for i in arachne httpd ; do
+                    systemctl enable --now $i
+                done
+
+                echo "--- Open firewall ---"
+                for i in http https openvpn ; do
+                    echo -n "$i: "
+                    firewall-cmd --add-service $i --permanent
+                done
+                for i in 8080/tcp ; do
+                    echo -n "$i :"
+                    firewall-cmd --add-port $i --permanent
+                done
+                echo -n "Reload: "
+                firewall-cmd --reload
+
+                if [ -e "/etc/httpd/krb5.keytab" ]; then
+                    cp -v \
+                        /etc/httpd/krb5.keytab \
+                        /var/lib/arachne/arachneconfig/krb5.keytab
+                    chown -v arachne /var/lib/arachne/arachneconfig/krb5.keytab
+                fi
+
+                my_ip=$( ifconfig eth0 | awk '/inet/ { print $2; }' )
+                echo "You can now connect to http://$my_ip:8080/arachne"
+            SCRIPT
+    end # arachne
+end # config

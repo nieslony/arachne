@@ -1,0 +1,5 @@
+policy_module(arachne, 1.0)
+
+require {
+    type openvpn_etc_t;
+}

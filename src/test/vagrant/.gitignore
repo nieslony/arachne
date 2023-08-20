@@ -1,0 +1,3 @@
+provision.d/*
+.vagrant
+!provision.d/README.txt

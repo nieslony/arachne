@@ -1,0 +1,9 @@
+*~
+/target
+/frontend/generated
+/frontend/index.html
+/*json
+/*ts
+/node_modules
+/work
+/nb-configuration.xml
