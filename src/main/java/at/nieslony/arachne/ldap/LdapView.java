@@ -65,11 +65,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.naming.directory.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ldap.AuthenticationException;
 import org.springframework.ldap.InvalidNameException;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.security.core.AuthenticationException;
 
 /**
  *
@@ -350,6 +350,13 @@ public class LdapView extends VerticalLayout {
         bindPrincipalField.setItems("");
         bindPrincipalField.setWidthFull();
         binder.forField(bindPrincipalField)
+                .withValidator(
+                        (value) -> {
+                            return bindType.getValue() != LdapSettings.LdapBindType.KEYTAB
+                            || (value != null && !value.isEmpty());
+                        },
+                        "Valid range: 1...65535"
+                )
                 .bind(LdapSettings::getKerberosBindPricipal, LdapSettings::setKerberosBindPricipal);
         Button readPrincipalsButton = new Button(
                 "Read Entries from Keytab",
@@ -362,8 +369,15 @@ public class LdapView extends VerticalLayout {
                             bindPrincipalField.setItems(principals);
                             bindPrincipalField.setValue(principal.get());
                         }
+                        binder.validate();
                     } catch (IOException | KeytabException ex) {
-
+                        String msg = "Cannot read keytab %s: "
+                                .formatted(
+                                        keytabPath.getValue(),
+                                        ex.getMessage()
+                                );
+                        logger.error(msg);
+                        Notification.show(msg);
                     }
                 }
         );
@@ -371,11 +385,15 @@ public class LdapView extends VerticalLayout {
                 bindPrincipalField,
                 readPrincipalsButton
         );
+
         principalsLayout.setWidthFull();
-        principalsLayout.setFlexGrow(1, bindPrincipalField);
+
+        principalsLayout.setFlexGrow(
+                1, bindPrincipalField);
         principalsLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
-        bindType.addValueChangeListener(e -> {
+        bindType.addValueChangeListener(e
+                -> {
             switch (bindType.getValue()) {
                 case ANONYMOUS -> {
                     bindDnField.setVisible(false);
@@ -398,8 +416,8 @@ public class LdapView extends VerticalLayout {
                     bindPrincipalField.setVisible(true);
                     readPrincipalsButton.setVisible(true);
                 }
-
             }
+            binder.validate();
         });
 
         Button testConnectionButton = new Button(
@@ -408,6 +426,7 @@ public class LdapView extends VerticalLayout {
         );
 
         FormLayout layout = new FormLayout();
+
         layout.add(
                 ldapUrlsEditor,
                 new VerticalLayout(
@@ -649,7 +668,11 @@ public class LdapView extends VerticalLayout {
             dlg.open();
 
         } catch (Exception ex) {
-            logger.error("LDAP search failed: " + ex.getMessage());
+            String msg = "LDAP search failed: " + ex.getMessage();
+            logger.error(msg);
+            Notification notification = new Notification(msg, 10);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notification.open();
         }
     }
 
@@ -706,7 +729,11 @@ public class LdapView extends VerticalLayout {
             dlg.open();
 
         } catch (Exception ex) {
-            logger.error("LDAP search failed: " + ex.getMessage());
+            String msg = "LDAP search failed: " + ex.getMessage();
+            logger.error(msg);
+            Notification notification = new Notification(msg, 10);
+            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notification.open();
         }
     }
 }
