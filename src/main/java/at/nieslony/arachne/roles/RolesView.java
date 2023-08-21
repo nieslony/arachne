@@ -5,8 +5,13 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -40,6 +45,7 @@ public class RolesView extends VerticalLayout {
 
     final private RoleRuleRepository roleRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
+    final private LdapSettings ldapSettings;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -49,10 +55,12 @@ public class RolesView extends VerticalLayout {
 
     public RolesView(
             RoleRuleRepository roleRuleRepository,
-            UserMatcherCollector userMatcherCollector
+            UserMatcherCollector userMatcherCollector,
+            Settings settings
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
+        this.ldapSettings = new LdapSettings(settings);
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -220,8 +228,8 @@ public class RolesView extends VerticalLayout {
         userMatchers.setEmptySelectionAllowed(false);
         userMatchers.setLabel("Role Rules");
 
-        TextField parameter = new TextField("Parameter");
-        parameter.setValueChangeMode(ValueChangeMode.EAGER);
+        UsersGroupsAutocomplete parameter = new UsersGroupsAutocomplete(ldapSettings, 5);
+        parameter.setWidthFull();
 
         Select<Role> roles = new Select();
         roles.setLabel(("Role"));
@@ -264,16 +272,26 @@ public class RolesView extends VerticalLayout {
 
         userMatchers.addValueChangeListener(event -> {
             UserMatcherInfo umi = event.getValue();
-            if (umi.getParameterLabel().isEmpty()) {
+            if (umi.getParameterLabel() == null || umi.getParameterLabel().isEmpty()) {
                 parameter.setEnabled(false);
                 parameter.setLabel("Without parameter");
             } else {
                 parameter.setEnabled(true);
                 parameter.setLabel(umi.getParameterLabel());
             }
+            String className = umi.getClassName();
+            if (className.equals(UsernameMatcher.class.getName())) {
+                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.USERS);
+            } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
+                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.GROUPS);
+            } else {
+                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.NULL);
+            }
+
             binder.validate();
         });
 
+        userMatchers.setValue(allUserMatchers.get(1));
         binder.validate();
 
         dialog.add(new FormLayout(
