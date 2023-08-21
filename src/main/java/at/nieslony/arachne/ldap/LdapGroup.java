@@ -6,6 +6,7 @@ package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.users.ArachneUser;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +31,11 @@ public class LdapGroup {
     private List<String> members;
 
     public void setMembers(String[] members) {
-        this.members = Arrays.asList(members);
+        if (members != null) {
+            this.members = Arrays.asList(members);
+        } else {
+            this.members = new LinkedList<>();
+        }
     }
 
     public boolean hasMember(ArachneUser user) {

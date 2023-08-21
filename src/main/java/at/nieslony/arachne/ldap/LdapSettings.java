@@ -94,6 +94,51 @@ public class LdapSettings {
         }
     }
 
+    private class GroupContextMapper extends AbstractContextMapper<LdapGroup> {
+
+        @Override
+        protected LdapGroup doMapFromContext(DirContextOperations dco) {
+            LdapGroup ldapGroup = new LdapGroup();
+            ldapGroup.setDn(
+                    "%s,%s"
+                            .formatted(
+                                    dco.getDn().toString(),
+                                    getBaseDn()
+                            )
+            );
+            ldapGroup.setName(
+                    dco.getStringAttribute(getGroupsAttrName())
+            );
+            ldapGroup.setDescription(
+                    dco.getStringAttribute(getGroupsAttrDescription())
+            );
+            ldapGroup.setMembers(
+                    dco.getStringAttributes(getGroupsAttrMember())
+            );
+            logger.info("Found: " + ldapGroup);
+            return ldapGroup;
+        }
+    }
+
+    private class UserContextMapper extends AbstractContextMapper<ArachneUser> {
+
+        @Override
+        protected ArachneUser doMapFromContext(DirContextOperations dco) {
+            logger.info("Found: " + dco.toString());
+            ArachneUser ldapUser = ArachneUser.builder()
+                    .externalId("%s,%s".formatted(
+                            dco.getDn().toString(),
+                            getBaseDn()
+                    ))
+                    .externalProvider(LdapUserSource.getName())
+                    .username(dco.getStringAttribute(getUsersAttrUsername()))
+                    .displayName(dco.getStringAttribute(getUsersAttrDisplayName()))
+                    .email(dco.getStringAttribute(getUsersAttrEmail()))
+                    .build();
+            return ldapUser;
+        }
+    }
+
     public LdapSettings() {
     }
 
@@ -338,25 +383,115 @@ public class LdapSettings {
                 getUsersOu(),
                 filter,
                 sc,
-                new AbstractContextMapper<ArachneUser>() {
-            @Override
-            protected ArachneUser doMapFromContext(DirContextOperations dco) {
-                logger.info("Found: " + dco.toString());
-                ArachneUser ldapUser = ArachneUser.builder()
-                        .externalId("%s,%s".formatted(
-                                dco.getDn().toString(),
-                                getBaseDn()
-                        ))
-                        .externalProvider(LdapUserSource.getName())
-                        .username(dco.getStringAttribute(getUsersAttrUsername()))
-                        .displayName(dco.getStringAttribute(getUsersAttrDisplayName()))
-                        .email(dco.getStringAttribute(getUsersAttrEmail()))
-                        .build();
-                return ldapUser;
-            }
-        });
+                new UserContextMapper()
+        );
 
         return result;
+    }
+
+    public List<String> findUsersPretty(String pattern, int max) {
+        LdapTemplate ldap;
+        try {
+            ldap = getLdapTemplate();
+        } catch (Exception ex) {
+            logger.error("Cannot getLdapTemplate: " + ex.getMessage());
+            return null;
+        }
+        String filter
+                = "(&(objectclass=%s)(|(%s=%s)(%s=%s)))"
+                        .formatted(
+                                getUsersObjectClass(),
+                                getUsersAttrUsername(),
+                                pattern,
+                                getUsersAttrDisplayName(),
+                                pattern
+                        );
+        logger.info("LDAP filter: " + filter);
+        SearchControls sc = new SearchControls();
+        sc.setCountLimit(max);
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(
+                new String[]{
+                    "dn",
+                    getUsersAttrUsername(),
+                    getUsersAttrDisplayName(),
+                    getUsersAttrEmail()
+                }
+        );
+        return ldap
+                .search(
+                        getUsersOu(),
+                        filter,
+                        sc,
+                        new UserContextMapper()
+                )
+                .stream()
+                .map((user) -> {
+                    String displayName = user.getDisplayName();
+                    if (displayName != null && !displayName.isEmpty()) {
+                        return "%s (%s)"
+                                .formatted(
+                                        user.getUsername(),
+                                        displayName
+                                );
+                    } else {
+                        return user.getUsername();
+                    }
+                })
+                .sorted()
+                .toList();
+    }
+
+    public List<String> findGroupsPretty(String pattern, int max) {
+        LdapTemplate ldap;
+        try {
+            ldap = getLdapTemplate();
+        } catch (Exception ex) {
+            logger.error("Cannot getLdapTemplate: " + ex.getMessage());
+            return null;
+        }
+        String filter
+                = "(&(objectclass=%s)(|(%s=%s)(%s=%s)))"
+                        .formatted(
+                                getGroupsObjectClass(),
+                                getGroupsAttrName(),
+                                pattern,
+                                getGroupsAttrDescription(),
+                                pattern
+                        );
+        logger.info("LDAP filter: " + filter);
+        SearchControls sc = new SearchControls();
+        sc.setCountLimit(max);
+        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        sc.setReturningAttributes(
+                new String[]{
+                    "dn",
+                    getGroupsAttrName(),
+                    getGroupsAttrDescription()
+                }
+        );
+        return ldap
+                .search(
+                        getGroupsOu(),
+                        filter,
+                        sc,
+                        new GroupContextMapper()
+                )
+                .stream()
+                .map((group) -> {
+                    String description = group.getDescription();
+                    if (description != null && !description.isEmpty()) {
+                        return "%s (%s)"
+                                .formatted(
+                                        group.getName(),
+                                        description
+                                );
+                    } else {
+                        return group.getName();
+                    }
+                })
+                .sorted()
+                .toList();
     }
 
     public ArachneUser getUser(String username) {
@@ -393,31 +528,8 @@ public class LdapSettings {
                 getGroupsOu(),
                 filter,
                 sc,
-                new AbstractContextMapper<LdapGroup>() {
-            @Override
-            protected LdapGroup doMapFromContext(DirContextOperations dco) {
-                LdapGroup ldapGroup = new LdapGroup();
-                ldapGroup.setDn(
-                        "%s,%s"
-                                .formatted(
-                                        dco.getDn().toString(),
-                                        getBaseDn()
-                                )
-                );
-                ldapGroup.setName(
-                        dco.getStringAttribute(getGroupsAttrName())
-                );
-                ldapGroup.setDescription(
-                        dco.getStringAttribute(getGroupsAttrDescription())
-                );
-                ldapGroup.setMembers(
-                        dco.getStringAttributes(getGroupsAttrMember())
-                );
-                logger.info("Found: " + ldapGroup);
-                return ldapGroup;
-
-            }
-        });
+                new GroupContextMapper()
+        );
 
         return groups;
     }

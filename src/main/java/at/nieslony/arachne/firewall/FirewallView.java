@@ -17,12 +17,15 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
+import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
+import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.utils.HostnameValidator;
 import at.nieslony.arachne.utils.IgnoringInvisibleValidator;
 import at.nieslony.arachne.utils.NetMask;
@@ -30,6 +33,7 @@ import at.nieslony.arachne.utils.NetUtils;
 import at.nieslony.arachne.utils.RequiredIfVisibleValidator;
 import at.nieslony.arachne.utils.SubnetValidator;
 import at.nieslony.arachne.utils.TransportProtocol;
+import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -90,6 +94,7 @@ public class FirewallView extends VerticalLayout {
 
     private final Binder<FirewallBasicsSettings> binder;
     private FirewallBasicsSettings firewallBasicSettings;
+    private final LdapSettings ldapSettings;
 
     public FirewallView(
             FirewallRuleRepository firewallRuleRepository,
@@ -102,6 +107,7 @@ public class FirewallView extends VerticalLayout {
 
         binder = new Binder();
         firewallBasicSettings = new FirewallBasicsSettings(settings);
+        ldapSettings = new LdapSettings(settings);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
@@ -583,8 +589,8 @@ public class FirewallView extends VerticalLayout {
                         }
                 );
 
-        TextField parameterField = new TextField("Parameter");
-        parameterField.setValueChangeMode(ValueChangeMode.EAGER);
+        UsersGroupsAutocomplete parameterField
+                = new UsersGroupsAutocomplete(ldapSettings, 5);
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -630,6 +636,20 @@ public class FirewallView extends VerticalLayout {
                     } else {
                         parameterField.setVisible(false);
                         saveButton.setEnabled(true);
+                    }
+                    String className = e.getValue().getClassName();
+                    if (className.equals(UsernameMatcher.class.getName())) {
+                        parameterField.setCompleteMode(
+                                UsersGroupsAutocomplete.CompleteMode.USERS
+                        );
+                    } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
+                        parameterField.setCompleteMode(
+                                UsersGroupsAutocomplete.CompleteMode.GROUPS
+                        );
+                    } else {
+                        parameterField.setCompleteMode(
+                                UsersGroupsAutocomplete.CompleteMode.NULL
+                        );
                     }
                 }
         );
