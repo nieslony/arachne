@@ -24,7 +24,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -132,8 +131,7 @@ public class RolesView extends VerticalLayout {
                 );
         ruleColumn.setEditorComponent(userMatchersField);
 
-        TextField parameterField = new TextField();
-        parameterField.setValueChangeMode(ValueChangeMode.EAGER);
+        UsersGroupsAutocomplete parameterField = new UsersGroupsAutocomplete(ldapSettings, 5);
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -193,6 +191,14 @@ public class RolesView extends VerticalLayout {
                 parameterField.setEnabled(false);
             } else {
                 parameterField.setEnabled(true);
+            }
+            String className = umi.getClassName();
+            if (className.equals(UsernameMatcher.class.getName())) {
+                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.USERS);
+            } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
+                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.GROUPS);
+            } else {
+                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.NULL);
             }
             binder.validate();
         });
