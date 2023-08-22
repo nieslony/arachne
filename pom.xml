@@ -11,7 +11,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
 
-        <vaadin.version>24.1.5</vaadin.version>
+        <vaadin.version>24.1.6</vaadin.version>
         <selenium.version>4.11.0</selenium.version>
     </properties>
 
