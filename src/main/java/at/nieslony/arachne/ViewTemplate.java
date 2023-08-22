@@ -107,10 +107,27 @@ public class ViewTemplate extends AppLayout {
 
     private void createDrawer() {
         SideNav homeNav = new SideNav();
-        homeNav.addItem(
-                new SideNavItem("Home", MainView.class,
-                        VaadinIcon.HOME.create())
-        );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (userDetails
+                .getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+            homeNav.addItem(
+                    new SideNavItem("Admin Home", AdminHome.class,
+                            VaadinIcon.HOME.create())
+            );
+            homeNav.addItem(
+                    new SideNavItem("User Home", UserHome.class,
+                            VaadinIcon.HOME.create())
+            );
+        } else {
+            homeNav.addItem(
+                    new SideNavItem("Home", AdminHome.class,
+                            VaadinIcon.HOME.create())
+            );
+        }
+
         homeNav.setWidthFull();
 
         SideNav usersNav = new SideNav();

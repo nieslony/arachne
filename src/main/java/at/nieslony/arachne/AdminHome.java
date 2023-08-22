@@ -23,16 +23,16 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "", layout = ViewTemplate.class)
+@Route(value = "admin-home", layout = ViewTemplate.class)
 @PageTitle("Arachne")
 @PermitAll
-public class MainView extends VerticalLayout {
+public class AdminHome extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(MainView.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminHome.class);
 
     private final OpenVpnManagement openVpnManagement;
 
-    public MainView(OpenVpnManagement openVpnManagement) {
+    public AdminHome(OpenVpnManagement openVpnManagement) {
         this.openVpnManagement = openVpnManagement;
 
         add(createConnectedUsersView());
