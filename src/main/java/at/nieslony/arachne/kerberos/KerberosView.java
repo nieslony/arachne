@@ -74,7 +74,10 @@ public class KerberosView extends VerticalLayout {
         servicePrincipalField.setWidthFull();
         servicePrincipalField.setItems("");
         binder.forField(servicePrincipalField)
-                .asRequired("Principal expected")
+                .withValidator(
+                        (value) -> value != null && !value.isEmpty(),
+                        "Value reqired"
+                )
                 .bind(KerberosSettings::getServicePrincipal, KerberosSettings::setServicePrincipal);
 
         Button readKeytabButton = new Button(
@@ -100,6 +103,7 @@ public class KerberosView extends VerticalLayout {
                         notification.add(msg);
                         notification.open();
                     }
+                    binder.validate();
                 }
         );
 
@@ -135,5 +139,7 @@ public class KerberosView extends VerticalLayout {
                 saveButton
         );
         setMaxWidth(50, Unit.EM);
+
+        binder.validate();
     }
 }
