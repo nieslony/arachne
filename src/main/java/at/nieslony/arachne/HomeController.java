@@ -40,14 +40,4 @@ public class HomeController extends VerticalLayout {
             UI.getCurrent().navigate(UserHome.class);
         }
     }
-
-    /*@GetMapping("/")
-    @ResponseBody
-    @PermitAll
-    public RedirectView home(HttpServletRequest request) {
-        if (request.isUserInRole("ROLE_ADMIN")) {
-            return new RedirectView("admin-home");
-        }
-        return new RedirectView("/admin-home", true);
-    }*/
 }

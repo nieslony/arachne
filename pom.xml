@@ -164,6 +164,12 @@
             <artifactId>autocomplete</artifactId>
             <version>24.1.5</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.vaadin.olli</groupId>
+            <artifactId>clipboardhelper</artifactId>
+            <version>2.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
