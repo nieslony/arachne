@@ -8,6 +8,7 @@ import at.nieslony.arachne.firewall.FirewallView;
 import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
+import at.nieslony.arachne.openvpn.OpenVpnSiteView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
@@ -149,6 +150,8 @@ public class ViewTemplate extends AppLayout {
         networkNav.addItem(
                 new SideNavItem("OpenVPN User", OpenVpnUserView.class,
                         VaadinIcon.CONTROLLER.create()),
+                new SideNavItem("OpenVPN Site 2 Site", OpenVpnSiteView.class,
+                        VaadinIcon.SERVER.create()),
                 new SideNavItem("Firewall", FirewallView.class,
                         VaadinIcon.FIRE.create())
         );
