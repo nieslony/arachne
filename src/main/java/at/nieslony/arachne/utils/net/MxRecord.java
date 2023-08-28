@@ -14,33 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.utils;
+package at.nieslony.arachne.utils.net;
 
 import lombok.Getter;
-import lombok.ToString;
 
 /**
  *
  * @author claas
  */
 @Getter
-@ToString
-public class SrvRecord {
+public class MxRecord {
 
-    final private int port;
-    final private String hostname;
-    final private int priority;
-    final private int weight;
+    private final int priority;
+    private final String value;
 
-    public SrvRecord(String dnsEntry) {
-        // _service._proto.name. ttl IN SRV priority weight port target.
-        // _sip._tcp.example.com. 86400 IN SRV 0 5 5060 sipserver.example.com.
-        String[] values = dnsEntry.split(" ");
-        priority = Integer.parseInt(values[0]);
-        weight = Integer.parseInt(values[1]);
-        port = Integer.parseInt(values[2]);
-        hostname = values[3].endsWith(".")
-                ? values[3].substring(0, values[3].length() - 1)
-                : values[3];
+    public MxRecord(int priority, String value) {
+        this.priority = priority;
+        if (value.endsWith(".")) {
+            this.value = value.substring(0, value.length() - 1);
+        } else {
+            this.value = value;
+        }
     }
 }

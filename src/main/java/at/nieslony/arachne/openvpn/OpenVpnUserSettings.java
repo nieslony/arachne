@@ -5,8 +5,8 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.utils.NetUtils;
-import at.nieslony.arachne.utils.TransportProtocol;
+import at.nieslony.arachne.utils.net.NetUtils;
+import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;

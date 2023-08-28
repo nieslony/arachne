@@ -18,8 +18,8 @@ package at.nieslony.arachne.mail;
 
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.utils.MxRecord;
-import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.net.MxRecord;
+import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;

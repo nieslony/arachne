@@ -17,10 +17,10 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.utils.MxRecord;
-import at.nieslony.arachne.utils.NetUtils;
-import at.nieslony.arachne.utils.SrvRecord;
-import at.nieslony.arachne.utils.TransportProtocol;
+import at.nieslony.arachne.utils.net.MxRecord;
+import at.nieslony.arachne.utils.net.NetUtils;
+import at.nieslony.arachne.utils.net.SrvRecord;
+import at.nieslony.arachne.utils.net.TransportProtocol;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
