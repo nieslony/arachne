@@ -125,6 +125,14 @@ public class Settings {
         put(setting, content.name());
     }
 
+    public void delete(String setting) {
+        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
+
+        if (settingsModel.isPresent()) {
+            settingsRepository.delete(settingsModel.get());
+        }
+    }
+
     public ServerProperties getServerProperties() {
         return serverProperties;
     }
