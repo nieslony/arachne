@@ -130,7 +130,6 @@ public class OpenVpnUserSettings {
     private String listenIp;
     private int listenPort;
     private TransportProtocol listenProtocol;
-    // no gui
     private Boolean mtuTest;
     private String remote;
     private String deviceType;
@@ -140,10 +139,8 @@ public class OpenVpnUserSettings {
     private int keepaliveTimeout;
     private int keepaliveInterval;
     private List<String> pushDnsServers;
-    // no gui
     private List<String> dnsSearch;
     private List<String> pushRoutes = new LinkedList<>();
-    // no gui
     private Boolean internetThrouphVpn;
     private AuthType authType;
     private PasswordVerificationType passwordVerificationType;
