@@ -5,7 +5,7 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.pki.CertSpecs;
-import at.nieslony.arachne.utils.NetUtils;
+import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;

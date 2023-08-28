@@ -9,11 +9,13 @@ import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.EditableListBox;
-import at.nieslony.arachne.utils.HostnameValidator;
-import at.nieslony.arachne.utils.IpValidator;
-import at.nieslony.arachne.utils.NetMask;
-import at.nieslony.arachne.utils.SubnetValidator;
-import at.nieslony.arachne.utils.TransportProtocol;
+import at.nieslony.arachne.utils.net.NetMask;
+import at.nieslony.arachne.utils.net.NicInfo;
+import at.nieslony.arachne.utils.net.NicUtils;
+import at.nieslony.arachne.utils.net.TransportProtocol;
+import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IpValidator;
+import at.nieslony.arachne.utils.validators.SubnetValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -41,20 +43,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,28 +61,6 @@ import org.slf4j.LoggerFactory;
 public class OpenVpnUserView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
-
-    @Getter
-    @Setter
-    @EqualsAndHashCode
-    public class NicInfo {
-
-        private String ipAddress;
-        private String nicName;
-
-        public NicInfo(String ipAddress, String nicName) {
-            this.ipAddress = ipAddress;
-            this.nicName = nicName;
-        }
-
-        public NicInfo() {
-        }
-
-        @Override
-        public String toString() {
-            return "%s - %s".formatted(ipAddress, nicName);
-        }
-    }
 
     private Settings settings;
     private OpenVpnUserSettings vpnSettings;
@@ -225,7 +196,7 @@ public class OpenVpnUserView extends VerticalLayout {
         clientConfigName.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NicInfo> ipAddresse = new Select<>();
-        ipAddresse.setItems(findAllNics());
+        ipAddresse.setItems(NicUtils.findAllNics());
         ipAddresse.setLabel("Listen on");
         ipAddresse.setWidth(20, Unit.EM);
 
@@ -311,7 +282,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 .asRequired("Value required")
                 .bind(
                         (s) -> {
-                            return findNicByIp(s.getListenIp());
+                            return NicUtils.findNicByIp(s.getListenIp());
                         },
                         (s, v) -> {
                             s.setListenIp(v.getIpAddress());
@@ -369,7 +340,7 @@ public class OpenVpnUserView extends VerticalLayout {
         protocol.addValueChangeListener((e) -> {
             mtuTestField.setEnabled(e.getValue() == TransportProtocol.UDP);
         });
-        
+
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
         formLayout.add(clientConfigName);
@@ -584,37 +555,5 @@ public class OpenVpnUserView extends VerticalLayout {
         );
 
         return layout;
-    }
-
-    public List<NicInfo> findAllNics() {
-        List<NicInfo> allNics = new LinkedList<>();
-        allNics.add(new NicInfo("0.0.0.0", "All Interfaces"));
-        Enumeration<NetworkInterface> foundNics;
-        try {
-            foundNics = NetworkInterface.getNetworkInterfaces();
-        } catch (SocketException ex) {
-            logger.error("Cannot retrieve list of NICs: " + ex.getMessage());
-            return null;
-        }
-        for (NetworkInterface nic : Collections
-                .list(foundNics)) {
-            for (InetAddress inetAddress : Collections.list(nic.getInetAddresses())) {
-                if (inetAddress instanceof Inet4Address) {
-                    allNics.add(new NicInfo(
-                            inetAddress.getHostAddress(),
-                            nic.getName()));
-                }
-            }
-        }
-
-        return allNics;
-    }
-
-    NicInfo findNicByIp(String ipAddress) {
-        return findAllNics()
-                .stream()
-                .filter((t) -> t.ipAddress.equals(ipAddress))
-                .findFirst()
-                .get();
     }
 }

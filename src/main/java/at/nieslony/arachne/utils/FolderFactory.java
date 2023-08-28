@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.utils;
 
+import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

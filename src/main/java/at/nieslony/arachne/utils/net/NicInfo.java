@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.utils;
+package at.nieslony.arachne.utils.net;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,26 +12,25 @@ import lombok.Setter;
  *
  * @author claas
  */
+@Getter
+@Setter
 @EqualsAndHashCode
-public class NetMask {
+public class NicInfo {
 
-    @Getter
-    @Setter
-    private int bits;
+    String ipAddress;
+    private String nicName;
 
-    @Getter
-    private String mask;
-
-    public NetMask() {
+    public NicInfo(String ipAddress, String nicName) {
+        this.ipAddress = ipAddress;
+        this.nicName = nicName;
     }
 
-    public NetMask(int bits) {
-        this.bits = bits;
-        this.mask = NetUtils.maskLen2Mask(bits);
+    public NicInfo() {
     }
 
     @Override
     public String toString() {
-        return "%d - %s".formatted(bits, mask);
+        return "%s - %s".formatted(ipAddress, nicName);
     }
+
 }
