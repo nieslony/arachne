@@ -64,8 +64,8 @@ public class FirewallBasicsSettings extends AbstractSettingsGroup {
         }
     }
 
-    private boolean enableFirewall;
-    private String firewallZone;
-    private EnableRoutingMode enableRoutingMode;
-    private IcmpRules icmpRules;
+    private boolean enableFirewall = false;
+    private String firewallZone = "arachne";
+    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
+    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }
