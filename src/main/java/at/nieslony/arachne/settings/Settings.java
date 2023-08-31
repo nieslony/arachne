@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,6 +40,9 @@ public class Settings {
 
     @Autowired
     private SettingsRepository settingsRepository;
+
+    @Autowired
+    private ServerProperties serverProperties;
 
     private static Settings settings = null;
 
@@ -114,5 +118,9 @@ public class Settings {
         } else {
             settingsRepository.save(new SettingsModel(setting, bytes));
         }
+    }
+
+    public ServerProperties getServerProperties() {
+        return serverProperties;
     }
 }
