@@ -59,9 +59,10 @@ public class ArachneUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
         logger.info("Searching for user " + username);
-        UserSettings userSettings = new UserSettings(settings);
+        UserSettings userSettings = settings.getSettings(UserSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
         ArachneUser user = userRepository.findByUsername(username);
