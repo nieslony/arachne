@@ -40,6 +40,16 @@ public class Settings {
     @Autowired
     private SettingsRepository settingsRepository;
 
+    private static Settings settings = null;
+
+    public Settings() {
+        settings = this;
+    }
+
+    public static Settings getInstance() {
+        return settings;
+    }
+
     public <T extends AbstractSettingsGroup> T getSettings(Class<T> c) {
         T obj;
         try {
