@@ -23,6 +23,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,23 +35,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class Settings {
 
+    private static final Logger logger = LoggerFactory.getLogger(Settings.class);
+
     @Autowired
     private SettingsRepository settingsRepository;
 
-    public <T extends AbstractSettingsGroup> T getSettings(Class<T> c)
-            throws SettingsException {
+    public <T extends AbstractSettingsGroup> T getSettings(Class<T> c) {
+        T obj;
         try {
-            T obj = c.getDeclaredConstructor().newInstance();
-            obj.load(this);
-            return obj;
+            obj = c.getDeclaredConstructor().newInstance();
         } catch (IllegalAccessException | IllegalArgumentException
                 | InstantiationException | InvocationTargetException
-                | NoSuchMethodException | SecurityException
-                | SettingsException ex) {
-            throw new SettingsException(
-                    "Cannot create settings class %s".formatted(c.getName()),
-                    ex);
+                | NoSuchMethodException | SecurityException ex) {
+            logger.error(
+                    "Cannot instanciate %s: %s"
+                            .formatted(c.getName(), ex.getMessage()
+                            )
+            );
+            return null;
         }
+        try {
+            obj.load(this);
+        } catch (SettingsException ex) {
+            logger.error("Cannot load %s: %s"
+                    .formatted(c.getName(), ex.getMessage()
+                    )
+            );
+        }
+        return obj;
     }
 
     private static <T> byte[] makeBytes(T value) throws SettingsException {
