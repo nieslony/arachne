@@ -140,7 +140,7 @@ public class FirewallRestController {
 
     private List<RichRule> createRichRules(FirewallRuleModel rule) {
         List<RichRule> richRules = new LinkedList<>();
-        OpenVpnUserSettings openvpnSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings openvpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         Set<String> addresses = new HashSet<>();
         for (FirewallWhere where : rule.getWhere()) {

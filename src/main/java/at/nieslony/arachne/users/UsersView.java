@@ -188,7 +188,8 @@ public class UsersView extends VerticalLayout {
             userMenu.addItem("Delete...", event -> deleteUser(user));
         }
         if (user.getRoles().contains("USER")) {
-            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+            OpenVpnUserSettings openVpnUserSettings
+                    = settings.getSettings(OpenVpnUserSettings.class);
             FileDownloadWrapper link = new FileDownloadWrapper(
                     openVpnUserSettings.getClientConfigName(),
                     () -> {

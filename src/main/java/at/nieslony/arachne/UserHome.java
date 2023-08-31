@@ -66,7 +66,7 @@ public class UserHome extends VerticalLayout {
     ) {
         this.settings = settings;
         this.openVpnRestController = openVpnRestController;
-        this.openVpnUserSettings = new OpenVpnUserSettings(settings);
+        this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         VerticalLayout content = new VerticalLayout();
         Tabs tabs = new Tabs();

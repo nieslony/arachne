@@ -78,7 +78,7 @@ public class MailSettingsRestController {
         JavaMailSender mailSender = mailSettings.getMailSender();
         MimeMessage message = mailSender.createMimeMessage();
         String from = mailSettings.getPrettySenderMailAddress();
-        OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String windowsConfig = openVpnRestController
                 .openVpnUserConfig(forUser.getUsername());

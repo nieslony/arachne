@@ -116,7 +116,7 @@ public class FirewallView extends VerticalLayout {
         tabs.add("Incoming Rules", createIncomingTab());
 
         Button saveButton = new Button("Save", (e) -> {
-            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+            OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
             logger.info("Saving firewall settings");
             try {
