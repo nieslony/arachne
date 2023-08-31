@@ -32,7 +32,7 @@ public class LdapGroupUserMatcher extends UserMatcher {
     public boolean isUserMatching(String username) {
         logger.info("Try to match " + username);
         Settings settings = Settings.getInstance();
-        LdapSettings ldapSettings = new LdapSettings(settings);
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         if (!ldapSettings.isEnableLdapUserSource()) {
             logger.info("LDAP user source not enabled -> user does't match");
             return false;
