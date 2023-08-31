@@ -87,7 +87,6 @@ public class MailSettingsView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(MailSettingsView.class);
 
-    private final Settings settings;
     private final UserRepository userRepository;
     private final MailSettingsRestController mailSettingsRestController;
 
@@ -105,18 +104,10 @@ public class MailSettingsView extends VerticalLayout {
             UserRepository userRepository,
             MailSettingsRestController mailSettingsRestController
     ) {
-        this.settings = settings;
         this.userRepository = userRepository;
         this.mailSettingsRestController = mailSettingsRestController;
 
-        try {
-            mailSettings = settings.getSettings(MailSettings.class);
-        } catch (SettingsException ex) {
-            logger.error("Cannot load mail settings: " + ex.getMessage());
-            if (mailSettings == null) {
-                mailSettings = new MailSettings();
-            }
-        }
+        mailSettings = settings.getSettings(MailSettings.class);
         binder = new Binder<>();
         sendTestMailDialog = createSendTestMailDialog();
         sendTestConfigDialog = createSendConfigDialog();

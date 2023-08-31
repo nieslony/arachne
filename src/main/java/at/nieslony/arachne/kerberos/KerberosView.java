@@ -54,13 +54,7 @@ public class KerberosView extends VerticalLayout {
         Notification notification = new Notification();
         notification.setDuration(5000);
 
-        KerberosSettings kerberosSettings;
-        try {
-            kerberosSettings = settings.getSettings(KerberosSettings.class);
-        } catch (SettingsException ex) {
-            logger.error("Cannot load settings: " + ex.getMessage());
-            kerberosSettings = new KerberosSettings();
-        }
+        KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         Binder<KerberosSettings> binder = new Binder<>();
         binder.setBean(kerberosSettings);
 

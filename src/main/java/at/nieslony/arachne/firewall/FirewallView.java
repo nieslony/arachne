@@ -107,14 +107,8 @@ public class FirewallView extends VerticalLayout {
         this.userMatcherCollector = userMatcherCollector;
 
         binder = new Binder();
-        try {
-            firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
-        } catch (SettingsException ex) {
-            logger.error("Cannot load settings: " + ex.getMessage());
-            firewallBasicSettings = new FirewallBasicsSettings();
-        }
-
-        ldapSettings = new LdapSettings(settings);
+        firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
+        ldapSettings = settings.getSettings(LdapSettings.class);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();

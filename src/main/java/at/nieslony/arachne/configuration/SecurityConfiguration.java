@@ -7,7 +7,6 @@ package at.nieslony.arachne.configuration;
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
@@ -53,12 +52,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @PostConstruct
     public void init() {
-        try {
-            kerberosSettings = settings.getSettings(KerberosSettings.class);
-        } catch (SettingsException ex) {
-            logger.error("Cannot load settings: " + ex.getMessage());
-            kerberosSettings = new KerberosSettings();
-        }
+        kerberosSettings = settings.getSettings(KerberosSettings.class);
     }
 
     @Override
