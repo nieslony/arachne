@@ -1,6 +1,7 @@
 package at.nieslony.arachne.settings;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.regex.Pattern;
 
 /*
@@ -16,6 +17,10 @@ abstract public class AbstractSettingsGroup {
     public void load(Settings settings) throws SettingsException {
         for (Field field : getClass().getDeclaredFields()) {
             field.setAccessible(true);
+            int modifiers = field.getModifiers();
+            if (Modifier.isStatic(modifiers) | Modifier.isFinal(modifiers)) {
+                continue;
+            }
             String n = groupName() + "." + makeKey(field.getName());
             var v = settings.get(n, field.getType());
             if (v != null) {
@@ -34,6 +39,10 @@ abstract public class AbstractSettingsGroup {
     public void save(Settings settings) throws SettingsException {
         for (Field field : getClass().getDeclaredFields()) {
             field.setAccessible(true);
+            int modifiers = field.getModifiers();
+            if (Modifier.isStatic(modifiers) | Modifier.isFinal(modifiers)) {
+                continue;
+            }
             Class c = field.getType();
             String n = groupName() + "." + makeKey(field.getName());
             try {
