@@ -4,12 +4,11 @@
  */
 package at.nieslony.arachne.openvpnmanagement;
 
-import at.nieslony.arachne.settings.SettingsModel;
-import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
 import jakarta.annotation.PostConstruct;
 import java.io.BufferedReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -21,7 +20,6 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,23 +34,19 @@ public class OpenVpnManagement {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnManagement.class);
 
-    private static final String SK_MANAGEMENT_SOCKET = "openvpn.management.socket";
-    private static final String SK_MANAGEMENT_PASSWORD = "openvpn.management.password";
-    private static final String PASSWORD_FN = "management.pwd";
-    private static final String SOCKET_FN = "arachne-management.socket";
-
     private String socketPath;
     private SocketChannel socketChannel;
     private BufferedReader managementReader;
     private PrintWriter managementWriter;
-
     private String managementPassword;
 
     @Autowired
-    SettingsRepository settingsRepository;
+    Settings settings;
 
     @Autowired
     FolderFactory folderFactory;
+
+    private OpenVpnManagementSettings openVpnManagementSettings;
 
     public OpenVpnManagement() {
         logger.info("Creating OpenVPN management interface");
@@ -60,7 +54,22 @@ public class OpenVpnManagement {
 
     @PostConstruct
     public void init() {
-        managementPassword = getPassword();
+        openVpnManagementSettings
+                = settings.getSettings(OpenVpnManagementSettings.class);
+        if (!openVpnManagementSettings.getManagementPassword().isEmpty()) {
+            managementPassword = new String(
+                    Base64.getDecoder()
+                            .decode(openVpnManagementSettings.getManagementPassword()
+                            )
+            );
+        } else {
+            managementPassword = getNewPassword();
+            String encodedPassword
+                    = Base64
+                            .getEncoder()
+                            .encodeToString(managementPassword.getBytes());
+            openVpnManagementSettings.setManagementPassword(encodedPassword);
+        }
     }
 
     public void quit() {
@@ -72,22 +81,8 @@ public class OpenVpnManagement {
         }
     }
 
-    private String getPassword() {
-        Optional<SettingsModel> setting = settingsRepository.findBySetting(SK_MANAGEMENT_PASSWORD);
-        if (!setting.isPresent()) {
-            String password = getNewPassword();
-            savePassword(password);
-            return password;
-        } else {
-            String password = new String(
-                    Base64.getDecoder().decode(setting.get().getContent())
-            );
-            return password;
-        }
-    }
-
     private String getSocketPath() {
-        return folderFactory.getVpnConfigDir(SOCKET_FN);
+        return folderFactory.getVpnConfigDir(openVpnManagementSettings.getSocketFilename());
     }
 
     public void openSocket() throws OpenVpnManagementException {
@@ -112,7 +107,7 @@ public class OpenVpnManagement {
                             Channels.newInputStream(socketChannel))
             );
 
-            managementWriter.println(getPassword());
+            managementWriter.println(managementPassword);
 
             String line;
             do {
@@ -184,24 +179,16 @@ public class OpenVpnManagement {
     }
 
     public void saveSettings(String socket, String password) {
-        Optional<SettingsModel> setting;
-
         String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
 
-        setting = settingsRepository.findBySetting(SK_MANAGEMENT_SOCKET);
-        if (setting.isPresent()) {
-            setting.get().setContent(socket);
-            settingsRepository.save(setting.get());
-        } else {
-            settingsRepository.save(new SettingsModel(SK_MANAGEMENT_SOCKET, socket));
-        }
-
-        setting = settingsRepository.findBySetting(SK_MANAGEMENT_PASSWORD);
-        if (setting.isPresent()) {
-            setting.get().setContent(encodedPassword);
-            settingsRepository.save(setting.get());
-        } else {
-            settingsRepository.save(new SettingsModel(SK_MANAGEMENT_PASSWORD, encodedPassword));
+        OpenVpnManagementSettings openVpnManagementSettings
+                = settings.getSettings(OpenVpnManagementSettings.class);
+        openVpnManagementSettings.setSocketFilename(socket);
+        openVpnManagementSettings.setManagementPassword(encodedPassword);
+        try {
+            openVpnManagementSettings.save(settings);
+        } catch (SettingsException ex) {
+            logger.error("Cannot save settings: " + ex.getMessage());
         }
     }
 
@@ -217,33 +204,13 @@ public class OpenVpnManagement {
         return password;
     }
 
-    private void savePassword(String password) {
-        String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
-
-        Optional<SettingsModel> setting;
-        setting = settingsRepository.findBySetting(SK_MANAGEMENT_PASSWORD);
-        if (setting.isPresent()) {
-            setting.get().setContent(encodedPassword);
-            settingsRepository.save(setting.get());
-        } else {
-            settingsRepository.save(new SettingsModel(SK_MANAGEMENT_PASSWORD, encodedPassword));
-        }
-
-        try (FileWriter passwordFile = new FileWriter(folderFactory.getVpnConfigDir(PASSWORD_FN))) {
-            passwordFile.write(password + "\n");
-        } catch (IOException ex) {
-
-        }
-    }
-
-    public void generateNewPassword() {
-        savePassword(getNewPassword());
-    }
-
     public String getVpnConfigSetting() {
         return "management %s unix %s"
                 .formatted(
                         getSocketPath(),
-                        folderFactory.getVpnConfigDir(PASSWORD_FN));
+                        folderFactory.getVpnConfigDir(
+                                openVpnManagementSettings.getPasswordFilename()
+                        )
+                );
     }
 }
