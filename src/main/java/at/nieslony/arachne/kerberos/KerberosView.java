@@ -19,6 +19,7 @@ package at.nieslony.arachne.kerberos;
 import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -53,7 +54,13 @@ public class KerberosView extends VerticalLayout {
         Notification notification = new Notification();
         notification.setDuration(5000);
 
-        KerberosSettings kerberosSettings = new KerberosSettings(settings);
+        KerberosSettings kerberosSettings;
+        try {
+            kerberosSettings = settings.getSettings(KerberosSettings.class);
+        } catch (SettingsException ex) {
+            logger.error("Cannot load settings: " + ex.getMessage());
+            kerberosSettings = new KerberosSettings();
+        }
         Binder<KerberosSettings> binder = new Binder<>();
         binder.setBean(kerberosSettings);
 
@@ -118,8 +125,12 @@ public class KerberosView extends VerticalLayout {
         Button saveButton = new Button(
                 "Save and Restart Arachne",
                 e -> {
-                    binder.getBean().save(settings);
-                    Arachne.restart();
+                    try {
+                        binder.getBean().save(settings);
+                        Arachne.restart();
+                    } catch (SettingsException ex) {
+                        logger.error(ex.getMessage());
+                    }
                 }
         );
 

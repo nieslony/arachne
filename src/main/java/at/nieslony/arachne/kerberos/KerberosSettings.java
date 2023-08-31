@@ -16,8 +16,7 @@
  */
 package at.nieslony.arachne.kerberos;
 
-import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,29 +28,9 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class KerberosSettings {
-
-    private final static String SK_KERBEROS_ENABLE_AUTH = "kerberos.enable-auth";
-    private final static String SK_KERBEROS_KEYTAB_PATH = "kerberos.keytab-path";
-    private final static String SK_KERBEROS_SERVICE_PRINCIPAL = "kerberos,service-principal";
-
-    public KerberosSettings() {
-    }
-
-    public KerberosSettings(Settings settings) {
-        enableKrbAuth = settings.getBoolean(SK_KERBEROS_ENABLE_AUTH, false);
-        keytabPath = settings.get(SK_KERBEROS_KEYTAB_PATH,
-                FolderFactory.getInstance().getDefaultKeytabPath());
-        servicePrincipal = settings.get(SK_KERBEROS_SERVICE_PRINCIPAL, "");
-    }
+public class KerberosSettings extends AbstractSettingsGroup {
 
     private boolean enableKrbAuth;
     private String keytabPath;
     private String servicePrincipal;
-
-    public void save(Settings settings) {
-        settings.put(SK_KERBEROS_ENABLE_AUTH, enableKrbAuth);
-        settings.put(SK_KERBEROS_KEYTAB_PATH, keytabPath);
-        settings.put(SK_KERBEROS_SERVICE_PRINCIPAL, servicePrincipal);
-    }
 }
