@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.settings;
 
+import at.nieslony.arachne.utils.FolderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,6 +45,9 @@ public class Settings {
     @Autowired
     private ServerProperties serverProperties;
 
+    @Autowired
+    private FolderFactory folderFactory;
+
     private static Settings settings = null;
 
     public Settings() {
@@ -61,11 +65,26 @@ public class Settings {
         } catch (IllegalAccessException | IllegalArgumentException
                 | InstantiationException | InvocationTargetException
                 | NoSuchMethodException | SecurityException ex) {
-            logger.error(
-                    "Cannot instanciate %s: %s"
-                            .formatted(c.getName(), ex.getMessage()
-                            )
-            );
+            if (ex.getCause() != null) {
+                logger.error(
+                        "Cannot instanciate %s: exception=%s cause=%s msg=%s"
+                                .formatted(
+                                        c.getName(),
+                                        ex.getClass().getName(),
+                                        ex.getCause().getClass().getName(),
+                                        ex.getCause().getMessage()
+                                )
+                );
+            } else {
+                logger.error(
+                        "Cannot instanciate %s: %s %s"
+                                .formatted(
+                                        c.getName(),
+                                        ex.getClass().getName(),
+                                        ex.getMessage()
+                                )
+                );
+            }
             return null;
         }
         try {
