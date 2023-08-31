@@ -362,7 +362,7 @@ public class LdapView extends VerticalLayout {
                             return bindType.getValue() != LdapSettings.LdapBindType.KEYTAB
                             || (value != null && !value.isEmpty());
                         },
-                        "Valid range: 1...65535"
+                        "Cannot be empty"
                 )
                 .bind(LdapSettings::getKerberosBindPricipal, LdapSettings::setKerberosBindPricipal);
         Button readPrincipalsButton = new Button(
@@ -378,10 +378,13 @@ public class LdapView extends VerticalLayout {
                         }
                         binder.validate();
                     } catch (IOException | KeytabException ex) {
+                        String exMsg = ex.getCause() != null
+                        ? ex.getCause().getMessage()
+                        : ex.getMessage();
                         String msg = "Cannot read keytab %s: "
                                 .formatted(
                                         keytabPath.getValue(),
-                                        ex.getMessage()
+                                        exMsg
                                 );
                         logger.error(msg);
                         Notification.show(msg);
