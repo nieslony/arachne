@@ -23,6 +23,7 @@ import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.ANONYMOUS;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
@@ -89,7 +90,7 @@ public class LdapView extends VerticalLayout {
 
     public LdapView(Settings settings) {
         this.settings = settings;
-        this.ldapSettings = new LdapSettings(settings);
+        this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder();
 
         Checkbox enableLdapUserSource = new Checkbox("Enable LDAP user Source");
@@ -104,7 +105,13 @@ public class LdapView extends VerticalLayout {
 
         saveButton = new Button(
                 "Save",
-                e -> binder.getBean().save(settings)
+                e -> {
+                    try {
+                        binder.getBean().save(settings);
+                    } catch (SettingsException ex) {
+                        logger.error("Cannot save ldap settings: " + ex.getMessage());
+                    }
+                }
         );
 
         enableLdapUserSource.addValueChangeListener(e -> {
