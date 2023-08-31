@@ -69,6 +69,11 @@ public class OpenVpnManagement {
                             .getEncoder()
                             .encodeToString(managementPassword.getBytes());
             openVpnManagementSettings.setManagementPassword(encodedPassword);
+            try {
+                openVpnManagementSettings.save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save openvpn management Settings: " + ex.getMessage());
+            }
         }
     }
 
