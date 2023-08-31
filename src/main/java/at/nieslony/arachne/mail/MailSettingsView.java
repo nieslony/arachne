@@ -22,6 +22,7 @@ import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.Component;
@@ -90,7 +91,7 @@ public class MailSettingsView extends VerticalLayout {
     private final UserRepository userRepository;
     private final MailSettingsRestController mailSettingsRestController;
 
-    private final MailSettings mailSettings;
+    private MailSettings mailSettings = null;
     private final Dialog sendTestMailDialog;
     private final Dialog sendTestConfigDialog;
     private final Binder<MailSettings> binder;
@@ -108,13 +109,24 @@ public class MailSettingsView extends VerticalLayout {
         this.userRepository = userRepository;
         this.mailSettingsRestController = mailSettingsRestController;
 
-        mailSettings = new MailSettings(this.settings);
+        try {
+            mailSettings = settings.getSettings(MailSettings.class);
+        } catch (SettingsException ex) {
+            logger.error("Cannot load mail settings: " + ex.getMessage());
+            if (mailSettings == null) {
+                mailSettings = new MailSettings();
+            }
+        }
         binder = new Binder<>();
         sendTestMailDialog = createSendTestMailDialog();
         sendTestConfigDialog = createSendConfigDialog();
 
         Button saveButton = new Button("Save", (e) -> {
-            mailSettings.save(settings);
+            try {
+                mailSettings.save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save mail settings: " + ex.getMessage());
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -422,11 +434,11 @@ public class MailSettingsView extends VerticalLayout {
             switch (templateType.getValue()) {
                 case HTML ->
                     templateContentHtmlField.setValue(
-                            mailSettings.getDefaultTemplateConfigHtml(settings)
+                            mailSettings.getDefaultTemplateConfigHtml()
                     );
                 case PLAIN ->
                     templateContentPlainField.setValue(
-                            mailSettings.getDefaultTemplateConfigPlain(settings)
+                            mailSettings.getDefaultTemplateConfigPlain()
                     );
             }
         });
