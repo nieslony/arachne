@@ -13,6 +13,7 @@ import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
@@ -76,7 +77,7 @@ public class OpenVpnRestController {
     @GetMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings getUserSettings() {
-        return new OpenVpnUserSettings(settings);
+        return settings.getSettings(OpenVpnUserSettings.class);
     }
 
     static final String FN_OPENVPN_SERVER_CONF = "openvpn-user-server.conf";
@@ -107,7 +108,7 @@ public class OpenVpnRestController {
     @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings postUserSettings(
             @RequestBody OpenVpnUserSettings vpnSettings
-    ) {
+    ) throws SettingsException {
         logger.info("Set new openVPN user server config: " + settings.toString());
         vpnSettings.save(settings);
         writeOpenVpnUserServerConfig(vpnSettings);
@@ -274,7 +275,7 @@ public class OpenVpnRestController {
     }
 
     public String openVpnUserConfig(String username) throws PkiException {
-        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
@@ -301,7 +302,7 @@ public class OpenVpnRestController {
     }
 
     public String openVpnUserConfigShell(String username) throws PkiException {
-        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
@@ -378,7 +379,7 @@ public class OpenVpnRestController {
     }
 
     String openVpnUserConfigJson(String username) throws PkiException {
-        OpenVpnUserSettings vpnSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
