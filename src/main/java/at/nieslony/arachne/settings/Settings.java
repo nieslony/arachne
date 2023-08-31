@@ -16,11 +16,14 @@
  */
 package at.nieslony.arachne.settings;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,110 +33,63 @@ import org.springframework.stereotype.Component;
 @Component
 public class Settings {
 
-    private static Settings settings;
-
     @Autowired
-    SettingsRepository settingsRepository;
+    private SettingsRepository settingsRepository;
 
-    @Autowired
-    private ServerProperties serverProperties;
-
-    public Settings() {
-        settings = this;
+    public <T extends AbstractSettingsGroup> T getSettings(Class<T> c)
+            throws SettingsException {
+        try {
+            T obj = c.getDeclaredConstructor().newInstance();
+            obj.load(this);
+            return obj;
+        } catch (IllegalAccessException | IllegalArgumentException
+                | InstantiationException | InvocationTargetException
+                | NoSuchMethodException | SecurityException
+                | SettingsException ex) {
+            throw new SettingsException(
+                    "Cannot create settings class %s".formatted(c.getName()),
+                    ex);
+        }
     }
 
-    public static Settings getInstance() {
-        return settings;
+    private static <T> byte[] makeBytes(T value) throws SettingsException {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(value);
+            return baos.toByteArray();
+        } catch (IOException ex) {
+            throw new SettingsException("Cannot serialize value:" + ex.getMessage());
+        }
     }
 
-    public String get(String setting, String defaultValue) {
+    private static Object fromBytes(byte[] s) throws SettingsException {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(s);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            return ois.readObject();
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new SettingsException("Cannot deserialize value", ex);
+        }
+    }
+
+    public <T extends Object> T get(String setting, Class<? extends Object> c)
+            throws SettingsException {
+        Optional<SettingsModel> value = settingsRepository.findBySetting(setting);
+        if (value.isEmpty()) {
+            return null;
+        }
+        return (T) fromBytes(value.get().getContent());
+    }
+
+    public <T> void put(String setting, T value) throws SettingsException {
+        byte[] bytes = makeBytes(value);
         Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
+
         if (settingsModel.isPresent()) {
-            return settingsModel.get().getContent();
+            settingsRepository.save(settingsModel.get().setContent(bytes));
         } else {
-            return defaultValue;
+            settingsRepository.save(new SettingsModel(setting, bytes));
         }
-    }
-
-    public int getInt(String setting, int defaultValue) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-        if (settingsModel.isPresent()) {
-            return Integer.parseInt(settingsModel.get().getContent());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    public boolean getBoolean(String setting, boolean defaultValue) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-        if (settingsModel.isPresent()) {
-            return Boolean.parseBoolean(settingsModel.get().getContent());
-        } else {
-            return defaultValue;
-        }
-    }
-
-    public List<String> getList(String setting, List<String> defaultValue) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-        if (settingsModel.isPresent()) {
-            return SettingsModel.splitString(settingsModel.get().getContent());
-        } else {
-            if (defaultValue != null) {
-                return defaultValue;
-            }
-            return new LinkedList<>();
-        }
-    }
-
-    public <E extends Enum<E>> E getEnum(String setting, E defaultValue) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-        if (settingsModel.isPresent()) {
-            String s = settingsModel.get().getContent();
-            E e = (E) E.valueOf(defaultValue.getClass(), s);
-            return e;
-        } else {
-            if (defaultValue != null) {
-                return defaultValue;
-            }
-            return defaultValue;
-        }
-    }
-
-    public void put(String setting, String content) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-
-        if (settingsModel.isPresent()) {
-            settingsRepository.save(settingsModel.get().setContent(content));
-        } else {
-            settingsRepository.save(new SettingsModel(setting, content));
-        }
-    }
-
-    public void put(String setting, int content) {
-        put(setting, String.valueOf(content));
-    }
-
-    public void put(String setting, List<String> content) {
-        put(setting, SettingsModel.joinList(content));
-    }
-
-    public void put(String setting, boolean content) {
-        put(setting, String.valueOf(content));
-    }
-
-    public <E extends Enum<E>> void put(String setting, E content) {
-        put(setting, content.name());
-    }
-
-    public void delete(String setting) {
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
-
-        if (settingsModel.isPresent()) {
-            settingsRepository.delete(settingsModel.get());
-        }
-    }
-
-    public ServerProperties getServerProperties() {
-        return serverProperties;
     }
 }
