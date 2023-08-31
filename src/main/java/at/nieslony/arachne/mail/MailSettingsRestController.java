@@ -74,7 +74,7 @@ public class MailSettingsRestController {
             ArachneUser forUser,
             String to,
             String subject
-    ) throws IOException, MessagingException, PkiException {
+    ) throws IOException, MessagingException, PkiException, SettingsException {
         JavaMailSender mailSender = mailSettings.getMailSender();
         MimeMessage message = mailSender.createMimeMessage();
         String from = mailSettings.getPrettySenderMailAddress();

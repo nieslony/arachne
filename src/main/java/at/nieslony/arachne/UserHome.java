@@ -8,6 +8,7 @@ import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -149,7 +150,7 @@ public class UserHome extends VerticalLayout {
                         return openVpnRestController
                                 .openVpnUserConfig(username)
                                 .getBytes();
-                    } catch (PkiException ex) {
+                    } catch (PkiException | SettingsException ex) {
                         logger.error(
                                 "Cannot send openvpn config: " + ex.getMessage());
                         return "".getBytes();
@@ -190,7 +191,7 @@ public class UserHome extends VerticalLayout {
         AtomicReference<String> nmInstructions = new AtomicReference<>();
         try {
             nmInstructions.set(openVpnRestController.openVpnUserConfigShell(username));
-        } catch (PkiException ex) {
+        } catch (PkiException | SettingsException ex) {
             return new Text("");
         }
 

@@ -120,7 +120,7 @@ public class OpenVpnRestController {
     public String getUserVpnConfig(
             @PathVariable String username,
             @RequestParam(required = false, name = "format") String format
-    ) {
+    ) throws SettingsException {
         try {
             if (format == null) {
                 return openVpnUserConfig(username);
@@ -148,7 +148,7 @@ public class OpenVpnRestController {
     @RolesAllowed(value = {"USER"})
     public String getUserVpnConfig(
             @RequestParam(required = false, name = "format") String format
-    ) {
+    ) throws SettingsException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
@@ -271,10 +271,12 @@ public class OpenVpnRestController {
             );
         } catch (OpenVpnManagementException ex) {
             logger.error("Cannot restart openVPN: " + ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("Hmmm. something went wrong: " + ex.getMessage());
         }
     }
 
-    public String openVpnUserConfig(String username) throws PkiException {
+    public String openVpnUserConfig(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);
@@ -301,7 +303,7 @@ public class OpenVpnRestController {
         return sw.toString();
     }
 
-    public String openVpnUserConfigShell(String username) throws PkiException {
+    public String openVpnUserConfigShell(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
@@ -378,7 +380,7 @@ public class OpenVpnRestController {
         return configWriter.toString();
     }
 
-    String openVpnUserConfigJson(String username) throws PkiException {
+    String openVpnUserConfigJson(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);

@@ -197,7 +197,7 @@ public class UsersView extends VerticalLayout {
                             String config = openVpnRestController
                                     .openVpnUserConfig(user.getUsername());
                             return config.getBytes();
-                        } catch (PkiException ex) {
+                        } catch (PkiException | SettingsException ex) {
                             logger.error(
                                     "Cannot send openvpn config: " + ex.getMessage());
                             return "".getBytes();
@@ -484,7 +484,7 @@ public class UsersView extends VerticalLayout {
                         subject
                 );
                 Notification.show("Config sent to " + mailAddr);
-            } catch (IOException | MessagingException | PkiException ex) {
+            } catch (IOException | MessagingException | PkiException | SettingsException ex) {
                 String msg = "Error sending e-mail to %s: %s"
                         .formatted(user.getEmail(), ex.getMessage());
                 logger.error(msg);

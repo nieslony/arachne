@@ -17,6 +17,6 @@ import lombok.Setter;
 public class OpenVpnManagementSettings extends AbstractSettingsGroup {
 
     private String socketFilename = "arachne-management.socket";
-    private String managementPassword = "management.pwd";
     private String passwordFilename = "arachne-management.pwd";
+    private String managementPassword = "management.pwd";
 }

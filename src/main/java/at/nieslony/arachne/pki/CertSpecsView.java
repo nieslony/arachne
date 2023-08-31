@@ -18,6 +18,7 @@ package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -36,6 +37,8 @@ import java.io.StringWriter;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -46,6 +49,8 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 public class CertSpecsView
         extends VerticalLayout
         implements HasUrlParameter<String>, HasDynamicTitle {
+
+    private static final Logger logger = LoggerFactory.getLogger(CertSpecsView.class);
 
     private CertSpecs.CertSpecType certSpecType;
     private final Settings settings;
@@ -136,7 +141,11 @@ public class CertSpecsView
         Button saveButton = new Button("Save", (e) -> {
             CertSpecs certSpecs = binder.getBean();
             if (certSpecs != null) {
-                certSpecs.save(settings);
+                try {
+                    certSpecs.save(settings);
+                } catch (SettingsException ex) {
+                    logger.error("Cannot save settings: " + ex.getMessage());
+                }
             }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -165,8 +174,12 @@ public class CertSpecsView
 
         commonNameField.setEnabled(certSpecType != CertSpecs.CertSpecType.USER_SPEC);
 
-        CertSpecs certSpecs = new CertSpecs(settings, certSpecType);
-        binder.setBean(certSpecs);
+        try {
+            CertSpecs certSpecs = new CertSpecs(settings, certSpecType);
+            binder.setBean(certSpecs);
+        } catch (SettingsException ex) {
+            logger.error("Cannot create cert specs: " + ex.getMessage());
+        }
     }
 
     @Override

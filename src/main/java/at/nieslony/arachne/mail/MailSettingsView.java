@@ -471,7 +471,7 @@ public class MailSettingsView extends VerticalLayout {
                     to,
                     "Arachne Test Mail with Configuration"
             );
-        } catch (IOException | MessagingException | PkiException ex) {
+        } catch (IOException | MessagingException | PkiException | SettingsException ex) {
             String msg = "Cannot send Test Mail: " + ex.getMessage();
             logger.error(msg);
             Notification notification = Notification.show(msg);

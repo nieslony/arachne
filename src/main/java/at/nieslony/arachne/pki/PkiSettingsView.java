@@ -19,6 +19,7 @@ package at.nieslony.arachne.pki;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -34,6 +35,8 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -44,6 +47,8 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class PkiSettingsView extends VerticalLayout {
 
+    private static final Logger logger = LoggerFactory.getLogger(PkiSettingsView.class);
+
     private Binder<PkiSettings> binder;
     private Dialog writeDhParamsDialog;
 
@@ -51,7 +56,7 @@ public class PkiSettingsView extends VerticalLayout {
             Settings settings,
             OpenVpnRestController openVpnRestController
     ) {
-        PkiSettings pkiSettings = new PkiSettings(settings);
+        PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
         binder = new Binder<>();
         writeDhParamsDialog = createWriteDhParamsDialog();
 
@@ -106,7 +111,11 @@ public class PkiSettingsView extends VerticalLayout {
         crlLayout.setAlignItems(Alignment.BASELINE);
 
         Button saveButton = new Button("Save", (e) -> {
-            binder.getBean().save(settings);
+            try {
+                binder.getBean().save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save pki settings: " + ex.getMessage());
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
