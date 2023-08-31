@@ -31,6 +31,9 @@ import lombok.ToString;
 @ToString
 public class KerberosSettings extends AbstractSettingsGroup {
 
+    public KerberosSettings() {
+    }
+
     private boolean enableKrbAuth = false;
     private String keytabPath = FolderFactory.getInstance().getDefaultKeytabPath();
     private String servicePrincipal = "";
