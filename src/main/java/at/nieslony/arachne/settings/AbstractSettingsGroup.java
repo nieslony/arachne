@@ -13,9 +13,6 @@ import java.util.regex.Pattern;
  */
 abstract public class AbstractSettingsGroup {
 
-    protected AbstractSettingsGroup() {
-    }
-
     public void load(Settings settings) throws SettingsException {
         for (Field field : getClass().getDeclaredFields()) {
             field.setAccessible(true);
