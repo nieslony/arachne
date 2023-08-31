@@ -18,6 +18,7 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -133,7 +134,14 @@ public class FirewallRestController {
         }
         firewallEveryBodyRules.setRichRules(richRules);
 
-        FirewallBasicsSettings firewallBasicsSettings = new FirewallBasicsSettings(settings);
+        FirewallBasicsSettings firewallBasicsSettings;
+        try {
+            firewallBasicsSettings = settings.getSettings(FirewallBasicsSettings.class);
+        } catch (SettingsException ex) {
+            logger.error("Cannot load ");
+            firewallBasicsSettings = new FirewallBasicsSettings();
+        }
+
         firewallEveryBodyRules.setIcmpRules(firewallBasicsSettings.getIcmpRules());
 
         return firewallEveryBodyRules;
