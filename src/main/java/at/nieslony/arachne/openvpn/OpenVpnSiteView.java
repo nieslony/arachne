@@ -16,6 +16,8 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -29,6 +31,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -51,6 +54,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         TabSheet tabs = new TabSheet();
         tabs.add("Basics", createBasicsPage());
         tabs.add("Clients", createClientsPage());
+        tabs.setWidthFull();
 
         Button saveButton = new Button("Save");
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -219,24 +223,113 @@ public class OpenVpnSiteView extends VerticalLayout {
         Select<OpenVpnSiteSettings.VpnSite> sites = new Select<>();
         sites.setLabel("Sites");
         sites.setWidthFull();
+        sites.setItems(openVpnSiteSettings.getVpnSites());
 
-        Button renameButton = new Button("Rename...");
+        Button renameButton = new Button(
+                "Rename...",
+                (e) -> {
+                    setNameDescDialog(
+                            sites.getValue(),
+                            (site) -> {
+                                sites.setItems(openVpnSiteSettings.getVpnSites());
+                                sites.setValue(site);
+                            }
+                    );
+                }
+        );
 
-        Button deleteButton = new Button("Delete");
+        Button deleteButton = new Button("Delete", (e) -> {
+            ConfirmDialog dlg = new ConfirmDialog();
+            String conName = sites.getValue().getName();
+            dlg.setHeader("Delete VPN Site \"%s\"".formatted(conName));
+            dlg.setText("""
+                        Really delete VPN site \"%s\"?
+                        This action cannot be undone."""
+                    .formatted(conName));
+            dlg.setCancelable(true);
+            dlg.addConfirmListener((ce) -> {
+            });
+            dlg.open();
+        });
 
-        Button addButton = new Button("Add...");
+        Button addButton = new Button("Add...", (e) -> {
+            setNameDescDialog(null, (site) -> {
+            });
+        });
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(
+        HorizontalLayout sitesLayout = new HorizontalLayout(
+                sites,
                 renameButton,
                 deleteButton,
                 addButton
         );
+        sitesLayout.setFlexGrow(1, sites);
+        sitesLayout.setAlignItems(Alignment.BASELINE);
+        sitesLayout.setWidthFull();
+
+        TabSheet siteSettingsTab = new TabSheet();
+        siteSettingsTab.add("DNS", new VerticalLayout());
+        siteSettingsTab.add("Routes", new VerticalLayout());
 
         layout.add(
-                sites,
-                buttonLayout
+                sitesLayout,
+                siteSettingsTab
         );
+        layout.setMargin(false);
+        layout.setPadding(false);
 
+        sites.setValue(openVpnSiteSettings.getVpnSites().get(0));
         return layout;
+    }
+
+    private void setNameDescDialog(
+            OpenVpnSiteSettings.VpnSite site,
+            Consumer<OpenVpnSiteSettings.VpnSite> onOk
+    ) {
+        Dialog dlg = new Dialog();
+        if (site == null) {
+            dlg.setHeaderTitle("Add VPN Site");
+        } else {
+            dlg.setHeaderTitle("Rename VPN Site");
+        }
+
+        TextField nameField = new TextField("Connection Name");
+        nameField.setRequired(true);
+        nameField.setValue(site != null ? site.getName() : "New Site");
+
+        TextField descriptionField = new TextField("Description");
+        descriptionField.setValue(site != null ? site.getDescription() : "");
+
+        VerticalLayout layout = new VerticalLayout(
+                nameField,
+                descriptionField
+        );
+        layout.setMargin(false);
+        layout.setPadding(false);
+
+        dlg.add(layout);
+
+        Button okButton = new Button("OK", (e) -> {
+            dlg.close();
+            if (site == null) {
+                onOk.accept(OpenVpnSiteSettings.VpnSite.builder()
+                        .name(nameField.getValue())
+                        .description(descriptionField.getValue())
+                        .build()
+                );
+            } else {
+                site.setName(nameField.getValue());
+                site.setDescription(descriptionField.getValue());
+                onOk.accept(site);
+            }
+        });
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", (e) -> {
+            dlg.close();
+        });
+
+        dlg.getFooter().add(cancelButton, okButton);
+        dlg.open();
     }
 }

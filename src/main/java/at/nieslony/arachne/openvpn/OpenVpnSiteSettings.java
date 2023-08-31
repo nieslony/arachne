@@ -8,7 +8,9 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -24,22 +26,45 @@ public class OpenVpnSiteSettings {
 
     @Getter
     @Setter
-    public class VpnSite {
+    @Builder
+    static public class VpnSite {
+
+        private final String SK_OPENVPN_SITE = "openvpn.site";
+        private final String SK_NAME = "name";
 
         private int id;
         private String name;
+        private String description;
         private String remoteIp;
         private String sshUser;
         private String sshPrivateKey;
         private String preSharedkey;
 
-        private VpnSite(int id) {
-            this.id = id;
+        public void save(Settings settings) {
+            settings.put(makeSettingsKey("name"), name);
+            settings.put(makeSettingsKey("description"), description);
+        }
+
+        private String makeSettingsKey(String setting) {
+            return "%s.%d.%s".formatted(
+                    SK_OPENVPN_SITE,
+                    id,
+                    setting
+            );
+        }
+
+        public static VpnSite createDefaultSite() {
+            return VpnSite.builder()
+                    .name("Default")
+                    .description("Default configuration for all sites")
+                    .build();
         }
 
         @Override
         public String toString() {
-            return name;
+            return description == null || description.isEmpty()
+                    ? name
+                    : name + " - " + description;
         }
     }
 
@@ -68,6 +93,7 @@ public class OpenVpnSiteSettings {
     private static final String SK_OPENVPN_SITE_CLIENT_MASK = "openvpn.site.clientMask";
     private static final String SK_OPENVPN_SITE_KEEPALIVE_INTERVAL = "openvpn.site.keepaliveInterval";
     private static final String SK_OPENVPN_SITE_KEEPALIVE_TIMEOUT = "openvpn.site.keepaliveTimeout";
+    private static final String SK_OPENVPN_SITE_SITES = "openvpn.site.sites";
 
     public OpenVpnSiteSettings() {
     }
@@ -84,6 +110,12 @@ public class OpenVpnSiteSettings {
         clientMask = settings.getInt(SK_OPENVPN_SITE_CLIENT_MASK, 24);
         keepaliveInterval = settings.getInt(SK_OPENVPN_SITE_KEEPALIVE_INTERVAL, 10);
         keepaliveTimeout = settings.getInt(SK_OPENVPN_SITE_KEEPALIVE_TIMEOUT, 60);
+
+        vpnSites = new LinkedList<>();
+        List<String> siteNrs = settings.getList(SK_OPENVPN_SITE_SITES, new LinkedList<>());
+        if (siteNrs.isEmpty()) {
+            vpnSites.add(VpnSite.createDefaultSite());
+        }
     }
 
     public void save(Settings settings) {
@@ -108,7 +140,6 @@ public class OpenVpnSiteSettings {
                         .max(Comparator.comparing(VpnSite::getId))
                         .get()
                         .getId();
-        VpnSite vpnSite = new VpnSite(maxId + 1);
-        return vpnSite;
+        return null;
     }
 }
