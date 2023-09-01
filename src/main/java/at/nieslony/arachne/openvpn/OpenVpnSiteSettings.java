@@ -93,6 +93,7 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         return sites.values();
     }
 
+    @Override
     public void load(Settings settings) throws SettingsException {
         super.load(settings);
         if (vpnSiteIds == null || vpnSiteIds.isEmpty()) {
@@ -102,6 +103,14 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
                 VpnSite site = new VpnSite(settings, id);
                 sites.put(id, site);
             }
+        }
+    }
+
+    @Override
+    public void save(Settings settings) throws SettingsException {
+        super.save(settings);
+        for (VpnSite site : sites.values()) {
+            site.save(settings);
         }
     }
 

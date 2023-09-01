@@ -6,6 +6,7 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
@@ -34,6 +35,8 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -43,6 +46,8 @@ import java.util.stream.IntStream;
 @PageTitle("OpenVPN Site 2 Site | Arachne")
 @RolesAllowed("ADMIN")
 public class OpenVpnSiteView extends VerticalLayout {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
 
     private final Binder<OpenVpnSiteSettings> binder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
@@ -59,7 +64,13 @@ public class OpenVpnSiteView extends VerticalLayout {
         tabs.add("Clients", createClientsPage());
         tabs.setWidthFull();
 
-        Button saveButton = new Button("Save");
+        Button saveButton = new Button("Save", (t) -> {
+            try {
+                openVpnSiteSettings.save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+            }
+        });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(tabs, saveButton);
