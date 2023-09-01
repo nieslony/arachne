@@ -2,7 +2,9 @@ package at.nieslony.arachne.settings;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -14,13 +16,22 @@ import java.util.regex.Pattern;
  */
 abstract public class AbstractSettingsGroup {
 
+    protected List<Field> getSettingFields() {
+        return Stream.of(getClass().getDeclaredFields())
+                .map((field) -> {
+                    field.setAccessible(true);
+                    return field;
+                })
+                .filter((field) -> {
+                    int modifiers = field.getModifiers();
+                    return !Modifier.isStatic(modifiers)
+                            && !Modifier.isFinal(modifiers);
+                })
+                .toList();
+    }
+
     public void load(Settings settings) throws SettingsException {
-        for (Field field : getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            int modifiers = field.getModifiers();
-            if (Modifier.isStatic(modifiers) | Modifier.isFinal(modifiers)) {
-                continue;
-            }
+        for (Field field : getSettingFields()) {
             String n = groupName() + "." + makeKey(field.getName());
             var v = settings.get(n, field.getType());
             if (v != null) {
@@ -37,12 +48,7 @@ abstract public class AbstractSettingsGroup {
     }
 
     public void save(Settings settings) throws SettingsException {
-        for (Field field : getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            int modifiers = field.getModifiers();
-            if (Modifier.isStatic(modifiers) | Modifier.isFinal(modifiers)) {
-                continue;
-            }
+        for (Field field : getSettingFields()) {
             Class c = field.getType();
             String n = groupName() + "." + makeKey(field.getName());
             try {
