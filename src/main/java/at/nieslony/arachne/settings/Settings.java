@@ -139,6 +139,10 @@ public class Settings {
         }
     }
 
+    public void delete(String setting) {
+        settingsRepository.deleteBySetting(setting);
+    }
+
     public ServerProperties getServerProperties() {
         return serverProperties;
     }

@@ -63,6 +63,13 @@ abstract public class AbstractSettingsGroup {
         }
     }
 
+    public void delete(Settings settings) {
+        for (Field field : getSettingFields()) {
+            String n = groupName() + "." + makeKey(field.getName());
+            settings.delete(n);
+        }
+    }
+
     private String makeKey(String s) {
         return Pattern
                 .compile("([A-Z])")
