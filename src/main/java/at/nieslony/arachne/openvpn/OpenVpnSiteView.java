@@ -46,8 +46,11 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private final Binder<OpenVpnSiteSettings> binder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
+    private final Settings settings;
 
     public OpenVpnSiteView(Settings settings) {
+        this.settings = settings;
+
         binder = new Binder<>(OpenVpnSiteSettings.class);
         openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
@@ -248,6 +251,10 @@ public class OpenVpnSiteView extends VerticalLayout {
                     .formatted(conName));
             dlg.setCancelable(true);
             dlg.addConfirmListener((ce) -> {
+                OpenVpnSiteSettings.VpnSite site = sites.getValue();
+                openVpnSiteSettings.deleteSite(settings, site.getId());
+                sites.setItems(openVpnSiteSettings.getVpnSites());
+                sites.setValue(openVpnSiteSettings.getVpnSite(0));
             });
             dlg.open();
         });

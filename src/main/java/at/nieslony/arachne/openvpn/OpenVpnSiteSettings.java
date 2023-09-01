@@ -113,4 +113,11 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         sites.put(id, site);
         return site;
     }
+
+    public void deleteSite(Settings settings, int id) {
+        logger.info("Removing site %d" + id);
+        VpnSite site = sites.remove(id);
+        site.delete(settings);
+        vpnSiteIds.remove(id);
+    }
 }
