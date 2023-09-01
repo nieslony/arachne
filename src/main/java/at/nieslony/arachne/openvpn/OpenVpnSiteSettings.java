@@ -4,16 +4,21 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
-import java.util.Comparator;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import lombok.Builder;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -22,15 +27,13 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class OpenVpnSiteSettings {
+public class OpenVpnSiteSettings extends AbstractSettingsGroup {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteSettings.class);
 
     @Getter
     @Setter
-    @Builder
-    static public class VpnSite {
-
-        private final String SK_OPENVPN_SITE = "openvpn.site";
-        private final String SK_NAME = "name";
+    static public class VpnSite extends AbstractSettingsGroup {
 
         private int id;
         private String name;
@@ -40,24 +43,20 @@ public class OpenVpnSiteSettings {
         private String sshPrivateKey;
         private String preSharedkey;
 
-        public void save(Settings settings) {
-            settings.put(makeSettingsKey("name"), name);
-            settings.put(makeSettingsKey("description"), description);
+        VpnSite(String name, String description, int id) {
+            this.id = id;
+            this.name = name;
+            this.description = description;
         }
 
-        private String makeSettingsKey(String setting) {
-            return "%s.%d.%s".formatted(
-                    SK_OPENVPN_SITE,
-                    id,
-                    setting
-            );
+        public VpnSite(Settings settings, int id) throws SettingsException {
+            this.id = id;
+            load(settings);
         }
 
-        public static VpnSite createDefaultSite() {
-            return VpnSite.builder()
-                    .name("Default")
-                    .description("Default configuration for all sites")
-                    .build();
+        @Override
+        protected String groupName() {
+            return "%s.%d".formatted(super.groupName(), id);
         }
 
         @Override
@@ -68,78 +67,50 @@ public class OpenVpnSiteSettings {
         }
     }
 
-    private String listenIp;
-    private int listenPort;
-    private TransportProtocol listenProtocol;
-    private Boolean mtuTest;
-    private String remote;
-    private String deviceType;
-    private String deviceName;
-    private String clientNetwork;
-    private Integer clientMask;
-    private Integer keepaliveTimeout;
-    private Integer keepaliveInterval;
+    private String listenIp = "0.0.0.0";
+    private int listenPort = 1194;
+    private TransportProtocol listenProtocol = TransportProtocol.UDP;
+    private Boolean mtuTest = true;
+    private String remote = NetUtils.myHostname();
+    private String deviceType = "tun";
+    private String deviceName = "arachne-site";
+    private String clientNetwork = "192.168.101.0";
+    private Integer clientMask = 24;
+    private Integer keepaliveTimeout = 10;
+    private Integer keepaliveInterval = 60;
+    private List<Integer> vpnSiteIds = new LinkedList<>();
 
-    private List<VpnSite> vpnSites;
-
-    private static final String SK_OPENVPN_SITE_LISTEN_IP = "openvpn.site.listen-ip";
-    private static final String SK_OPENVPN_SITE_LISTEN_PORT = "openvpn.site.listen-port";
-    private static final String SK_OPENVPN_SITE_LISTEN_PROTOCOL = "openvpn.site.listen-protocol";
-    private static final String SK_OPENVPN_SITE_MTU_TEST = "openvpn.site.mtu-test";
-    private static final String SK_OPENVPN_SITE_REMOTE = "openvpn.site.remote";
-    private static final String SK_OPENVPN_SITE_DEVICE_TYPE = "openvpn.site.deviceType";
-    private static final String SK_OPENVPN_SITE_DEVICE_NAME = "openvpn.site.deviceName";
-    private static final String SK_OPENVPN_SITE_CLIENT_NETWORK = "openvpn.site.clientNetwork";
-    private static final String SK_OPENVPN_SITE_CLIENT_MASK = "openvpn.site.clientMask";
-    private static final String SK_OPENVPN_SITE_KEEPALIVE_INTERVAL = "openvpn.site.keepaliveInterval";
-    private static final String SK_OPENVPN_SITE_KEEPALIVE_TIMEOUT = "openvpn.site.keepaliveTimeout";
-    private static final String SK_OPENVPN_SITE_SITES = "openvpn.site.sites";
+    private final Map<Integer, VpnSite> sites = new HashMap<>();
 
     public OpenVpnSiteSettings() {
     }
 
-    public OpenVpnSiteSettings(Settings settings) {
-        listenIp = settings.get(SK_OPENVPN_SITE_LISTEN_IP, "0.0.0.0");
-        listenPort = settings.getInt(SK_OPENVPN_SITE_LISTEN_PORT, 1194);
-        listenProtocol = settings.getEnum(SK_OPENVPN_SITE_LISTEN_PROTOCOL, TransportProtocol.UDP);
-        mtuTest = settings.getBoolean(SK_OPENVPN_SITE_MTU_TEST, true);
-        remote = settings.get(SK_OPENVPN_SITE_REMOTE, NetUtils.myHostname());
-        deviceType = settings.get(SK_OPENVPN_SITE_DEVICE_TYPE, "tun");
-        deviceName = settings.get(SK_OPENVPN_SITE_DEVICE_NAME, "arachne-site");
-        clientNetwork = settings.get(SK_OPENVPN_SITE_CLIENT_NETWORK, "192.168.100.0");
-        clientMask = settings.getInt(SK_OPENVPN_SITE_CLIENT_MASK, 24);
-        keepaliveInterval = settings.getInt(SK_OPENVPN_SITE_KEEPALIVE_INTERVAL, 10);
-        keepaliveTimeout = settings.getInt(SK_OPENVPN_SITE_KEEPALIVE_TIMEOUT, 60);
+    public VpnSite getVpnSite(int id) {
+        return sites.get(id);
+    }
 
-        vpnSites = new LinkedList<>();
-        List<String> siteNrs = settings.getList(SK_OPENVPN_SITE_SITES, new LinkedList<>());
-        if (siteNrs.isEmpty()) {
-            vpnSites.add(VpnSite.createDefaultSite());
+    public Collection<VpnSite> getVpnSites() {
+        return sites.values();
+    }
+
+    public void load(Settings settings) throws SettingsException {
+        super.load(settings);
+        if (vpnSiteIds == null || vpnSiteIds.isEmpty()) {
+            addSite("Default", "Default Settings for all Sites");
+        } else {
+            for (int id : vpnSiteIds) {
+                VpnSite site = new VpnSite(settings, id);
+                sites.put(id, site);
+            }
         }
     }
 
-    public void save(Settings settings) {
-        settings.put(SK_OPENVPN_SITE_LISTEN_IP, listenIp);
-        settings.put(SK_OPENVPN_SITE_LISTEN_PORT, listenPort);
-        settings.put(SK_OPENVPN_SITE_LISTEN_PROTOCOL, listenProtocol);
-        settings.put(SK_OPENVPN_SITE_MTU_TEST, mtuTest);
-        settings.put(SK_OPENVPN_SITE_REMOTE, remote);
-        settings.put(SK_OPENVPN_SITE_DEVICE_TYPE, deviceType);
-        settings.put(SK_OPENVPN_SITE_DEVICE_NAME, deviceName);
-        settings.put(SK_OPENVPN_SITE_CLIENT_NETWORK, clientNetwork);
-        settings.put(SK_OPENVPN_SITE_CLIENT_MASK, clientMask);
-        settings.put(SK_OPENVPN_SITE_KEEPALIVE_INTERVAL, keepaliveInterval);
-        settings.put(SK_OPENVPN_SITE_KEEPALIVE_TIMEOUT, keepaliveTimeout);
-    }
-
-    public VpnSite addVpnSite() {
-        int maxId = vpnSites.isEmpty()
-                ? 0
-                : vpnSites
-                        .stream()
-                        .max(Comparator.comparing(VpnSite::getId))
-                        .get()
-                        .getId();
-        return null;
+    public VpnSite addSite(String name, String description) {
+        logger.info("Adding site " + name);
+        int id = vpnSiteIds.stream().max(Integer::compare).orElse(-1) + 1;
+        VpnSite site = new VpnSite(name, description, id);
+        vpnSiteIds.add(id);
+        sites.put(id, site);
+        return site;
     }
 }

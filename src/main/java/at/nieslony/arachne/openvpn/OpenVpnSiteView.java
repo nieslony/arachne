@@ -49,7 +49,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     public OpenVpnSiteView(Settings settings) {
         binder = new Binder<>(OpenVpnSiteSettings.class);
-        openVpnSiteSettings = new OpenVpnSiteSettings(settings);
+        openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         TabSheet tabs = new TabSheet();
         tabs.add("Basics", createBasicsPage());
@@ -254,6 +254,8 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         Button addButton = new Button("Add...", (e) -> {
             setNameDescDialog(null, (site) -> {
+                sites.setItems(openVpnSiteSettings.getVpnSites());
+                sites.setValue(site);
             });
         });
 
@@ -278,7 +280,13 @@ public class OpenVpnSiteView extends VerticalLayout {
         layout.setMargin(false);
         layout.setPadding(false);
 
-        sites.setValue(openVpnSiteSettings.getVpnSites().get(0));
+        sites.addValueChangeListener((e) -> {
+            deleteButton.setEnabled(
+                    e.getValue() != null && e.getValue().getId() != 0
+            );
+        });
+
+        sites.setValue(openVpnSiteSettings.getVpnSite(0));
         return layout;
     }
 
@@ -312,11 +320,10 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
             if (site == null) {
-                onOk.accept(OpenVpnSiteSettings.VpnSite.builder()
-                        .name(nameField.getValue())
-                        .description(descriptionField.getValue())
-                        .build()
-                );
+                onOk.accept(openVpnSiteSettings.addSite(
+                        nameField.getValue(),
+                        descriptionField.getValue()
+                ));
             } else {
                 site.setName(nameField.getValue());
                 site.setDescription(descriptionField.getValue());
