@@ -14,6 +14,7 @@ import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -81,7 +82,7 @@ public class UsersView extends VerticalLayout {
     final Grid.Column<ArachneUser> userSourceColumn;
 
     DataProvider<ArachneUser, Void> userDataProvider;
-    final UserSettings userSettings;
+    UserSettings userSettings;
 
     public UsersView(
             UserRepository userRepository,
@@ -94,7 +95,7 @@ public class UsersView extends VerticalLayout {
         this.userRepository = userRepository;
         this.roleRuleRepository = roleRuleRepository;
         this.settings = settings;
-        this.userSettings = new UserSettings(settings);
+        this.userSettings = settings.getSettings(UserSettings.class);
         this.openVpnRestController = openVpnRestController;
         this.mailSettingsRestController = mailSettingsRestController;
 
@@ -187,7 +188,8 @@ public class UsersView extends VerticalLayout {
             userMenu.addItem("Delete...", event -> deleteUser(user));
         }
         if (user.getRoles().contains("USER")) {
-            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+            OpenVpnUserSettings openVpnUserSettings
+                    = settings.getSettings(OpenVpnUserSettings.class);
             FileDownloadWrapper link = new FileDownloadWrapper(
                     openVpnUserSettings.getClientConfigName(),
                     () -> {
@@ -195,7 +197,7 @@ public class UsersView extends VerticalLayout {
                             String config = openVpnRestController
                                     .openVpnUserConfig(user.getUsername());
                             return config.getBytes();
-                        } catch (PkiException ex) {
+                        } catch (PkiException | SettingsException ex) {
                             logger.error(
                                     "Cannot send openvpn config: " + ex.getMessage());
                             return "".getBytes();
@@ -436,7 +438,11 @@ public class UsersView extends VerticalLayout {
 
         Button okButton = new Button("OK", (e) -> {
             userSettings.setExpirationTimeout(expirationTimeoutField.getValue());
-            userSettings.save(settings);
+            try {
+                userSettings.save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save user settings: " + ex.getMessage());
+            }
             dlg.close();
         });
         okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -452,7 +458,7 @@ public class UsersView extends VerticalLayout {
     }
 
     void sendVpnConfig(ArachneUser user) {
-        MailSettings mailSettings = new MailSettings(settings);
+        MailSettings mailSettings = settings.getSettings(MailSettings.class);
 
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Send %s' Config as E-Mail".formatted(user.getDisplayName()));
@@ -478,7 +484,7 @@ public class UsersView extends VerticalLayout {
                         subject
                 );
                 Notification.show("Config sent to " + mailAddr);
-            } catch (IOException | MessagingException | PkiException ex) {
+            } catch (IOException | MessagingException | PkiException | SettingsException ex) {
                 String msg = "Error sending e-mail to %s: %s"
                         .formatted(user.getEmail(), ex.getMessage());
                 logger.error(msg);

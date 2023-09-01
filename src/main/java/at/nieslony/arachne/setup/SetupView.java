@@ -5,6 +5,7 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.pki.CertSpecs;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -27,6 +28,8 @@ import java.io.StringWriter;
 import java.util.concurrent.atomic.AtomicReference;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -46,7 +49,7 @@ public class SetupView extends VerticalLayout {
     private TextField caSubject;
     private IntegerField caCertLifeTimeDays;
     private Select<String> caKeyAlgo;
-    private Select<String> caRsaKeySize;
+    private Select<Integer> caRsaKeySize;
     private Select<String> caSignatureAlgo;
 
     private TextField serverCommonName;
@@ -58,7 +61,7 @@ public class SetupView extends VerticalLayout {
     private TextField serverSubject;
     private IntegerField serverCertLifeTimeDays;
     private Select<String> serverKeyAlgo;
-    private Select<String> serverRsaKeySize;
+    private Select<Integer> serverRsaKeySize;
     private Select<String> serverSignatureAlgo;
     private Select<Integer> serverDhParamsLength;
 
@@ -230,7 +233,7 @@ public class SetupView extends VerticalLayout {
 
         caRsaKeySize = new Select<>();
         caRsaKeySize.setLabel("RSA Key Size");
-        caRsaKeySize.setItems("2048", "4096");
+        caRsaKeySize.setItems(2048, 4096);
 
         caSignatureAlgo = new Select<>();
         caSignatureAlgo.setLabel("Signature Algorithm");
@@ -238,8 +241,8 @@ public class SetupView extends VerticalLayout {
 
         caCommonName.setValue("Arachne CA");
         caCertLifeTimeDays.setValue(3650);
-        caKeyAlgo.setValue(("RSA"));
-        caRsaKeySize.setValue("2048");
+        caKeyAlgo.setValue("RSA");
+        caRsaKeySize.setValue(2048);
         caSignatureAlgo.setValue("SHA256withRSA");
 
         subjectLayout.add(
@@ -324,7 +327,7 @@ public class SetupView extends VerticalLayout {
 
         serverRsaKeySize = new Select<>();
         serverRsaKeySize.setLabel("RSA Key Size");
-        serverRsaKeySize.setItems("2048", "4096");
+        serverRsaKeySize.setItems(2048, 4096);
 
         serverSignatureAlgo = new Select<>();
         serverSignatureAlgo.setLabel("Signature Algorithm");
@@ -336,8 +339,8 @@ public class SetupView extends VerticalLayout {
 
         serverCommonName.setValue(NetUtils.myHostname());
         serverCertLifeTimeDays.setValue(365);
-        serverKeyAlgo.setValue(("RSA"));
-        serverRsaKeySize.setValue("2048");
+        serverKeyAlgo.setValue("RSA");
+        serverRsaKeySize.setValue(2048);
         serverSignatureAlgo.setValue("SHA256withRSA");
         serverDhParamsLength.setValue(2048);
 
@@ -433,22 +436,22 @@ public class SetupView extends VerticalLayout {
         finish.addClickListener((var t) -> {
             SetupData setupData = new SetupData();
 
-            CertSpecs caCertSpecs = new CertSpecs();
+            CertSpecs caCertSpecs = new CertSpecs(CertSpecs.CertSpecType.CA_SPEC);
             caCertSpecs.setSubject(caSubject.getValue());
             caCertSpecs.setKeyAlgo(caKeyAlgo.getValue());
-            caCertSpecs.setKeySize(Integer.parseInt(caRsaKeySize.getValue()));
+            caCertSpecs.setKeySize(caRsaKeySize.getValue());
             caCertSpecs.setCertLifeTimeDays(caCertLifeTimeDays.getValue());
             caCertSpecs.setSignatureAlgo(caSignatureAlgo.getValue());
 
-            CertSpecs serverCertSpecs = new CertSpecs();
+            CertSpecs serverCertSpecs = new CertSpecs(CertSpecs.CertSpecType.SERVER_SPEC);
             serverCertSpecs.setSubject(serverSubject.getValue());
             serverCertSpecs.setKeyAlgo(serverKeyAlgo.getValue());
-            serverCertSpecs.setKeySize(Integer.parseInt(serverRsaKeySize.getValue()));
+            serverCertSpecs.setKeySize(serverRsaKeySize.getValue());
             serverCertSpecs.setCertLifeTimeDays(serverCertLifeTimeDays.getValue());
             serverCertSpecs.setSignatureAlgo(serverSignatureAlgo.getValue());
             setupData.setDhParamsBits(serverDhParamsLength.getValue());
 
-            CertSpecs userCertSpecs = new CertSpecs();
+            CertSpecs userCertSpecs = new CertSpecs(CertSpecs.CertSpecType.USER_SPEC);
             userCertSpecs.setSubject("cn={username}");
             userCertSpecs.setKeyAlgo("RSA");
             userCertSpecs.setKeySize(2048);
@@ -463,9 +466,13 @@ public class SetupView extends VerticalLayout {
             setupData.setAdminPassword(adminPassword.getValue());
             setupData.setAdminEmail(adminEmail.getValue());
 
-            setupController.setupArachne(setupData);
+            try {
+                setupController.setupArachne(setupData);
+            } catch (SettingsException ex) {
+                logger.error("Cannot during setup: " + ex.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
             logger.info("Redirecting to /");
-            //getElement().removeFromTree();
             getUI().get().navigate("");
         });
 

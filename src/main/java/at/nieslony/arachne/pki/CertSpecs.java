@@ -4,7 +4,9 @@
  */
 package at.nieslony.arachne.pki;
 
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import java.security.InvalidParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -23,7 +25,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 @Getter
 @Setter
 @ToString
-public class CertSpecs {
+public class CertSpecs extends AbstractSettingsGroup {
 
     public enum CertSpecKey {
         SK_KEY_ALGO("keyAlgo"),
@@ -68,59 +70,34 @@ public class CertSpecs {
         return SK_PREFIX + "." + certSpecType + "." + field;
     }
 
-    private String keyAlgo;
-    private int keySize;
-    private int certLifeTimeDays;
-    private String subject;
-    private String signatureAlgo;
+    private String keyAlgo = "";
+    private Integer keySize = 2048;
+    private Integer certLifeTimeDays;
+    private String subject = "";
+    private String signatureAlgo = "";
     private CertSpecType certSpecType;
 
-    public CertSpecs() {
+    private CertSpecs() {
     }
 
-    public CertSpecs(Settings settings, CertSpecType certSpecType) {
+    public CertSpecs(CertSpecType certSpecType) {
         this.certSpecType = certSpecType;
-        this.keyAlgo = settings.get(
-                getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_KEY_ALGO),
-                ""
-        );
-        this.keySize = settings.getInt(
-                getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_KEY_SIZE),
-                2048
-        );
-        this.certLifeTimeDays = settings.getInt(
-                getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_CERT_LIFETIME_DAYS),
-                switch (certSpecType) {
-            case CA_SPEC:
-                yield 10 * 365;
-            case SERVER_SPEC:
-                yield 2 * 365;
-            case USER_SPEC:
-                yield 365;
+    }
+
+    public CertSpecs(Settings settings, CertSpecType certSpecType)
+            throws SettingsException {
+        this.certSpecType = certSpecType;
+        load(settings);
+        if (this.certLifeTimeDays == null) {
+            this.certLifeTimeDays = switch (certSpecType) {
+                case CA_SPEC:
+                    yield 10 * 365;
+                case SERVER_SPEC:
+                    yield 2 * 365;
+                case USER_SPEC:
+                    yield 365;
+            };
         }
-        );
-        this.subject = settings.get(
-                getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_SUBJECT),
-                ""
-        );
-        this.signatureAlgo = settings.get(
-                getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_SIGNATURE_ALGO),
-                ""
-        );
-    }
-
-    public void save(Settings settings, CertSpecType certSpecType) {
-        this.certSpecType = certSpecType;
-        save(settings);
-    }
-
-    public void save(Settings settings) {
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_KEY_ALGO), keyAlgo);
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_KEY_SIZE), keySize);
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_CERT_LIFETIME_DAYS), certLifeTimeDays);
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_SIGNATURE_ALGO), signatureAlgo);
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_SUBJECT), subject);
-        settings.put(getSettingKey(certSpecType, CertSpecs.CertSpecKey.SK_CERT_SPEC_TYPE), certSpecType);
     }
 
     public void validate() throws CertSpecsValidationException {
@@ -171,5 +148,10 @@ public class CertSpecs {
         } catch (OperatorCreationException | IllegalArgumentException ex) {
             throw new CertSpecsValidationException(certSpecType, CertSpecKey.SK_SIGNATURE_ALGO, ex.getMessage());
         }
+    }
+
+    @Override
+    protected String groupName() {
+        return "%s.%s".formatted(super.groupName(), certSpecType.toString());
     }
 }

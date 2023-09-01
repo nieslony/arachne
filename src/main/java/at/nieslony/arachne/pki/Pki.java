@@ -5,6 +5,7 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.setup.SetupData;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -59,7 +60,9 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
@@ -91,20 +94,25 @@ public class Pki {
 
     public void fromSetupData(SetupData setupData) throws CertSpecsValidationException {
         logger.info("Verify and save PKI settings");
-        setupData.getCaCertSpecs().save(settings, CertSpecs.CertSpecType.CA_SPEC);
-        setupData.getServerCertSpecs().save(settings, CertSpecs.CertSpecType.SERVER_SPEC);
-        setupData.getUserCertSpecs().save(settings, CertSpecs.CertSpecType.USER_SPEC);
+        try {
+            setupData.getCaCertSpecs().save(settings);
+            setupData.getServerCertSpecs().save(settings);
+            setupData.getUserCertSpecs().save(settings);
+        } catch (SettingsException ex) {
+            logger.error("Cannot save setupData: " + ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         getRootCert();
         try {
             getServerCert();
-        } catch (PkiException ex) {
+            PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
+            pkiSettings.setDhParamsBits(setupData.getDhParamsBits());
+            pkiSettings.save(settings);
+            generateDhParams(pkiSettings.getDhParamsBits());
+        } catch (PkiException | SettingsException ex) {
             throw new CertSpecsValidationException(ex);
         }
-        PkiSettings pkiSettings = new PkiSettings(settings);
-        pkiSettings.setDhParamsBits(setupData.getDhParamsBits());
-        pkiSettings.save(settings);
-        generateDhParams(pkiSettings.getDhParamsBits());
     }
 
     public String getRootCertAsBase64() {
@@ -140,7 +148,13 @@ public class Pki {
     }
 
     void loadOrCreateRootCert() {
-        CertSpecs caCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
+        CertSpecs caCertSpecs;
+        try {
+            caCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
+        } catch (SettingsException ex) {
+            logger.error("cannoit load caCertSpecs: " + ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         String rootCertSubject = caCertSpecs.getSubject();
 
         List<CertificateModel> certModList
@@ -233,39 +247,42 @@ public class Pki {
                 | CertIOException
                 | NoSuchAlgorithmException
                 | OperatorCreationException
-                | CertificateException ex) {
+                | CertificateException
+                | SettingsException ex) {
             logger.error("Error genarating root certitficate: " + ex.getMessage());
         }
     }
 
-    public X509Certificate getServerCert() throws PkiException {
+    public X509Certificate getServerCert() throws PkiException, SettingsException {
         return getServerCertModel().getCertificate();
     }
 
-    public X509Certificate getUserCert(String username) throws PkiException {
+    public X509Certificate getUserCert(String username) throws PkiException, SettingsException {
         return getUserCertModel(username).getCertificate();
     }
 
-    public PrivateKey getServerKey() throws PkiException {
+    public PrivateKey getServerKey() throws PkiException, SettingsException {
         CertificateModel cm = getServerCertModel();
         return cm.getKeyModel().getPrivateKey();
     }
 
-    public PrivateKey getUserKey(String username) throws PkiException {
+    public PrivateKey getUserKey(String username) throws PkiException, SettingsException {
         CertificateModel cm = getUserCertModel(username);
         return cm.getKeyModel().getPrivateKey();
     }
 
-    public String getServerKeyAsBase64() throws PkiException {
+    public String getServerKeyAsBase64() throws PkiException, SettingsException {
         return asBase64(getServerKey());
     }
 
-    public String getUserKeyAsBase64(String username) throws PkiException {
+    public String getUserKeyAsBase64(String username) throws PkiException, SettingsException {
         return asBase64(getUserKey(username));
     }
 
     private CertificateModel getUserCertModel(String username)
-            throws CertSpecsValidationException, PkiNotInitializedException {
+            throws CertSpecsValidationException,
+            PkiNotInitializedException,
+            SettingsException {
         CertSpecs userCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.USER_SPEC);
         userCertSpecs.validate();
         String subject = userCertSpecs
@@ -301,7 +318,7 @@ public class Pki {
     }
 
     private CertificateModel getServerCertModel()
-            throws PkiNotInitializedException, CertSpecsValidationException {
+            throws PkiNotInitializedException, CertSpecsValidationException, SettingsException {
         CertSpecs serverCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.SERVER_SPEC);
         serverCertSpecs.validate();
         String subject = serverCertSpecs.getSubject();
@@ -320,7 +337,7 @@ public class Pki {
     }
 
     public void createServerCert()
-            throws CertSpecsValidationException, PkiNotInitializedException {
+            throws CertSpecsValidationException, PkiNotInitializedException, SettingsException {
         CertSpecs serverCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.SERVER_SPEC);
         serverCertSpecs.validate();
         createServerCert(serverCertSpecs);
@@ -349,7 +366,7 @@ public class Pki {
         try {
             X509Certificate cert = getServerCert();
             return asBase64(cert);
-        } catch (PkiException ex) {
+        } catch (PkiException | SettingsException ex) {
             logger.error(ex.getMessage());
             return null;
         }
@@ -359,7 +376,7 @@ public class Pki {
         try {
             X509Certificate cert = getUserCert(username);
             return asBase64(cert);
-        } catch (PkiException ex) {
+        } catch (PkiException | SettingsException ex) {
             logger.error(ex.getMessage());
             return null;
         }
@@ -457,7 +474,11 @@ public class Pki {
             cert = new JcaX509CertificateConverter()
                     .getCertificate(certHolder);
 
-        } catch (OperatorCreationException | CertificateException | CertIOException | NoSuchAlgorithmException ex) {
+        } catch (OperatorCreationException
+                | CertificateException
+                | CertIOException
+                | NoSuchAlgorithmException
+                | SettingsException ex) {
             logger.error(
                     "Cannot create certificate (%s): %s"
                             .formatted(subjectStr, ex.getMessage())
@@ -498,16 +519,16 @@ public class Pki {
             PemWriter pw = new PemWriter(sw);
             pw.writeObject(pemObject);
             pw.close();
-            PkiSettings pkiSettings = new PkiSettings(settings);
+            PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
             pkiSettings.setDhParams(sw.toString());
             pkiSettings.save(settings);
-        } catch (IOException ex) {
+        } catch (IOException | SettingsException ex) {
             logger.error("Error generating dh params: " + ex.getMessage());
         }
     }
 
     public String getDhParams() throws PkiNotInitializedException {
-        PkiSettings pkiSettings = new PkiSettings(settings);
+        PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
         return pkiSettings.getDhParams();
     }
 

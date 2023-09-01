@@ -51,8 +51,8 @@ public class UpdateServerCert extends Task {
     public String run(BeanFactory beanFactory) throws Exception {
         Pki pki = beanFactory.getBean(Pki.class);
         Settings settings = beanFactory.getBean(Settings.class);
-        OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
-        PkiSettings pkiSettings = new PkiSettings(settings);
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+        PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
 
         X509Certificate serverCert = pki.getServerCert();
         Calendar cal = Calendar.getInstance();

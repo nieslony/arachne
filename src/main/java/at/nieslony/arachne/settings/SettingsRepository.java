@@ -14,4 +14,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SettingsRepository extends JpaRepository<SettingsModel, Long> {
 
     Optional<SettingsModel> findBySetting(String setting);
+
+    Optional<SettingsModel> deleteBySetting(String setting);
 }

@@ -12,9 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -30,24 +27,9 @@ import lombok.experimental.Accessors;
 @Table(name = "arachne_settings")
 public class SettingsModel implements Serializable {
 
-    public SettingsModel(String setting, String content) {
+    public SettingsModel(String setting, byte[] content) {
         this.setting = setting;
         this.content = content;
-    }
-
-    public SettingsModel(String setting, int content) {
-        this.setting = setting;
-        this.content = String.valueOf(content);
-    }
-
-    public SettingsModel(String setting, List<String> content) {
-        this.setting = setting;
-        this.content = joinList(content);
-    }
-
-    public SettingsModel(String setting, boolean content) {
-        this.setting = setting;
-        this.content = String.valueOf(content);
     }
 
     public SettingsModel() {
@@ -60,28 +42,7 @@ public class SettingsModel implements Serializable {
     @Column(nullable = false, unique = true)
     private String setting;
 
-    @Column
+    @Column(columnDefinition = "BLOB")
     @Lob
-    private String content;
-
-    static String encodeString(String s) {
-        return s.replaceAll("\\\\", "\\\\\\\\").replaceAll(",", "\\\\,");
-    }
-
-    static String decodeString(String s) {
-        return s.replaceAll("\\\\,", ",").replaceAll("\\\\\\\\", "\\\\");
-    }
-
-    static List<String> splitString(String s) {
-        List<String> l = Arrays.asList(s.split(",,"));
-        l.replaceAll(i -> decodeString(i));
-        return l;
-    }
-
-    static String joinList(List<String> l) {
-        List<String> lc = new LinkedList<>(l);
-        lc.replaceAll(i -> encodeString(i));
-
-        return String.join(",,", lc);
-    }
+    private byte[] content;
 }

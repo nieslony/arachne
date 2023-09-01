@@ -22,6 +22,7 @@ import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.ArachneUser;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
@@ -56,16 +57,15 @@ public class MailSettingsRestController {
 
     @GetMapping("/")
     @RolesAllowed(value = {"ADMIN"})
-    public MailSettings getMailSettings() {
-        MailSettings mailSettings = new MailSettings(settings);
+    public MailSettings getMailSettings() throws SettingsException {
+        MailSettings mailSettings = settings.getSettings(MailSettings.class);
         return mailSettings;
     }
 
     @PostMapping("/")
     @RolesAllowed(value = {"ADMIN"})
-    public void postMailSettings(
-            @RequestBody MailSettings mailSettings
-    ) {
+    public void postMailSettings(@RequestBody MailSettings mailSettings)
+            throws SettingsException {
         mailSettings.save(settings);
     }
 
@@ -74,11 +74,11 @@ public class MailSettingsRestController {
             ArachneUser forUser,
             String to,
             String subject
-    ) throws IOException, MessagingException, PkiException {
+    ) throws IOException, MessagingException, PkiException, SettingsException {
         JavaMailSender mailSender = mailSettings.getMailSender();
         MimeMessage message = mailSender.createMimeMessage();
         String from = mailSettings.getPrettySenderMailAddress();
-        OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String windowsConfig = openVpnRestController
                 .openVpnUserConfig(forUser.getUsername());

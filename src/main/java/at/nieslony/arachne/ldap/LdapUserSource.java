@@ -43,7 +43,7 @@ public class LdapUserSource implements ExternalUserSource {
 
     @Override
     public ArachneUser findUser(String username) {
-        LdapSettings ldapSettings = new LdapSettings(settings);
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         ArachneUser user = ldapSettings.getUser(username);
         user.setPassword("");
         return user;

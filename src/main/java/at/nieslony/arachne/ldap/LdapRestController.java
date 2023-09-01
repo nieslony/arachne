@@ -5,6 +5,7 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,12 +26,13 @@ public class LdapRestController {
 
     @GetMapping("/settings")
     public LdapSettings getSettings() {
-        LdapSettings ldapSettings = new LdapSettings(settings);
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         return ldapSettings;
     }
 
     @PutMapping("/settings")
-    public void putSettings(@RequestBody LdapSettings ldapSettings) {
+    public void putSettings(@RequestBody LdapSettings ldapSettings)
+            throws SettingsException {
         ldapSettings.save(settings);
     }
 }

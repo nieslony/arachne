@@ -8,6 +8,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NicInfo;
@@ -72,7 +73,7 @@ public class OpenVpnUserView extends VerticalLayout {
             Pki pki
     ) {
         this.settings = settings;
-        vpnSettings = new OpenVpnUserSettings(settings);
+        vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         binder = new Binder(OpenVpnUserSettings.class);
 
         Button saveSettings = new Button("Save Settings");
@@ -82,13 +83,18 @@ public class OpenVpnUserView extends VerticalLayout {
         });
         saveSettings.addClickListener((t) -> {
             if (binder.writeBeanIfValid(vpnSettings)) {
-                FirewallBasicsSettings firewallBasicsSettings = new FirewallBasicsSettings(settings);
-                vpnSettings.save(settings);
-                openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-                openvpnRestController.writeOpenVpnPluginConfig(
-                        vpnSettings,
-                        firewallBasicsSettings
-                );
+                FirewallBasicsSettings firewallBasicsSettings
+                        = settings.getSettings(FirewallBasicsSettings.class);
+                try {
+                    vpnSettings.save(settings);
+                    openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
+                    openvpnRestController.writeOpenVpnPluginConfig(
+                            vpnSettings,
+                            firewallBasicsSettings
+                    );
+                } catch (SettingsException ex) {
+                    logger.error("Cannot save openvpn user settings: " + ex.getMessage());
+                }
             }
         });
 
