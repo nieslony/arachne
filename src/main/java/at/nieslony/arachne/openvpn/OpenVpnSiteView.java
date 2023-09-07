@@ -55,7 +55,10 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
 
-    public OpenVpnSiteView(Settings settings) {
+    public OpenVpnSiteView(
+            Settings settings,
+            OpenVpnRestController openVpnRestController
+    ) {
         this.settings = settings;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
@@ -70,6 +73,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button saveButton = new Button("Save", (t) -> {
             try {
                 openVpnSiteSettings.save(settings);
+                openVpnRestController.writeOpenVpnSiteServerConfig();
             } catch (SettingsException ex) {
                 logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
             }
