@@ -7,6 +7,7 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
@@ -50,6 +51,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
 
     private final Binder<OpenVpnSiteSettings> binder;
+    private final Binder<OpenVpnSiteSettings.VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
 
@@ -57,6 +59,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         this.settings = settings;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
+        siteBinder = new Binder<>(OpenVpnSiteSettings.VpnSite.class);
         openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         TabSheet tabs = new TabSheet();
@@ -288,8 +291,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setWidthFull();
 
         TabSheet siteSettingsTab = new TabSheet();
-        siteSettingsTab.add("DNS", new VerticalLayout());
-        siteSettingsTab.add("Routes", new VerticalLayout());
+        siteSettingsTab.add("DNS", createDnsPage());
+        siteSettingsTab.add("Routes", createRoutesTab());
 
         layout.add(
                 sitesLayout,
@@ -302,6 +305,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             deleteButton.setEnabled(
                     e.getValue() != null && e.getValue().getId() != 0
             );
+            siteBinder.setBean(e.getValue());
         });
 
         sites.setValue(openVpnSiteSettings.getVpnSite(0));
@@ -356,5 +360,52 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         dlg.getFooter().add(cancelButton, okButton);
         dlg.open();
+    }
+
+    private Component createDnsPage() {
+        EditableListBox dnsServers = new EditableListBox("DNS Servers");
+        siteBinder.bind(
+                dnsServers,
+                (source) -> source.getPushDnsServers(),
+                (source, value) -> {
+                    source.setPushDnsServers(value);
+                });
+
+        EditableListBox pushDomains = new EditableListBox("Push Domains");
+        siteBinder.bind(
+                pushDomains,
+                (source) -> source.getPushSearchDomains(),
+                (source, value) -> source.setPushSearchDomains(value)
+        );
+
+        HorizontalLayout layout = new HorizontalLayout(
+                dnsServers,
+                pushDomains
+        );
+
+        return layout;
+    }
+
+    private Component createRoutesTab() {
+        EditableListBox pushRoutes = new EditableListBox("Push Routes");
+        siteBinder.bind(
+                pushRoutes,
+                (source) -> source.getPushRoutes(),
+                (source, value) -> source.setPushRoutes(value)
+        );
+
+        Checkbox routeInternet
+                = new Checkbox("Route Internet Traffic through VPN");
+        siteBinder.bind(
+                routeInternet,
+                OpenVpnSiteSettings.VpnSite::isRouteInternetThroughVpn,
+                OpenVpnSiteSettings.VpnSite::setRouteInternetThroughVpn
+        );
+
+        VerticalLayout layout = new VerticalLayout(
+                pushRoutes,
+                routeInternet
+        );
+        return layout;
     }
 }

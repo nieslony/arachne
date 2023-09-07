@@ -9,6 +9,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -42,6 +43,14 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         private String sshUser;
         private String sshPrivateKey;
         private String preSharedkey;
+
+        private List<String> pushDnsServers = NetUtils.getDnsServers();
+        private List<String> pushSearchDomains = Arrays.asList(
+                NetUtils.myDomain()
+        );
+
+        private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
+        private boolean routeInternetThroughVpn = false;
 
         VpnSite(String name, String description, int id) {
             this.id = id;
