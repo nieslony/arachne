@@ -5,7 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.roles.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -70,7 +70,6 @@ public class ArachneUser implements Serializable {
 
     @Column
     @Setter(AccessLevel.NONE)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     public void setPassword(String password) {
@@ -122,6 +121,7 @@ public class ArachneUser implements Serializable {
         this.lastModified = new Date();
     }
 
+    @JsonIgnore
     public Set<String> getRolesWithName() {
         Set<String> roleNames = new HashSet<>();
         roles.forEach((role) -> {
