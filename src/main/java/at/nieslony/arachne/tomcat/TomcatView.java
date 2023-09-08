@@ -19,6 +19,7 @@ package at.nieslony.arachne.tomcat;
 import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -75,9 +76,13 @@ public class TomcatView extends VerticalLayout {
         Button saveAndRestartButton = new Button(
                 "Save and Restart Arachne",
                 e -> {
-                    TomcatSettings tomcatSettings = binder.getBean();
-                    tomcatSettings.save(settings);
-                    saveApacheConfig(tomcatSettings);
+                    try {
+                        TomcatSettings tomcatSettings = binder.getBean();
+                        tomcatSettings.save(settings);
+                        saveApacheConfig(tomcatSettings);
+                    } catch (SettingsException ex) {
+                        logger.error("Cannot save tomcat settings: " + ex.getMessage());
+                    }
                 });
 
         binder.forField(enableAjpField)
@@ -112,7 +117,7 @@ public class TomcatView extends VerticalLayout {
                     ajpSecretField.setEnabled(e.getValue());
                 });
 
-        TomcatSettings tomcatSettings = new TomcatSettings(settings);
+        TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         binder.setBean(tomcatSettings);
         binder.validate();
 
@@ -126,7 +131,11 @@ public class TomcatView extends VerticalLayout {
     }
 
     private void saveApacheConfig(TomcatSettings tomcatSettings) {
-        tomcatSettings.save(settings);
+        try {
+            tomcatSettings.save(settings);
+        } catch (SettingsException ex) {
+            logger.error("Cannot save tomcat settings: " + ex.getMessage());
+        }
 
         String fileName = arachneConfigDir + "/arachne.conf";
         String now = new Date().toString();

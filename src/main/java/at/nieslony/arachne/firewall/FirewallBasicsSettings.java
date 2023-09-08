@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class FirewallBasicsSettings {
+public class FirewallBasicsSettings extends AbstractSettingsGroup {
 
     public enum EnableRoutingMode {
         OFF("Don't change"),
@@ -64,27 +64,8 @@ public class FirewallBasicsSettings {
         }
     }
 
-    private final static String SK_FIREWALL_ENABLE = "firewall.enable";
-    private final static String SK_FIREFALL_ZONE = "firewall.zone";
-    private final static String SK_FIREWALL_ROUTINGMODE = "firewall.eńable-routing-mode";
-    private final static String SK_ICMP_RULES = "firewall.icmp-rules";
-
-    private boolean enableFirewall;
-    private String firewallZone;
-    private EnableRoutingMode enableRoutingMode;
-    private IcmpRules icmpRules;
-
-    public FirewallBasicsSettings(Settings settings) {
-        enableFirewall = settings.getBoolean(SK_FIREWALL_ENABLE, false);
-        firewallZone = settings.get(SK_FIREFALL_ZONE, "arachne");
-        enableRoutingMode = settings.getEnum(SK_FIREWALL_ROUTINGMODE, EnableRoutingMode.RESTORE_ON_EXIT);
-        icmpRules = settings.getEnum(SK_ICMP_RULES, IcmpRules.ALLOW_ALL);
-    }
-
-    public void save(Settings settings) {
-        settings.put(SK_FIREWALL_ENABLE, enableFirewall);
-        settings.put(SK_FIREFALL_ZONE, firewallZone);
-        settings.put(SK_FIREWALL_ROUTINGMODE, enableRoutingMode);
-        settings.put(SK_ICMP_RULES, icmpRules);
-    }
+    private boolean enableFirewall = false;
+    private String firewallZone = "arachne";
+    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
+    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }

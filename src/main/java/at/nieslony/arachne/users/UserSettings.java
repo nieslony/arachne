@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,20 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UserSettings {
+public class UserSettings extends AbstractSettingsGroup {
 
-    private static final String SK_EXPIRATION_TIMEOUT = "users.expiration-timeout";
-
-    private Integer expirationTimeout;
-
-    public UserSettings() {
-    }
-
-    public UserSettings(Settings settings) {
-        expirationTimeout = settings.getInt(SK_EXPIRATION_TIMEOUT, 60);
-    }
-
-    public void save(Settings settings) {
-        settings.put(SK_EXPIRATION_TIMEOUT, expirationTimeout);
-    }
+    private Integer expirationTimeout = 60;
 }

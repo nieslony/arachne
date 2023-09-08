@@ -8,7 +8,6 @@ import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
-import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -49,14 +48,11 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private ArachneUserDetailsService arachneUserDetailsService;
 
-    @Autowired
-    private FolderFactory folderFactory;
-
     private KerberosSettings kerberosSettings;
 
     @PostConstruct
     public void init() {
-        kerberosSettings = new KerberosSettings(settings);
+        kerberosSettings = settings.getSettings(KerberosSettings.class);
     }
 
     @Override

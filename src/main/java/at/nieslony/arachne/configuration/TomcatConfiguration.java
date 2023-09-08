@@ -25,9 +25,7 @@ public class TomcatConfiguration {
 
     @Bean
     public TomcatServletWebServerFactory servletContainer() {
-        final int ajpPort = 8009;
-
-        TomcatSettings tomcatSettings = new TomcatSettings(settings);
+        TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
         if (tomcatSettings.isEnableAjpConnector()) {

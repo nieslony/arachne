@@ -59,7 +59,7 @@ public class RolesView extends VerticalLayout {
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.ldapSettings = new LdapSettings(settings);
+        this.ldapSettings = settings.getSettings(LdapSettings.class);
 
         Button addRole = new Button("Add...", e -> {
             addRule();

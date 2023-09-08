@@ -4,19 +4,18 @@
  */
 package at.nieslony.arachne.setup;
 
-import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
+import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.roles.RolesCollector;
-import at.nieslony.arachne.settings.SettingsModel;
-import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.FolderFactory;
-import java.util.Optional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,9 +35,12 @@ public class SetupController {
             = LoggerFactory.getLogger(SetupController.class);
 
     public static final String SETUP_STATUS_KEY = "setup.status";
-    public static final String SETUP_STATUS_FINISHED = "finished";
-    public static final String SETUP_STATUS_RUNNING = "running";
-    public static final String SETUP_STATUS_FAILED = "failed";
+
+    public enum SetupStatus {
+        FINISHED,
+        RUNNING,
+        FAILED
+    }
 
     @Autowired
     private UserRepository userRepository;
@@ -47,7 +49,7 @@ public class SetupController {
     private RoleRuleRepository roleRuleRepository;
 
     @Autowired
-    private SettingsRepository settingsRepository;
+    private Settings settings;
 
     @Autowired
     private Pki pki;
@@ -59,21 +61,24 @@ public class SetupController {
     private RolesCollector rolesCollector;
 
     public boolean setupAlreadyDone() {
-        Optional<SettingsModel> settingsModel
-                = settingsRepository.findBySetting(SetupController.SETUP_STATUS_KEY);
+        try {
+            SetupStatus status = settings.get(SETUP_STATUS_KEY, SetupStatus.class);
+            return status != null;
+        } catch (SettingsException ex) {
+            logger.error(
+                    "Cannot get settings %s: %s"
+                            .formatted(SETUP_STATUS_KEY, ex.getMessage())
+            );
+        }
 
-        return settingsModel.isPresent();
+        return true;
     }
 
-    public String setupArachne(SetupData setupData) {
+    public String setupArachne(SetupData setupData) throws SettingsException {
         logger.info("Performing setup: " + setupData);
         logger.info("Work directory: " + folderFactory.getArachneConfigDir());
 
-        SettingsModel setupStatus = new SettingsModel(
-                SETUP_STATUS_KEY,
-                SETUP_STATUS_RUNNING
-        );
-        setupStatus = settingsRepository.save(setupStatus);
+        settings.put(SETUP_STATUS_KEY, SetupStatus.RUNNING);
 
         RoleRuleModel adminIsAdmin
                 = new RoleRuleModel(
@@ -102,8 +107,7 @@ public class SetupController {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         }
 
-        setupStatus.setContent(SETUP_STATUS_FINISHED);
-        settingsRepository.save(setupStatus);
+        settings.put(SETUP_STATUS_KEY, SetupStatus.FINISHED);
 
         String msg;
         msg = "Setup completed.";
@@ -113,7 +117,8 @@ public class SetupController {
     }
 
     @PostMapping("/setup")
-    public String onStupArachne(@RequestBody SetupData setupData) {
+    public String onStupArachne(@RequestBody SetupData setupData)
+            throws SettingsException {
         return setupArachne(setupData);
     }
 }

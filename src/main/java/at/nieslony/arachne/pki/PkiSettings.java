@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.pki;
 
-import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -28,32 +28,13 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class PkiSettings {
+public class PkiSettings extends AbstractSettingsGroup {
 
-    private final static String SK_DH_PARAMS = "pki.dhParams";
-    private final static String SK_DH_PARAMS_BITS = "pki.dh-params-bits";
-    private final static String SK_CRL_LIFETIME_DAYS = "pki.crl-lifetime-days";
-    private final static String SK_SERVER_CERT_RENEW_DAYS = "pki.server-cert-renew-days";
-
-    private String dhParams;
-    private int dhParamsBits;
-    private int crlLifeTimeDays;
-    private int serverCertRenewDays;
+    private String dhParams = "";
+    private int dhParamsBits = 2048;
+    private int crlLifeTimeDays = 7;
+    private int serverCertRenewDays = 30;
 
     public PkiSettings() {
-    }
-
-    public PkiSettings(Settings settings) {
-        dhParams = settings.get(SK_DH_PARAMS, "");
-        dhParamsBits = settings.getInt(SK_DH_PARAMS_BITS, 2048);
-        crlLifeTimeDays = settings.getInt(SK_CRL_LIFETIME_DAYS, 7);
-        serverCertRenewDays = settings.getInt(SK_SERVER_CERT_RENEW_DAYS, 30);
-    }
-
-    public void save(Settings settings) {
-        settings.put(SK_DH_PARAMS, dhParams);
-        settings.put(SK_DH_PARAMS_BITS, dhParamsBits);
-        settings.put(SK_CRL_LIFETIME_DAYS, crlLifeTimeDays);
-        settings.put(SK_SERVER_CERT_RENEW_DAYS, serverCertRenewDays);
     }
 }

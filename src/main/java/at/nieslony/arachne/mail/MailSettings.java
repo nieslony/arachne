@@ -16,8 +16,7 @@
  */
 package at.nieslony.arachne.mail;
 
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.utils.net.MxRecord;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.IOException;
@@ -42,7 +41,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
  */
 @Getter
 @Setter
-public class MailSettings {
+public class MailSettings extends AbstractSettingsGroup {
 
     private static final Logger logger = LoggerFactory.getLogger(MailSettings.class);
 
@@ -62,64 +61,26 @@ public class MailSettings {
         }
     }
 
-    private String smtpServer;
-    private int smtpPort;
-    private String smtpUser;
-    private String smtpPassword;
-    private String senderDisplayname;
-    private String senderEmailAddress;
-    private String templateConfigHtml;
-    private String templateConfigPlain;
-    private TemplateConfigType templateConfigType;
+    private String smtpServer = getDefaultSmtpServer();
+    private int smtpPort = 25;
+    private String smtpUser = "arachne";
+    private String smtpPassword = "";
+    private String senderDisplayname = "Arachne openVPN Administrator";
+    private String senderEmailAddress = "no-reply@" + NetUtils.myDomain();
+    private String templateConfigHtml = getDefaultTemplateConfigHtml();
+    private String templateConfigPlain = getDefaultTemplateConfigPlain();
+    private TemplateConfigType templateConfigType = TemplateConfigType.HTML;
 
-    private final static String SK_MAIL_SMTP_SERVER = "mail.smtp-server";
-    private final static String SK_MAIL_SMTP_PORT = "mail.smtp-port";
-    private final static String SK_MAIL_SMTP_USER = "mail.smtp-user";
-    private final static String SK_MAIL_SMTP_PASSWORD = "mail.smtp-password";
-    private final static String SK_MAIL_SENDER_DISPLAYNAME = "mail.sender-displayname";
-    private final static String SK_MAIL_SENDER_EMAIL_ADDRESS = "mail.sender-email-address";
-    private final static String SK_MAIL_TMPL_CFG_HTML = "mail.template-config-html";
-    private final static String SK_MAIL_TMPL_CFG_PLAIN = "mail.template-config-plain";
-    private final static String SK_MAIL_TMPL_CFG_TYPE = "mail.template-config-type";
-
-    public MailSettings() {
-    }
-
-    public MailSettings(Settings settings) {
-        String smtpServerDefaultStr = "mail." + NetUtils.myDomain();
+    private String getDefaultSmtpServer() {
         try {
             List<MxRecord> recs = NetUtils.mxLookup();
             if (recs != null && !recs.isEmpty()) {
-                smtpServerDefaultStr = recs.get(0).getValue();
+                return recs.get(0).getValue();
             }
         } catch (NamingException ex) {
             logger.warn("Cannot get MX record: " + ex.getMessage());
         }
-
-        smtpServer = settings.get(SK_MAIL_SMTP_SERVER, smtpServerDefaultStr);
-        smtpPort = settings.getInt(SK_MAIL_SMTP_PORT, 25);
-        smtpUser = settings.get(SK_MAIL_SMTP_USER, "arachne");
-        smtpPassword = settings.get(SK_MAIL_SMTP_PASSWORD, "");
-        senderDisplayname = settings.get(SK_MAIL_SENDER_DISPLAYNAME, "Arachne openVPN Administrator");
-        senderEmailAddress = settings.get(
-                SK_MAIL_SENDER_EMAIL_ADDRESS,
-                "no-reply@" + NetUtils.myDomain()
-        );
-        templateConfigHtml = settings.get(SK_MAIL_TMPL_CFG_HTML, getDefaultTemplateConfigHtml(settings));
-        templateConfigPlain = settings.get(SK_MAIL_TMPL_CFG_PLAIN, getDefaultTemplateConfigPlain(settings));
-        templateConfigType = settings.getEnum(SK_MAIL_TMPL_CFG_TYPE, TemplateConfigType.HTML);
-    }
-
-    public void save(Settings settings) {
-        settings.put(SK_MAIL_SMTP_SERVER, smtpServer);
-        settings.put(SK_MAIL_SMTP_PORT, smtpPort);
-        settings.put(SK_MAIL_SMTP_USER, smtpUser);
-        settings.put(SK_MAIL_SMTP_PASSWORD, smtpPassword);
-        settings.put(SK_MAIL_TMPL_CFG_HTML, templateConfigHtml);
-        settings.put(SK_MAIL_TMPL_CFG_PLAIN, templateConfigPlain);
-        settings.put(SK_MAIL_TMPL_CFG_TYPE, templateConfigType);
-        settings.put(SK_MAIL_SENDER_DISPLAYNAME, senderDisplayname);
-        settings.put(SK_MAIL_SENDER_EMAIL_ADDRESS, senderEmailAddress);
+        return "mail." + NetUtils.myDomain();
     }
 
     public JavaMailSender getMailSender() {
@@ -147,13 +108,11 @@ public class MailSettings {
         }
     }
 
-    final public String getDefaultTemplateConfigHtml(Settings settings) {
+    final public String getDefaultTemplateConfigHtml() {
         final String RN = "MailTemplates/openvpn-config.html";
-        OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
         try {
             InputStream is = new ClassPathResource(RN).getInputStream();
-            return new String(is.readAllBytes())
-                    .replace("{attachment}", openVpnUserSettings.getClientConfigName());
+            return new String(is.readAllBytes());
         } catch (IOException ex) {
             logger.error("Cannot load resource %s: %s"
                     .formatted(RN, ex.getMessage())
@@ -162,8 +121,8 @@ public class MailSettings {
         }
     }
 
-    final public String getDefaultTemplateConfigPlain(Settings settings) {
-        Source htmlSource = new Source(getDefaultTemplateConfigHtml(settings));
+    final public String getDefaultTemplateConfigPlain() {
+        Source htmlSource = new Source(getDefaultTemplateConfigHtml());
         Segment segment = new Segment(htmlSource, 0, htmlSource.length());
         Renderer htmlRender = new Renderer(segment)
                 .setMaxLineLength(80)
@@ -186,5 +145,9 @@ public class MailSettings {
 
     public String getVarNmConnection() {
         return "{nm-connection}";
+    }
+
+    public String getVarAttachnement() {
+        return "{attachment}";
     }
 }

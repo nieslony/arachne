@@ -34,7 +34,7 @@ public class UpdateDhParams extends Task {
     public String run(BeanFactory beanFactory) {
         Pki pki = beanFactory.getBean(Pki.class);
         Settings settings = beanFactory.getBean(Settings.class);
-        PkiSettings pkiSettings = new PkiSettings(settings);
+        PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
         pki.generateDhParams(pkiSettings.getDhParamsBits());
 
         return null;

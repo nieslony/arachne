@@ -21,19 +21,20 @@ import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.validators.HostnameValidator;
-import at.nieslony.arachne.utils.validators.IgnoringInvisibleValidator;
+import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
+import at.nieslony.arachne.utils.net.TransportProtocol;
+import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleValidator;
 import at.nieslony.arachne.utils.validators.RequiredIfVisibleValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
-import at.nieslony.arachne.utils.net.TransportProtocol;
-import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -106,8 +107,8 @@ public class FirewallView extends VerticalLayout {
         this.userMatcherCollector = userMatcherCollector;
 
         binder = new Binder();
-        firewallBasicSettings = new FirewallBasicsSettings(settings);
-        ldapSettings = new LdapSettings(settings);
+        firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
+        ldapSettings = settings.getSettings(LdapSettings.class);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
@@ -115,14 +116,18 @@ public class FirewallView extends VerticalLayout {
         tabs.add("Incoming Rules", createIncomingTab());
 
         Button saveButton = new Button("Save", (e) -> {
-            OpenVpnUserSettings openVpnUserSettings = new OpenVpnUserSettings(settings);
+            OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
             logger.info("Saving firewall settings");
-            firewallBasicSettings.save(settings);
-            openVpnRestController.writeOpenVpnPluginConfig(
-                    openVpnUserSettings,
-                    firewallBasicSettings
-            );
+            try {
+                firewallBasicSettings.save(settings);
+                openVpnRestController.writeOpenVpnPluginConfig(
+                        openVpnUserSettings,
+                        firewallBasicSettings
+                );
+            } catch (SettingsException ex) {
+                logger.error("Cannot save firewall settings: " + ex.getMessage());
+            }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
