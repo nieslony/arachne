@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.tasks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -79,6 +80,7 @@ public class TaskModel {
     @Column
     private String statusMsg;
 
+    @JsonIgnore
     public Class<? extends Task> getTaskClass() throws ClassNotFoundException {
         return (Class<? extends Task>) Class.forName(taskClassName);
     }
