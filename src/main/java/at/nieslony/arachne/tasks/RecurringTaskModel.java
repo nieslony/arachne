@@ -22,6 +22,8 @@ import static at.nieslony.arachne.utils.ArachneTimeUnit.HOUR;
 import static at.nieslony.arachne.utils.ArachneTimeUnit.MIN;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,19 +55,20 @@ public class RecurringTaskModel {
     private String className;
 
     @Column
-    private Boolean repeatTask;
+    private Boolean repeatTask = false;
 
     @Column
-    private Integer recurringInterval;
+    private Integer recurringInterval = 0;
 
     @Column
-    private ArachneTimeUnit timeUnit;
+    @Enumerated(EnumType.STRING)
+    private ArachneTimeUnit timeUnit = DAY;
 
     @Column
-    private Boolean startAtFixTime;
+    private Boolean startAtFixTime = false;
 
     @Column
-    private String startAt;
+    private String startAt = "";
 
     public Time getStartAtAsTime() {
         if (startAt == null) {
