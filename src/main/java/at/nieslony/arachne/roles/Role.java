@@ -11,7 +11,8 @@ package at.nieslony.arachne.roles;
 public enum Role {
     //NO_ACCESS("No Access"),
     ADMIN("Administrator"),
-    USER("VPN User");
+    USER("VPN User"),
+    BACKUP("Backup Operator");
 
     final private String roleStr;
 
