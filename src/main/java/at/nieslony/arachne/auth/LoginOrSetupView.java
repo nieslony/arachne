@@ -6,6 +6,7 @@ package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.setup.SetupController;
 import at.nieslony.arachne.setup.SetupView;
+import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -28,16 +29,19 @@ public class LoginOrSetupView
             = LoggerFactory.getLogger(LoginOrSetupView.class);
 
     private SetupController setupController;
+    private FolderFactory folderFactory;
 
     private String title;
-    boolean loginViewInit;
     private final LoginForm login = new LoginForm();
 
     ;
-  
-    public LoginOrSetupView(SetupController setupController) {
-        loginViewInit = false;
+
+    public LoginOrSetupView(
+            SetupController setupController,
+            FolderFactory folderFactory
+    ) {
         this.setupController = setupController;
+        this.folderFactory = folderFactory;
     }
 
     @Override
@@ -69,7 +73,7 @@ public class LoginOrSetupView
         } else {
             logger.info("Show SetupView");
             title = "Setup | Arachne";
-            add(new SetupView(setupController));
+            add(new SetupView(setupController, folderFactory));
         }
 
     }

@@ -6,13 +6,19 @@ package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -21,10 +27,17 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.slf4j.LoggerFactory;
@@ -76,16 +89,22 @@ public class SetupView extends VerticalLayout {
     private NativeLabel finishError;
 
     SetupController setupController;
+    FolderFactory folderFactory;
     Binder<SetupData> binder;
 
-    public SetupView(SetupController setupController) {
+    public SetupView(
+            SetupController setupController,
+            FolderFactory folderFactory
+    ) {
         this.setupController = setupController;
+        this.folderFactory = folderFactory;
         binder = new Binder();
 
         H1 header = new H1("Arachne Setup Wizard");
 
         TabSheet tabSheet = new TabSheet();
 
+        tabSheet.add("Welcome", createRestoreTab());
         tabSheet.add("CA Certificate", createCaCertificateTab());
         tabSheet.add("Server Certificate", createServerCertificateTab());
         tabSheet.add("Admin User", createAdminUserTab());
@@ -477,6 +496,66 @@ public class SetupView extends VerticalLayout {
         });
 
         layout.add(text, finishError, finish);
+
+        return layout;
+    }
+
+    private Component createRestoreTab() {
+        VerticalLayout layout = new VerticalLayout();
+
+        H2 welcome = new H2("Welcome to Arachne Setup Wizard!");
+
+        Paragraph restoreFoundText;
+        Component restoreButton;
+        Path restorePath = Path.of(folderFactory.getRestorePath()).toAbsolutePath();
+        if (Files.exists(restorePath)) {
+            restoreFoundText = new Paragraph(
+                    "Backup file %s found."
+                            .formatted(restorePath.toString())
+            );
+            restoreButton = new Button("Restore settings...", (e) -> {
+                try {
+                    FileInputStream fis = new FileInputStream(restorePath.toString());
+                    setupController.restore(fis);
+                } catch (FileNotFoundException ex) {
+                    logger.error(
+                            "Cannot read %s: %s"
+                                    .formatted(
+                                            restorePath.toString(),
+                                            ex.getMessage()
+                                    )
+                    );
+                }
+            });
+        } else {
+            restoreFoundText = new Paragraph(
+                    """
+                    No backup file %s found. Restore from uploaded file or
+                    just continue with setup wizard by clicking "Next".
+                    """.formatted(restorePath.toString()));
+            MemoryBuffer memoryBuffer = new MemoryBuffer();
+            Upload upload = new Upload(memoryBuffer);
+            upload.setAcceptedFileTypes("application/json", ".json");
+            upload.addSucceededListener((e) -> {
+                InputStream is = memoryBuffer.getInputStream();
+                setupController.restore(is);
+            });
+            upload.addFileRejectedListener(event -> {
+                String errorMessage = event.getErrorMessage();
+
+                Notification notification = Notification.show(errorMessage, 5000,
+                        Notification.Position.MIDDLE);
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            });
+
+            restoreButton = upload;
+        }
+
+        layout.add(
+                welcome,
+                restoreFoundText,
+                restoreButton
+        );
 
         return layout;
     }
