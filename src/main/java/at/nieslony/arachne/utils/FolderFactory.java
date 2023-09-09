@@ -32,6 +32,9 @@ public class FolderFactory {
     @Value("${firewalldServicesDir}")
     private String firewalldServiceDir;
 
+    @Value("${workdir}")
+    private String workDir;
+
     static private FolderFactory instance;
 
     public FolderFactory() {
@@ -97,5 +100,9 @@ public class FolderFactory {
 
     public String getFirewalldServiceDir() {
         return firewalldServiceDir;
+    }
+
+    public String getRestorePath() {
+        return Path.of(workDir + "/backup.json").toAbsolutePath().toString();
     }
 }
