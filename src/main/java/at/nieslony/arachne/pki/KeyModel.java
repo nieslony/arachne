@@ -12,16 +12,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -33,6 +35,8 @@ import lombok.ToString;
 @Entity
 @Table(name = "keys")
 public class KeyModel implements Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(KeyModel.class);
 
     public KeyModel(PrivateKey privateKey) {
         this.privateKey = privateKey;
@@ -50,48 +54,27 @@ public class KeyModel implements Serializable {
     @JsonIgnore
     private PrivateKey privateKey;
 
-    @JsonIgnore
-    @Getter(AccessLevel.PRIVATE)
-    @Setter(AccessLevel.PRIVATE)
-    private byte[] bytes;
-
-    @JsonIgnore
-    @Getter(AccessLevel.PRIVATE)
-    @Setter(AccessLevel.PRIVATE)
-    private String keyAlgo;
-
     public byte[] getEncoded() {
         if (privateKey != null) {
-            return privateKey.getEncoded();
+            try (
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(privateKey);
+
+                return bos.toByteArray();
+            } catch (IOException ex) {
+                logger.error("Cannot serialize private key: " + ex.getMessage());
+                return null;
+            }
         } else {
             return null;
         }
     }
 
-    private void loadKey() {
-        try {
-            KeyFactory kf = KeyFactory.getInstance(keyAlgo);
-            privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(bytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException ex) {
-
-        }
-    }
-
     public void setEncoded(byte[] bytes) {
-        this.bytes = bytes;
-        if (keyAlgo != null) {
-            loadKey();
-        }
-    }
-
-    public String getAlgorithm() {
-        return privateKey.getAlgorithm();
-    }
-
-    public void setAlgorithm(String algo) {
-        keyAlgo = algo;
-        if (bytes != null) {
-            loadKey();
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
+            privateKey = (PrivateKey) ois.readObject();
+        } catch (ClassNotFoundException | IOException ex) {
+            logger.error("Cannot deserialize private key: " + ex.getMessage());
         }
     }
 }

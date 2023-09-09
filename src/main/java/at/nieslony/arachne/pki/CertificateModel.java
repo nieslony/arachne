@@ -16,16 +16,19 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -37,6 +40,8 @@ import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 @ToString
 @Table(name = "certitificates")
 public class CertificateModel implements Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(CertificateModel.class);
 
     public enum CertType {
         INVALID("Invalid"),
@@ -106,9 +111,13 @@ public class CertificateModel implements Serializable {
 
     public byte[] getEncoded() {
         if (certificate != null) {
-            try {
-                return certificate.getEncoded();
-            } catch (CertificateEncodingException ex) {
+            try (
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(certificate);
+
+                return bos.toByteArray();
+            } catch (IOException ex) {
+                logger.error("Cannot serialize certificate: " + ex.getMessage());
                 return null;
             }
         } else {
@@ -117,11 +126,10 @@ public class CertificateModel implements Serializable {
     }
 
     public void setEncoded(byte[] bytes) {
-        CertificateFactory certFactory = new CertificateFactory();
-        try {
-            certificate = (X509Certificate) certFactory.engineGenerateCertificate(new ByteArrayInputStream(bytes));
-        } catch (CertificateException ex) {
-
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
+            certificate = (X509Certificate) ois.readObject();
+        } catch (ClassNotFoundException | IOException ex) {
+            logger.error("Cannot deserialize certificate: " + ex.getMessage());
         }
     }
 
