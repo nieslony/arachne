@@ -20,12 +20,14 @@ import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.tasks.TaskRepository;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
 
 /**
  *
  * @author claas
  */
+@JsonPropertyOrder({"version", "keys", "certificates"})
 public class Backup {
 
     FirewallRuleRepository firewallRuleRepository;
@@ -73,7 +75,7 @@ public class Backup {
         return certificateRepository.findAll();
     }
 
-    public List<KeyModel> getKey() {
+    public List<KeyModel> getKeys() {
         return keyRepository.findAll();
     }
 
