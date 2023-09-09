@@ -6,6 +6,7 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.roles.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -71,6 +72,11 @@ public class ArachneUser implements Serializable {
     @Column
     @Setter(AccessLevel.NONE)
     private String password;
+
+    @JsonSetter("password")
+    public void setEncryptedPassword(String password) {
+        this.password = password;
+    }
 
     public void setPassword(String password) {
         this.password = new BCryptPasswordEncoder().encode(password);
