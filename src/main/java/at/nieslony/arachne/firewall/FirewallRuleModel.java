@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,6 +61,7 @@ public class FirewallRuleModel {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FirewallWhat> what;
 
+    @JsonIgnore
     public Boolean isValid() {
         if (who == null || where == null || what == null) {
             return false;

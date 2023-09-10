@@ -6,6 +6,7 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherDescription;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,6 +51,7 @@ public class RoleRuleModel implements Serializable {
     @Column(nullable = false)
     private String userMatcherClassName;
 
+    @JsonIgnore
     public String getRoleRuleDescription() {
         try {
             Class userMatcherClass = Class.forName(userMatcherClassName);
@@ -72,6 +74,7 @@ public class RoleRuleModel implements Serializable {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @JsonIgnore
     public String getRoleReadable() {
         return role.toString();
     }

@@ -20,8 +20,11 @@ import at.nieslony.arachne.utils.ArachneTimeUnit;
 import static at.nieslony.arachne.utils.ArachneTimeUnit.DAY;
 import static at.nieslony.arachne.utils.ArachneTimeUnit.HOUR;
 import static at.nieslony.arachne.utils.ArachneTimeUnit.MIN;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,20 +56,22 @@ public class RecurringTaskModel {
     private String className;
 
     @Column
-    private Boolean repeatTask;
+    private Boolean repeatTask = false;
 
     @Column
-    private Integer recurringInterval;
+    private Integer recurringInterval = 0;
 
     @Column
-    private ArachneTimeUnit timeUnit;
+    @Enumerated(EnumType.STRING)
+    private ArachneTimeUnit timeUnit = DAY;
 
     @Column
-    private Boolean startAtFixTime;
+    private Boolean startAtFixTime = false;
 
     @Column
-    private String startAt;
+    private String startAt = "";
 
+    @JsonIgnore
     public Time getStartAtAsTime() {
         if (startAt == null) {
             return null;
@@ -82,6 +87,7 @@ public class RecurringTaskModel {
         return new Time(hour, min, sec);
     }
 
+    @JsonIgnore
     public long getRecurringIntervalInSecs() {
         return switch (timeUnit) {
             case DAY ->
