@@ -9,12 +9,16 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -34,22 +38,30 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
 
     @Getter
     @Setter
+    @Builder(toBuilder = true)
+    @AllArgsConstructor
     static public class VpnSite extends AbstractSettingsGroup {
 
         private int id;
         private String name;
         private String description;
-        private String remoteIp;
+
+        private String remoteHost;
         private String sshUser;
         private String sshPrivateKey;
-        private String preSharedkey;
 
+        private String preSharedKey;
+
+        @Builder.Default
         private List<String> pushDnsServers = NetUtils.getDnsServers();
+        @Builder.Default
         private List<String> pushSearchDomains = Arrays.asList(
                 NetUtils.myDomain()
         );
 
+        @Builder.Default
         private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
+        @Builder.Default
         private boolean routeInternetThroughVpn = false;
 
         VpnSite(String name, String description, int id) {
@@ -137,5 +149,27 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         VpnSite site = sites.remove(id);
         site.delete(settings);
         vpnSiteIds.remove(id);
+    }
+
+    public static String createPreSharedKey() {
+        SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstance("NativePRNG");
+        } catch (NoSuchAlgorithmException ex) {
+            logger.error("Cannot create secure random: " + ex.getMessage());
+            return null;
+        }
+        byte[] values = new byte[2048 / 8];
+        secureRandom.nextBytes(values);
+        String keyBase64 = org.bouncycastle.util.encoders.Base64.toBase64String(values);
+
+        return """
+               #
+               # 2048 bit OpenVPN static key
+               #
+               -----BEGIN OpenVPN Static key V1-----
+               %s
+               -----END OpenVPN Static key V1-----
+               """.formatted(keyBase64);
     }
 }
