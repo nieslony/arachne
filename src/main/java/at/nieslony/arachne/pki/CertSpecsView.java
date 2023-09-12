@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "cert_specs", layout = ViewTemplate.class)
+@Route(value = "cert-specs", layout = ViewTemplate.class)
 @RolesAllowed("ADMIN")
 public class CertSpecsView
         extends VerticalLayout
@@ -68,7 +68,7 @@ public class CertSpecsView
         this.binder = new Binder<>();
 
         commonNameField = new TextField("Common Name");
-        organizationalUnitField = new TextField("Organozational Unit");
+        organizationalUnitField = new TextField("Organizational Unit");
         organizationField = new TextField("Organization");
         countryField = new TextField("Country");
         stateField = new TextField("State");
@@ -159,7 +159,9 @@ public class CertSpecsView
     @Override
     public void setParameter(BeforeEvent be, String parameter) {
         try {
-            certSpecType = CertSpecs.CertSpecType.valueOf(parameter.toUpperCase());
+            certSpecType = CertSpecs.CertSpecType.valueOf(
+                    parameter.toUpperCase().replaceAll("-", "_")
+            );
         } catch (java.lang.IllegalArgumentException ex) {
             add(new Text("Invalid cert specification: " + parameter));
             return;

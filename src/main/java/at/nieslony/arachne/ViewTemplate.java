@@ -163,14 +163,14 @@ public class ViewTemplate extends AppLayout {
                         "User Cert Specs",
                         RouteConfiguration
                                 .forSessionScope()
-                                .getUrl(CertSpecsView.class, "user_spec"),
+                                .getUrl(CertSpecsView.class, "user-spec"),
                         VaadinIcon.USER.create()
                 ),
                 new SideNavItem(
                         "Server Cert Specs",
                         RouteConfiguration
                                 .forSessionScope()
-                                .getUrl(CertSpecsView.class, "server_spec"),
+                                .getUrl(CertSpecsView.class, "server-spec"),
                         VaadinIcon.CLOUD.create()
                 ),
                 new SideNavItem(

@@ -80,7 +80,7 @@ import org.vaadin.pekka.WysiwygE;
  *
  * @author claas
  */
-@Route(value = "mail_settings", layout = ViewTemplate.class)
+@Route(value = "mail-settings", layout = ViewTemplate.class)
 @PageTitle("E-Mail Settings | Arachne")
 @RolesAllowed("ADMIN")
 public class MailSettingsView extends VerticalLayout {
