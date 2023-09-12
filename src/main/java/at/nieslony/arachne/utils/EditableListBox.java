@@ -63,7 +63,11 @@ public class EditableListBox
         );
 
         NativeLabel elbLabel = new NativeLabel(label);
-        elbLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+        elbLabel.addClassNames(
+                LumoUtility.FontSize.SMALL,
+                LumoUtility.FontWeight.BOLD,
+                LumoUtility.TextColor.BODY
+        );
 
         editField = new TextField();
         editField.setValueChangeMode(ValueChangeMode.EAGER);
@@ -72,6 +76,7 @@ public class EditableListBox
                 e -> {
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         Button updateButton = new Button(
                 "Update",
@@ -79,6 +84,7 @@ public class EditableListBox
                     items.remove(itemsField.getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         updateButton.setEnabled(false);
         Button removeButton = new Button(
@@ -86,6 +92,7 @@ public class EditableListBox
                 e -> {
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         removeButton.setEnabled(false);
 
@@ -134,13 +141,12 @@ public class EditableListBox
     @Override
     public void setValue(List<String> items) {
         this.items.clear();
-        this.items.addAll(items);
+        this.items = new LinkedList<>(items);
         itemsField.setItems(this.items);
     }
 
     @Override
     public List<String> getValue() {
-        logger.info(items.toString());
         return new LinkedList<>(items);
     }
 
@@ -151,9 +157,16 @@ public class EditableListBox
     @Override
     protected void setPresentationValue(List<String> v) {
         items.clear();
-        if (v != null) {
-            items.addAll(v);
-        }
-        itemsField.setItems(items);
+        items = new LinkedList<>(v);
+        setModelValue(v, false);
+    }
+
+    @Override
+    public boolean valueEquals(List<String> l1, List<String> l2) {
+        logger.debug("l1: " + l1.toString());
+        logger.debug("l2: " + l2.toString());
+        boolean eq = l1.equals(l2);
+        logger.debug(eq ? "equal" : "not equal");
+        return eq;
     }
 }
