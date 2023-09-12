@@ -27,6 +27,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -54,12 +55,16 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final Binder<OpenVpnSiteSettings.VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
+    private final OpenVpnRestController openVpnRestController;
+
+    private boolean siteModified = false;
 
     public OpenVpnSiteView(
             Settings settings,
             OpenVpnRestController openVpnRestController
     ) {
         this.settings = settings;
+        this.openVpnRestController = openVpnRestController;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(OpenVpnSiteSettings.VpnSite.class);
@@ -70,14 +75,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         tabs.add("Clients", createClientsPage());
         tabs.setWidthFull();
 
-        Button saveButton = new Button("Save", (t) -> {
-            try {
-                openVpnSiteSettings.save(settings);
-                openVpnRestController.writeOpenVpnSiteServerConfig();
-            } catch (SettingsException ex) {
-                logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
-            }
-        });
+        Button saveButton = new Button("Save", (t) -> save());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(tabs, saveButton);
@@ -295,6 +293,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setWidthFull();
 
         TabSheet siteSettingsTab = new TabSheet();
+        siteSettingsTab.add("Connection", createClientConnectionPage());
         siteSettingsTab.add("DNS", createDnsPage());
         siteSettingsTab.add("Routes", createRoutesTab());
 
@@ -309,7 +308,44 @@ public class OpenVpnSiteView extends VerticalLayout {
             deleteButton.setEnabled(
                     e.getValue() != null && e.getValue().getId() != 0
             );
-            siteBinder.setBean(e.getValue());
+            if (siteModified) {
+                if (e.isFromClient()) {
+                    ConfirmDialog dlg = new ConfirmDialog(
+                            "Unsaved Changes",
+                            "Site has unsaved changes. Save now?",
+                            "Save", (ce) -> {
+                                OpenVpnSiteSettings.VpnSite modValue = siteBinder.getBean();
+                                binder.getBean().getSites().put(modValue.getId(), modValue);
+                                sites.setItems(binder.getBean().getVpnSites());
+                                sites.setValue(e.getValue());
+
+                                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                                siteBinder.setBean(tmpSite);
+
+                                siteModified = false;
+                            },
+                            "Reject", (ce) -> {
+                                siteModified = false;
+
+                                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                                siteBinder.setBean(tmpSite);
+                            },
+                            "Cancel", (ce) -> {
+                                sites.setValue(e.getOldValue());
+                            }
+                    );
+                    dlg.open();
+                }
+            } else {
+                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                siteBinder.setBean(tmpSite);
+            }
+
+        });
+
+        siteBinder.addValueChangeListener((e) -> {
+            logger.info("------ Site modified. From client: " + e.isFromClient());
+            siteModified |= e.isFromClient();
         });
 
         sites.setValue(openVpnSiteSettings.getVpnSite(0));
@@ -411,5 +447,44 @@ public class OpenVpnSiteView extends VerticalLayout {
                 routeInternet
         );
         return layout;
+    }
+
+    private Component createClientConnectionPage() {
+        VerticalLayout layout = new VerticalLayout();
+
+        TextField remoteHostField = new TextField("Remote Host");
+        siteBinder.bind(
+                remoteHostField,
+                OpenVpnSiteSettings.VpnSite::getRemoteHost,
+                OpenVpnSiteSettings.VpnSite::setRemoteHost
+        );
+
+        TextArea preSharedKeyField = new TextArea("Preshared Key");
+        preSharedKeyField.setMinWidth(80, Unit.EM);
+        preSharedKeyField.setMinHeight(10, Unit.EX);
+        siteBinder.bind(preSharedKeyField,
+                OpenVpnSiteSettings.VpnSite::getPreSharedKey,
+                OpenVpnSiteSettings.VpnSite::setPreSharedKey
+        );
+        Button createPSKButton = new Button("Create", (e) -> {
+            preSharedKeyField.setValue(OpenVpnSiteSettings.createPreSharedKey());
+        });
+
+        layout.add(
+                remoteHostField,
+                preSharedKeyField,
+                createPSKButton
+        );
+
+        return layout;
+    }
+
+    private void save() {
+        try {
+            openVpnSiteSettings.save(settings);
+            openVpnRestController.writeOpenVpnSiteServerConfig();
+        } catch (SettingsException ex) {
+            logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+        }
     }
 }
