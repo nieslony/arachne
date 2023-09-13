@@ -337,10 +337,11 @@ public class OpenVpnSiteView extends VerticalLayout {
                     dlg.open();
                 }
             } else {
-                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
-                siteBinder.setBean(tmpSite);
+                if (e.getValue() != null) {
+                    OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                    siteBinder.setBean(tmpSite);
+                }
             }
-
         });
 
         siteBinder.addValueChangeListener((e) -> {
@@ -481,6 +482,10 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private void save() {
         try {
+            OpenVpnSiteSettings.VpnSite curSite = siteBinder.getBean();
+            if (curSite != null) {
+                openVpnSiteSettings.getSites().put(curSite.getId(), curSite);
+            }
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
         } catch (SettingsException ex) {
