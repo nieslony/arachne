@@ -52,7 +52,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
 
     private final Binder<OpenVpnSiteSettings> binder;
-    private final Binder<OpenVpnSiteSettings.VpnSite> siteBinder;
+    private final Binder<VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
     private final OpenVpnRestController openVpnRestController;
@@ -67,7 +67,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         this.openVpnRestController = openVpnRestController;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
-        siteBinder = new Binder<>(OpenVpnSiteSettings.VpnSite.class);
+        siteBinder = new Binder<>(VpnSite.class);
         openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         TabSheet tabs = new TabSheet();
@@ -239,7 +239,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private Component createClientsPage() {
         VerticalLayout layout = new VerticalLayout();
 
-        Select<OpenVpnSiteSettings.VpnSite> sites = new Select<>();
+        Select<VpnSite> sites = new Select<>();
         sites.setLabel("Sites");
         sites.setWidthFull();
         sites.setItems(openVpnSiteSettings.getVpnSites());
@@ -267,7 +267,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                     .formatted(conName));
             dlg.setCancelable(true);
             dlg.addConfirmListener((ce) -> {
-                OpenVpnSiteSettings.VpnSite site = sites.getValue();
+                VpnSite site = sites.getValue();
                 openVpnSiteSettings.deleteSite(settings, site.getId());
                 sites.setItems(openVpnSiteSettings.getVpnSites());
                 sites.setValue(openVpnSiteSettings.getVpnSite(0));
@@ -314,12 +314,12 @@ public class OpenVpnSiteView extends VerticalLayout {
                             "Unsaved Changes",
                             "Site has unsaved changes. Save now?",
                             "Save", (ce) -> {
-                                OpenVpnSiteSettings.VpnSite modValue = siteBinder.getBean();
+                                VpnSite modValue = siteBinder.getBean();
                                 binder.getBean().getSites().put(modValue.getId(), modValue);
                                 sites.setItems(binder.getBean().getVpnSites());
                                 sites.setValue(e.getValue());
 
-                                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                                VpnSite tmpSite = e.getValue().toBuilder().build();
                                 siteBinder.setBean(tmpSite);
 
                                 siteModified = false;
@@ -327,7 +327,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                             "Reject", (ce) -> {
                                 siteModified = false;
 
-                                OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                                VpnSite tmpSite = e.getValue().toBuilder().build();
                                 siteBinder.setBean(tmpSite);
                             },
                             "Cancel", (ce) -> {
@@ -338,7 +338,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 }
             } else {
                 if (e.getValue() != null) {
-                    OpenVpnSiteSettings.VpnSite tmpSite = e.getValue().toBuilder().build();
+                    VpnSite tmpSite = e.getValue().toBuilder().build();
                     siteBinder.setBean(tmpSite);
                 }
             }
@@ -354,8 +354,8 @@ public class OpenVpnSiteView extends VerticalLayout {
     }
 
     private void setNameDescDialog(
-            OpenVpnSiteSettings.VpnSite site,
-            Consumer<OpenVpnSiteSettings.VpnSite> onOk
+            VpnSite site,
+            Consumer<VpnSite> onOk
     ) {
         Dialog dlg = new Dialog();
         if (site == null) {
@@ -439,8 +439,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                 = new Checkbox("Route Internet Traffic through VPN");
         siteBinder.bind(
                 routeInternet,
-                OpenVpnSiteSettings.VpnSite::isRouteInternetThroughVpn,
-                OpenVpnSiteSettings.VpnSite::setRouteInternetThroughVpn
+                VpnSite::isRouteInternetThroughVpn,
+                VpnSite::setRouteInternetThroughVpn
         );
 
         VerticalLayout layout = new VerticalLayout(
@@ -456,16 +456,16 @@ public class OpenVpnSiteView extends VerticalLayout {
         TextField remoteHostField = new TextField("Remote Host");
         siteBinder.bind(
                 remoteHostField,
-                OpenVpnSiteSettings.VpnSite::getRemoteHost,
-                OpenVpnSiteSettings.VpnSite::setRemoteHost
+                VpnSite::getRemoteHost,
+                VpnSite::setRemoteHost
         );
 
         TextArea preSharedKeyField = new TextArea("Preshared Key");
         preSharedKeyField.setMinWidth(80, Unit.EM);
         preSharedKeyField.setMinHeight(10, Unit.EX);
         siteBinder.bind(preSharedKeyField,
-                OpenVpnSiteSettings.VpnSite::getPreSharedKey,
-                OpenVpnSiteSettings.VpnSite::setPreSharedKey
+                VpnSite::getPreSharedKey,
+                VpnSite::setPreSharedKey
         );
         Button createPSKButton = new Button("Create", (e) -> {
             preSharedKeyField.setValue(OpenVpnSiteSettings.createPreSharedKey());
@@ -482,7 +482,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private void save() {
         try {
-            OpenVpnSiteSettings.VpnSite curSite = siteBinder.getBean();
+            VpnSite curSite = siteBinder.getBean();
             if (curSite != null) {
                 openVpnSiteSettings.getSites().put(curSite.getId(), curSite);
             }

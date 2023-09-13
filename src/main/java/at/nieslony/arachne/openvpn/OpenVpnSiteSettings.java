@@ -36,57 +36,6 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteSettings.class);
 
-    @Getter
-    @Setter
-    @Builder(toBuilder = true)
-    @AllArgsConstructor
-    static public class VpnSite extends AbstractSettingsGroup {
-
-        private int id;
-        private String name;
-        private String description;
-
-        private String remoteHost;
-        private String sshUser;
-        private String sshPrivateKey;
-
-        private String preSharedKey;
-
-        @Builder.Default
-        private List<String> pushDnsServers = NetUtils.getDnsServers();
-        @Builder.Default
-        private List<String> pushSearchDomains = Arrays.asList(
-                NetUtils.myDomain()
-        );
-
-        @Builder.Default
-        private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
-        @Builder.Default
-        private boolean routeInternetThroughVpn = false;
-
-        VpnSite(String name, String description, int id) {
-            this.id = id;
-            this.name = name;
-            this.description = description;
-        }
-
-        public VpnSite(Settings settings, int id) throws SettingsException {
-            this.id = id;
-            load(settings);
-        }
-
-        @Override
-        protected String groupName() {
-            return "%s.%d".formatted(super.groupName(), id);
-        }
-
-        @Override
-        public String toString() {
-            return description == null || description.isEmpty()
-                    ? name
-                    : name + " - " + description;
-        }
-    }
 
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
