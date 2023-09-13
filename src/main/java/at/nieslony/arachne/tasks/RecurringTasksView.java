@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "recurring_tasks", layout = ViewTemplate.class)
+@Route(value = "recurring-tasks", layout = ViewTemplate.class)
 @PageTitle("Recurring Tasks | Arachne")
 @RolesAllowed("ADMIN")
 public class RecurringTasksView extends VerticalLayout {

@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "openvpn_user", layout = ViewTemplate.class)
+@Route(value = "openvpn-user", layout = ViewTemplate.class)
 @PageTitle("OpenVPN User | Arachne")
 @RolesAllowed("ADMIN")
 public class OpenVpnUserView extends VerticalLayout {

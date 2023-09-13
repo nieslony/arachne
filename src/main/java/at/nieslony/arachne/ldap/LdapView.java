@@ -76,7 +76,7 @@ import org.springframework.security.core.AuthenticationException;
  *
  * @author claas
  */
-@Route(value = "ldap_settings", layout = ViewTemplate.class)
+@Route(value = "ldap-settings", layout = ViewTemplate.class)
 @PageTitle("LDAP Settings | Arachne")
 @RolesAllowed("ADMIN")
 public class LdapView extends VerticalLayout {

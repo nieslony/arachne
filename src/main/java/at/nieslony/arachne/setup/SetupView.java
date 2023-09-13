@@ -119,7 +119,7 @@ public class SetupView extends VerticalLayout {
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next");
         next.addClickListener((t) -> {
-            int noTabs = 4;
+            int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
             if (curTab < noTabs - 1) {
                 tabSheet.setSelectedIndex(curTab + 1);
