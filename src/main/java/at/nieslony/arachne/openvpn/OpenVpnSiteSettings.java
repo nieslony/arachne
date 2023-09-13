@@ -11,17 +11,15 @@ import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public class OpenVpnSiteSettings extends AbstractSettingsGroup {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteSettings.class);
-
 
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
@@ -110,7 +107,12 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         }
         byte[] values = new byte[2048 / 8];
         secureRandom.nextBytes(values);
-        String keyBase64 = org.bouncycastle.util.encoders.Base64.toBase64String(values);
+        String keyBase64 = String.join(
+                "\n",
+                Base64
+                        .toBase64String(values)
+                        .split("(?<=\\G.{78})")
+        );
 
         return """
                #

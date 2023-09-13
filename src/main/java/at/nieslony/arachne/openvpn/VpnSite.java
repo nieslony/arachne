@@ -25,19 +25,29 @@ import lombok.Setter;
 @AllArgsConstructor
 public class VpnSite extends AbstractSettingsGroup {
 
-    private int id;
+    private Integer id;
     private String name;
     private String description;
     private String remoteHost;
     private String sshUser;
     private String sshPrivateKey;
     private String preSharedKey;
+
+    @Builder.Default
+    private boolean inheritDnsServers = true;
     @Builder.Default
     private List<String> pushDnsServers = NetUtils.getDnsServers();
     @Builder.Default
+    private boolean inheritPushDomains = true;
+    @Builder.Default
     private List<String> pushSearchDomains = Arrays.asList(NetUtils.myDomain());
+
+    @Builder.Default
+    private boolean inheritPushRoutes = true;
     @Builder.Default
     private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
+    @Builder.Default
+    boolean inheritRouteInternetThroughVpn = true;
     @Builder.Default
     private boolean routeInternetThroughVpn = false;
 

@@ -12,6 +12,8 @@ import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import at.nieslony.arachne.utils.validators.ConditionalValidator;
+import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -30,6 +32,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -58,6 +61,19 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnRestController openVpnRestController;
 
     private boolean siteModified = false;
+
+    private TextField remoteHostField;
+    private TextArea preSharedKeyField;
+
+    private Checkbox inheritDnsServers;
+    private EditableListBox dnsServers;
+    private Checkbox inheritPushDomains;
+    private EditableListBox pushDomains;
+
+    private Checkbox inheritPushRoutes;
+    private EditableListBox pushRoutes;
+    private Checkbox inheritRouteInternet;
+    private Checkbox routeInternet;
 
     public OpenVpnSiteView(
             Settings settings,
@@ -342,6 +358,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                     siteBinder.setBean(tmpSite);
                 }
             }
+            setInheritBoxesVisible(siteBinder.getBean().getId() != 0);
+            siteBinder.validate();
         });
 
         siteBinder.addValueChangeListener((e) -> {
@@ -404,65 +422,126 @@ public class OpenVpnSiteView extends VerticalLayout {
     }
 
     private Component createDnsPage() {
-        EditableListBox dnsServers = new EditableListBox("DNS Servers");
+        dnsServers = new EditableListBox("DNS Servers");
         siteBinder.bind(
                 dnsServers,
                 (source) -> source.getPushDnsServers(),
                 (source, value) -> {
                     source.setPushDnsServers(value);
                 });
+        inheritDnsServers = new Checkbox("Inherit");
+        inheritDnsServers.addValueChangeListener((e) -> {
+            dnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
+        });
+        siteBinder.bind(
+                inheritDnsServers,
+                VpnSite::isInheritDnsServers,
+                VpnSite::setInheritDnsServers
+        );
 
-        EditableListBox pushDomains = new EditableListBox("Push Domains");
+        pushDomains = new EditableListBox("Push Domains");
         siteBinder.bind(
                 pushDomains,
                 (source) -> source.getPushSearchDomains(),
                 (source, value) -> source.setPushSearchDomains(value)
         );
+        inheritPushDomains = new Checkbox("Inherit");
+        inheritPushDomains.addValueChangeListener((e) -> {
+            pushDomains.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
+        });
+        siteBinder.bind(
+                inheritPushDomains,
+                VpnSite::isInheritPushDomains,
+                VpnSite::setInheritPushDomains
+        );
 
         HorizontalLayout layout = new HorizontalLayout(
-                dnsServers,
-                pushDomains
+                new VerticalLayout(
+                        inheritDnsServers,
+                        dnsServers
+                ),
+                new VerticalLayout(
+                        inheritPushDomains,
+                        pushDomains
+                )
         );
 
         return layout;
     }
 
     private Component createRoutesTab() {
-        EditableListBox pushRoutes = new EditableListBox("Push Routes");
+        pushRoutes = new EditableListBox("Push Routes");
         siteBinder.bind(
                 pushRoutes,
                 (source) -> source.getPushRoutes(),
                 (source, value) -> source.setPushRoutes(value)
         );
+        inheritPushRoutes = new Checkbox("Inherit");
+        inheritPushRoutes.addValueChangeListener((e) -> {
+            pushRoutes.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
+        });
+        siteBinder.bind(
+                inheritPushRoutes,
+                VpnSite::isInheritPushRoutes,
+                VpnSite::setInheritPushRoutes
+        );
 
-        Checkbox routeInternet
-                = new Checkbox("Route Internet Traffic through VPN");
+        routeInternet = new Checkbox("Route Internet Traffic through VPN");
         siteBinder.bind(
                 routeInternet,
                 VpnSite::isRouteInternetThroughVpn,
                 VpnSite::setRouteInternetThroughVpn
         );
+        inheritRouteInternet = new Checkbox("Inherit");
+        inheritRouteInternet.addValueChangeListener((e) -> {
+            routeInternet.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
+        });
+        siteBinder.bind(
+                inheritRouteInternet,
+                VpnSite::isInheritRouteInternetThroughVpn,
+                VpnSite::setInheritRouteInternetThroughVpn
+        );
 
         VerticalLayout layout = new VerticalLayout(
+                inheritPushRoutes,
                 pushRoutes,
-                routeInternet
+                new HorizontalLayout(
+                        routeInternet,
+                        inheritRouteInternet
+                )
         );
+
         return layout;
     }
 
     private Component createClientConnectionPage() {
         VerticalLayout layout = new VerticalLayout();
 
-        TextField remoteHostField = new TextField("Remote Host");
-        siteBinder.bind(
-                remoteHostField,
-                VpnSite::getRemoteHost,
-                VpnSite::setRemoteHost
-        );
+        remoteHostField = new TextField("Remote Host");
+        remoteHostField.setWidthFull();
+        remoteHostField.setValueChangeMode(ValueChangeMode.EAGER);
+        siteBinder.forField(remoteHostField)
+                .asRequired((v, vc) -> {
+                    if (siteBinder.getBean().getId() == 0) {
+                        return ValidationResult.ok();
+                    } else {
+                        return v.isEmpty()
+                                ? ValidationResult.error("Hostname required")
+                                : ValidationResult.ok();
+                    }
+                })
+                .withValidator(new ConditionalValidator<>(
+                        () -> siteBinder.getBean().getId() == 0,
+                        new HostnameValidator()
+                ))
+                .bind(
+                        VpnSite::getRemoteHost,
+                        VpnSite::setRemoteHost
+                );
 
-        TextArea preSharedKeyField = new TextArea("Preshared Key");
+        preSharedKeyField = new TextArea("Preshared Key");
         preSharedKeyField.setMinWidth(80, Unit.EM);
-        preSharedKeyField.setMinHeight(10, Unit.EX);
+        preSharedKeyField.setHeight(10, Unit.EX);
         siteBinder.bind(preSharedKeyField,
                 VpnSite::getPreSharedKey,
                 VpnSite::setPreSharedKey
@@ -491,5 +570,15 @@ public class OpenVpnSiteView extends VerticalLayout {
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
         }
+    }
+
+    private void setInheritBoxesVisible(boolean visible) {
+        remoteHostField.setEnabled(visible);
+        preSharedKeyField.setEnabled(visible);
+
+        inheritDnsServers.setVisible(visible);
+        inheritPushDomains.setVisible(visible);
+        inheritPushRoutes.setVisible(visible);
+        inheritRouteInternet.setVisible(visible);
     }
 }
