@@ -567,6 +567,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             }
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
+            siteModified = false;
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
         }
