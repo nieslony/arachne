@@ -42,6 +42,18 @@ public class VpnSite extends AbstractSettingsGroup {
     @Builder.Default
     private List<String> pushSearchDomains = Arrays.asList(NetUtils.myDomain());
 
+    public List<String> getPushDnsServers(VpnSite defaultSite) {
+        return inheritDnsServers
+                ? defaultSite.getPushDnsServers()
+                : getPushDnsServers();
+    }
+
+    public List<String> getPushSearchDomains(VpnSite defaultSite) {
+        return inheritPushDomains
+                ? defaultSite.getPushSearchDomains()
+                : getPushSearchDomains();
+    }
+
     @Builder.Default
     private boolean inheritPushRoutes = true;
     @Builder.Default
@@ -50,6 +62,12 @@ public class VpnSite extends AbstractSettingsGroup {
     boolean inheritRouteInternetThroughVpn = true;
     @Builder.Default
     private boolean routeInternetThroughVpn = false;
+
+    public List<String> getPushRoutes(VpnSite defaultSite) {
+        return inheritPushRoutes
+                ? defaultSite.getPushRoutes()
+                : getPushRoutes();
+    }
 
     VpnSite(String name, String description, int id) {
         this.id = id;

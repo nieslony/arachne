@@ -21,9 +21,15 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Pre;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -37,6 +43,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.StringWriter;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -308,6 +315,25 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setAlignItems(Alignment.BASELINE);
         sitesLayout.setWidthFull();
 
+        MenuBar siteConfigMenu = new MenuBar();
+        MenuItem siteConfigItem = siteConfigMenu.addItem(new HorizontalLayout(
+                new Text("Site Config"),
+                new Icon(VaadinIcon.CHEVRON_DOWN)
+        ));
+        SubMenu subMenu = siteConfigItem.getSubMenu();
+        subMenu.addItem("Download...", (e) -> {
+        });
+        subMenu.addItem("Upload to site...", (e) -> {
+        });
+        subMenu.addItem("View...", (e) -> {
+            StringWriter cfgWriter = new StringWriter();
+            openVpnRestController.writeOpenVpnSiteRemoteConfig(
+                    sites.getValue().getId(),
+                    cfgWriter
+            );
+            createRemoteConfigDialog(cfgWriter.toString()).open();
+        });
+
         TabSheet siteSettingsTab = new TabSheet();
         siteSettingsTab.add("Connection", createClientConnectionPage());
         siteSettingsTab.add("DNS", createDnsPage());
@@ -315,6 +341,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         layout.add(
                 sitesLayout,
+                siteConfigMenu,
                 siteSettingsTab
         );
         layout.setMargin(false);
@@ -567,6 +594,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             }
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
+            openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             siteModified = false;
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
@@ -581,5 +609,20 @@ public class OpenVpnSiteView extends VerticalLayout {
         inheritPushDomains.setVisible(visible);
         inheritPushRoutes.setVisible(visible);
         inheritRouteInternet.setVisible(visible);
+    }
+
+    private Dialog createRemoteConfigDialog(String cfg) {
+        Dialog dlg = new Dialog("Remote Configuration");
+
+        Pre cfgField = new Pre(cfg);
+        dlg.add(cfgField);
+
+        Button closeButton = new Button("Close", (e) -> {
+            dlg.close();
+        });
+        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        dlg.getFooter().add(closeButton);
+
+        return dlg;
     }
 }
