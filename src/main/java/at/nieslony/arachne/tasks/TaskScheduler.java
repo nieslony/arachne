@@ -171,11 +171,18 @@ public class TaskScheduler implements BeanFactoryAware {
                             model.getTaskClassName(), next.toString()
                     ));
                     taskRepository.save(model);
+                    scheduleTask(model);
                 } else {
                     logger.info("Task %s is not repeated".formatted(taskClassName));
                 }
             } else {
-                logger.info("Task %s is already scheduled".formatted(taskClassName));
+                logger.info(
+                        "Task %s is already scheduled at %s"
+                                .formatted(
+                                        taskClassName,
+                                        alreadyScheduledTask.getScheduled().toString()
+                                )
+                );
                 scheduleTask(alreadyScheduledTask);
             }
         }
@@ -191,6 +198,30 @@ public class TaskScheduler implements BeanFactoryAware {
             var futureTask = scheduledTasks.remove(model.getTaskClassName());
             futureTask.cancel(false);
         }
+
+        Date startAt = model.getScheduled();
+        Calendar now = Calendar.getInstance();
+        if (now.after(startAt)) {
+            if (recurringTaskModel.getStartAtFixTime()) {
+                Calendar cal = Calendar.getInstance();
+                var time = recurringTaskModel.getStartAtAsTime();
+                cal.set(Calendar.HOUR, time.hour());
+                cal.set(Calendar.MINUTE, time.min());
+                if (cal.before(now)) {
+                    cal.add(Calendar.DATE, 1);
+                }
+                startAt = cal.getTime();
+            } else {
+                startAt = now.getTime();
+            }
+            logger.info(
+                    "Task scheduled in past, rescheduled to "
+                    + startAt.toString()
+            );
+            model.setScheduled(startAt);
+            taskRepository.save(model);
+        }
+
         AtomicReference<ScheduledFuture<?>> future = new AtomicReference<>();
         ArachneTimerTask arachneTimerTask;
         try {
@@ -207,34 +238,15 @@ public class TaskScheduler implements BeanFactoryAware {
             return;
         }
 
-        if (recurringTaskModel.getStartAtFixTime()) {
-            Calendar now = Calendar.getInstance();
-            Date startAt = new Date(
-                    now.get(Calendar.YEAR),
-                    now.get(Calendar.MONTH),
-                    now.get(Calendar.DAY_OF_MONTH),
-                    recurringTaskModel.getStartAtAsTime().hour(),
-                    recurringTaskModel.getStartAtAsTime().min()
-            );
-            long delay;
-            if (now.after(startAt)) {
+        long delay = (startAt.getTime() - now.getTime().getTime()) / 1000;
+        long interval = recurringTaskModel.getRecurringIntervalInSecs();
+        future.set(scheduler.scheduleAtFixedRate(
+                arachneTimerTask,
+                delay,
+                interval,
+                TimeUnit.SECONDS
+        ));
 
-            } else {
-
-            }
-        } else {
-            Date startAt = model.getScheduled();
-            Date now = new Date();
-            long delay = (startAt.getTime() - now.getTime()) / 1000;
-            long interval = recurringTaskModel.getRecurringIntervalInSecs();
-
-            future.set(scheduler.scheduleAtFixedRate(
-                    arachneTimerTask,
-                    delay,
-                    interval,
-                    TimeUnit.SECONDS
-            ));
-        }
         scheduledTasks.put(model.getTaskClassName(), future.get());
     }
 
