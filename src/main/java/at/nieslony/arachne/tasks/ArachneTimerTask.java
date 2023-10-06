@@ -76,13 +76,6 @@ public class ArachneTimerTask extends TimerTask {
 
         taskScheduler.getScheduler().schedule(
                 () -> {
-                    logger.info(
-                            "Creating next scheduled entry %s on %s"
-                                    .formatted(
-                                            taskModel.getTaskClassName(),
-                                            taskModel.getScheduled().toString()
-                                    )
-                    );
                     long nextRun
                     = new Date().getTime()
                     + future.get().getDelay(TimeUnit.MILLISECONDS);
@@ -92,6 +85,13 @@ public class ArachneTimerTask extends TimerTask {
                     newTaskModel.setTaskClassName(taskModel.getTaskClassName());
                     taskRepository.save(newTaskModel);
                     taskModel = newTaskModel;
+                    logger.info(
+                            "Creating next scheduled entry %s on %s"
+                                    .formatted(
+                                            taskModel.getTaskClassName(),
+                                            taskModel.getScheduled().toString()
+                                    )
+                    );
                 },
                 10,
                 java.util.concurrent.TimeUnit.MILLISECONDS
