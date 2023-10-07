@@ -14,6 +14,7 @@ import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
+import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.olli.FileDownloadWrapper;
 
 /**
  *
@@ -68,6 +70,10 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnRestController openVpnRestController;
 
     private boolean siteModified = false;
+
+    private Select<VpnSite> sites;
+    private Button deleteButton;
+    private MenuBar siteConfigMenu;
 
     private TextField remoteHostField;
     private TextArea preSharedKeyField;
@@ -262,7 +268,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private Component createClientsPage() {
         VerticalLayout layout = new VerticalLayout();
 
-        Select<VpnSite> sites = new Select<>();
+        sites = new Select<>();
         sites.setLabel("Sites");
         sites.setWidthFull();
         sites.setItems(openVpnSiteSettings.getVpnSites());
@@ -280,7 +286,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 }
         );
 
-        Button deleteButton = new Button("Delete", (e) -> {
+        deleteButton = new Button("Delete", (e) -> {
             ConfirmDialog dlg = new ConfirmDialog();
             String conName = sites.getValue().getName();
             dlg.setHeader("Delete VPN Site \"%s\"".formatted(conName));
@@ -315,14 +321,25 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setAlignItems(Alignment.BASELINE);
         sitesLayout.setWidthFull();
 
-        MenuBar siteConfigMenu = new MenuBar();
+        siteConfigMenu = new MenuBar();
         MenuItem siteConfigItem = siteConfigMenu.addItem(new HorizontalLayout(
                 new Text("Site Config"),
                 new Icon(VaadinIcon.CHEVRON_DOWN)
         ));
         SubMenu subMenu = siteConfigItem.getSubMenu();
-        subMenu.addItem("Download...", (e) -> {
-        });
+        FileDownloadWrapper downloadComponent = new FileDownloadWrapper(
+                "bla",
+                () -> {
+                    StringWriter cfgWriter = new StringWriter();
+                    openVpnRestController.writeOpenVpnSiteRemoteConfig(
+                            sites.getValue().getId(),
+                            cfgWriter
+                    );
+                    return cfgWriter.toString().getBytes();
+                }
+        );
+        downloadComponent.setText("Download...");
+        subMenu.addItem(downloadComponent);
         subMenu.addItem("Upload to site...", (e) -> {
         });
         subMenu.addItem("View...", (e) -> {
@@ -347,47 +364,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         layout.setMargin(false);
         layout.setPadding(false);
 
-        sites.addValueChangeListener((e) -> {
-            deleteButton.setEnabled(
-                    e.getValue() != null && e.getValue().getId() != 0
-            );
-            if (siteModified) {
-                if (e.isFromClient()) {
-                    ConfirmDialog dlg = new ConfirmDialog(
-                            "Unsaved Changes",
-                            "Site has unsaved changes. Save now?",
-                            "Save", (ce) -> {
-                                VpnSite modValue = siteBinder.getBean();
-                                binder.getBean().getSites().put(modValue.getId(), modValue);
-                                sites.setItems(binder.getBean().getVpnSites());
-                                sites.setValue(e.getValue());
-
-                                VpnSite tmpSite = e.getValue().toBuilder().build();
-                                siteBinder.setBean(tmpSite);
-
-                                siteModified = false;
-                            },
-                            "Reject", (ce) -> {
-                                siteModified = false;
-
-                                VpnSite tmpSite = e.getValue().toBuilder().build();
-                                siteBinder.setBean(tmpSite);
-                            },
-                            "Cancel", (ce) -> {
-                                sites.setValue(e.getOldValue());
-                            }
-                    );
-                    dlg.open();
-                }
-            } else {
-                if (e.getValue() != null) {
-                    VpnSite tmpSite = e.getValue().toBuilder().build();
-                    siteBinder.setBean(tmpSite);
-                }
-            }
-            setInheritBoxesVisible(siteBinder.getBean().getId() != 0);
-            siteBinder.validate();
-        });
+        sites.addValueChangeListener(this::onChangeSite);
 
         siteBinder.addValueChangeListener((e) -> {
             logger.info("------ Site modified. From client: " + e.isFromClient());
@@ -601,16 +578,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         }
     }
 
-    private void setInheritBoxesVisible(boolean visible) {
-        remoteHostField.setEnabled(visible);
-        preSharedKeyField.setEnabled(visible);
-
-        inheritDnsServers.setVisible(visible);
-        inheritPushDomains.setVisible(visible);
-        inheritPushRoutes.setVisible(visible);
-        inheritRouteInternet.setVisible(visible);
-    }
-
     private Dialog createRemoteConfigDialog(String cfg) {
         Dialog dlg = new Dialog("Remote Configuration");
 
@@ -624,5 +591,66 @@ public class OpenVpnSiteView extends VerticalLayout {
         dlg.getFooter().add(closeButton);
 
         return dlg;
+    }
+
+    private String getRemoteConfigName(VpnSite site) {
+        return "arachne_$s_to_%s.cfg"
+                .formatted(
+                        site.getRemoteHost(),
+                        openVpnSiteSettings.getRemote()
+                );
+    }
+
+    private void onChangeSite(
+            AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
+    ) {
+        boolean defaultSiteSelected
+                = e.getValue() != null && e.getValue().getId() != 0;
+        deleteButton.setEnabled(!defaultSiteSelected);
+        siteConfigMenu.setEnabled(!defaultSiteSelected);
+
+        remoteHostField.setEnabled(!defaultSiteSelected);
+        preSharedKeyField.setEnabled(!defaultSiteSelected);
+
+        inheritDnsServers.setVisible(!defaultSiteSelected);
+        inheritPushDomains.setVisible(!defaultSiteSelected);
+        inheritPushRoutes.setVisible(!defaultSiteSelected);
+        inheritRouteInternet.setVisible(!defaultSiteSelected);
+
+        if (siteModified) {
+            if (e.isFromClient()) {
+                ConfirmDialog dlg = new ConfirmDialog(
+                        "Unsaved Changes",
+                        "Site has unsaved changes. Save now?",
+                        "Save", (ce) -> {
+                            VpnSite modValue = siteBinder.getBean();
+                            binder.getBean().getSites().put(modValue.getId(), modValue);
+                            sites.setItems(binder.getBean().getVpnSites());
+                            sites.setValue(e.getValue());
+
+                            VpnSite tmpSite = e.getValue().toBuilder().build();
+                            siteBinder.setBean(tmpSite);
+
+                            siteModified = false;
+                        },
+                        "Reject", (ce) -> {
+                            siteModified = false;
+
+                            VpnSite tmpSite = e.getValue().toBuilder().build();
+                            siteBinder.setBean(tmpSite);
+                        },
+                        "Cancel", (ce) -> {
+                            sites.setValue(e.getOldValue());
+                        }
+                );
+                dlg.open();
+            }
+        } else {
+            if (e.getValue() != null) {
+                VpnSite tmpSite = e.getValue().toBuilder().build();
+                siteBinder.setBean(tmpSite);
+            }
+        }
+        siteBinder.validate();
     }
 }
