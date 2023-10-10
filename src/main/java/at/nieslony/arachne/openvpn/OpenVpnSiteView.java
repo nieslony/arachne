@@ -16,6 +16,7 @@ import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasEnabled;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -45,6 +46,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,6 +73,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnRestController openVpnRestController;
 
     private boolean siteModified = false;
+    private List<HasEnabled> nonDefaultComponents;
 
     private Select<VpnSite> sites;
     private Button deleteButton;
@@ -94,6 +98,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     ) {
         this.settings = settings;
         this.openVpnRestController = openVpnRestController;
+        this.nonDefaultComponents = new LinkedList<>();
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
@@ -111,6 +116,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         binder.setBean(openVpnSiteSettings);
         binder.validate();
+        enableNonDefaultCopmponents(false);
     }
 
     private Component createBasicsPage() {
@@ -303,6 +309,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             });
             dlg.open();
         });
+        nonDefaultComponents.add(deleteButton);
 
         Button addButton = new Button("Add...", (e) -> {
             setNameDescDialog(null, (site) -> {
@@ -350,6 +357,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             );
             createRemoteConfigDialog(cfgWriter.toString()).open();
         });
+        nonDefaultComponents.add(siteConfigMenu);
 
         TabSheet siteSettingsTab = new TabSheet();
         siteSettingsTab.add("Connection", createClientConnectionPage());
@@ -442,6 +450,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritDnsServers,
                 VpnSite::setInheritDnsServers
         );
+        nonDefaultComponents.add(inheritDnsServers);
 
         pushDomains = new EditableListBox("Push Domains");
         siteBinder.bind(
@@ -458,6 +467,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritPushDomains,
                 VpnSite::setInheritPushDomains
         );
+        nonDefaultComponents.add(inheritPushDomains);
 
         HorizontalLayout layout = new HorizontalLayout(
                 new VerticalLayout(
@@ -489,6 +499,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritPushRoutes,
                 VpnSite::setInheritPushRoutes
         );
+        nonDefaultComponents.add(inheritPushRoutes);
 
         routeInternet = new Checkbox("Route Internet Traffic through VPN");
         siteBinder.bind(
@@ -505,6 +516,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritRouteInternetThroughVpn,
                 VpnSite::setInheritRouteInternetThroughVpn
         );
+        nonDefaultComponents.add(inheritRouteInternet);
 
         VerticalLayout layout = new VerticalLayout(
                 inheritPushRoutes,
@@ -542,6 +554,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                         VpnSite::getRemoteHost,
                         VpnSite::setRemoteHost
                 );
+        nonDefaultComponents.add(remoteHostField);
 
         preSharedKeyField = new TextArea("Preshared Key");
         preSharedKeyField.setMinWidth(80, Unit.EM);
@@ -553,6 +566,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button createPSKButton = new Button("Create", (e) -> {
             preSharedKeyField.setValue(OpenVpnSiteSettings.createPreSharedKey());
         });
+        nonDefaultComponents.add(preSharedKeyField);
 
         layout.add(
                 remoteHostField,
@@ -601,21 +615,18 @@ public class OpenVpnSiteView extends VerticalLayout {
                 );
     }
 
+    private void enableNonDefaultCopmponents(boolean enable) {
+        nonDefaultComponents.forEach((component) -> {
+            component.setEnabled(enable);
+        });
+    }
+
     private void onChangeSite(
             AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
     ) {
         boolean defaultSiteSelected
                 = e.getValue() != null && e.getValue().getId() != 0;
-        deleteButton.setEnabled(!defaultSiteSelected);
-        siteConfigMenu.setEnabled(!defaultSiteSelected);
-
-        remoteHostField.setEnabled(!defaultSiteSelected);
-        preSharedKeyField.setEnabled(!defaultSiteSelected);
-
-        inheritDnsServers.setVisible(!defaultSiteSelected);
-        inheritPushDomains.setVisible(!defaultSiteSelected);
-        inheritPushRoutes.setVisible(!defaultSiteSelected);
-        inheritRouteInternet.setVisible(!defaultSiteSelected);
+        enableNonDefaultCopmponents(defaultSiteSelected);
 
         if (siteModified) {
             if (e.isFromClient()) {
