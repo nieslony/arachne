@@ -14,6 +14,8 @@ import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IpValidator;
+import at.nieslony.arachne.utils.validators.SubnetValidator;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
@@ -41,6 +43,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -434,7 +437,12 @@ public class OpenVpnSiteView extends VerticalLayout {
     }
 
     private Component createDnsPage() {
-        dnsServers = new EditableListBox("DNS Servers");
+        dnsServers = new EditableListBox("DNS Servers") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new IpValidator();
+            }
+        };
         siteBinder.bind(
                 dnsServers,
                 (source) -> source.getPushDnsServers(),
@@ -452,7 +460,12 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         nonDefaultComponents.add(inheritDnsServers);
 
-        pushDomains = new EditableListBox("Push Domains");
+        pushDomains = new EditableListBox("Push Domains") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new HostnameValidator();
+            }
+        };
         siteBinder.bind(
                 pushDomains,
                 (source) -> source.getPushSearchDomains(),
@@ -484,7 +497,12 @@ public class OpenVpnSiteView extends VerticalLayout {
     }
 
     private Component createRoutesTab() {
-        pushRoutes = new EditableListBox("Push Routes");
+        pushRoutes = new EditableListBox("Push Routes") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new SubnetValidator(false);
+            }
+        };
         siteBinder.bind(
                 pushRoutes,
                 (source) -> source.getPushRoutes(),
