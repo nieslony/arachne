@@ -76,7 +76,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnRestController openVpnRestController;
 
     private boolean siteModified = false;
-    private List<HasEnabled> nonDefaultComponents;
+    private final List<HasEnabled> nonDefaultComponents;
 
     private Select<VpnSite> sites;
     private Button deleteButton;
@@ -95,6 +95,24 @@ public class OpenVpnSiteView extends VerticalLayout {
     private Checkbox inheritRouteInternet;
     private Checkbox routeInternet;
 
+    private SiteConfigUploader siteConfigUploader;
+
+    enum SshAuthType {
+        USERNAME_PASSWORD("Username/Password"),
+        PRESHARE_KEY("Preshared Key");
+
+        private final String value;
+
+        private SshAuthType(String s) {
+            value = s;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
+
     public OpenVpnSiteView(
             Settings settings,
             OpenVpnRestController openVpnRestController
@@ -103,6 +121,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         this.openVpnRestController = openVpnRestController;
         this.nonDefaultComponents = new LinkedList<>();
 
+        siteConfigUploader = new SiteConfigUploader();
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
         openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
@@ -682,4 +701,5 @@ public class OpenVpnSiteView extends VerticalLayout {
         }
         siteBinder.validate();
     }
+
 }
