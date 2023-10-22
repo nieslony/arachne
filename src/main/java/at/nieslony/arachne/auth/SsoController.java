@@ -5,6 +5,7 @@
 package at.nieslony.arachne.auth;
 
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class SsoController {
 
     @GetMapping("/sso")
+    @AnonymousAllowed
     public ResponseEntity<String> sso() {
         VaadinSession session = VaadinSession.getCurrent();
         if (session != null) {
