@@ -11,6 +11,10 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +54,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private ArachneUserDetailsService arachneUserDetailsService;
 
+    @Autowired
+    private WwwAuthenticateFilter wwwAuthenticateFilter;
+
     private KerberosSettings kerberosSettings;
 
     @PostConstruct
@@ -66,11 +73,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .exceptionHandling(
-                        eh -> eh.authenticationEntryPoint(
-                                spnegoEntryPoint()
-                        )
-                )
                 .csrf(
                         (csrf) -> csrf.disable()
                 )
@@ -90,6 +92,11 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                     = http.getSharedObject(AuthenticationManager.class);
 
             http
+                    .exceptionHandling(
+                            eh -> eh.authenticationEntryPoint(
+                                    spnegoEntryPoint()
+                            )
+                    )
                     .authenticationProvider(
                             kerberosAuthenticationProvider()
                     )
@@ -101,30 +108,37 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                             SessionManagementFilter.class
                     )
                     .addFilterBefore(
-                            new WwwAuthenticateFilter(),
+                            wwwAuthenticateFilter,
                             UsernamePasswordAuthenticationFilter.class
                     );
+        } else {
+            logger.info(
+                    "Kerberos is disabled, don't add authentication providers and filters"
+            );
         }
     }
 
     @Bean
-    public SpnegoAuthenticationProcessingFilter spnegoAuthenticationProcessingFilter(
+    public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager
     ) {
-        logger.info("Creating SpnegoAuthenticationProcessingFilter");
-        SpnegoAuthenticationProcessingFilter filter = new SpnegoAuthenticationProcessingFilter();
-        filter.setAuthenticationManager(authenticationManager);
-        filter.setFailureHandler((request, response, exception) -> {
-            logger.error("Cannot authenticate with Kerberos: " + exception.getMessage());
-            response.sendError(HttpStatus.UNAUTHORIZED.value());
-        });
-        filter.setFailureHandler((request, response, ex) -> {
-            logger.error("Authentication failed: " + ex.getMessage());
-        });
-        filter.setSuccessHandler((request, response, authentication) -> {
-            logger.info("Access to %s granted".formatted(request.getContextPath()));
-        });
-        return filter;
+        if (kerberosSettings.isEnableKrbAuth()) {
+            logger.info("Creating SpnegoAuthenticationProcessingFilter");
+            SpnegoAuthenticationProcessingFilter filter = new SpnegoAuthenticationProcessingFilter();
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setFailureHandler((request, response, exception) -> {
+                logger.error("Cannot authenticate with Kerberos: " + exception.getMessage());
+                response.sendError(HttpStatus.UNAUTHORIZED.value());
+            });
+            filter.setSuccessHandler((request, response, authentication) -> {
+                logger.info("Access to %s granted".formatted(request.getContextPath()));
+            });
+            return filter;
+        } else {
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
+        }
     }
 
     @Override
