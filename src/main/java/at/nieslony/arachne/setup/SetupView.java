@@ -110,12 +110,11 @@ public class SetupView extends VerticalLayout {
         tabSheet.add("Admin User", createAdminUserTab());
         tabSheet.add("Summary", createSummaryTab());
         tabSheet.addSelectedChangeListener((t) -> {
-            int noTabs = 4;
+            int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
             next.setEnabled(curTab < noTabs - 1);
             prev.setEnabled(curTab > 0);
         });
-
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next");
         next.addClickListener((t) -> {
