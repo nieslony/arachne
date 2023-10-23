@@ -4,11 +4,16 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.AdminHome;
+import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.setup.SetupController;
 import at.nieslony.arachne.setup.SetupView;
 import at.nieslony.arachne.utils.FolderFactory;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.login.LoginForm;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -28,20 +33,21 @@ public class LoginOrSetupView
     private static final org.slf4j.Logger logger
             = LoggerFactory.getLogger(LoginOrSetupView.class);
 
-    private SetupController setupController;
-    private FolderFactory folderFactory;
+    private final SetupController setupController;
+    private final FolderFactory folderFactory;
+    private final Settings settings;
 
     private String title;
-    private final LoginForm login = new LoginForm();
-
-    ;
+    private final LoginOverlay login = new LoginOverlay();
 
     public LoginOrSetupView(
             SetupController setupController,
-            FolderFactory folderFactory
+            FolderFactory folderFactory,
+            Settings settings
     ) {
         this.setupController = setupController;
         this.folderFactory = folderFactory;
+        this.settings = settings;
     }
 
     @Override
@@ -55,14 +61,29 @@ public class LoginOrSetupView
             logger.info("Create login page");
             title = "Login | Arachne";
             removeAll();
+            KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
 
             addClassName("login-view");
             setSizeFull();
             setAlignItems(Alignment.CENTER);
             setJustifyContentMode(JustifyContentMode.CENTER);
             login.setAction("login");
+            login.setTitle("Arachne");
+            login.setDescription("Administer your openVPN");
             login.setForgotPasswordButtonVisible(false);
-            add(new H1("Arachne"), login);
+            if (kerberosSettings.isEnableKrbAuth()) {
+                Button toSSoButton = new Button(
+                        "Login with SSO",
+                        e -> {
+                            login.setOpened(false);
+                            UI.getCurrent().navigate(AdminHome.class);
+                        }
+                );
+                toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+                toSSoButton.setWidthFull();
+                login.getFooter().add(toSSoButton);
+            }
+            login.setOpened(true);
 
             if (beforeEnterEvent.getLocation()
                     .getQueryParameters()
@@ -70,6 +91,7 @@ public class LoginOrSetupView
                     .containsKey("error")) {
                 login.setError(true);
             }
+            add(login);
         } else {
             logger.info("Show SetupView");
             title = "Setup | Arachne";
