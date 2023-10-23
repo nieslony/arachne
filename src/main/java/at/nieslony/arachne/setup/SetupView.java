@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.setup;
 
+import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
@@ -491,7 +492,7 @@ public class SetupView extends VerticalLayout {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
             }
             logger.info("Redirecting to /");
-            getUI().get().navigate("");
+            getUI().get().navigate(AdminHome.class);
         });
 
         layout.add(text, finishError, finish);
