@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.setup;
 
+import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
@@ -110,12 +111,11 @@ public class SetupView extends VerticalLayout {
         tabSheet.add("Admin User", createAdminUserTab());
         tabSheet.add("Summary", createSummaryTab());
         tabSheet.addSelectedChangeListener((t) -> {
-            int noTabs = 4;
+            int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
             next.setEnabled(curTab < noTabs - 1);
             prev.setEnabled(curTab > 0);
         });
-
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next");
         next.addClickListener((t) -> {
@@ -492,7 +492,7 @@ public class SetupView extends VerticalLayout {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
             }
             logger.info("Redirecting to /");
-            getUI().get().navigate("");
+            getUI().get().navigate(AdminHome.class);
         });
 
         layout.add(text, finishError, finish);

@@ -31,6 +31,7 @@ import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.FolderFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -153,6 +154,7 @@ public class SetupController {
     }
 
     @PostMapping("/setup")
+    @AnonymousAllowed
     public String onStupArachne(@RequestBody SetupData setupData)
             throws SettingsException {
         return setupArachne(setupData);

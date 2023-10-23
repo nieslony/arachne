@@ -12,13 +12,10 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -26,7 +23,6 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class WwwAuthenticateFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(WwwAuthenticateFilter.class);
@@ -39,52 +35,35 @@ public class WwwAuthenticateFilter implements Filter {
     ) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            logger.info("Already authenticated.");
-            fc.doFilter(request, response);
-            return;
-        }
-
-        String path = httpRequest.getRequestURI();
+        var path = httpRequest.getRequestURI();
         var session = httpRequest.getSession();
 
-        logger.info("Processing path " + path);
-        if (path.equals("/arachne/crl.pem")) {
-            logger.info("crl.pem without auth");
-            fc.doFilter(request, response);
-            return;
-        }
+        logger.info(
+                "%s %s".formatted(
+                        session.getId(),
+                        path
+                )
+        );
 
-        if (path.equals("/arachne/sso")) {
-            logger.info("Enforce sso");
-            session.setAttribute("formLogin", "no");
-            fc.doFilter(request, response);
-            return;
-        }
-
-        if (path.equals("/arachne/login")
-                || "yes".equals(session.getAttribute("formLogin"))) {
-            session.setAttribute("formLogin", "yes");
-            fc.doFilter(request, response);
-            return;
-        }
-
-        String authenticate = httpRequest.getHeader("Authorization");
-        if (authenticate != null) {
-            logger.info("Try Negotiate");
+        if (Arrays.stream(new String[]{
+            "/arachne/login",
+            "/arachne/error"
+        }).anyMatch(path::equals)
+                || Arrays.stream(new String[]{
+            "/arachne/VAADIN/build/"
+        }).anyMatch(path::startsWith)
+                || httpRequest.getHeader("Authorization") != null) {
             fc.doFilter(request, response);
             return;
         }
 
         logger.info("Return 401 - UNAUTHORIZED for " + path);
-        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         httpResponse.addHeader("WWW-Authenticate", "Negotiate");
+        httpResponse.setContentType("text/html");
+        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         if (path.startsWith("/arachne/api")) {
             httpResponse.addHeader("WWW-Authenticate", "Basic realm=\"Arachne\"");
         }
-        session.setAttribute("tryNegotiate", "yes");
         var out = httpResponse.getOutputStream();
         String url = "/arachne/login";
         out.println(
