@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
 import java.security.PrivateKey;
 import java.security.cert.X509CRL;
@@ -68,6 +69,7 @@ public class PkiRestController {
     }
 
     @GetMapping("/crl.pem")
+    @AnonymousAllowed
     public String getCrl() {
         X509CRL crl = pki.getCrl(() -> {
             return certificateRepository.findByRevocationDateIsNotNullOrderByValidToDesc();

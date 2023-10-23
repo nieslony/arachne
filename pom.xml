@@ -12,7 +12,6 @@
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
 
         <vaadin.version>24.2.0</vaadin.version>
-        <!-- <selenium.version>4.11.0</selenium.version> -->
     </properties>
 
     <parent>
@@ -127,7 +126,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20230618</version>
+            <version>20231013</version>
         </dependency>
 
         <dependency>
@@ -162,7 +161,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>autocomplete</artifactId>
-            <version>24.1.5</version>
+            <version>24.1.6</version>
         </dependency>
 
         <dependency>
