@@ -91,7 +91,7 @@ public class LdapView extends VerticalLayout {
     public LdapView(Settings settings) {
         this.settings = settings;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
-        this.binder = new Binder();
+        this.binder = new Binder<>();
 
         Checkbox enableLdapUserSource = new Checkbox("Enable LDAP user Source");
         enableLdapUserSource.setValue(true);
@@ -353,7 +353,7 @@ public class LdapView extends VerticalLayout {
         binder.forField(keytabPath)
                 .bind(LdapSettings::getKeytabPath, LdapSettings::setKeytabPath);
 
-        ComboBox<String> bindPrincipalField = new ComboBox<String>("Bind Principal");
+        ComboBox<String> bindPrincipalField = new ComboBox<>("Bind Principal");
         bindPrincipalField.setItems("");
         bindPrincipalField.setWidthFull();
         binder.forField(bindPrincipalField)
@@ -458,7 +458,7 @@ public class LdapView extends VerticalLayout {
         String msg;
         try {
             LdapTemplate templ = ldapSettings.getLdapTemplate();
-            var res = templ.lookup(ldapSettings.getBaseDn());
+            templ.lookup(ldapSettings.getBaseDn());
             msg = "Connection successful";
         } catch (AuthenticationException ex) {
             msg = "Authentication failed: " + ex.getMessage();
@@ -616,15 +616,6 @@ public class LdapView extends VerticalLayout {
         );
 
         return layout;
-    }
-
-    boolean ldapUrlExists(
-            LdapSettings ldapSettings,
-            LdapProtocol protocol,
-            String hostname,
-            int port) {
-        LdapUrl url = new LdapUrl(protocol, hostname, port);
-        return !ldapSettings.getLdapUrls().contains(url);
     }
 
     void testFindGroup(String groupname) {

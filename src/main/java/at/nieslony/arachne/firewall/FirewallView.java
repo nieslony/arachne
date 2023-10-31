@@ -106,7 +106,7 @@ public class FirewallView extends VerticalLayout {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
 
-        binder = new Binder();
+        binder = new Binder<>();
         firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
         ldapSettings = settings.getSettings(LdapSettings.class);
 
@@ -331,7 +331,7 @@ public class FirewallView extends VerticalLayout {
             dlg.setHeaderTitle("Edit rule");
         }
 
-        Binder<FirewallRuleModel> binder = new Binder();
+        Binder<FirewallRuleModel> editRuleBinder = new Binder<>();
 
         NativeLabel whoLabel = new NativeLabel("Who");
         whoLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
@@ -424,11 +424,11 @@ public class FirewallView extends VerticalLayout {
         TextField descriptionField = new TextField("Description");
         descriptionField.setWidthFull();
         descriptionField.setClearButtonVisible(true);
-        binder.forField(descriptionField)
+        editRuleBinder.forField(descriptionField)
                 .bind(FirewallRuleModel::getDescription, FirewallRuleModel::setDescription);
 
         Checkbox isEnabledField = new Checkbox("Enable Rule");
-        binder.forField(isEnabledField)
+        editRuleBinder.forField(isEnabledField)
                 .bind(FirewallRuleModel::isEnabled, FirewallRuleModel::setEnabled);
 
         VerticalLayout layout = new VerticalLayout(
@@ -564,7 +564,7 @@ public class FirewallView extends VerticalLayout {
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
-        binder.setBean(rule);
+        editRuleBinder.setBean(rule);
 
         dlg.open();
     }
@@ -578,13 +578,13 @@ public class FirewallView extends VerticalLayout {
             dlg.setHeaderTitle("Edit Who");
         }
 
-        Binder<FirewallWho> binder = new Binder<>();
+        Binder<FirewallWho> whoBinder = new Binder<>();
 
         Select<UserMatcherInfo> userMatchersSelect = new Select<>();
         userMatchersSelect.setLabel("User Matcher");
         userMatchersSelect.setItems(userMatcherCollector.getAllUserMatcherInfo());
         userMatchersSelect.setEmptySelectionAllowed(false);
-        binder.forField(userMatchersSelect)
+        whoBinder.forField(userMatchersSelect)
                 .bind(
                         rr -> {
                             return new UserMatcherInfo(rr.getUserMatcherClassName());
@@ -596,7 +596,7 @@ public class FirewallView extends VerticalLayout {
 
         UsersGroupsAutocomplete parameterField
                 = new UsersGroupsAutocomplete(ldapSettings, 5);
-        binder.forField(parameterField)
+        whoBinder.forField(parameterField)
                 .withValidator(
                         text -> {
                             String label = userMatchersSelect.getValue().getParameterLabel();
@@ -615,8 +615,8 @@ public class FirewallView extends VerticalLayout {
 
         Button saveButton = new Button("Save", (t) -> {
             logger.info(who.toString());
-            binder.validate();
-            if (binder.isValid()) {
+            whoBinder.validate();
+            if (whoBinder.isValid()) {
                 dlg.close();
                 onSave.accept(who);
             } else {
@@ -630,41 +630,40 @@ public class FirewallView extends VerticalLayout {
             dlg.close();
         });
 
-        userMatchersSelect.addValueChangeListener(
-                (e) -> {
-                    String labelTxt = e.getValue().getParameterLabel();
-                    parameterField.setLabel(labelTxt);
-                    if (labelTxt != null && !labelTxt.isEmpty()) {
-                        parameterField.setVisible(true);
-                        binder.validate();
-                        saveButton.setEnabled(!parameterField.isInvalid());
-                    } else {
-                        parameterField.setVisible(false);
-                        saveButton.setEnabled(true);
-                    }
-                    String className = e.getValue().getClassName();
-                    if (className.equals(UsernameMatcher.class.getName())) {
-                        parameterField.setCompleteMode(
-                                UsersGroupsAutocomplete.CompleteMode.USERS
-                        );
-                    } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
-                        parameterField.setCompleteMode(
-                                UsersGroupsAutocomplete.CompleteMode.GROUPS
-                        );
-                    } else {
-                        parameterField.setCompleteMode(
-                                UsersGroupsAutocomplete.CompleteMode.NULL
-                        );
-                    }
-                }
+        userMatchersSelect.addValueChangeListener((e) -> {
+            String labelTxt = e.getValue().getParameterLabel();
+            parameterField.setLabel(labelTxt);
+            if (labelTxt != null && !labelTxt.isEmpty()) {
+                parameterField.setVisible(true);
+                whoBinder.validate();
+                saveButton.setEnabled(!parameterField.isInvalid());
+            } else {
+                parameterField.setVisible(false);
+                saveButton.setEnabled(true);
+            }
+            String className = e.getValue().getClassName();
+            if (className.equals(UsernameMatcher.class.getName())) {
+                parameterField.setCompleteMode(
+                        UsersGroupsAutocomplete.CompleteMode.USERS
+                );
+            } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
+                parameterField.setCompleteMode(
+                        UsersGroupsAutocomplete.CompleteMode.GROUPS
+                );
+            } else {
+                parameterField.setCompleteMode(
+                        UsersGroupsAutocomplete.CompleteMode.NULL
+                );
+            }
+        }
         );
 
-        binder.addStatusChangeListener((sce) -> {
+        whoBinder.addStatusChangeListener((sce) -> {
             saveButton.setEnabled(!sce.hasValidationErrors());
         });
 
-        binder.setBean(who);
-        binder.validate();
+        whoBinder.setBean(who);
+        whoBinder.validate();
 
         dlg.getFooter().add(cancelButton, saveButton);
         dlg.open();
@@ -674,21 +673,21 @@ public class FirewallView extends VerticalLayout {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Edit Where");
 
-        Binder<FirewallWhere> binder = new Binder();
+        Binder<FirewallWhere> whereBinder = new Binder<>();
 
         Select<FirewallWhere.Type> whereTypeSelect = new Select<>();
         whereTypeSelect.setLabel("Where Type");
         whereTypeSelect.setItems(FirewallWhere.Type.values());
         whereTypeSelect.setEmptySelectionAllowed(false);
         whereTypeSelect.setWidth(20, Unit.EM);
-        binder.forField(whereTypeSelect)
+        whereBinder.forField(whereTypeSelect)
                 .bind(FirewallWhere::getType, FirewallWhere::setType);
 
         TextField hostnameField = new TextField("Hostname");
         hostnameField.setWidthFull();
         hostnameField.setVisible(false);
         hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.forField(hostnameField)
+        whereBinder.forField(hostnameField)
                 .asRequired(new IgnoringInvisibleValidator<>(
                         new HostnameValidator(false))
                 )
@@ -707,12 +706,12 @@ public class FirewallView extends VerticalLayout {
         );
         netMaskField.setLabel("Subnet Mask");
         netMaskField.setWidth(20, Unit.EM);
-        binder.forField(netMaskField)
+        whereBinder.forField(netMaskField)
                 .bind(
                         (source) -> new NetMask(source.getSubnetMask()),
                         (dest, value) -> dest.setSubnetMask(value.getBits())
                 );
-        binder.forField(networkField)
+        whereBinder.forField(networkField)
                 .asRequired(new IgnoringInvisibleValidator<>(
                         new SubnetValidator(() -> {
                             NetMask mask = netMaskField.getValue();
@@ -738,7 +737,7 @@ public class FirewallView extends VerticalLayout {
         TextField serviceRecDomainField = new TextField("Domain");
         serviceRecDomainField.setPattern(("^[a-z][a-z9-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"));
         serviceRecDomainField.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.forField(serviceRecDomainField)
+        whereBinder.forField(serviceRecDomainField)
                 .asRequired(new RequiredIfVisibleValidator())
                 .bind(FirewallWhere::getServiceRecDomain, FirewallWhere::setServiceRecDomain);
 
@@ -746,7 +745,7 @@ public class FirewallView extends VerticalLayout {
         serviceRecNameField.setWidth(10, Unit.EM);
         serviceRecNameField.setPattern("[a-z]*");
         serviceRecNameField.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.forField(serviceRecNameField)
+        whereBinder.forField(serviceRecNameField)
                 .asRequired(new RequiredIfVisibleValidator())
                 .bind(FirewallWhere::getServiceRecName, FirewallWhere::setServiceRecName);
 
@@ -755,7 +754,7 @@ public class FirewallView extends VerticalLayout {
         serviceRecProtocolField.setItems(TransportProtocol.values());
         serviceRecProtocolField.setWidth(6, Unit.EM);
         serviceRecProtocolField.setEmptySelectionAllowed(false);
-        binder.forField(serviceRecProtocolField)
+        whereBinder.forField(serviceRecProtocolField)
                 .bind(FirewallWhere::getServiceRecProtocol, FirewallWhere::setServiceRecProtocol);
 
         HorizontalLayout serviceRecEdit = new HorizontalLayout(
@@ -771,7 +770,7 @@ public class FirewallView extends VerticalLayout {
         TextField mxRecDomain = new TextField("Domain");
         mxRecDomain.setWidthFull();
         mxRecDomain.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.forField(mxRecDomain)
+        whereBinder.forField(mxRecDomain)
                 .asRequired(new IgnoringInvisibleValidator<>(
                         new HostnameValidator())
                 )
@@ -829,17 +828,17 @@ public class FirewallView extends VerticalLayout {
                     }
                 }
             }
-            binder.validate();
+            whereBinder.validate();
         });
 
         dlg.getFooter().add(cancelButton, saveButton);
 
-        binder.addStatusChangeListener((sce) -> {
+        whereBinder.addStatusChangeListener((sce) -> {
             saveButton.setEnabled(!sce.hasValidationErrors());
         });
 
-        binder.setBean(where);
-        binder.validate();
+        whereBinder.setBean(where);
+        whereBinder.validate();
 
         dlg.setMinWidth(40, Unit.EM);
         dlg.open();
@@ -849,13 +848,13 @@ public class FirewallView extends VerticalLayout {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Edit What");
 
-        Binder<FirewallWhat> binder = new Binder<>();
+        Binder<FirewallWhat> whatBinder = new Binder<>();
         Collection<FirewalldService> firewalldServices = FirewalldService.getAllServices();
 
         Select<FirewallWhat.Type> whatTypeSelect = new Select<>();
         whatTypeSelect.setLabel("What Type");
         whatTypeSelect.setItems(FirewallWhat.Type.values());
-        binder.forField(whatTypeSelect)
+        whatBinder.forField(whatTypeSelect)
                 .bind(FirewallWhat::getType, FirewallWhat::setType);
 
         ComboBox<FirewalldService> firewalldServiceSelect = new ComboBox<>();
@@ -864,7 +863,7 @@ public class FirewallView extends VerticalLayout {
         firewalldServiceSelect.setItemLabelGenerator(FirewalldService::getShortDescription);
         firewalldServiceSelect.setWidthFull();
         firewalldServiceSelect.setVisible(false);
-        binder.forField(firewalldServiceSelect)
+        whatBinder.forField(firewalldServiceSelect)
                 .bind(
                         (FirewallWhat source)
                         -> FirewalldService.getService(source.getService()),
@@ -877,12 +876,12 @@ public class FirewallView extends VerticalLayout {
         portField.setMax(65535);
         portField.setWidth(8, Unit.EM);
         portField.setStepButtonsVisible(true);
-        binder.forField(portField)
+        whatBinder.forField(portField)
                 .bind(FirewallWhat::getPort, FirewallWhat::setPort);
 
         Select<TransportProtocol> portProtocolSelect = new Select<>();
         portProtocolSelect.setItems(TransportProtocol.values());
-        binder.forField(portProtocolSelect)
+        whatBinder.forField(portProtocolSelect)
                 .bind(FirewallWhat::getPortProtocol, FirewallWhat::setPortProtocol);
 
         HorizontalLayout portEdit = new HorizontalLayout(
@@ -899,7 +898,7 @@ public class FirewallView extends VerticalLayout {
         portFromField.setMax(65535);
         portFromField.setWidth(8, Unit.EM);
         portFromField.setStepButtonsVisible(true);
-        binder.forField(portFromField)
+        whatBinder.forField(portFromField)
                 .bind(FirewallWhat::getPortFrom, FirewallWhat::setPortFrom);
 
         IntegerField portToField = new IntegerField("Port to");
@@ -907,12 +906,12 @@ public class FirewallView extends VerticalLayout {
         portToField.setMax(65535);
         portToField.setWidth(8, Unit.EM);
         portToField.setStepButtonsVisible(true);
-        binder.forField(portToField)
+        whatBinder.forField(portToField)
                 .bind(FirewallWhat::getPortTo, FirewallWhat::setPortTo);
 
         Select<TransportProtocol> portRangeProtocolSelect = new Select<>();
         portRangeProtocolSelect.setItems(TransportProtocol.values());
-        binder.forField(portRangeProtocolSelect)
+        whatBinder.forField(portRangeProtocolSelect)
                 .bind(FirewallWhat::getPortRangeProtocol, FirewallWhat::setPortRangeProtocol);
 
         HorizontalLayout portRangeEdit = new HorizontalLayout(
@@ -964,24 +963,25 @@ public class FirewallView extends VerticalLayout {
             }
         });
 
-        binder.setBean(what);
-        binder.validate();
+        whatBinder.setBean(what);
+        whatBinder.validate();
 
         dlg.open();
     }
 
     private <T> Details createDetails(Collection<T> items) {
-        Details details = new Details();
-        String summaryText = "%s...(%d)".formatted(
-                items.toArray()[0].toString(),
-                items.size()
-        );
-        details.setSummaryText(summaryText);
         UnorderedList detailItems = new UnorderedList();
         items.forEach((w) -> {
             detailItems.add(new ListItem(w.toString()));
         });
         detailItems.addClassName(LumoUtility.Padding.NONE);
+
+        String summaryText = "%s...(%d)".formatted(
+                items.toArray()[0].toString(),
+                items.size()
+        );
+
+        Details details = new Details(summaryText, detailItems);
         details.addOpenedChangeListener((t) -> {
             if (t.isOpened()) {
                 details.setSummaryText("%d rules".formatted(items.size()));
@@ -989,7 +989,6 @@ public class FirewallView extends VerticalLayout {
                 details.setSummaryText(summaryText);
             }
         });
-        details.setContent(detailItems);
 
         return details;
     }

@@ -57,7 +57,7 @@ public class TomcatView extends VerticalLayout {
 
     public TomcatView(Settings settings) {
         this.settings = settings;
-        Binder<TomcatSettings> binder = new Binder(TomcatSettings.class);
+        Binder<TomcatSettings> binder = new Binder<>(TomcatSettings.class);
 
         Checkbox enableAjpField = new Checkbox("Enable AJP Connector");
         enableAjpField.setValue(true);

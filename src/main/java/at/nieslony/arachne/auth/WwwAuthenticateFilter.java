@@ -47,7 +47,8 @@ public class WwwAuthenticateFilter implements Filter {
 
         if (Arrays.stream(new String[]{
             "/arachne/login",
-            "/arachne/error"
+            "/arachne/error",
+            "/arachne/offline-stub.html"
         }).anyMatch(path::equals)
                 || Arrays.stream(new String[]{
             "/arachne/VAADIN/build/"

@@ -63,7 +63,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
 
-    private Settings settings;
+    private final Settings settings;
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
 
@@ -74,7 +74,7 @@ public class OpenVpnUserView extends VerticalLayout {
     ) {
         this.settings = settings;
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
-        binder = new Binder(OpenVpnUserSettings.class);
+        binder = new Binder<>(OpenVpnUserSettings.class);
 
         Button saveSettings = new Button("Save Settings");
         saveSettings.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -192,7 +192,7 @@ public class OpenVpnUserView extends VerticalLayout {
         return layout;
     }
 
-    final private Component createBasicsPage() {
+    private Component createBasicsPage() {
         TextField name = new TextField("Network Manager configuration name");
         name.setWidthFull();
         name.setValueChangeMode(ValueChangeMode.EAGER);
