@@ -19,6 +19,7 @@ package at.nieslony.arachne.kerberos;
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.utils.FolderFactory;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -29,10 +30,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class KerberosSettings extends AbstractSettingsGroup {
-
-    public KerberosSettings() {
-    }
 
     private boolean enableKrbAuth = false;
     private String keytabPath = FolderFactory.getInstance().getDefaultKeytabPath();
