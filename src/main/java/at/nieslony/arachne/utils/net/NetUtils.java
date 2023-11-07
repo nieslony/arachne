@@ -73,12 +73,8 @@ public class NetUtils {
     public static List<MxRecord> mxLookup(String domain) throws NamingException {
         List<MxRecord> mxRecords = new LinkedList<>();
 
-        Hashtable env = new Hashtable();
-        env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-        env.put("java.naming.provider.url", "dns:");
-
-        DirContext ctx = new InitialDirContext(env);
-        Attributes attrs = ctx.getAttributes(domain, new String[]{"MX"});
+        DirContext ctx = new InitialDirContext();
+        Attributes attrs = ctx.getAttributes("dns:/" + domain, new String[]{"MX"});
         NamingEnumeration en = attrs.getAll();
         while (en.hasMore()) {
             Attribute attr = (Attribute) en.next();
