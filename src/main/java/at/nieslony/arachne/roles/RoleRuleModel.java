@@ -55,7 +55,7 @@ public class RoleRuleModel implements Serializable {
     @JsonIgnore
     public String getRoleRuleDescription() {
         try {
-            Class userMatcherClass = Class.forName(userMatcherClassName);
+            Class<?> userMatcherClass = Class.forName(userMatcherClassName);
             if (userMatcherClass.isAnnotationPresent(
                     UserMatcherDescription.class)) {
                 UserMatcherDescription descr

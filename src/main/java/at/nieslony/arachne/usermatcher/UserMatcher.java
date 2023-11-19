@@ -31,7 +31,7 @@ public abstract class UserMatcher {
         return getMatcherDetails(c, parameter);
     }
 
-    public static String getMatcherDetails(Class matcherClass, String parameter) {
+    public static String getMatcherDetails(Class<?> matcherClass, String parameter) {
         UserMatcherDescription desc
                 = CastUtils.cast(matcherClass.getAnnotation(
                         CastUtils.cast(UserMatcherDescription.class)
