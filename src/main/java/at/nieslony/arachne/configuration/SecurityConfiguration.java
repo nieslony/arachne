@@ -9,6 +9,7 @@ import at.nieslony.arachne.auth.WwwAuthenticateFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
+import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
@@ -56,6 +57,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Autowired
     private WwwAuthenticateFilter wwwAuthenticateFilter;
+
+    @Autowired
+    private FolderFactory folderFactory;
 
     private KerberosSettings kerberosSettings;
 
