@@ -482,7 +482,7 @@ public class LdapView extends VerticalLayout {
     }
 
     VerticalLayout createUrlsEditor(LdapSettings ldapSettings) {
-        Binder binder = new Binder();
+        Binder<?> cueBinder = new Binder();
 
         Button guessFromDns = new Button("Guess URLs from DNS");
 
@@ -509,12 +509,12 @@ public class LdapView extends VerticalLayout {
         );
         hostnameField.setClearButtonVisible(true);
         AtomicReference<String> hostname = new AtomicReference<>("");
-        binder.forField(hostnameField)
+        cueBinder.forField(hostnameField)
                 .withValidator(new HostnameValidator())
                 .bind(
                         s -> hostname.get(),
                         (s, v) -> {
-                            hostname.set(v.toString());
+                            hostname.set(v);
                         }
                 );
         hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
