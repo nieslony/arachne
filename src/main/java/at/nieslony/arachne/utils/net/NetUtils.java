@@ -113,14 +113,8 @@ public class NetUtils {
             TransportProtocol protocol,
             String domain)
             throws NamingException {
-        String value = null;
-
-        Hashtable env = new Hashtable();
-        env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-        env.put("java.naming.provider.url", "dns:");
-
-        DirContext ctx = new InitialDirContext(env);
-        String search = "_%s._%s.%s".formatted(
+        DirContext ctx = new InitialDirContext();
+        String search = "dns:/_%s._%s.%s".formatted(
                 srvType,
                 protocol.name().toLowerCase(),
                 domain
@@ -176,8 +170,11 @@ public class NetUtils {
         List<String> dnsServers = new ArrayList<>();
 
         try {
-            Hashtable env = new Hashtable();
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+            Hashtable<String, String> env = new Hashtable<>();
+            env.put(
+                    Context.INITIAL_CONTEXT_FACTORY,
+                    "com.sun.jndi.dns.DnsContextFactory"
+            );
             DirContext ictx = new InitialDirContext(env);
             String dnsServersStr = (String) ictx.getEnvironment().get("java.naming.provider.url");
 
