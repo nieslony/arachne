@@ -51,7 +51,7 @@ public class EditableListBox
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
-        binder = new Binder();
+        binder = new Binder<>();
         items = new LinkedList<>();
 
         itemsField = new ListBox<>();

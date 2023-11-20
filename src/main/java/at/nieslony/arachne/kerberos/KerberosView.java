@@ -71,7 +71,7 @@ public class KerberosView extends VerticalLayout {
                 }, "Cannot read file")
                 .bind(KerberosSettings::getKeytabPath, KerberosSettings::setKeytabPath);
 
-        ComboBox<String> servicePrincipalField = new ComboBox("Service Principal");
+        ComboBox<String> servicePrincipalField = new ComboBox<>("Service Principal");
         servicePrincipalField.setWidthFull();
         servicePrincipalField.setItems("");
         binder.forField(servicePrincipalField)

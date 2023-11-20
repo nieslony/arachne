@@ -9,6 +9,7 @@ import at.nieslony.arachne.auth.WwwAuthenticateFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
+import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
@@ -57,6 +58,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private WwwAuthenticateFilter wwwAuthenticateFilter;
 
+    @Autowired
+    private FolderFactory folderFactory;
+
     private KerberosSettings kerberosSettings;
 
     @PostConstruct
@@ -73,17 +77,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf(
-                        (csrf) -> csrf.disable()
-                )
-                .headers(
-                        (headers) -> headers.frameOptions(
-                                (fro) -> fro.disable()
-                        )
-                )
-                .httpBasic((configurator) -> {
-                    configurator.realmName("Arachne openVPN Administrator");
-                });
+                .csrf((csrf)
+                        -> csrf.disable())
+                .headers((headers)
+                        -> headers.frameOptions((fro) -> fro.disable()))
+                .httpBasic((configurator)
+                        -> configurator.realmName("Arachne openVPN Administrator")
+                );
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
 

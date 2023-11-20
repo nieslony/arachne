@@ -42,6 +42,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -74,7 +75,7 @@ public class TaskView extends VerticalLayout {
                 .addColumn((source) -> {
                     try {
                         Class c = Class.forName(source.getTaskClassName());
-                        return getTaskName(c);
+                        return getTaskName(CastUtils.cast(c));
                     } catch (ClassNotFoundException ex) {
                         return "Unknown Class: " + source.getTaskClassName();
                     }

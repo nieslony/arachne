@@ -99,7 +99,7 @@ public class SetupView extends VerticalLayout {
     ) {
         this.setupController = setupController;
         this.folderFactory = folderFactory;
-        binder = new Binder();
+        binder = new Binder<>();
 
         H1 header = new H1("Arachne Setup Wizard");
 
@@ -297,7 +297,7 @@ public class SetupView extends VerticalLayout {
         binder.forField(serverCommonName)
                 .bind(
                         (src) -> cn.get(),
-                        (dst, val) -> cn.set(val.toString())
+                        (dst, val) -> cn.set(val)
                 );
 
         serverOrganizationalUnit = new TextField("Organizational Unit");
@@ -418,7 +418,7 @@ public class SetupView extends VerticalLayout {
                 )
                 .bind(
                         (src) -> retypePwd.get(),
-                        (dst, val) -> retypePwd.set(val.toString())
+                        (dst, val) -> retypePwd.set(val)
                 );
 
         adminDisplayName.setValue("Arachne Administrator");

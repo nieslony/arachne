@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.usermatcher;
 
+import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.stereotype.Component;
@@ -33,11 +34,10 @@ public class UserMatcherCollector {
 
     public UserMatcher buildUserMatcher(String userMatchClassName, String parameter) {
         try {
-            Class cl = Class.forName(userMatchClassName);
+            Class<?> cl = Class.forName(userMatchClassName);
+            Constructor<?> constructor = cl.getConstructor(String.class);
             UserMatcher userMatcher
-                    = (UserMatcher) cl
-                            .getConstructor(String.class)
-                            .newInstance(parameter);
+                    = (UserMatcher) constructor.newInstance(parameter);
 
             return userMatcher;
         } catch (Exception ex) {

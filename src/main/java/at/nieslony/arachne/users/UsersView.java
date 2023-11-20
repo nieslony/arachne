@@ -102,8 +102,6 @@ public class UsersView extends VerticalLayout {
         userDataProvider
                 = DataProvider.fromCallbacks(
                         query -> {
-                            int offset = query.getOffset();
-                            int limit = query.getLimit();
                             return userRepository
                                     .findAll()
                                     .stream()
@@ -182,7 +180,6 @@ public class UsersView extends VerticalLayout {
                 }
                 editor.editItem(user);
             });
-            MenuItem editItem = menuBar.addItem(editButton);
 
             userMenu.addItem("Change Password...", event -> changePassword(user));
             userMenu.addItem("Delete...", event -> deleteUser(user));
@@ -222,15 +219,13 @@ public class UsersView extends VerticalLayout {
 
     final void editUsersGridBuffered() {
         Editor<ArachneUser> editor = usersGrid.getEditor();
-        Binder<ArachneUser> binder = new Binder(ArachneUser.class);
+        Binder<ArachneUser> binder = new Binder<>(ArachneUser.class);
         editor.setBinder(binder);
         editor.setBuffered(true);
 
         UsernameValidator usernameValidator = new UsernameValidator();
         UsernameUniqueValidator usernameUniqueValidator
                 = new UsernameUniqueValidator(userRepository);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String myUsername = authentication.getName();
 
         Grid.Column<ArachneUser> editColumn = usersGrid
                 .addComponentColumn((ArachneUser user) -> getUserEditMenu(user, editor))
@@ -308,7 +303,7 @@ public class UsersView extends VerticalLayout {
     void addUser() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Add User");
-        Binder<ArachneUser> binder = new Binder(ArachneUser.class
+        Binder<ArachneUser> binder = new Binder<>(ArachneUser.class
         );
 
         TextField usernameField = new TextField("Username");

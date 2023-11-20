@@ -69,7 +69,7 @@ public class ChangePasswordDialog extends Dialog {
     }
 
     void createDialog() {
-        Binder<PasswordChanger> binder = new Binder(PasswordChanger.class);
+        Binder<PasswordChanger> binder = new Binder<>(PasswordChanger.class);
 
         PasswordField currentPasswordField = null;
         ArachneUser user;

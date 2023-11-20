@@ -19,6 +19,7 @@ import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -54,10 +55,11 @@ public class RoleRuleModel implements Serializable {
     @JsonIgnore
     public String getRoleRuleDescription() {
         try {
-            Class userMatcherClass = Class.forName(userMatcherClassName);
-            if (userMatcherClass.isAnnotationPresent(UserMatcherDescription.class)) {
+            Class<?> userMatcherClass = Class.forName(userMatcherClassName);
+            if (userMatcherClass.isAnnotationPresent(
+                    UserMatcherDescription.class)) {
                 UserMatcherDescription descr
-                        = (UserMatcherDescription) userMatcherClass.getAnnotation(UserMatcherDescription.class);
+                        = CastUtils.cast(userMatcherClass.getAnnotation(UserMatcherDescription.class));
                 return descr.description();
             } else {
                 return this.getClass().getName();

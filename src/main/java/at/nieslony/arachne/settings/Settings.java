@@ -16,18 +16,19 @@
  */
 package at.nieslony.arachne.settings;
 
-import at.nieslony.arachne.utils.FolderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.data.util.CastUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,9 +45,6 @@ public class Settings {
 
     @Autowired
     private ServerProperties serverProperties;
-
-    @Autowired
-    private FolderFactory folderFactory;
 
     private static Settings settings = null;
 
@@ -109,23 +107,26 @@ public class Settings {
         }
     }
 
-    private static Object fromBytes(byte[] s) throws SettingsException {
+    private static <T extends Serializable> T fromBytes(byte[] s) throws SettingsException {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(s);
             ObjectInputStream ois = new ObjectInputStream(bais);
-            return ois.readObject();
+            Object obj = ois.readObject();
+            return CastUtils.cast(obj);
         } catch (IOException | ClassNotFoundException ex) {
             throw new SettingsException("Cannot deserialize value", ex);
         }
     }
 
-    public <T extends Object> T get(String setting, Class<? extends Object> c)
-            throws SettingsException {
+    public <T extends Object> T get(
+            String setting,
+            Class<? extends Object> c
+    ) throws SettingsException {
         Optional<SettingsModel> value = settingsRepository.findBySetting(setting);
         if (value.isEmpty()) {
             return null;
         }
-        return (T) fromBytes(value.get().getContent());
+        return fromBytes(value.get().getContent());
     }
 
     public <T> void put(String setting, T value) throws SettingsException {

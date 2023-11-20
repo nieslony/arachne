@@ -7,6 +7,7 @@ package at.nieslony.arachne.usermatcher;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -35,7 +36,7 @@ public class UserMatcherInfo {
         if (userMatcherClassName != null) {
             try {
                 Class userMatcherClass = Class.forName(userMatcherClassName);
-                init(userMatcherClass);
+                init(CastUtils.cast(userMatcherClass));
             } catch (ClassNotFoundException ex) {
 
             }

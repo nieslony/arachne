@@ -68,7 +68,7 @@ public class RolesView extends VerticalLayout {
         HorizontalLayout topButtons = new HorizontalLayout();
         topButtons.add(addRole);
 
-        roleRules = new Grid();
+        roleRules = new Grid<>();
         ruleColumn = roleRules
                 .addColumn(RoleRuleModel::getRoleRuleDescription)
                 .setHeader("Rule")
@@ -98,7 +98,7 @@ public class RolesView extends VerticalLayout {
 
     private void editRoleBuffered() {
         Editor<RoleRuleModel> editor = roleRules.getEditor();
-        Binder<RoleRuleModel> binder = new Binder(RoleRuleModel.class);
+        Binder<RoleRuleModel> binder = new Binder<>(RoleRuleModel.class);
         editor.setBinder(binder);
         editor.setBuffered(true);
 
@@ -145,7 +145,7 @@ public class RolesView extends VerticalLayout {
                 .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
         parameterColumn.setEditorComponent(parameterField);
 
-        Select<Role> roles = new Select();
+        Select<Role> roles = new Select<>();
         roles.setItems(Role.values());
         roles.setEmptySelectionAllowed(false);
         binder.forField(roles)
@@ -237,7 +237,7 @@ public class RolesView extends VerticalLayout {
         UsersGroupsAutocomplete parameter = new UsersGroupsAutocomplete(ldapSettings, 5);
         parameter.setWidthFull();
 
-        Select<Role> roles = new Select();
+        Select<Role> roles = new Select<>();
         roles.setLabel(("Role"));
         Role[] allRoles = Role.values();
         roles.setItems(Role.values());

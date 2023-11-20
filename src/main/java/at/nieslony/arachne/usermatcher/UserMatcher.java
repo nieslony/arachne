@@ -4,6 +4,8 @@
  */
 package at.nieslony.arachne.usermatcher;
 
+import org.springframework.data.util.CastUtils;
+
 /**
  *
  * @author claas
@@ -29,11 +31,11 @@ public abstract class UserMatcher {
         return getMatcherDetails(c, parameter);
     }
 
-    public static String getMatcherDetails(Class matcherClass, String parameter) {
+    public static String getMatcherDetails(Class<?> matcherClass, String parameter) {
         UserMatcherDescription desc
-                = (UserMatcherDescription) matcherClass.getAnnotation(
-                        UserMatcherDescription.class
-                );
+                = CastUtils.cast(matcherClass.getAnnotation(
+                        CastUtils.cast(UserMatcherDescription.class)
+                ));
         if (desc != null) {
             if (desc.parameterLabel() != null && parameter != null) {
                 return "%s %s".formatted(desc.description(), parameter);

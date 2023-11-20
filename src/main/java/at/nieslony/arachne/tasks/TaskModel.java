@@ -27,6 +27,7 @@ import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -46,7 +47,7 @@ public class TaskModel {
         SUCCESS("Success"),
         ERROR("Error");
 
-        private String status;
+        private final String status;
 
         private Status(String status) {
             this.status = status;
@@ -82,7 +83,7 @@ public class TaskModel {
 
     @JsonIgnore
     public Class<? extends Task> getTaskClass() throws ClassNotFoundException {
-        return (Class<? extends Task>) Class.forName(taskClassName);
+        return CastUtils.cast(Class.forName(taskClassName));
     }
 
     public void setStarted() {
