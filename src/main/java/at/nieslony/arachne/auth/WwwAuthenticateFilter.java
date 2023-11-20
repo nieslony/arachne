@@ -45,15 +45,17 @@ public class WwwAuthenticateFilter implements Filter {
                 )
         );
 
-        if (Arrays.stream(new String[]{
+        final String[] whitelistPaths = {
             "/arachne/login",
             "/arachne/error",
             "/arachne/offline-stub.html"
-        }).anyMatch(path::equals)
-                || Arrays.stream(new String[]{
+        };
+        final String[] whitelistPathPrefixes = {
             "/arachne/VAADIN/build/"
-        }).anyMatch(path::startsWith)
-                || httpRequest.getHeader("Authorization") != null) {
+        };
+        if (httpRequest.getHeader("Authorization") != null
+                || Arrays.stream(whitelistPaths).anyMatch(path::equals)
+                || Arrays.stream(whitelistPathPrefixes).anyMatch(path::startsWith)) {
             fc.doFilter(request, response);
             return;
         }
