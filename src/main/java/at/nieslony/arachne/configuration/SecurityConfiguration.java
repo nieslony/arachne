@@ -77,17 +77,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf(
-                        (csrf) -> csrf.disable()
-                )
-                .headers(
-                        (headers) -> headers.frameOptions(
-                                (fro) -> fro.disable()
-                        )
-                )
-                .httpBasic((configurator) -> {
-                    configurator.realmName("Arachne openVPN Administrator");
-                });
+                .csrf((csrf)
+                        -> csrf.disable())
+                .headers((headers)
+                        -> headers.frameOptions((fro) -> fro.disable()))
+                .httpBasic((configurator)
+                        -> configurator.realmName("Arachne openVPN Administrator")
+                );
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
 
