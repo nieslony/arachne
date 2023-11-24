@@ -15,6 +15,7 @@ import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -54,6 +55,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.olli.FileDownloadWrapper;
@@ -102,8 +105,12 @@ public class UsersView extends VerticalLayout {
         userDataProvider
                 = DataProvider.fromCallbacks(
                         query -> {
-                            return userRepository
-                                    .findAll()
+                            Pageable pageable = PageRequest.of(
+                                    query.getOffset(),
+                                    query.getLimit()
+                            );
+                            var page = userRepository.findAll(pageable);
+                            return page
                                     .stream()
                                     .peek((user) -> {
                                         userDetails.ensureUpdated(
