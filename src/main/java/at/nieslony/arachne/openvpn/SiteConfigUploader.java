@@ -4,8 +4,9 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import static at.nieslony.arachne.openvpn.OpenVpnSiteView.SshAuthType.PRESHARE_KEY;
+import static at.nieslony.arachne.openvpn.OpenVpnSiteView.SshAuthType.PRESHARED_KEY;
 import static at.nieslony.arachne.openvpn.OpenVpnSiteView.SshAuthType.USERNAME_PASSWORD;
+import com.jcraft.jsch.JSch;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -93,7 +94,7 @@ public class SiteConfigUploader {
         actionsLayout.setMargin(false);
         actionsLayout.setPadding(false);
 
-        Select<OpenVpnSiteView.SshAuthType> authTypeSelect = new Select(
+        Select<OpenVpnSiteView.SshAuthType> authTypeSelect = new Select<>(
                 "AuthenticationType",
                 (e) -> {
                     switch ((OpenVpnSiteView.SshAuthType) e.getValue()) {
@@ -101,10 +102,11 @@ public class SiteConfigUploader {
                             usernamePwdLayout.setVisible(true);
                             privateKeyField.setVisible(false);
                         }
-                        case PRESHARE_KEY -> {
+                        case PRESHARED_KEY -> {
                             usernamePwdLayout.setVisible(false);
                             privateKeyField.setVisible(true);
                         }
+
                     }
                 }
         );
@@ -139,6 +141,6 @@ public class SiteConfigUploader {
     }
 
     private void onUploadConfig() {
-
+        JSch ssh = new JSch();
     }
 }

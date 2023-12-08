@@ -45,14 +45,12 @@ public class EditableListBox
     private static final Logger logger = LoggerFactory.getLogger(EditableListBox.class);
 
     private ListBox<String> itemsField;
-    private List<String> items;
     private Binder<String> binder;
     private TextField editField;
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
         binder = new Binder<>();
-        items = new LinkedList<>();
 
         itemsField = new ListBox<>();
         itemsField.setHeight(30, Unit.EX);
@@ -74,13 +72,16 @@ public class EditableListBox
         Button addButton = new Button(
                 "Add",
                 e -> {
+                    var items = getValue();
                     items.add(editField.getValue());
-                    itemsField.setItems(items);
+                    getValue().add(editField.getValue());
+                    itemsField.setItems(getValue());
                     setModelValue(new LinkedList<>(items), true);
                 });
         Button updateButton = new Button(
                 "Update",
                 e -> {
+                    var items = getValue();
                     items.remove(itemsField.getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
@@ -90,6 +91,7 @@ public class EditableListBox
         Button removeButton = new Button(
                 "Remove",
                 e -> {
+                    var items = getValue();
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
@@ -138,27 +140,27 @@ public class EditableListBox
         });
     }
 
+    /*
     @Override
     public void setValue(List<String> items) {
         this.items.clear();
         this.items = new LinkedList<>(items);
         itemsField.setItems(this.items);
+
     }
 
     @Override
     public List<String> getValue() {
         return new LinkedList<>(items);
     }
-
+     */
     protected Validator<String> getValidator() {
         return (t, vc) -> ValidationResult.ok();
     }
 
     @Override
     protected void setPresentationValue(List<String> v) {
-        items.clear();
-        items = new LinkedList<>(v);
-        setModelValue(v, false);
+        itemsField.setItems(getValue());
     }
 
     @Override

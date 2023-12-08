@@ -9,6 +9,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
+import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
@@ -95,11 +96,11 @@ public class OpenVpnSiteView extends VerticalLayout {
     private Checkbox inheritRouteInternet;
     private Checkbox routeInternet;
 
-    private SiteConfigUploader siteConfigUploader;
+    private final SiteConfigUploader siteConfigUploader;
 
     enum SshAuthType {
         USERNAME_PASSWORD("Username/Password"),
-        PRESHARE_KEY("Preshared Key");
+        PRESHARED_KEY("Preshared Key");
 
         private final String value;
 
@@ -370,6 +371,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         downloadComponent.setText("Download...");
         subMenu.addItem(downloadComponent);
         subMenu.addItem("Upload to site...", (e) -> {
+            siteConfigUploader.openDialog(sites.getValue());
         });
         subMenu.addItem("View...", (e) -> {
             StringWriter cfgWriter = new StringWriter();
@@ -462,6 +464,10 @@ public class OpenVpnSiteView extends VerticalLayout {
                 return new IpValidator();
             }
         };
+        Button defaultDnsServers = new Button("Default DNS Servers",
+                (e) -> dnsServers.setValue(NetUtils.getDnsServers())
+        );
+
         siteBinder.bind(
                 dnsServers,
                 (source) -> source.getPushDnsServers(),
@@ -470,6 +476,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 });
         inheritDnsServers = new Checkbox("Inherit");
         inheritDnsServers.addValueChangeListener((e) -> {
+            defaultDnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
             dnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
         });
         siteBinder.bind(
@@ -485,6 +492,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 return new HostnameValidator();
             }
         };
+        Button defaultPushDomains = new Button("Default Push Domains",
+                (e) -> pushDomains.setValue(NetUtils.getDefaultPushRoutes())
+        );
         siteBinder.bind(
                 pushDomains,
                 (source) -> source.getPushSearchDomains(),
@@ -492,6 +502,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         inheritPushDomains = new Checkbox("Inherit");
         inheritPushDomains.addValueChangeListener((e) -> {
+            defaultPushDomains.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
             pushDomains.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
         });
         siteBinder.bind(
@@ -504,10 +515,12 @@ public class OpenVpnSiteView extends VerticalLayout {
         HorizontalLayout layout = new HorizontalLayout(
                 new VerticalLayout(
                         inheritDnsServers,
+                        defaultDnsServers,
                         dnsServers
                 ),
                 new VerticalLayout(
                         inheritPushDomains,
+                        defaultPushDomains,
                         pushDomains
                 )
         );
@@ -645,7 +658,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     }
 
     private String getRemoteConfigName(VpnSite site) {
-        return "arachne_$s_to_%s.cfg"
+        return "arachne_%s_to_%s.cfg"
                 .formatted(
                         site.getRemoteHost(),
                         openVpnSiteSettings.getRemote()
