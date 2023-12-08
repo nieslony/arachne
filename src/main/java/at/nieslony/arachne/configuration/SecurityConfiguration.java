@@ -5,7 +5,6 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
-import at.nieslony.arachne.auth.WwwAuthenticateFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
@@ -22,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -36,8 +36,8 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  *
@@ -55,9 +55,8 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private ArachneUserDetailsService arachneUserDetailsService;
 
-    @Autowired
-    private WwwAuthenticateFilter wwwAuthenticateFilter;
-
+    /*@Autowired
+    private WwwAuthenticateFilter wwwAuthenticateFilter;*/
     @Autowired
     private FolderFactory folderFactory;
 
@@ -70,12 +69,51 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        SpnegoEntryPoint sep = new SpnegoEntryPoint("/");
+        SpnegoEntryPoint sep = new SpnegoEntryPoint("/login");
         return sep;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth
+                -> auth.requestMatchers(
+                        AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/images/*.png")).permitAll());
+
+        super.configure(http);
+        setLoginView(http, LoginOrSetupView.class);
+
+        if (kerberosSettings.isEnableKrbAuth()) {
+            AuthenticationManager authenticationManager
+                    = http.getSharedObject(AuthenticationManager.class);
+
+            http
+                    .exceptionHandling(
+                            eh -> eh.authenticationEntryPoint(
+                                    spnegoEntryPoint()
+                            )
+                    )
+                    .authenticationProvider(
+                            kerberosAuthenticationProvider()
+                    )
+                    .authenticationProvider(
+                            kerberosServiceAuthenticationProvider()
+                    )
+                    .exceptionHandling((t) -> {
+                        t.accessDeniedPage("/arachne/login");
+                    })
+                    .addFilterBefore(
+                            spnegoAuthenticationProcessingFilter(authenticationManager),
+                            BasicAuthenticationFilter.class
+                    );
+        } else {
+            logger.info(
+                    "Kerberos is disabled, don't add authentication providers and filters"
+            );
+        }
+    }
+
+    /*@Override
+    protected void ___configure(HttpSecurity http) throws Exception {
         http
                 .csrf((csrf)
                         -> csrf.disable())
@@ -106,18 +144,23 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                     .addFilterAfter(
                             spnegoAuthenticationProcessingFilter(authenticationManager),
                             SessionManagementFilter.class
-                    )
-                    .addFilterBefore(
+                    ) exceptionHandling(
+                            (t) -> {
+
+                                logger.info("Access denied. Forward to login page");
+                                //t.accessDeniedPage("/arachne/login");
+                            })*/ /*.addFilterBefore(
                             wwwAuthenticateFilter,
                             UsernamePasswordAuthenticationFilter.class
-                    );
+                    );;
+
         } else {
             logger.info(
                     "Kerberos is disabled, don't add authentication providers and filters"
             );
         }
     }
-
+     */
     @Bean
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager
@@ -144,6 +187,8 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     public void configure(WebSecurity web) throws Exception {
         // Customize your WebSecurity configuration.
+//        web.ignoring().requestMatchers("/unauthorized");
+//        web.ignoring().requestMatchers("/unauthorized");
         super.configure(web);
     }
 

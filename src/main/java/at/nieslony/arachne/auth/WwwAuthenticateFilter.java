@@ -16,14 +16,13 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 /**
  *
  * @author claas
  */
-@Component
-public class WwwAuthenticateFilter implements Filter {
+// @Component
+class WwwAuthenticateFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(WwwAuthenticateFilter.class);
 
@@ -48,7 +47,8 @@ public class WwwAuthenticateFilter implements Filter {
         final String[] whitelistPaths = {
             "/arachne/login",
             "/arachne/error",
-            "/arachne/offline-stub.html"
+            "/arachne/offline-stub.html",
+            "/arachne/"
         };
         final String[] whitelistPathPrefixes = {
             "/arachne/VAADIN/build/"
