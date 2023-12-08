@@ -19,6 +19,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route("login")
+@AnonymousAllowed
 public class LoginOrSetupView
         extends VerticalLayout
         implements HasDynamicTitle, BeforeEnterObserver {
@@ -58,6 +60,9 @@ public class LoginOrSetupView
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         if (setupController.setupAlreadyDone()) {
+            //var resp = VaadinResponse.getCurrent();
+            //resp.setStatus(HttpStatus.UNAUTHORIZED.value());
+
             logger.info("Create login page");
             title = "Login | Arachne";
             removeAll();
