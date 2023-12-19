@@ -308,13 +308,13 @@ public class OpenVpnRestController {
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
-        String userCertFn = "~/.certs/arachne-%s.crt".formatted(username);
-        String caCertFn = "~/.certs/arachne-%s.crt".formatted(vpnSettings.getRemote());
-        String privateKeyFn = "~/.certs/arachne-%s.key".formatted(username);
+        String userCertFn = "$HOME/.cert/arachne-%s.crt".formatted(username);
+        String caCertFn = "$HOME/.cert/arachne-%s.crt".formatted(vpnSettings.getRemote());
+        String privateKeyFn = "$HOME/.cert/arachne-%s.key".formatted(username);
         int port = vpnSettings.getListenPort();
 
         StringWriter configWriter = new StringWriter();
-        configWriter.append("mkdir -v ~/.certs\n");
+        configWriter.append("mkdir -v $HOME/.cert\n");
         configWriter.append("""
                             cat <<EOF > %s
                             %s
@@ -339,18 +339,19 @@ public class OpenVpnRestController {
         password-flags = 2, port = , remote = odysseus.nieslony.lan,
         username = claas@NIESLONY.LAN
          */
-        configWriter.append("vpn_opts=\"\"\n");
+        configWriter.append("vpn_opts=\"\n");
         if (!vpnSettings.getInternetThrouphVpn()) {
-            configWriter.append("vpn_opts=\"$vpn_opts ipv4.never-default yes\"\n");
+            configWriter.append("    ipv4.never-default yes\"\n");
         }
         configWriter.append(
-                "vpn_opts=\"$vpn_opts ipv4.dns-search %s\"\n"
+                "    ipv4.dns-search %s\"\n"
                         .formatted(String.join(",", vpnSettings.getDnsSearch()))
         );
         configWriter.append(
-                "vpn_opts=\"$vpn_opts ipv4.dns %s\"\n"
+                "    ipv4.dns %s\"\n"
                         .formatted(String.join(",", vpnSettings.getPushDnsServers()))
         );
+        configWriter.append("\"\n");
 
         configWriter.append(
                 """
