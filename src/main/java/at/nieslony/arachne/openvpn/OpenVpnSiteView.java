@@ -116,10 +116,12 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     public OpenVpnSiteView(
             Settings settings,
-            OpenVpnRestController openVpnRestController
+            OpenVpnRestController openVpnRestController,
+            SiteConfigUploader siteConfigUploader
     ) {
         this.settings = settings;
         this.openVpnRestController = openVpnRestController;
+        this.siteConfigUploader = siteConfigUploader;
         this.nonDefaultComponents = new LinkedList<>();
 
         siteConfigUploader = new SiteConfigUploader();
@@ -694,14 +696,14 @@ public class OpenVpnSiteView extends VerticalLayout {
                             sites.setItems(binder.getBean().getVpnSites());
                             sites.setValue(e.getValue());
 
-                            siteBinder.setBean(tmpSite);
+                            siteBinder.setBean(e.getValue());
 
                             siteModified = false;
                         },
                         "Reject", (ce) -> {
                             siteModified = false;
 
-                            siteBinder.setBean(tmpSite);
+                            siteBinder.setBean(e.getOldValue());
                         },
                         "Cancel", (ce) -> {
                             sites.setValue(e.getOldValue());
@@ -716,6 +718,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             }
         }
         siteBinder.validate();
+        siteBinder.refreshFields();
     }
 
 }
