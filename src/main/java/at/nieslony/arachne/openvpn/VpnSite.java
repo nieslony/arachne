@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
@@ -23,6 +24,7 @@ import lombok.Setter;
 @Setter
 @Builder(toBuilder = true)
 @AllArgsConstructor
+@ToString
 public class VpnSite extends AbstractSettingsGroup {
 
     private Integer id;
@@ -85,8 +87,7 @@ public class VpnSite extends AbstractSettingsGroup {
         return "%s.%d".formatted(super.groupName(), id);
     }
 
-    @Override
-    public String toString() {
+    public String label() {
         return description == null || description.isEmpty() ? name : name + " - " + description;
     }
 }

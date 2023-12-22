@@ -132,7 +132,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         tabs.add("Clients", createClientsPage());
         tabs.setWidthFull();
 
-        Button saveButton = new Button("Save", (t) -> save());
+        Button saveButton = new Button("Save", (t) -> onSaveSite());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(tabs, saveButton);
@@ -298,6 +298,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
 
         sites = new Select<>();
+        sites.setItemLabelGenerator((site) -> site.label());
         sites.setLabel("Sites");
         sites.setWidthFull();
         sites.setItems(openVpnSiteSettings.getVpnSites());
@@ -627,15 +628,18 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private void save() {
+    private void onSaveSite() {
         try {
             VpnSite curSite = siteBinder.getBean();
             if (curSite != null) {
+                logger.info("Saving " + curSite.toString());
                 openVpnSiteSettings.getSites().put(curSite.getId(), curSite);
             }
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
+            sites.setItems(openVpnSiteSettings.getVpnSites());
+            logger.info(openVpnSiteSettings.getVpnSites().toString());
             siteModified = false;
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
@@ -674,11 +678,12 @@ public class OpenVpnSiteView extends VerticalLayout {
     private void onChangeSite(
             AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
     ) {
-        boolean defaultSiteSelected
+        boolean isDefaultSiteSelected
                 = e.getValue() != null && e.getValue().getId() != 0;
-        enableNonDefaultCopmponents(defaultSiteSelected);
+        enableNonDefaultCopmponents(isDefaultSiteSelected);
 
         if (siteModified) {
+            logger.info("Site modified");
             if (e.isFromClient()) {
                 ConfirmDialog dlg = new ConfirmDialog(
                         "Unsaved Changes",
@@ -689,7 +694,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                             sites.setItems(binder.getBean().getVpnSites());
                             sites.setValue(e.getValue());
 
-                            VpnSite tmpSite = e.getValue().toBuilder().build();
                             siteBinder.setBean(tmpSite);
 
                             siteModified = false;
@@ -697,7 +701,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                         "Reject", (ce) -> {
                             siteModified = false;
 
-                            VpnSite tmpSite = e.getValue().toBuilder().build();
                             siteBinder.setBean(tmpSite);
                         },
                         "Cancel", (ce) -> {
@@ -707,9 +710,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 dlg.open();
             }
         } else {
+            logger.info("Site not modified");
             if (e.getValue() != null) {
-                VpnSite tmpSite = e.getValue().toBuilder().build();
-                siteBinder.setBean(tmpSite);
+                siteBinder.setBean(e.getValue());
             }
         }
         siteBinder.validate();
