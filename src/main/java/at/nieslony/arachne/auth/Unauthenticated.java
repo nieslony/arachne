@@ -4,25 +4,23 @@
  */
 package at.nieslony.arachne.auth;
 
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  *
  * @author claas
  */
-@RestController
+//@RestController
 public class Unauthenticated {
 
     private static final org.slf4j.Logger logger
             = LoggerFactory.getLogger(LoginOrSetupView.class);
 
-    @GetMapping("/unauthorized")
-    @AnonymousAllowed
+    //@GetMapping("/unauthorized")
+    //@AnonymousAllowed
     public ResponseEntity<String> unauthorized() {
         logger.info("Unauthorized");
         return ResponseEntity
@@ -30,6 +28,7 @@ public class Unauthenticated {
                 .headers((headers) -> {
                     headers.add("WWW-Authenticate", "Negotiate");
                 })
+                .contentType(MediaType.TEXT_HTML)
                 .body("""
                       <html>
                       <head>

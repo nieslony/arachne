@@ -19,8 +19,10 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinResponse;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 
 /**
  *
@@ -60,8 +62,9 @@ public class LoginOrSetupView
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         if (setupController.setupAlreadyDone()) {
-            //var resp = VaadinResponse.getCurrent();
-            //resp.setStatus(HttpStatus.UNAUTHORIZED.value());
+            var resp = VaadinResponse.getCurrent();
+            resp.setStatus(HttpStatus.UNAUTHORIZED.value());
+            resp.setHeader("WWW-Authenticate", "Negotiate");
 
             logger.info("Create login page");
             title = "Login | Arachne";
