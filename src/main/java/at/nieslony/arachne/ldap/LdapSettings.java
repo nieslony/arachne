@@ -402,7 +402,7 @@ public class LdapSettings extends AbstractSettingsGroup {
 
     public ArachneUser getUser(String username) {
         List<ArachneUser> users = findUsers(username, 1);
-        if (users.isEmpty()) {
+        if (users == null || users.isEmpty()) {
             return null;
         }
         return users.get(0);
