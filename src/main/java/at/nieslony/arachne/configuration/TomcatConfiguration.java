@@ -40,6 +40,8 @@ public class TomcatConfiguration {
             if (tomcatSettings.isEnableAjpSecret()) {
                 ajpProtocol.setSecret(tomcatSettings.getAjpSecret());
             }
+            ajpProtocol.setTomcatAuthentication(true);
+            ajpProtocol.setAllowedRequestAttributesPattern(".*");
 
             tomcat.addAdditionalTomcatConnectors(ajpConnector);
         }
