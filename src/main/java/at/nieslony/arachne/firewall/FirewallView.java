@@ -32,7 +32,7 @@ import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
-import at.nieslony.arachne.utils.validators.IgnoringInvisibleValidator;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.RequiredIfVisibleValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
 import com.vaadin.flow.component.Component;
@@ -688,7 +688,7 @@ public class FirewallView extends VerticalLayout {
         hostnameField.setVisible(false);
         hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
         whereBinder.forField(hostnameField)
-                .asRequired(new IgnoringInvisibleValidator<>(
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new HostnameValidator(false))
                 )
                 .bind(FirewallWhere::getHostname, FirewallWhere::setHostname);
@@ -712,7 +712,7 @@ public class FirewallView extends VerticalLayout {
                         (dest, value) -> dest.setSubnetMask(value.getBits())
                 );
         whereBinder.forField(networkField)
-                .asRequired(new IgnoringInvisibleValidator<>(
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new SubnetValidator(() -> {
                             NetMask mask = netMaskField.getValue();
                             if (mask == null) {
@@ -771,7 +771,7 @@ public class FirewallView extends VerticalLayout {
         mxRecDomain.setWidthFull();
         mxRecDomain.setValueChangeMode(ValueChangeMode.EAGER);
         whereBinder.forField(mxRecDomain)
-                .asRequired(new IgnoringInvisibleValidator<>(
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new HostnameValidator())
                 )
                 .bind(FirewallWhere::getMxDomain, FirewallWhere::setMxDomain);
