@@ -20,8 +20,11 @@ import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
+import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.notification.Notification;
@@ -50,38 +53,43 @@ public class KerberosView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(KerberosView.class);
 
+    private Checkbox enableKerberosAuthField;
+    private TextField keytabPathField;
+    private ComboBox<String> servicePrincipalField;
+    private Button readKeytabButton;
+    private Binder<KerberosSettings> kerberosBinder;
+
     public KerberosView(Settings settings) {
         Notification notification = new Notification();
         notification.setDuration(5000);
 
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
-        Binder<KerberosSettings> binder = new Binder<>();
-        binder.setBean(kerberosSettings);
+        kerberosBinder = new Binder<>();
+        kerberosBinder.setBean(kerberosSettings);
 
-        Checkbox enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
-        binder.forField(enableKerberosAuthField)
+        enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
+        kerberosBinder.forField(enableKerberosAuthField)
                 .bind(KerberosSettings::isEnableKrbAuth, KerberosSettings::setEnableKrbAuth);
 
-        TextField keytabPathField = new TextField("Keytab Path");
+        keytabPathField = new TextField("Keytab Path");
         keytabPathField.setWidthFull();
-        binder.forField(keytabPathField)
+        kerberosBinder.forField(keytabPathField)
                 .withValidator((filename) -> {
                     File f = new File(filename);
                     return f.isFile() && f.canRead();
                 }, "Cannot read file")
                 .bind(KerberosSettings::getKeytabPath, KerberosSettings::setKeytabPath);
 
-        ComboBox<String> servicePrincipalField = new ComboBox<>("Service Principal");
+        servicePrincipalField = new ComboBox<>("Service Principal");
         servicePrincipalField.setWidthFull();
         servicePrincipalField.setItems("");
-        binder.forField(servicePrincipalField)
-                .withValidator(
-                        (value) -> value != null && !value.isEmpty(),
-                        "Value reqired"
-                )
+        kerberosBinder.forField(servicePrincipalField)
+                .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
+                        new SerivePrincipalValidator()
+                ))
                 .bind(KerberosSettings::getServicePrincipal, KerberosSettings::setServicePrincipal);
 
-        Button readKeytabButton = new Button(
+        readKeytabButton = new Button(
                 "Read Entries from Keytab",
                 e -> {
                     String filename = keytabPathField.getValue();
@@ -97,6 +105,7 @@ public class KerberosView extends VerticalLayout {
                         if (principal.isPresent()) {
                             servicePrincipalField.setValue(principal.get());
                         }
+                        kerberosBinder.validate();
                     } catch (IOException | KeytabException ex) {
                         String msg = "Cannot read %s: %s"
                                 .formatted(filename, ex.getMessage());
@@ -104,7 +113,7 @@ public class KerberosView extends VerticalLayout {
                         notification.add(msg);
                         notification.open();
                     }
-                    binder.validate();
+                    kerberosBinder.validate();
                 }
         );
 
@@ -120,15 +129,17 @@ public class KerberosView extends VerticalLayout {
                 "Save and Restart Arachne",
                 e -> {
                     try {
-                        binder.getBean().save(settings);
+                        kerberosBinder.getBean().save(settings);
                         Arachne.restart();
                     } catch (SettingsException ex) {
                         logger.error(ex.getMessage());
                     }
                 }
         );
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setDisableOnClick(true);
 
-        binder.addStatusChangeListener(
+        kerberosBinder.addStatusChangeListener(
                 l -> {
                     saveButton.setEnabled(
                             !enableKerberosAuthField.getValue()
@@ -136,6 +147,10 @@ public class KerberosView extends VerticalLayout {
                     );
                 }
         );
+
+        enableKerberosAuthField.addValueChangeListener((e) -> {
+            onUpdateEnableKerberos(e.getValue());
+        });
 
         add(
                 enableKerberosAuthField,
@@ -145,6 +160,14 @@ public class KerberosView extends VerticalLayout {
         );
         setMaxWidth(50, Unit.EM);
 
-        binder.validate();
+        onUpdateEnableKerberos(enableKerberosAuthField.getValue());
+    }
+
+    private void onUpdateEnableKerberos(boolean enabled) {
+        keytabPathField.setEnabled(enabled);
+        servicePrincipalField.setEnabled(enabled);
+        readKeytabButton.setEnabled(enabled);
+        kerberosBinder.validate();
+        kerberosBinder.validate();
     }
 }
