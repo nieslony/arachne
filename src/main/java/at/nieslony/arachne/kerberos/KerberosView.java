@@ -22,6 +22,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -30,6 +31,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
@@ -53,16 +55,29 @@ public class KerberosView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(KerberosView.class);
 
+    private Notification notification;
+
     private Checkbox enableKerberosAuthField;
     private TextField keytabPathField;
     private ComboBox<String> servicePrincipalField;
     private Button readKeytabButton;
     private Binder<KerberosSettings> kerberosBinder;
 
+    private Checkbox preAuthEnabled;
+    private TextField preAuthEnvVar;
+    private Binder<PreAuthSettings> preAuthBinder;
+
     public KerberosView(Settings settings) {
-        Notification notification = new Notification();
+        notification = new Notification();
         notification.setDuration(5000);
 
+        TabSheet tabs = new TabSheet();
+        tabs.add("Kerberos", createKerberosViw(settings));
+        tabs.add("Pre Authentication", createPreAuthView(settings));
+        add(tabs);
+    }
+
+    private Component createKerberosViw(Settings settings) {
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         kerberosBinder = new Binder<>();
         kerberosBinder.setBean(kerberosSettings);
@@ -130,6 +145,7 @@ public class KerberosView extends VerticalLayout {
                 e -> {
                     try {
                         kerberosBinder.getBean().save(settings);
+                        preAuthBinder.getBean().save(settings);
                         Arachne.restart();
                     } catch (SettingsException ex) {
                         logger.error(ex.getMessage());
@@ -152,7 +168,7 @@ public class KerberosView extends VerticalLayout {
             onUpdateEnableKerberos(e.getValue());
         });
 
-        add(
+        VerticalLayout layout = new VerticalLayout(
                 enableKerberosAuthField,
                 keytabPathField,
                 servicePrincipalLayout,
@@ -161,6 +177,39 @@ public class KerberosView extends VerticalLayout {
         setMaxWidth(50, Unit.EM);
 
         onUpdateEnableKerberos(enableKerberosAuthField.getValue());
+
+        return layout;
+    }
+
+    private Component createPreAuthView(Settings settings) {
+        PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
+        preAuthBinder = new Binder<>();
+        preAuthBinder.setBean(preAuthSettings);
+
+        preAuthEnabled = new Checkbox("Enable Pre Authentication");
+        preAuthBinder
+                .forField(preAuthEnabled)
+                .bind(PreAuthSettings::isPreAuthtEnabled, PreAuthSettings::setPreAuthtEnabled);
+
+        preAuthEnvVar = new TextField("Environment Variable");
+        preAuthBinder
+                .forField(preAuthEnvVar)
+                .asRequired()
+                .bind(PreAuthSettings::getEnvironmentVariable, PreAuthSettings::setEnvironmentVariable);
+
+        preAuthEnabled.addValueChangeListener((e) -> {
+            onEnablePreAuthentication(e.getValue());
+        });
+
+        VerticalLayout layout = new VerticalLayout(
+                preAuthEnabled,
+                preAuthEnvVar
+        );
+
+        preAuthBinder.validate();
+        onEnablePreAuthentication(preAuthEnabled.getValue());
+
+        return layout;
     }
 
     private void onUpdateEnableKerberos(boolean enabled) {
@@ -168,6 +217,9 @@ public class KerberosView extends VerticalLayout {
         servicePrincipalField.setEnabled(enabled);
         readKeytabButton.setEnabled(enabled);
         kerberosBinder.validate();
-        kerberosBinder.validate();
+    }
+
+    private void onEnablePreAuthentication(boolean enable) {
+        preAuthEnvVar.setEnabled(enable);
     }
 }

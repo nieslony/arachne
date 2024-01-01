@@ -6,6 +6,7 @@ package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.kerberos.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
@@ -54,16 +55,16 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Autowired
     private ArachneUserDetailsService arachneUserDetailsService;
 
-    /*@Autowired
-    private WwwAuthenticateFilter wwwAuthenticateFilter;*/
     @Autowired
     private FolderFactory folderFactory;
 
     private KerberosSettings kerberosSettings;
+    private PreAuthSettings preAuthSettings;
 
     @PostConstruct
     public void init() {
         kerberosSettings = settings.getSettings(KerberosSettings.class);
+        preAuthSettings = settings.getSettings(PreAuthSettings.class);
     }
 
     @Bean
@@ -79,28 +80,35 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class);
 
-        http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
+        }
     }
 
     @Bean
     public Filter requestAttributeAuthenticationFilter(
             AuthenticationManager authenticationManager
     ) {
-        RequestAttributeAuthenticationFilter filter = new RequestAttributeAuthenticationFilter();
-        filter.setExceptionIfVariableMissing(false);
-        filter.setPrincipalEnvironmentVariable("REMOTE_USER");
-        filter.setAuthenticationManager(authenticationManager);
-        filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
-            logger.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());
-        });
-        filter.setAuthenticationFailureHandler((request, response, exception) -> {
-            logger.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
-        });
-        filter.setAuthenticationDetailsSource((context) -> {
-            return arachneUserDetailsService;
-        });
-
-        return filter;
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            RequestAttributeAuthenticationFilter filter = new RequestAttributeAuthenticationFilter();
+            filter.setExceptionIfVariableMissing(false);
+            filter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+                logger.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());
+            });
+            filter.setAuthenticationFailureHandler((request, response, exception) -> {
+                logger.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
+            });
+            filter.setAuthenticationDetailsSource((context) -> {
+                return arachneUserDetailsService;
+            });
+            return filter;
+        } else {
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
+        }
     }
 
     @Bean
@@ -149,7 +157,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                     .authenticationProvider(kerberosAuthenticationProvider())
                     .authenticationProvider(kerberosServiceAuthenticationProvider());
         }
-        authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
+        }
 
         return authManBuilder.build();
     }
