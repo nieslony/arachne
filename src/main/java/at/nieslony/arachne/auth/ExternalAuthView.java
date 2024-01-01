@@ -21,7 +21,6 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.kerberos.KeytabException;
 import at.nieslony.arachne.kerberos.KeytabFile;
-import at.nieslony.arachne.kerberos.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
@@ -76,12 +75,12 @@ public class ExternalAuthView extends VerticalLayout {
         notification.setDuration(5000);
 
         TabSheet tabs = new TabSheet();
-        tabs.add("Kerberos", createKerberosViw(settings));
+        tabs.add("Kerberos", createKerberosView(settings));
         tabs.add("Pre Authentication", createPreAuthView(settings));
         add(tabs);
     }
 
-    private Component createKerberosViw(Settings settings) {
+    private Component createKerberosView(Settings settings) {
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         kerberosBinder = new Binder<>();
         kerberosBinder.setBean(kerberosSettings);

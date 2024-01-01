@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.configuration;
 
-import at.nieslony.arachne.kerberos.PreAuthSettings;
+import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import org.apache.catalina.connector.Connector;
