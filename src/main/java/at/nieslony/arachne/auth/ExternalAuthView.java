@@ -14,10 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.kerberos;
+package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.kerberos.KeytabException;
+import at.nieslony.arachne.kerberos.KeytabFile;
+import at.nieslony.arachne.kerberos.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
@@ -51,9 +55,9 @@ import org.slf4j.LoggerFactory;
 @Route(value = "kerberos", layout = ViewTemplate.class)
 @PageTitle("Kerberos| Arachne")
 @RolesAllowed("ADMIN")
-public class KerberosView extends VerticalLayout {
+public class ExternalAuthView extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(KerberosView.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExternalAuthView.class);
 
     private Notification notification;
 
@@ -67,7 +71,7 @@ public class KerberosView extends VerticalLayout {
     private TextField preAuthEnvVar;
     private Binder<PreAuthSettings> preAuthBinder;
 
-    public KerberosView(Settings settings) {
+    public ExternalAuthView(Settings settings) {
         notification = new Notification();
         notification.setDuration(5000);
 

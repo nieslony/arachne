@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.firewall.FirewallView;
-import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
@@ -132,14 +132,13 @@ public class ViewTemplate extends AppLayout {
 
         SideNav usersNav = new SideNav();
         usersNav.setLabel("Users & Authentication");
-        usersNav.addItem(
-                new SideNavItem("Users", UsersView.class,
-                        VaadinIcon.USERS.create()),
+        usersNav.addItem(new SideNavItem("Users", UsersView.class,
+                VaadinIcon.USERS.create()),
                 new SideNavItem("LDAP User Source", LdapView.class,
                         VaadinIcon.FOLDER.create()),
                 new SideNavItem("Roles", RolesView.class,
                         VaadinIcon.GROUP.create()),
-                new SideNavItem("Kerberos Auth", KerberosView.class,
+                new SideNavItem("External Auth", ExternalAuthView.class,
                         VaadinIcon.AUTOMATION.create())
         );
         usersNav.setWidthFull();
