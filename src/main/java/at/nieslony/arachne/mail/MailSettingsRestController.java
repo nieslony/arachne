@@ -29,6 +29,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -37,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  *
@@ -45,6 +48,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/mail")
 public class MailSettingsRestController {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpenVpnRestController.class);
 
     @Autowired
     Settings settings;
@@ -97,6 +102,10 @@ public class MailSettingsRestController {
                 openVpnUserSettings.getClientConfigName(),
                 new ByteArrayDataSource(windowsConfig, "text/plain")
         );
+        logger.info("sender: " + mailSettings.getSenderDisplayname());
+        logger.info("Recipient: " + forUser.getDisplayName());
+        logger.info("rcpt var: " + mailSettings.getVarRcptName());
+        logger.info("sender var; " + mailSettings.getVarSenderName());
         switch (mailSettings.getTemplateConfigType()) {
             case HTML -> {
                 String msg = mailSettings
@@ -107,9 +116,12 @@ public class MailSettingsRestController {
                                         forUser.getUsername()
                                 )
                         )
-                        .replace(mailSettings.getVarSenderName(), forUser.getDisplayName())
-                        .replace(mailSettings.getVarLinuxInstructions(), linuxConfig)
-                        .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname());
+                        .replace(mailSettings.getVarRcptName(), forUser.getDisplayName())
+                        .replace(
+                                mailSettings.getVarLinuxInstructions(),
+                                HtmlUtils.htmlEscape(linuxConfig)
+                        )
+                        .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname());
                 String style = """
                                <style>
                                code {

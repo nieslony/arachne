@@ -5,8 +5,8 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
-import at.nieslony.arachne.auth.WwwAuthenticateFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
@@ -36,8 +36,8 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
 
 /**
  *
@@ -56,65 +56,58 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private ArachneUserDetailsService arachneUserDetailsService;
 
     @Autowired
-    private WwwAuthenticateFilter wwwAuthenticateFilter;
-
-    @Autowired
     private FolderFactory folderFactory;
 
     private KerberosSettings kerberosSettings;
+    private PreAuthSettings preAuthSettings;
 
     @PostConstruct
     public void init() {
         kerberosSettings = settings.getSettings(KerberosSettings.class);
+        preAuthSettings = settings.getSettings(PreAuthSettings.class);
     }
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        SpnegoEntryPoint sep = new SpnegoEntryPoint("/");
+        SpnegoEntryPoint sep = new SpnegoEntryPoint("/login");
         return sep;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                .csrf((csrf)
-                        -> csrf.disable())
-                .headers((headers)
-                        -> headers.frameOptions((fro) -> fro.disable()))
-                .httpBasic((configurator)
-                        -> configurator.realmName("Arachne openVPN Administrator")
-                );
+        AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+
         super.configure(http);
-        setLoginView(http, LoginOrSetupView.class, "/arachne/login");
+        setLoginView(http, LoginOrSetupView.class);
 
-        if (kerberosSettings.isEnableKrbAuth()) {
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
+        }
+    }
+
+    @Bean
+    public Filter requestAttributeAuthenticationFilter(
             AuthenticationManager authenticationManager
-                    = http.getSharedObject(AuthenticationManager.class);
-
-            http
-                    .exceptionHandling(
-                            eh -> eh.authenticationEntryPoint(
-                                    spnegoEntryPoint()
-                            )
-                    )
-                    .authenticationProvider(
-                            kerberosAuthenticationProvider()
-                    )
-                    .authenticationProvider(
-                            kerberosServiceAuthenticationProvider()
-                    )
-                    .addFilterAfter(
-                            spnegoAuthenticationProcessingFilter(authenticationManager),
-                            SessionManagementFilter.class
-                    )
-                    .addFilterBefore(
-                            wwwAuthenticateFilter,
-                            UsernamePasswordAuthenticationFilter.class
-                    );
+    ) {
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            RequestAttributeAuthenticationFilter filter = new RequestAttributeAuthenticationFilter();
+            filter.setExceptionIfVariableMissing(false);
+            filter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+                logger.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());
+            });
+            filter.setAuthenticationFailureHandler((request, response, exception) -> {
+                logger.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
+            });
+            filter.setAuthenticationDetailsSource((context) -> {
+                return arachneUserDetailsService;
+            });
+            return filter;
         } else {
-            logger.info(
-                    "Kerberos is disabled, don't add authentication providers and filters"
-            );
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
         }
     }
 
@@ -144,6 +137,8 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     public void configure(WebSecurity web) throws Exception {
         // Customize your WebSecurity configuration.
+//        web.ignoring().requestMatchers("/unauthorized");
+//        web.ignoring().requestMatchers("/unauthorized");
         super.configure(web);
     }
 
@@ -162,8 +157,22 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                     .authenticationProvider(kerberosAuthenticationProvider())
                     .authenticationProvider(kerberosServiceAuthenticationProvider());
         }
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
+        }
 
         return authManBuilder.build();
+    }
+
+    @Bean
+    public PreAuthenticatedAuthenticationProvider preAuthenticatedAuthenticationProvider() {
+        PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
+        provider.setPreAuthenticatedUserDetailsService((token) -> {
+            logger.info("Get user details from pre auth token for : " + token.getName());
+            return arachneUserDetailsService.loadUserByUsername(token.getName());
+        });
+
+        return provider;
     }
 
     @Bean

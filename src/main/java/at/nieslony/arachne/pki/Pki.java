@@ -109,7 +109,6 @@ public class Pki {
             PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
             pkiSettings.setDhParamsBits(setupData.getDhParamsBits());
             pkiSettings.save(settings);
-            generateDhParams(pkiSettings.getDhParamsBits());
         } catch (PkiException | SettingsException ex) {
             throw new CertSpecsValidationException(ex);
         }

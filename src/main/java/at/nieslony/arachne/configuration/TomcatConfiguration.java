@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.configuration;
 
+import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import org.apache.catalina.connector.Connector;
@@ -26,6 +27,7 @@ public class TomcatConfiguration {
     @Bean
     public TomcatServletWebServerFactory servletContainer() {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
+        PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
         if (tomcatSettings.isEnableAjpConnector()) {
@@ -40,6 +42,11 @@ public class TomcatConfiguration {
             if (tomcatSettings.isEnableAjpSecret()) {
                 ajpProtocol.setSecret(tomcatSettings.getAjpSecret());
             }
+
+            if (preAuthSettings.isPreAuthtEnabled()) {
+                ajpProtocol.setTomcatAuthentication(true);
+            }
+            ajpProtocol.setAllowedRequestAttributesPattern(".*");
 
             tomcat.addAdditionalTomcatConnectors(ajpConnector);
         }

@@ -25,6 +25,8 @@ import at.nieslony.arachne.tasks.RecurringTaskModel;
 import at.nieslony.arachne.tasks.RecurringTasksRepository;
 import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.tasks.TaskRepository;
+import at.nieslony.arachne.tasks.TaskScheduler;
+import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
@@ -97,6 +99,9 @@ public class SetupController {
     @Autowired
     private RolesCollector rolesCollector;
 
+    @Autowired
+    private TaskScheduler taskScheduler;
+
     public boolean setupAlreadyDone() {
         try {
             SetupStatus status = settings.get(SETUP_STATUS_KEY, SetupStatus.class);
@@ -143,6 +148,8 @@ public class SetupController {
             logger.error("Setup failed: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         }
+
+        taskScheduler.runTask(UpdateDhParams.class, null, null);
 
         settings.put(SETUP_STATUS_KEY, SetupStatus.FINISHED);
 
