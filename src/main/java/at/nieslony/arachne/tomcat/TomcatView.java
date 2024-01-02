@@ -72,10 +72,11 @@ public class TomcatView extends VerticalLayout {
                     try {
                         TomcatSettings tomcatSettings = binder.getBean();
                         tomcatSettings.save(settings);
-                        tomcatService.saveApacheConfig(tomcatSettings);
+                        tomcatService.saveApacheConfig();
                     } catch (SettingsException ex) {
                         logger.error("Cannot save tomcat settings: " + ex.getMessage());
                     }
+                    e.getSource().setEnabled(true);
                 });
 
         binder.forField(enableAjpField)

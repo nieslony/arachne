@@ -23,6 +23,6 @@ public class PreAuthSettings extends AbstractSettingsGroup {
     private boolean preAuthtEnabled = false;
     private String environmentVariable = "REMOTE_USER";
 
-    private boolean writeApacheConfig = true;
+    private boolean writeApachePreAuthConfig = true;
     private String keytabFile = "/etc/httpd/krb5.keytab";
 }

@@ -16,13 +16,13 @@
  */
 package at.nieslony.arachne.auth;
 
-import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.kerberos.KeytabException;
 import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.tomcat.TomcatService;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
 import com.vaadin.flow.component.Component;
@@ -58,8 +58,11 @@ public class ExternalAuthView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ExternalAuthView.class);
 
-    private Notification notification;
-    private Settings settings;
+    private final Notification notification;
+    private final Settings settings;
+    private final TomcatService tomcatService;
+
+    private final Button saveButton;
 
     private Checkbox enableKerberosAuthField;
     private TextField keytabPathField;
@@ -74,19 +77,28 @@ public class ExternalAuthView extends VerticalLayout {
 
     private Binder<PreAuthSettings> preAuthBinder;
 
-    public ExternalAuthView(Settings settings) {
+    public ExternalAuthView(Settings settings, TomcatService tomcatService) {
+        this.settings = settings;
+        this.tomcatService = tomcatService;
+
         notification = new Notification();
         notification.setDuration(5000);
+
+        saveButton = new Button(
+                "Save and Restart Arachne",
+                e -> onSaveAndRestart()
+        );
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();
         tabs.add("Kerberos", createKerberosView(settings));
         tabs.add("Pre Authentication", createPreAuthView(settings));
-        add(tabs);
+
+        add(tabs, saveButton);
     }
 
     private Component createKerberosView(Settings settings) {
-        this.settings = settings;
-
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         kerberosBinder = new Binder<>();
         kerberosBinder.setBean(kerberosSettings);
@@ -149,13 +161,6 @@ public class ExternalAuthView extends VerticalLayout {
         servicePrincipalLayout.setWidthFull();
         servicePrincipalLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
-        Button saveButton = new Button(
-                "Save and Restart Arachne",
-                e -> onSaveAndRestart()
-        );
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveButton.setDisableOnClick(true);
-
         kerberosBinder.addStatusChangeListener(
                 l -> {
                     saveButton.setEnabled(
@@ -172,8 +177,7 @@ public class ExternalAuthView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout(
                 enableKerberosAuthField,
                 keytabPathField,
-                servicePrincipalLayout,
-                saveButton
+                servicePrincipalLayout
         );
         setMaxWidth(50, Unit.EM);
 
@@ -201,7 +205,7 @@ public class ExternalAuthView extends VerticalLayout {
         createApacheConfig = new Checkbox("Create Apache Configuration");
         preAuthBinder
                 .forField(createApacheConfig)
-                .bind(PreAuthSettings::isWriteApacheConfig, PreAuthSettings::setWriteApacheConfig);
+                .bind(PreAuthSettings::isWriteApachePreAuthConfig, PreAuthSettings::setWriteApachePreAuthConfig);
 
         apacheKeytabFile = new TextField("Keytab Location");
         preAuthBinder
@@ -215,7 +219,7 @@ public class ExternalAuthView extends VerticalLayout {
         createApacheConfig.addValueChangeListener((e) -> {
             apacheKeytabFile.setEnabled(createApacheConfig.getValue());
         });
-        
+
         VerticalLayout layout = new VerticalLayout(
                 preAuthEnabled,
                 preAuthEnvVar,
@@ -244,10 +248,15 @@ public class ExternalAuthView extends VerticalLayout {
     }
 
     private void onSaveAndRestart() {
+        KerberosSettings kerberosSettings = kerberosBinder.getBean();
+        PreAuthSettings preAuthSettings = preAuthBinder.getBean();
         try {
-            kerberosBinder.getBean().save(settings);
-            preAuthBinder.getBean().save(settings);
-            Arachne.restart();
+            kerberosSettings.save(settings);
+            preAuthSettings.save(settings);
+            if (preAuthSettings.isWriteApachePreAuthConfig()) {
+                tomcatService.saveApacheConfig();
+            }
+            //Arachne.restart();
         } catch (SettingsException ex) {
             logger.error(ex.getMessage());
         }
