@@ -59,6 +59,7 @@ public class ExternalAuthView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(ExternalAuthView.class);
 
     private Notification notification;
+    private Settings settings;
 
     private Checkbox enableKerberosAuthField;
     private TextField keytabPathField;
@@ -68,6 +69,9 @@ public class ExternalAuthView extends VerticalLayout {
 
     private Checkbox preAuthEnabled;
     private TextField preAuthEnvVar;
+    private Checkbox createApacheConfig;
+    private TextField apacheKeytabFile;
+
     private Binder<PreAuthSettings> preAuthBinder;
 
     public ExternalAuthView(Settings settings) {
@@ -81,6 +85,8 @@ public class ExternalAuthView extends VerticalLayout {
     }
 
     private Component createKerberosView(Settings settings) {
+        this.settings = settings;
+
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         kerberosBinder = new Binder<>();
         kerberosBinder.setBean(kerberosSettings);
@@ -145,15 +151,7 @@ public class ExternalAuthView extends VerticalLayout {
 
         Button saveButton = new Button(
                 "Save and Restart Arachne",
-                e -> {
-                    try {
-                        kerberosBinder.getBean().save(settings);
-                        preAuthBinder.getBean().save(settings);
-                        Arachne.restart();
-                    } catch (SettingsException ex) {
-                        logger.error(ex.getMessage());
-                    }
-                }
+                e -> onSaveAndRestart()
         );
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setDisableOnClick(true);
@@ -200,13 +198,29 @@ public class ExternalAuthView extends VerticalLayout {
                 .asRequired()
                 .bind(PreAuthSettings::getEnvironmentVariable, PreAuthSettings::setEnvironmentVariable);
 
+        createApacheConfig = new Checkbox("Create Apache Configuration");
+        preAuthBinder
+                .forField(createApacheConfig)
+                .bind(PreAuthSettings::isWriteApacheConfig, PreAuthSettings::setWriteApacheConfig);
+
+        apacheKeytabFile = new TextField("Keytab Location");
+        preAuthBinder
+                .forField(apacheKeytabFile)
+                .bind(PreAuthSettings::getKeytabFile, PreAuthSettings::setKeytabFile);
+
         preAuthEnabled.addValueChangeListener((e) -> {
             onEnablePreAuthentication(e.getValue());
         });
 
+        createApacheConfig.addValueChangeListener((e) -> {
+            apacheKeytabFile.setEnabled(createApacheConfig.getValue());
+        });
+        
         VerticalLayout layout = new VerticalLayout(
                 preAuthEnabled,
-                preAuthEnvVar
+                preAuthEnvVar,
+                createApacheConfig,
+                apacheKeytabFile
         );
 
         preAuthBinder.validate();
@@ -224,5 +238,18 @@ public class ExternalAuthView extends VerticalLayout {
 
     private void onEnablePreAuthentication(boolean enable) {
         preAuthEnvVar.setEnabled(enable);
+        createApacheConfig.setEnabled(enable);
+        apacheKeytabFile.setEnabled(enable && createApacheConfig.getValue());
+        preAuthBinder.validate();
+    }
+
+    private void onSaveAndRestart() {
+        try {
+            kerberosBinder.getBean().save(settings);
+            preAuthBinder.getBean().save(settings);
+            Arachne.restart();
+        } catch (SettingsException ex) {
+            logger.error(ex.getMessage());
+        }
     }
 }
