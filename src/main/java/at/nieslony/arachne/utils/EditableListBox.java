@@ -47,6 +47,7 @@ public class EditableListBox
     private ListBox<String> itemsField;
     private Binder<String> binder;
     private TextField editField;
+    private Button clearButton;
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
@@ -74,8 +75,7 @@ public class EditableListBox
                 e -> {
                     var items = getValue();
                     items.add(editField.getValue());
-                    getValue().add(editField.getValue());
-                    itemsField.setItems(getValue());
+                    itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
                 });
         Button updateButton = new Button(
@@ -97,6 +97,15 @@ public class EditableListBox
                     setModelValue(new LinkedList<>(items), true);
                 });
         removeButton.setEnabled(false);
+        clearButton = new Button("Clear",
+                (t) -> {
+                    var items = getValue();
+                    items.clear();
+                    itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
+                }
+        );
+        clearButton.setEnabled(false);
 
         getContent().add(
                 elbLabel,
@@ -105,7 +114,8 @@ public class EditableListBox
                 new HorizontalLayout(
                         addButton,
                         updateButton,
-                        removeButton
+                        removeButton,
+                        clearButton
                 )
         );
         itemsField.setWidthFull();
@@ -140,27 +150,15 @@ public class EditableListBox
         });
     }
 
-    /*
-    @Override
-    public void setValue(List<String> items) {
-        this.items.clear();
-        this.items = new LinkedList<>(items);
-        itemsField.setItems(this.items);
-
-    }
-
-    @Override
-    public List<String> getValue() {
-        return new LinkedList<>(items);
-    }
-     */
     protected Validator<String> getValidator() {
         return (t, vc) -> ValidationResult.ok();
     }
 
     @Override
     protected void setPresentationValue(List<String> v) {
-        itemsField.setItems(getValue());
+        v.removeIf((t) -> t == null || t.isEmpty() || t.isBlank());
+        itemsField.setItems(v);
+        clearButton.setEnabled(!v.isEmpty());
     }
 
     @Override
