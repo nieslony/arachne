@@ -220,6 +220,7 @@ public class LdapSettings extends AbstractSettingsGroup {
                 loginConfig.setServicePrincipal(kerberosBindPricipal);
                 loginConfig.setDebug(true);
                 loginConfig.afterPropertiesSet();
+                loginConfig.setUseTicketCache(true);
                 loginConfig.setIsInitiator(true);
                 ctxSrc.setLoginConfig(loginConfig);
 
