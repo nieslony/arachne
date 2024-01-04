@@ -5,8 +5,8 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
-import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.auth.PreAuthSettings;
+import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
