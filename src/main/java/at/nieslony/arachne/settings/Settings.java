@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.data.util.CastUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -140,6 +141,7 @@ public class Settings {
         }
     }
 
+    @Transactional
     public void delete(String setting) {
         settingsRepository.deleteBySetting(setting);
     }

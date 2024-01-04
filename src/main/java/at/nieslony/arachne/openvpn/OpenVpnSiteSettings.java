@@ -22,6 +22,7 @@ import lombok.ToString;
 import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -81,6 +82,7 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         }
     }
 
+    @Transactional
     public VpnSite addSite(String name, String description) {
         logger.info("Adding site " + name);
         int id = vpnSiteIds.stream().max(Integer::compare).orElse(-1) + 1;
@@ -90,8 +92,9 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
         return site;
     }
 
+    @Transactional
     public void deleteSite(Settings settings, int id) {
-        logger.info("Removing site %d" + id);
+        logger.info("Removing site %d".formatted(id));
         VpnSite site = sites.remove(id);
         site.delete(settings);
         vpnSiteIds.remove(id);
