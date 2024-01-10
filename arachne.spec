@@ -2,6 +2,7 @@
 %global git_bump		0
 %global git_commit		f3b0f8580041649bf300a962674a2cf3f3bd1385
 %global git_shortcommit		%(c=%{git_commit}; echo ${c:0:7})
+%global git_branch              ma
 
 # don't strip binaries at all
 %global __strip			/bin/true
@@ -20,9 +21,10 @@
 
 Name:           arachne
 Version:        1.2.%{git_bump}.git.%{git_shortcommit}
+# Version:        master
 Release:        1
 License:        GPLv3
-Source:         %{name}-%{git_commit}.zip
+Source:         master.zip
 Summary:        Administration server for openVPN
 BuildArch:      noarch
 
