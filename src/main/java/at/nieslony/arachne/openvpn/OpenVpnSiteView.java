@@ -318,7 +318,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 }
         );
 
-        deleteButton = new Button("Delete", (e) -> {
+        deleteButton = new Button("Delete...", (e) -> {
             ConfirmDialog dlg = new ConfirmDialog();
             String conName = sites.getValue().getName();
             dlg.setHeader("Delete VPN Site \"%s\"".formatted(conName));
@@ -496,7 +496,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             }
         };
         Button defaultPushDomains = new Button("Default Push Domains",
-                (e) -> pushDomains.setValue(NetUtils.getDefaultPushRoutes())
+                (e) -> pushDomains.setValue(NetUtils.getDefaultSearchDomains())
         );
         siteBinder.bind(
                 pushDomains,
@@ -535,9 +535,14 @@ public class OpenVpnSiteView extends VerticalLayout {
         pushRoutes = new EditableListBox("Push Routes") {
             @Override
             protected Validator<String> getValidator() {
-                return new SubnetValidator(false);
+                return new SubnetValidator(true);
             }
         };
+
+        Button defaultPushRoutes = new Button("Defails Push Routes",
+                (t) -> pushRoutes.setValue(NetUtils.getDefaultPushRoutes())
+        );
+
         siteBinder.bind(
                 pushRoutes,
                 (source) -> source.getPushRoutes(),
@@ -545,7 +550,9 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         inheritPushRoutes = new Checkbox("Inherit");
         inheritPushRoutes.addValueChangeListener((e) -> {
-            pushRoutes.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
+            boolean enabled = !e.getValue() || siteBinder.getBean().getId() == 0;
+            pushRoutes.setEnabled(enabled);
+            defaultPushRoutes.setEnabled(enabled);
         });
         siteBinder.bind(
                 inheritPushRoutes,
@@ -573,10 +580,11 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 inheritPushRoutes,
+                defaultPushRoutes,
                 pushRoutes,
                 new HorizontalLayout(
-                        routeInternet,
-                        inheritRouteInternet
+                        inheritRouteInternet,
+                        routeInternet
                 )
         );
 
@@ -720,5 +728,4 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteBinder.validate();
         siteBinder.refreshFields();
     }
-
 }
