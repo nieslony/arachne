@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.2-SNAPSHOT
+Version:        1.2_SNAPSHOT
 Release:        1
 License:        GPLv3
 Source:         %{name}-%{version}.tar.gz
