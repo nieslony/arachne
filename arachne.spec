@@ -6,7 +6,7 @@ Name:           arachne
 Version:        1.2_SNAPSHOT
 Release:        1
 License:        GPLv3
-Source:         %{name}-%{version}.tar.gz
+Source:         %{name}-master.tar.gz
 Summary:        Administration server for openVPN
 BuildArch:      noarch
 
