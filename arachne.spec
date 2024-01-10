@@ -1,12 +1,28 @@
+# this is just a monotonically increasing number to preceed the git hash, to get incremented on every git bump
+%global git_bump		0
+%global git_commit		f3b0f8580041649bf300a962674a2cf3f3bd1385
+%global git_shortcommit		%(c=%{git_commit}; echo ${c:0:7})
+
+# don't strip binaries at all
+%global __strip			/bin/true
+%global debug_package		%{nil}
+
+# don't byte compile the ./examples ...
+%global __spec_install_post	/usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot  \
+				/usr/lib/rpm/brp-compress
+
+# they warn against doing this ... :-\
+%define _disable_source_fetch 0
+
 %global selinuxtype targeted
 %global moduletype contrib
 %global modulename arachne
 
 Name:           arachne
-Version:        1.2_SNAPSHOT
+Version:        1.2.%{git_bump}.git.%{git_shortcommit}
 Release:        1
 License:        GPLv3
-Source:         %{name}-master.zip
+Source:         %{name}-%{git_commit}.zip
 Summary:        Administration server for openVPN
 BuildArch:      noarch
 
