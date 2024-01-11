@@ -29,7 +29,8 @@ Recommends:     httpd
 Administration server for openVPN
 
 %prep
-%setup -n %source_dir
+%setup
+#-n % source_dir
 
 %build
 mvn --no-transfer-progress package
