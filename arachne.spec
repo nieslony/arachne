@@ -22,6 +22,7 @@
 Name:           arachne
 Version:        1.2.%{git_bump}.git.%{git_shortcommit}
 # Version:        master
+
 Release:        1
 License:        GPLv3
 Source:         master.zip
@@ -96,7 +97,3 @@ fi
 %{_datadir}/%{name}/Arachne.jar
 %license LICENSE
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
-
-%changelog
-* Wed Jan 10 2024 Claas Nieslony <github@nieslony.at>
-- Initial changelog
