@@ -1,22 +1,16 @@
-%global git_branch  %(git branch --show-current)
-%global now         %(date +%Y%m%d%H%M)
-%global source_dir  arachne-%git_branch
-
-# they warn against doing this ... :-\
-%define _disable_source_fetch 0
-
 %global selinuxtype targeted
 %global moduletype contrib
 %global modulename arachne
 
 Name:           arachne
-Version:        1.2_SNAPSHOT.%now.%git_branch
+Version:        1.2
 
 Release:        1
 License:        GPLv3
-#Source:         %source_dir.zip
+Source0:         %{name}-%{version}.tar.gz
 Summary:        Administration server for openVPN
 BuildArch:      noarch
+Url:            https://github.com/nieslony/arachne
 
 BuildRequires:  maven-openjdk17
 BuildRequires:  java-17-openjdk-devel
@@ -35,7 +29,6 @@ Recommends:     httpd
 Administration server for openVPN
 
 %prep
-%{echo: %(find /var/lib/copr-rpmbuild/results)}
 %setup -n %source_dir
 
 %build
