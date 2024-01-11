@@ -35,6 +35,7 @@ Recommends:     httpd
 Administration server for openVPN
 
 %prep
+find /var/lib/copr-rpmbuild
 %setup -n %source_dir
 
 %build
