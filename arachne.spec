@@ -14,7 +14,7 @@ Version:        1.2_SNAPSHOT.%now.%git_branch
 
 Release:        1
 License:        GPLv3
-Source:         %git_branch.zip
+Source:         %source_dir.zip
 Summary:        Administration server for openVPN
 BuildArch:      noarch
 
