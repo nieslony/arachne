@@ -1,16 +1,6 @@
-# this is just a monotonically increasing number to preceed the git hash, to get incremented on every git bump
-%global git_bump		0
-%global git_commit		f3b0f8580041649bf300a962674a2cf3f3bd1385
-%global git_shortcommit		%(c=%{git_commit}; echo ${c:0:7})
-%global git_branch              ma
-
-# don't strip binaries at all
-%global __strip			/bin/true
-%global debug_package		%{nil}
-
-# don't byte compile the ./examples ...
-%global __spec_install_post	/usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot  \
-				/usr/lib/rpm/brp-compress
+%global git_branch  %(git branch --show-current)
+%global now         %(date +%Y%m%d%H%M)
+%global source_dir  arachne-%git_branch
 
 # they warn against doing this ... :-\
 %define _disable_source_fetch 0
@@ -20,12 +10,11 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.2.%{git_bump}.git.%{git_shortcommit}
-# Version:        master
+Version:        1.2_SNAPSHOT.%now.%git_branch
 
 Release:        1
 License:        GPLv3
-Source:         master.zip
+Source:         %git_branch.zip
 Summary:        Administration server for openVPN
 BuildArch:      noarch
 
@@ -46,7 +35,7 @@ Recommends:     httpd
 Administration server for openVPN
 
 %prep
-%setup
+%setup -n %source_dir
 
 %build
 mvn --no-transfer-progress package
@@ -55,7 +44,7 @@ make -f /usr/share/selinux/devel/Makefile arachne.pp
 %install
 mkdir -pv %{buildroot}/%{_datadir}/%{name}
 mkdir -pv %{buildroot}/%{_unitdir}
-install -v %{_builddir}/%{name}-%{version}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
+install -v %{_builddir}/%source_dir/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
 install -v %{name}.service %{buildroot}/%{_unitdir}
 
 install -d %{buildroot}%{_datadir}/selinux/packages
@@ -97,3 +86,8 @@ fi
 %{_datadir}/%{name}/Arachne.jar
 %license LICENSE
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
+
+%changelog
+* Thu Jan 11 2024 Claas Nieslony <github@nieslony.at>
+- Initial changelog
+
