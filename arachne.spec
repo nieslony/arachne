@@ -39,7 +39,7 @@ make -f /usr/share/selinux/devel/Makefile arachne.pp
 %install
 mkdir -pv %{buildroot}/%{_datadir}/%{name}
 mkdir -pv %{buildroot}/%{_unitdir}
-install -v %{_builddir}/%namw-%version/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
+install -v %{_builddir}/%{?buildsubdir}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
 install -v %{name}.service %{buildroot}/%{_unitdir}
 
 install -d %{buildroot}%{_datadir}/selinux/packages
