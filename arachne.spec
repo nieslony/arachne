@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.2
+Version:        1.3
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Jan 12 2024 Claas Nieslony <claas@nieslony.at> 1.3-1
+- new package built with tito
+
 * Thu Jan 11 2024 Claas Nieslony <github@nieslony.at>
 - Initial changelog
 
