@@ -5,8 +5,8 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
-import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.auth.PreAuthSettings;
+import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
@@ -25,6 +25,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,8 +44,12 @@ import org.springframework.security.web.authentication.preauth.RequestAttributeA
  *
  * @author claas
  */
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled = true,
+        jsr250Enabled = true)
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
