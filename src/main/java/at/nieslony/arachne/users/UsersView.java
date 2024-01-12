@@ -15,7 +15,6 @@ import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -179,18 +178,20 @@ public class UsersView extends VerticalLayout {
         MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
         SubMenu userMenu = menuItem.getSubMenu();
 
-        if (!user.getUsername().equals(myUsername)) {
-            Button editButton = new Button("Edit");
-            editButton.addClickListener(e -> {
+        if (user.getExternalProvider() == null) {
+            userMenu.addItem("Edit", e -> {
                 if (editor.isOpen()) {
                     editor.cancel();
                 }
                 editor.editItem(user);
             });
 
-            userMenu.addItem("Change Password...", event -> changePassword(user));
-            userMenu.addItem("Delete...", event -> deleteUser(user));
+            if (!user.getUsername().equals(myUsername)) {
+                userMenu.addItem("Change Password...", event -> changePassword(user));
+                userMenu.addItem("Delete...", event -> deleteUser(user));
+            }
         }
+        
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);

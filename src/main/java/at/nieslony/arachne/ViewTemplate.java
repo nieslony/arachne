@@ -90,8 +90,9 @@ public class ViewTemplate extends AppLayout {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        userMenu.addItem("Change Password...", click -> changePassword());
-
+        if (userRepository.findByUsername(username).getExternalProvider() == null) {
+            userMenu.addItem("Change Password...", click -> changePassword());
+        }
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
                 logo,
