@@ -20,6 +20,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -78,6 +79,7 @@ public class TomcatView extends VerticalLayout {
                     }
                     e.getSource().setEnabled(true);
                 });
+        saveAndRestartButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         binder.forField(enableAjpField)
                 .bind(TomcatSettings::isEnableAjpConnector, TomcatSettings::setEnableAjpConnector);
