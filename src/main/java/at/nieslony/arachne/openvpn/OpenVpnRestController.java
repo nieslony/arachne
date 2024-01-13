@@ -190,6 +190,7 @@ public class OpenVpnRestController {
         logger.info("Writing openvpn user server config to " + fileName);
 
         writeCrl();
+        openVpnManagement.writePasswordFile();
 
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);

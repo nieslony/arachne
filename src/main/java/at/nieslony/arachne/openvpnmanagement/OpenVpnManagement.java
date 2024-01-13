@@ -183,17 +183,30 @@ public class OpenVpnManagement {
         logger.info("Command result: " + result.toString());
     }
 
-    public void saveSettings(String socket, String password) {
-        String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
+    public void writePasswordFile() {
+        String filename = folderFactory.getVpnConfigDir(
+                openVpnManagementSettings.getPasswordFilename()
+        );
+        logger.info("Writing management password into " + filename);
+        String password = openVpnManagementSettings.getManagementPassword();
+        if (password == null || password.isEmpty()) {
+            password = getNewPassword();
+            openVpnManagementSettings.setPasswordFilename(password);
+            try {
+                openVpnManagementSettings.save(settings);
+            } catch (SettingsException ex) {
+                logger.error("Cannot save settings: " + ex.getMessage());
+                return;
+            }
+        }
 
-        OpenVpnManagementSettings openVpnManagementSettings
-                = settings.getSettings(OpenVpnManagementSettings.class);
-        openVpnManagementSettings.setSocketFilename(socket);
-        openVpnManagementSettings.setManagementPassword(encodedPassword);
-        try {
-            openVpnManagementSettings.save(settings);
-        } catch (SettingsException ex) {
-            logger.error("Cannot save settings: " + ex.getMessage());
+        String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
+        try (PrintWriter fw = new PrintWriter(filename)) {
+            fw.println(encodedPassword);
+        } catch (IOException ex) {
+            logger.error("Cannot write manahement passwotd to %s: %s"
+                    .formatted(filename, ex.getMessage())
+            );
         }
     }
 
