@@ -14,10 +14,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.UnixDomainSocketAddress;
+import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -57,18 +57,10 @@ public class OpenVpnManagement {
         openVpnManagementSettings
                 = settings.getSettings(OpenVpnManagementSettings.class);
         if (!openVpnManagementSettings.getManagementPassword().isEmpty()) {
-            managementPassword = new String(
-                    Base64.getDecoder()
-                            .decode(openVpnManagementSettings.getManagementPassword()
-                            )
-            );
+            managementPassword = openVpnManagementSettings.getManagementPassword();
         } else {
             managementPassword = getNewPassword();
-            String encodedPassword
-                    = Base64
-                            .getEncoder()
-                            .encodeToString(managementPassword.getBytes());
-            openVpnManagementSettings.setManagementPassword(encodedPassword);
+            openVpnManagementSettings.setManagementPassword(managementPassword);
             try {
                 openVpnManagementSettings.save(settings);
             } catch (SettingsException ex) {
@@ -112,13 +104,32 @@ public class OpenVpnManagement {
                             Channels.newInputStream(socketChannel))
             );
 
-            managementWriter.println(managementPassword);
+            String answer;
+            CharBuffer buffer = CharBuffer.allocate(1024);
+            managementReader.read(buffer);
+            buffer.flip();
+            answer = buffer.toString();
+            if (!answer.startsWith("ENTER PASSWORD:")) {
+                String msg = "Expected 'ENTER PASSWORD:' but got " + answer;
+                logger.error(msg);
+                throw new OpenVpnManagementException(msg);
+            }
+            managementWriter.println(managementPassword + "\n");
+            managementReader.read(buffer);
+            buffer.flip();
+            answer = buffer.toString();
+            if (!answer.startsWith("SUCCESS:")) {
+                throw new OpenVpnManagementException("Expected 'SUCCESS:' but got " + answer);
+            }
 
             String line;
+            line = answer + managementReader.readLine();
+            logger.info(line);
             do {
                 line = managementReader.readLine();
-                logger.info("Opening management interface: " + line);
+                logger.info(line);
             } while (!line.startsWith(">"));
+
             logger.info("Management interface is open");
         } catch (IOException ex) {
             String msg = "Cannot connect to socket: " + ex.getMessage();
@@ -189,6 +200,7 @@ public class OpenVpnManagement {
         );
         logger.info("Writing management password into " + filename);
         String password = openVpnManagementSettings.getManagementPassword();
+        logger.info(password);
         if (password == null || password.isEmpty()) {
             password = getNewPassword();
             openVpnManagementSettings.setPasswordFilename(password);
@@ -200,9 +212,8 @@ public class OpenVpnManagement {
             }
         }
 
-        String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes());
         try (PrintWriter fw = new PrintWriter(filename)) {
-            fw.println(encodedPassword);
+            fw.println(password);
         } catch (IOException ex) {
             logger.error("Cannot write manahement passwotd to %s: %s"
                     .formatted(filename, ex.getMessage())
