@@ -83,6 +83,17 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
+- Bump arachne version to 1.3.1 (claas@nieslony.at)
+- Tell details about plugin location (claas@nieslony.at)
+- Change plugin search order (claas@nieslony.at)
+- Fix: open management console with password (claas@nieslony.at)
+- Remove useless code (claas@nieslony.at)
+- Write management passwort file (github@nieslony.at)
+- Set default button (claas@nieslony.at)
+- Fix: user context menu (claas@nieslony.at)
+- Fix: add annotation EnableMethodSecurity (claas@nieslony.at)
+
 * Fri Jan 12 2024 Claas Nieslony <claas@nieslony.at> 1.3-1
 - new package built with tito
 
