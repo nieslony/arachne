@@ -429,10 +429,13 @@ public class OpenVpnRestController {
     }
 
     private String findPlugin(String pluginName) {
+        logger.info("Searching for plugin in " + pluginPath);
         for (String dir : pluginPath.split(":")) {
             Path fn = Path.of(dir, pluginName);
             if (Files.exists(fn)) {
-                return fn.toString();
+                String absFn = fn.toAbsolutePath().toString();
+                logger.info("Found plugin: " + absFn);
+                return absFn;
             }
         }
 
