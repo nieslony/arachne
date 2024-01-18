@@ -71,12 +71,6 @@ public class VpnSite extends AbstractSettingsGroup {
                 : getPushRoutes();
     }
 
-    VpnSite(String name, String description, int id) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-    }
-
     public VpnSite(Settings settings, int id) throws SettingsException {
         this.id = id;
         load(settings);
