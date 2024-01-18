@@ -68,6 +68,45 @@ import org.vaadin.olli.FileDownloadWrapper;
 @RolesAllowed("ADMIN")
 public class OpenVpnSiteView extends VerticalLayout {
 
+    enum OnDefSiteEnabled {
+        DefSiteEnabled,
+        DefSiteDisabled
+    }
+
+    private class ComponentEnabler implements Consumer<Boolean> {
+
+        final private HasEnabled component;
+        final private Checkbox inheritdCheckBox;
+        final private OnDefSiteEnabled onDefSiteEnabled;
+
+        ComponentEnabler(OnDefSiteEnabled onDefSiteEnabled, HasEnabled component) {
+            this.component = component;
+            this.inheritdCheckBox = null;
+            this.onDefSiteEnabled = onDefSiteEnabled;
+        }
+
+        ComponentEnabler(Checkbox inheritedCheckbox, HasEnabled component) {
+            this.component = component;
+            this.inheritdCheckBox = inheritedCheckbox;
+            this.onDefSiteEnabled = OnDefSiteEnabled.DefSiteEnabled;
+        }
+
+        @Override
+        public void accept(Boolean isDefaultSite) {
+            if (inheritdCheckBox == null) {
+                component.setEnabled(
+                        switch (onDefSiteEnabled) {
+                    case DefSiteDisabled ->
+                        !isDefaultSite;
+                    case DefSiteEnabled ->
+                        isDefaultSite;
+                });
+            } else {
+                component.setEnabled(isDefaultSite || !inheritdCheckBox.getValue());
+            }
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
 
     private final Binder<OpenVpnSiteSettings> binder;
@@ -77,7 +116,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnRestController openVpnRestController;
 
     private boolean siteModified = false;
-    private final List<HasEnabled> nonDefaultComponents;
+    private final List<ComponentEnabler> nonDefaultComponents;
 
     private Select<VpnSite> sites;
     private Button deleteButton;
@@ -141,7 +180,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         binder.setBean(openVpnSiteSettings);
         binder.validate();
-        enableNonDefaultCopmponents(false);
+        enableNonDefaultCopmponents(true);
     }
 
     private Component createBasicsPage() {
@@ -337,7 +376,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             });
             dlg.open();
         });
-        nonDefaultComponents.add(deleteButton);
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, deleteButton));
 
         Button addButton = new Button("Add...", (e) -> {
             setNameDescDialog(null, (site) -> {
@@ -387,7 +426,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             );
             createRemoteConfigDialog(cfgWriter.toString()).open();
         });
-        nonDefaultComponents.add(siteConfigMenu);
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteConfigMenu));
 
         TabSheet siteSettingsTab = new TabSheet();
         siteSettingsTab.add("Connection", createSiteConnectionPage());
@@ -490,7 +529,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritDnsServers,
                 VpnSite::setInheritDnsServers
         );
-        nonDefaultComponents.add(inheritDnsServers);
+        nonDefaultComponents.add(new ComponentEnabler(inheritDnsServers, defaultDnsServers));
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritDnsServers));
+        nonDefaultComponents.add(new ComponentEnabler(inheritDnsServers, dnsServers));
 
         pushDomains = new EditableListBox("Push Domains") {
             @Override
@@ -516,7 +557,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritPushDomains,
                 VpnSite::setInheritPushDomains
         );
-        nonDefaultComponents.add(inheritPushDomains);
+        nonDefaultComponents.add(new ComponentEnabler(inheritPushDomains, defaultPushDomains));
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritPushDomains));
+        nonDefaultComponents.add(new ComponentEnabler(inheritPushDomains, pushDomains));
 
         HorizontalLayout layout = new HorizontalLayout(
                 new VerticalLayout(
@@ -553,7 +596,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         inheritPushRoutes = new Checkbox("Inherit");
         inheritPushRoutes.addValueChangeListener((e) -> {
-            boolean enabled = !e.getValue() || siteBinder.getBean().getId() == 0;
+            boolean enabled = !e.getValue() || sites.getValue().getId() == 0;
+            logger.info("value=" + e.getValue() + " siteId=" + sites.getValue().getId());
             pushRoutes.setEnabled(enabled);
             defaultPushRoutes.setEnabled(enabled);
         });
@@ -562,7 +606,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritPushRoutes,
                 VpnSite::setInheritPushRoutes
         );
-        nonDefaultComponents.add(inheritPushRoutes);
+        nonDefaultComponents.add(new ComponentEnabler(inheritPushRoutes, defaultPushRoutes));
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritPushRoutes));
+        nonDefaultComponents.add(new ComponentEnabler(inheritPushRoutes, pushRoutes));
 
         routeInternet = new Checkbox("Route Internet Traffic through VPN");
         siteBinder.bind(
@@ -579,7 +625,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritRouteInternetThroughVpn,
                 VpnSite::setInheritRouteInternetThroughVpn
         );
-        nonDefaultComponents.add(inheritRouteInternet);
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritRouteInternet));
+        nonDefaultComponents.add(new ComponentEnabler(inheritRouteInternet, routeInternet));
 
         VerticalLayout layout = new VerticalLayout(
                 inheritPushRoutes,
@@ -618,7 +665,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                         VpnSite::getRemoteHost,
                         VpnSite::setRemoteHost
                 );
-        nonDefaultComponents.add(remoteHostField);
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 
         preSharedKeyField = new TextArea("Preshared Key");
         preSharedKeyField.setMinWidth(80, Unit.EM);
@@ -630,7 +677,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button createPSKButton = new Button("Create", (e) -> {
             preSharedKeyField.setValue(OpenVpnSiteSettings.createPreSharedKey());
         });
-        nonDefaultComponents.add(preSharedKeyField);
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, preSharedKeyField));
 
         layout.add(
                 remoteHostField,
@@ -675,9 +722,9 @@ public class OpenVpnSiteView extends VerticalLayout {
         return dlg;
     }
 
-    private void enableNonDefaultCopmponents(boolean enable) {
-        nonDefaultComponents.forEach((component) -> {
-            component.setEnabled(enable);
+    private void enableNonDefaultCopmponents(boolean isDefaultSite) {
+        nonDefaultComponents.forEach((componentEnabler) -> {
+            componentEnabler.accept(isDefaultSite);
         });
     }
 
@@ -685,8 +732,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
     ) {
         boolean isDefaultSiteSelected
-                = e.getValue() != null && e.getValue().getId() != 0;
-        enableNonDefaultCopmponents(isDefaultSiteSelected);
+                = e.getValue() != null && e.getValue().getId() == 0;
 
         if (siteModified) {
             logger.info("Site modified");
@@ -728,5 +774,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         } else {
             logger.info("No site selected");
         }
+        enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }
