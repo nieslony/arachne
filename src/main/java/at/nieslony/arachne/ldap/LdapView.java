@@ -113,6 +113,7 @@ public class LdapView extends VerticalLayout {
                     }
                 }
         );
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         enableLdapUserSource.addValueChangeListener(e -> {
             tabSheet.setVisible(e.getValue());

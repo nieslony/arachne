@@ -197,6 +197,7 @@ public class OpenVpnRestController {
         logger.info("Writing openvpn user server config to " + fileName);
 
         writeCrl();
+        openVpnManagement.writePasswordFile();
 
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -435,10 +436,13 @@ public class OpenVpnRestController {
     }
 
     private String findPlugin(String pluginName) {
+        logger.info("Searching for plugin in " + pluginPath);
         for (String dir : pluginPath.split(":")) {
             Path fn = Path.of(dir, pluginName);
             if (Files.exists(fn)) {
-                return fn.toString();
+                String absFn = fn.toAbsolutePath().toString();
+                logger.info("Found plugin: " + absFn);
+                return absFn;
             }
         }
 

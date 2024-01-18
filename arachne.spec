@@ -3,12 +3,14 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        0.3.0
+Version:        1.3.1
+
 Release:        1
 License:        GPLv3
-Source:         %{name}-%{version}.tar.gz
+Source0:         %{name}-%{version}.tar.gz
 Summary:        Administration server for openVPN
 BuildArch:      noarch
+Url:            https://github.com/nieslony/arachne
 
 BuildRequires:  maven-openjdk17
 BuildRequires:  java-17-openjdk-devel
@@ -28,6 +30,7 @@ Administration server for openVPN
 
 %prep
 %setup
+#-n % source_dir
 
 %build
 mvn --no-transfer-progress package
@@ -36,7 +39,7 @@ make -f /usr/share/selinux/devel/Makefile arachne.pp
 %install
 mkdir -pv %{buildroot}/%{_datadir}/%{name}
 mkdir -pv %{buildroot}/%{_unitdir}
-install -v %{_builddir}/%{name}-%{version}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
+install -v %{_builddir}/%{?buildsubdir}/target/Arachne.jar %{buildroot}/%{_datadir}/%{name}
 install -v %{name}.service %{buildroot}/%{_unitdir}
 
 install -d %{buildroot}%{_datadir}/selinux/packages
@@ -78,3 +81,22 @@ fi
 %{_datadir}/%{name}/Arachne.jar
 %license LICENSE
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
+
+%changelog
+* Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
+- Bump arachne version to 1.3.1 (claas@nieslony.at)
+- Tell details about plugin location (claas@nieslony.at)
+- Change plugin search order (claas@nieslony.at)
+- Fix: open management console with password (claas@nieslony.at)
+- Remove useless code (claas@nieslony.at)
+- Write management passwort file (github@nieslony.at)
+- Set default button (claas@nieslony.at)
+- Fix: user context menu (claas@nieslony.at)
+- Fix: add annotation EnableMethodSecurity (claas@nieslony.at)
+
+* Fri Jan 12 2024 Claas Nieslony <claas@nieslony.at> 1.3-1
+- new package built with tito
+
+* Thu Jan 11 2024 Claas Nieslony <github@nieslony.at>
+- Initial changelog
+

@@ -34,10 +34,6 @@ public class TomcatService {
     @Autowired
     private Settings settings;
 
-    public void TRomcatService() {
-
-    }
-
     public void saveApacheConfig() {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
