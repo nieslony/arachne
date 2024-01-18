@@ -131,7 +131,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         TabSheet tabs = new TabSheet();
         tabs.add("Basics", createBasicsPage());
-        tabs.add("Clients", createClientsPage());
+        tabs.add("Sites", createSitesPage());
         tabs.setWidthFull();
 
         Button saveButton = new Button("Save", (t) -> onSaveSite());
@@ -212,37 +212,36 @@ public class OpenVpnSiteView extends VerticalLayout {
         interfaceLayout.add(interfaceType, interfaceName);
         interfaceLayout.setFlexGrow(1, interfaceName);
 
-        TextField clientNetwork = new TextField("Client Network");
-        clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.bind(
-                clientNetwork,
-                OpenVpnSiteSettings::getClientNetwork,
-                OpenVpnSiteSettings::setClientNetwork
+        TextField siteNetwork = new TextField("Site Network");
+        siteNetwork.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.bind(siteNetwork,
+                OpenVpnSiteSettings::getSiteNetwork,
+                OpenVpnSiteSettings::setSiteNetwork
         );
 
-        Select<NetMask> clientMask = new Select<>();
-        clientMask.setItems(
+        Select<NetMask> siteNetworkMask = new Select<>();
+        siteNetworkMask.setItems(
                 IntStream
                         .range(1, 32)
                         .boxed()
                         .map(i -> new NetMask(i))
                         .collect(Collectors.toList())
         );
-        clientMask.setLabel("Subnet Mask");
-        binder.forField(clientMask)
+        siteNetworkMask.setLabel("Subnet Mask");
+        binder.forField(siteNetworkMask)
                 .bind(
                         (source) -> {
-                            int mask = source.getClientMask();
+                            int mask = source.getSiteNetworkMask();
                             return new NetMask(mask);
                         },
                         (s, v) -> {
-                            s.setClientMask(v.getBits());
+                            s.setSiteNetworkMask(v.getBits());
                         }
                 );
 
-        HorizontalLayout clientNetLayout = new HorizontalLayout();
-        clientNetLayout.add(clientNetwork, clientMask);
-        clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
+        HorizontalLayout siteNetLayout = new HorizontalLayout();
+        siteNetLayout.add(siteNetwork, siteNetworkMask);
+        siteNetLayout.setFlexGrow(1, siteNetwork, siteNetworkMask);
 
         IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
         Div suffix;
@@ -284,11 +283,10 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
 
         FormLayout layout = new FormLayout();
-        layout.add(
-                listenLayout,
+        layout.add(listenLayout,
                 connectToHost,
                 interfaceLayout,
-                clientNetLayout,
+                siteNetLayout,
                 keepaliveLayout,
                 mtuTestField
         );
@@ -296,7 +294,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private Component createClientsPage() {
+    private Component createSitesPage() {
         VerticalLayout layout = new VerticalLayout();
 
         sites = new Select<>();
@@ -319,6 +317,10 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
 
         deleteButton = new Button("Delete...", (e) -> {
+            if (sites.getValue().getId() == 0) {
+                logger.warn("Cannot remove site id=0");
+                return;
+            }
             ConfirmDialog dlg = new ConfirmDialog();
             String conName = sites.getValue().getName();
             dlg.setHeader("Delete VPN Site \"%s\"".formatted(conName));
@@ -341,6 +343,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             setNameDescDialog(null, (site) -> {
                 sites.setItems(openVpnSiteSettings.getVpnSites());
                 sites.setValue(site);
+                logger.info("Created: " + site.toString());
             });
         });
 
@@ -387,7 +390,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         nonDefaultComponents.add(siteConfigMenu);
 
         TabSheet siteSettingsTab = new TabSheet();
-        siteSettingsTab.add("Connection", createClientConnectionPage());
+        siteSettingsTab.add("Connection", createSiteConnectionPage());
         siteSettingsTab.add("DNS", createDnsPage());
         siteSettingsTab.add("Routes", createRoutesTab());
 
@@ -591,7 +594,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private Component createClientConnectionPage() {
+    private Component createSiteConnectionPage() {
         VerticalLayout layout = new VerticalLayout();
 
         remoteHostField = new TextField("Remote Host");
@@ -651,6 +654,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             sites.setItems(openVpnSiteSettings.getVpnSites());
             logger.info(openVpnSiteSettings.getVpnSites().toString());
             siteModified = false;
+            sites.setValue(curSite);
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
         }
@@ -669,14 +673,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         dlg.getFooter().add(closeButton);
 
         return dlg;
-    }
-
-    private String getRemoteConfigName(VpnSite site) {
-        return "arachne_%s_to_%s.cfg"
-                .formatted(
-                        site.getRemoteHost(),
-                        openVpnSiteSettings.getRemote()
-                );
     }
 
     private void enableNonDefaultCopmponents(boolean enable) {
@@ -727,5 +723,10 @@ public class OpenVpnSiteView extends VerticalLayout {
         }
         siteBinder.validate();
         siteBinder.refreshFields();
+        if (e.getValue() != null) {
+            logger.info("Selected site: " + e.getValue().toString());
+        } else {
+            logger.info("No site selected");
+        }
     }
 }

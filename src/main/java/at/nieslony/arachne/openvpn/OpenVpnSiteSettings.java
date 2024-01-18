@@ -42,8 +42,8 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private String remote = NetUtils.myHostname();
     private String deviceType = "tun";
     private String deviceName = "arachne-site";
-    private String clientNetwork = "192.168.101.0";
-    private Integer clientMask = 24;
+    private String siteNetwork = "192.168.101.0";
+    private Integer siteNetworkMask = 24;
     private Integer keepaliveTimeout = 60;
     private Integer keepaliveInterval = 10;
     private List<Integer> vpnSiteIds = new LinkedList<>();

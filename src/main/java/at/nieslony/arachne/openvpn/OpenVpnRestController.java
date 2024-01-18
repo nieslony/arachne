@@ -523,8 +523,8 @@ public class OpenVpnRestController {
             pw.println(
                     "server %s %s"
                             .formatted(
-                                    openVpnSiteSettings.getClientNetwork(),
-                                    NetUtils.maskLen2Mask(openVpnSiteSettings.getClientMask())
+                                    openVpnSiteSettings.getSiteNetwork(),
+                                    NetUtils.maskLen2Mask(openVpnSiteSettings.getSiteNetworkMask())
                             )
             );
             pw.println("local " + openVpnSiteSettings.getListenIp());
