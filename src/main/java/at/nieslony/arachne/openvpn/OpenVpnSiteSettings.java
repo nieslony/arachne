@@ -86,7 +86,11 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     public VpnSite addSite(String name, String description) {
         logger.info("Adding site " + name);
         int id = vpnSiteIds.stream().max(Integer::compare).orElse(-1) + 1;
-        VpnSite site = new VpnSite(name, description, id);
+        VpnSite site = VpnSite.builder()
+                .id(id)
+                .name(name)
+                .description(description)
+                .build();
         vpnSiteIds.add(id);
         sites.put(id, site);
         return site;
