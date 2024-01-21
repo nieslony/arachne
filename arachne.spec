@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.1
+Version:        1.3.2
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Jan 21 2024 Claas Nieslony <github@nieslony.at> 1.3.2-1
+- 
+
 * Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
 - Bump arachne version to 1.3.1 (claas@nieslony.at)
 - Tell details about plugin location (claas@nieslony.at)
