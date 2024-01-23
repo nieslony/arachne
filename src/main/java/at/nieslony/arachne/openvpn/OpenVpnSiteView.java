@@ -7,6 +7,9 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.ssh.AddSshKeyDialog;
+import at.nieslony.arachne.ssh.SshKeyEntity;
+import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -17,6 +20,7 @@ import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
+import com.jcraft.jsch.KeyPair;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
@@ -25,6 +29,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -36,6 +41,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -48,7 +54,9 @@ import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +65,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.olli.ClipboardHelper;
 import org.vaadin.olli.FileDownloadWrapper;
 
 /**
@@ -114,6 +123,8 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
     private final OpenVpnRestController openVpnRestController;
+    private final SshKeyRepository sshKeyRepository;
+    private final AddSshKeyDialog addSshKeyDialog;
 
     private boolean siteModified = false;
     private final List<ComponentEnabler> nonDefaultComponents;
@@ -135,42 +146,40 @@ public class OpenVpnSiteView extends VerticalLayout {
     private Checkbox inheritRouteInternet;
     private Checkbox routeInternet;
 
+    private ComboBox<SshKeyEntity> sshKeys;
+    private TextArea sshPrivateKey;
+    private TextField sshPublicKey;
+    ClipboardHelper copySshPrivateKey;
+
     private final SiteConfigUploader siteConfigUploader;
-
-    enum SshAuthType {
-        USERNAME_PASSWORD("Username/Password"),
-        PRESHARED_KEY("Preshared Key");
-
-        private final String value;
-
-        private SshAuthType(String s) {
-            value = s;
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
 
     public OpenVpnSiteView(
             Settings settings,
             OpenVpnRestController openVpnRestController,
-            SiteConfigUploader siteConfigUploader
+            SiteConfigUploader siteConfigUploader,
+            SshKeyRepository sshKeyRepository
     ) {
         this.settings = settings;
         this.openVpnRestController = openVpnRestController;
         this.siteConfigUploader = siteConfigUploader;
         this.nonDefaultComponents = new LinkedList<>();
+        this.sshKeyRepository = sshKeyRepository;
+        this.addSshKeyDialog = new AddSshKeyDialog((keyEntity) -> {
+            keyEntity = sshKeyRepository.save(keyEntity);
+            sshKeys.setValue(keyEntity);
+        });
 
-        siteConfigUploader = new SiteConfigUploader();
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
         openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
+    }
 
+    @PostConstruct
+    public void init() {
         TabSheet tabs = new TabSheet();
-        tabs.add("Basics", createBasicsPage());
-        tabs.add("Sites", createSitesPage());
+        tabs.add("Basics", createPageBasics());
+        tabs.add("Sites", createPageSites());
+        tabs.add("SSH keys", createPageSshKeys());
         tabs.setWidthFull();
 
         Button saveButton = new Button("Save", (t) -> onSaveSite());
@@ -183,7 +192,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         enableNonDefaultCopmponents(true);
     }
 
-    private Component createBasicsPage() {
+    private Component createPageBasics() {
         Select<NicInfo> ipAddresse = new Select<>();
         ipAddresse.setItems(NicUtils.findAllNics());
         ipAddresse.setLabel("Listen on");
@@ -333,7 +342,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private Component createSitesPage() {
+    private Component createPageSites() {
         VerticalLayout layout = new VerticalLayout();
 
         sites = new Select<>();
@@ -424,14 +433,14 @@ public class OpenVpnSiteView extends VerticalLayout {
                     sites.getValue().getId(),
                     cfgWriter
             );
-            createRemoteConfigDialog(cfgWriter.toString()).open();
+            createDialogRemoteConfig(cfgWriter.toString()).open();
         });
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteConfigMenu));
 
         TabSheet siteSettingsTab = new TabSheet();
-        siteSettingsTab.add("Connection", createSiteConnectionPage());
-        siteSettingsTab.add("DNS", createDnsPage());
-        siteSettingsTab.add("Routes", createRoutesTab());
+        siteSettingsTab.add("Connection", createPageSitesConnection());
+        siteSettingsTab.add("DNS", createPageSitesDns());
+        siteSettingsTab.add("Routes", createPageSitesRoutes());
 
         layout.add(
                 sitesLayout,
@@ -502,7 +511,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         dlg.open();
     }
 
-    private Component createDnsPage() {
+    private Component createPageSitesDns() {
         dnsServers = new EditableListBox("DNS Servers") {
             @Override
             protected Validator<String> getValidator() {
@@ -577,7 +586,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private Component createRoutesTab() {
+    private Component createPageSitesRoutes() {
         pushRoutes = new EditableListBox("Push Routes") {
             @Override
             protected Validator<String> getValidator() {
@@ -641,7 +650,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private Component createSiteConnectionPage() {
+    private Component createPageSitesConnection() {
         VerticalLayout layout = new VerticalLayout();
 
         remoteHostField = new TextField("Remote Host");
@@ -688,6 +697,70 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
+    private Component createPageSshKeys() {
+        sshKeys = new ComboBox<>("SSH Keys");
+        sshKeys.setItems(sshKeyRepository.findAll());
+        sshKeys.setWidthFull();
+        sshKeys.setItemLabelGenerator((item) -> item.getLabel());
+
+        Button createNewKeyPair = new Button("Create new Key Pair...",
+                (e) -> addSshKeyDialog.open()
+        );
+
+        Button deleteKeyPair = new Button("Delete", (e) -> {
+            SshKeyEntity entity = sshKeys.getValue();
+            if (entity != null) {
+                sshKeyRepository.delete(entity);
+                sshKeys.setItems(sshKeyRepository.findAll());
+            }
+        });
+
+        HorizontalLayout sshKeysLayout = new HorizontalLayout(
+                sshKeys,
+                createNewKeyPair,
+                deleteKeyPair
+        );
+        sshKeysLayout.setWidthFull();
+        sshKeysLayout.setAlignItems(Alignment.BASELINE);
+
+        sshPrivateKey = new TextArea("Private Key");
+        sshPrivateKey.setHeight(40, Unit.EX);
+        sshPrivateKey.setWidth(42, Unit.EM);
+        sshPrivateKey.setReadOnly(true);
+
+        sshPublicKey = new TextField("Public Key");
+        sshPublicKey.setWidthFull();
+        sshPublicKey.setReadOnly(true);
+        copySshPrivateKey = new ClipboardHelper(
+                "",
+                new Button(VaadinIcon.COPY.create())
+        );
+        HorizontalLayout pubKeylayout = new HorizontalLayout(
+                sshPublicKey,
+                copySshPrivateKey
+        );
+        pubKeylayout.setWidthFull();
+        pubKeylayout.setAlignItems(Alignment.BASELINE);
+
+        binder.addValueChangeListener((e) -> {
+            updateSshKeys();
+        });
+
+        VerticalLayout layout = new VerticalLayout(
+                sshKeysLayout,
+                new Scroller(sshPrivateKey),
+                pubKeylayout
+        );
+
+        sshKeys.addValueChangeListener((e) -> {
+            SshKeyEntity entity = e.getValue();
+            sshPrivateKey.setValue(entity.getPrivateKey());
+            sshPublicKey.setValue(entity.getPublicKey());
+        });
+
+        return layout;
+    }
+
     private void onSaveSite() {
         try {
             VpnSite curSite = siteBinder.getBean();
@@ -707,7 +780,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         }
     }
 
-    private Dialog createRemoteConfigDialog(String cfg) {
+    private Dialog createDialogRemoteConfig(String cfg) {
         Dialog dlg = new Dialog("Remote Configuration");
 
         Pre cfgField = new Pre(cfg);
@@ -775,5 +848,23 @@ public class OpenVpnSiteView extends VerticalLayout {
             logger.info("No site selected");
         }
         enableNonDefaultCopmponents(isDefaultSiteSelected);
+    }
+
+    private void updateSshKeys() {
+        KeyPair keyPair = openVpnSiteSettings.getSshKeyPair();
+        if (keyPair != null) {
+            ByteArrayOutputStream privKeyStream = new ByteArrayOutputStream();
+            keyPair.writePrivateKey(privKeyStream);
+            sshPrivateKey.setValue(privKeyStream.toString());
+
+            ByteArrayOutputStream pubKeyStream = new ByteArrayOutputStream();
+            keyPair.writePublicKey(pubKeyStream, openVpnSiteSettings.getSshKeyPairComment());
+            sshPublicKey.setValue(pubKeyStream.toString());
+            copySshPrivateKey.setContent(sshPublicKey.getValue());
+        } else {
+            sshPrivateKey.setValue("");
+            sshPublicKey.setValue("");
+            copySshPrivateKey.setContent("");
+        }
     }
 }
