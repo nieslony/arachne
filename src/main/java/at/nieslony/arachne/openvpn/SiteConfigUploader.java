@@ -4,8 +4,9 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import static at.nieslony.arachne.openvpn.OpenVpnSiteView.SshAuthType.PRESHARED_KEY;
-import static at.nieslony.arachne.openvpn.OpenVpnSiteView.SshAuthType.USERNAME_PASSWORD;
+import at.nieslony.arachne.ssh.SshAuthType;
+import static at.nieslony.arachne.ssh.SshAuthType.PRESHARED_KEY;
+import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -107,10 +108,10 @@ public class SiteConfigUploader {
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
         Checkbox enableOpenVpnField = new Checkbox("Enable openVPN service");
 
-        Select<OpenVpnSiteView.SshAuthType> authTypeSelect = new Select<>(
+        Select<SshAuthType> authTypeSelect = new Select<>(
                 "AuthenticationType",
                 (e) -> {
-                    switch ((OpenVpnSiteView.SshAuthType) e.getValue()) {
+                    switch ((SshAuthType) e.getValue()) {
                         case USERNAME_PASSWORD -> {
                             passwordField.setVisible(true);
                             privateKeyField.setVisible(false);
@@ -123,9 +124,9 @@ public class SiteConfigUploader {
                     }
                 }
         );
-        authTypeSelect.setItems(OpenVpnSiteView.SshAuthType.values());
+        authTypeSelect.setItems(SshAuthType.values());
         authTypeSelect.setWidthFull();
-        authTypeSelect.setValue(OpenVpnSiteView.SshAuthType.USERNAME_PASSWORD);
+        authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
 
         FormLayout authLayout = new FormLayout(
                 usernameField,
