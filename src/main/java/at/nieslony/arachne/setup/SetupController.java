@@ -21,6 +21,8 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.ssh.SshKeyEntity;
+import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.tasks.RecurringTaskModel;
 import at.nieslony.arachne.tasks.RecurringTasksRepository;
 import at.nieslony.arachne.tasks.TaskModel;
@@ -86,6 +88,9 @@ public class SetupController {
 
     @Autowired
     private KeyRepository keyRepository;
+
+    @Autowired
+    private SshKeyRepository SshKeyRepository;
 
     @Autowired
     private Settings settings;
@@ -222,6 +227,12 @@ public class SetupController {
                         case "certificates" -> {
                             var reader = objectMapper.readerForListOf(CertificateModel.class);
                             certificateRepository.saveAll(
+                                    reader.readValue(n.getValue())
+                            );
+                        }
+                        case "sshKeys" -> {
+                            var reader = objectMapper.readerFor(SshKeyEntity.class);
+                            SshKeyRepository.saveAll(
                                     reader.readValue(n.getValue())
                             );
                         }

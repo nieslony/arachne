@@ -14,6 +14,8 @@ import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.SettingsModel;
 import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.ssh.SshKeyEntity;
+import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.tasks.RecurringTaskModel;
 import at.nieslony.arachne.tasks.RecurringTasksRepository;
 import at.nieslony.arachne.tasks.TaskModel;
@@ -38,6 +40,7 @@ public class Backup {
     RecurringTasksRepository recurringTasksRepository;
     TaskRepository taskRepository;
     UserRepository userRepository;
+    SshKeyRepository sshKeyRepository;
 
     public Backup(
             FirewallRuleRepository firewallRuleRepository,
@@ -47,7 +50,8 @@ public class Backup {
             SettingsRepository settingsRepository,
             RecurringTasksRepository recurringTasksRepository,
             TaskRepository taskRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            SshKeyRepository sshKeyRepository
     ) {
         this.settingsRepository = settingsRepository;
         this.firewallRuleRepository = firewallRuleRepository;
@@ -57,6 +61,7 @@ public class Backup {
         this.recurringTasksRepository = recurringTasksRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.sshKeyRepository = sshKeyRepository;
     }
 
     public int getVersion() {
@@ -93,5 +98,9 @@ public class Backup {
 
     public List<ArachneUser> getUsers() {
         return userRepository.findAll();
+    }
+
+    public List<SshKeyEntity> getSshKeys() {
+        return sshKeyRepository.findAll();
     }
 }

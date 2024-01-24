@@ -9,6 +9,7 @@ import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.KeyRepository;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.SettingsRepository;
+import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.tasks.RecurringTasksRepository;
 import at.nieslony.arachne.tasks.TaskRepository;
 import at.nieslony.arachne.users.UserRepository;
@@ -40,6 +41,8 @@ public class BackupRestController {
     TaskRepository taskRepository;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    SshKeyRepository sshKeyRepository;
 
     @GetMapping("/api/backup")
     @RolesAllowed(value = {"ADMIN", "BACKUP"})
@@ -52,7 +55,8 @@ public class BackupRestController {
                 settingsRepository,
                 recurringTasksRepository,
                 taskRepository,
-                userRepository
+                userRepository,
+                sshKeyRepository
         );
     }
 }
