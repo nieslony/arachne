@@ -9,7 +9,6 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
-import com.jcraft.jsch.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
@@ -48,8 +47,6 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private Integer keepaliveTimeout = 60;
     private Integer keepaliveInterval = 10;
     private List<Integer> vpnSiteIds = new LinkedList<>();
-    private KeyPair sshKeyPair;
-    private String sshKeyPairComment;
 
     private final Map<Integer, VpnSite> sites = new HashMap<>();
 
