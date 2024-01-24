@@ -20,7 +20,6 @@ import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
-import com.jcraft.jsch.KeyPair;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
@@ -56,7 +55,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
-import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -699,9 +697,11 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private Component createPageSshKeys() {
         sshKeys = new ComboBox<>("SSH Keys");
-        sshKeys.setItems(sshKeyRepository.findAll());
+        List<SshKeyEntity> sshKeyItems = sshKeyRepository.findAll();
+        sshKeys.setItems(sshKeyItems);
         sshKeys.setWidthFull();
         sshKeys.setItemLabelGenerator((item) -> item.getLabel());
+        sshKeys.setValue(sshKeyItems.get(0));
 
         Button createNewKeyPair = new Button("Create new Key Pair...",
                 (e) -> addSshKeyDialog.open()
@@ -741,10 +741,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         pubKeylayout.setWidthFull();
         pubKeylayout.setAlignItems(Alignment.BASELINE);
-
-        binder.addValueChangeListener((e) -> {
-            updateSshKeys();
-        });
 
         VerticalLayout layout = new VerticalLayout(
                 sshKeysLayout,
@@ -848,23 +844,5 @@ public class OpenVpnSiteView extends VerticalLayout {
             logger.info("No site selected");
         }
         enableNonDefaultCopmponents(isDefaultSiteSelected);
-    }
-
-    private void updateSshKeys() {
-        KeyPair keyPair = openVpnSiteSettings.getSshKeyPair();
-        if (keyPair != null) {
-            ByteArrayOutputStream privKeyStream = new ByteArrayOutputStream();
-            keyPair.writePrivateKey(privKeyStream);
-            sshPrivateKey.setValue(privKeyStream.toString());
-
-            ByteArrayOutputStream pubKeyStream = new ByteArrayOutputStream();
-            keyPair.writePublicKey(pubKeyStream, openVpnSiteSettings.getSshKeyPairComment());
-            sshPublicKey.setValue(pubKeyStream.toString());
-            copySshPrivateKey.setContent(sshPublicKey.getValue());
-        } else {
-            sshPrivateKey.setValue("");
-            sshPublicKey.setValue("");
-            copySshPrivateKey.setContent("");
-        }
     }
 }

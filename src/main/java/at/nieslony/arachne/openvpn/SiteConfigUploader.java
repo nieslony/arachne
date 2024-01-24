@@ -9,12 +9,11 @@ import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
+import at.nieslony.arachne.utils.ShowNotification;
 import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -27,7 +26,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import jakarta.annotation.PostConstruct;
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.util.List;
 import lombok.Getter;
@@ -121,9 +122,13 @@ public class SiteConfigUploader {
 
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
         restartOpenVpnField.setWidthFull();
+        binder.forField(restartOpenVpnField)
+                .bind(SiteUploadSettings::isRestartOpenVpn, SiteUploadSettings::setRestartOpenVpn);
 
         Checkbox enableOpenVpnField = new Checkbox("Enable openVPN service");
         enableOpenVpnField.setWidthFull();
+        binder.forField(enableOpenVpnField)
+                .bind(SiteUploadSettings::isEnableOpenVpn, SiteUploadSettings::setEnableOpenVpn);
 
         Select<SshAuthType> authTypeSelect = new Select<>();
         authTypeSelect.setLabel("AuthenticationType");
@@ -195,48 +200,107 @@ public class SiteConfigUploader {
         return dlg;
     }
 
+    private String buildUploadCommand() {
+        String configName = "arachne-%s".formatted(vpnSite.getRemoteHost());
+        String outputFile = "/tmp/%s.conf".formatted(configName);
+        String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
+        StringWriter configWriter = new StringWriter();
+        openVPnRestController.writeOpenVpnSiteRemoteConfig(vpnSite.getId(), configWriter);
+
+        return new StringBuilder()
+                .append("%s mkdir -pv %s || exit 1\n".formatted(sudo, uploadSettings.getDestinationFolder()))
+                .append("""
+                           cat <<EOF > %s
+                           %s
+                           EOF
+                           """.formatted(outputFile, configWriter.toString()))
+                .append("%s mv -v %s %s || exit 1\n".formatted(
+                        sudo,
+                        outputFile,
+                        uploadSettings.getDestinationFolder()
+                ))
+                .append(uploadSettings.isRestartOpenVpn()
+                        ? "%s systemctl restart openvpn@%s || exit 1\n".formatted(sudo, configName)
+                        : ""
+                )
+                .append(uploadSettings.isEnableOpenVpn()
+                        ? "%s systemctl enable openvpn@%s || exit 1\n".formatted(sudo, configName)
+                        : ""
+                )
+                .append("sleep 1\n")
+                .toString();
+    }
+
     private void onUploadConfig() {
         JSch ssh = new JSch();
         Session session = null;
         ChannelExec execChannel = null;
-        ChannelSftp sftpChannel = null;
+        String command = buildUploadCommand();
 
         try {
             session = ssh.getSession(uploadSettings.getUsername(), vpnSite.getRemoteHost());
             session.setPassword(uploadSettings.getPassword());
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
+            execChannel = (ChannelExec) session.openChannel("exec");
+            InputStream in = execChannel.getInputStream();
+            InputStream err = execChannel.getErrStream();
+            OutputStream out = execChannel.getOutputStream();
+            execChannel.setCommand(command);
+            execChannel.setPty(true);
+            execChannel.connect();
 
-            logger.info("Open Channel");
-            sftpChannel = (ChannelSftp) session.openChannel("sftp");
-            sftpChannel.connect();
-            StringWriter writer = new StringWriter();
-            openVPnRestController.writeOpenVpnSiteRemoteConfig(vpnSite.getId(), writer);
-            logger.info("put ");
-            sftpChannel.put(
-                    new ByteArrayInputStream(writer.toString().getBytes()),
-                    "%s-arachne-%s.conf".formatted(
-                            uploadSettings.getDestinationFolder(),
-                            vpnSite.getRemoteHost()
-                    )
-            );
-            logger.info("Disconnect");
-            sftpChannel.disconnect();
-        } catch (JSchException ex) {
-            logger.error(
-                    "Cannot connect to %s: %s".formatted(
-                            vpnSite.getRemoteHost(),
-                            ex.getMessage()
-                    )
-            );
-        } catch (SftpException ex) {
-            logger.error("SSH error: " + ex.getMessage());
-        } finally {
-            if (session != null) {
-                session.disconnect();
+            if (uploadSettings.isSudoRequired()) {
+                logger.info("Sending passwortd for sudo");
+                out.write((uploadSettings.getPassword() + "\n").getBytes());
+                out.flush();
             }
+            byte[] tmp = new byte[1024];
+            StringBuilder msgs = new StringBuilder();
+            while (true) {
+                while (in.available() > 0) {
+                    int i = in.read(tmp, 0, 1024);
+                    if (i < 0) {
+                        break;
+                    }
+                    msgs.append(new String(tmp, 0, i));
+                }
+                while (err.available() > 0) {
+                    int i = err.read(tmp, 0, 1024);
+                    if (i < 0) {
+                        break;
+                    }
+                    msgs.append(new String(tmp, 0, i));
+                }
+                if (execChannel.isClosed()) {
+                    var exitStatus = execChannel.getExitStatus();
+                    if (exitStatus == 0) {
+                        String msg = "Configuration successfully uploaded to " + vpnSite.getRemoteHost();
+                        logger.info(msg);
+                        ShowNotification.info(msg);
+                    } else {
+                        String header = "Configuration upload failed";
+                        String msg = msgs.toString();
+                        logger.error(header + ": " + msg);
+                        ShowNotification.error(header, msg);
+                    }
+                    break;
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ee) {
+                }
+            }
+        } catch (IOException | JSchException ex) {
+            String header = "Error connecting to " + vpnSite.getRemoteHost();
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
+        } finally {
             if (execChannel != null) {
                 execChannel.disconnect();
+            }
+            if (session != null) {
+                session.disconnect();
             }
         }
     }
