@@ -24,6 +24,7 @@ import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.ShowNotification;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
@@ -39,8 +40,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -382,13 +381,13 @@ public class LdapView extends VerticalLayout {
                         String exMsg = ex.getCause() != null
                         ? ex.getCause().getMessage()
                         : ex.getMessage();
-                        String msg = "Cannot read keytab %s: "
+                        String header = "Cannot read keytab %s: "
                                 .formatted(
                                         keytabPath.getValue(),
                                         exMsg
                                 );
-                        logger.error(msg);
-                        Notification.show(msg);
+                        logger.error(header + ex.getMessage());
+                        ShowNotification.error(header, ex.getMessage());
                     }
                 }
         );
@@ -454,32 +453,24 @@ public class LdapView extends VerticalLayout {
     }
 
     void testLdapConnection(LdapSettings ldapSettings) {
-        Notification notification = new Notification();
-        notification.setDuration(5000);
-        String msg;
         try {
             LdapTemplate templ = ldapSettings.getLdapTemplate();
             templ.lookup(ldapSettings.getBaseDn());
-            msg = "Connection successful";
+            ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
-            msg = "Authentication failed: " + ex.getMessage();
-            logger.error(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            logger.error("Authentication failed: " + ex.getMessage());
+            ShowNotification.error("Connection failed", ex.getMessage());
         } catch (NameNotFoundException ex) {
-            msg = "Name not found. Maybe wrong base dn";
-            logger.error(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            String header = "Name not found. Maybe wrong base dn. ";
+            logger.error(header + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         } catch (InvalidNameException ex) {
-            msg = ex.getMessage();
-            logger.error(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            logger.error(ex.getMessage());
+            ShowNotification.error("Invalid Name", ex.getMessage());
         } catch (Exception ex) {
-            msg = ex.getMessage();
-            logger.error(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            logger.error(ex.getMessage());
+            ShowNotification.error("Connection failed", ex.getMessage());
         }
-        notification.setText(msg);
-        notification.open();
     }
 
     VerticalLayout createUrlsEditor(LdapSettings ldapSettings) {
@@ -670,11 +661,9 @@ public class LdapView extends VerticalLayout {
             dlg.open();
 
         } catch (Exception ex) {
-            String msg = "LDAP search failed: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = new Notification(msg, 10);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            notification.open();
+            String header = "LDAP search failed: ";
+            logger.error(header + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 
@@ -731,11 +720,9 @@ public class LdapView extends VerticalLayout {
             dlg.open();
 
         } catch (Exception ex) {
-            String msg = "LDAP search failed: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = new Notification(msg, 10);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            notification.open();
+            String header = "LDAP search failed: ";
+            logger.error(header + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 }
