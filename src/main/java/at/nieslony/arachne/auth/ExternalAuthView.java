@@ -23,6 +23,7 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tomcat.TomcatService;
+import at.nieslony.arachne.utils.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
 import com.vaadin.flow.component.Component;
@@ -31,7 +32,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -58,7 +58,6 @@ public class ExternalAuthView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ExternalAuthView.class);
 
-    private final Notification notification;
     private final Settings settings;
     private final TomcatService tomcatService;
 
@@ -80,9 +79,6 @@ public class ExternalAuthView extends VerticalLayout {
     public ExternalAuthView(Settings settings, TomcatService tomcatService) {
         this.settings = settings;
         this.tomcatService = tomcatService;
-
-        notification = new Notification();
-        notification.setDuration(5000);
 
         saveButton = new Button(
                 "Save and Restart Arachne",
@@ -143,11 +139,11 @@ public class ExternalAuthView extends VerticalLayout {
                         }
                         kerberosBinder.validate();
                     } catch (IOException | KeytabException ex) {
-                        String msg = "Cannot read %s: %s"
-                                .formatted(filename, ex.getMessage());
-                        logger.error(msg);
-                        notification.add(msg);
-                        notification.open();
+                        String header = "Cannot read %s: %s"
+                                .formatted(filename, ex.getMessage()
+                                );
+                        logger.error(header + ex.getMessage());
+                        ShowNotification.error(header, ex.getMessage());
                     }
                     kerberosBinder.validate();
                 }

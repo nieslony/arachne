@@ -20,13 +20,13 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.ShowNotification;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -100,7 +100,7 @@ public class PkiSettingsView extends VerticalLayout {
 
         Button createCrlButton = new Button("Recreate CRL", (e) -> {
             openVpnRestController.writeCrl();
-            Notification.show("CRL written");
+            ShowNotification.info("CRL written");
         });
 
         HorizontalLayout crlLayout = new HorizontalLayout(

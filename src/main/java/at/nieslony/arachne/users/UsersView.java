@@ -16,6 +16,7 @@ import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import at.nieslony.arachne.utils.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -33,7 +34,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -191,7 +191,7 @@ public class UsersView extends VerticalLayout {
                 userMenu.addItem("Delete...", event -> deleteUser(user));
             }
         }
-        
+
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);
@@ -486,12 +486,11 @@ public class UsersView extends VerticalLayout {
                         mailAddr,
                         subject
                 );
-                Notification.show("Config sent to " + mailAddr);
+                ShowNotification.info("Config sent to " + mailAddr);
             } catch (IOException | MessagingException | PkiException | SettingsException ex) {
-                String msg = "Error sending e-mail to %s: %s"
-                        .formatted(user.getEmail(), ex.getMessage());
-                logger.error(msg);
-                Notification.show(msg);
+                String header = "Error sending e-mail to %s".formatted(user.getEmail());
+                logger.error(header + ": " + ex.getMessage());
+                ShowNotification.error(header, ex.getMessage());
             }
 
             dlg.close();

@@ -25,6 +25,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;
@@ -37,8 +38,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -311,7 +310,7 @@ public class MailSettingsView extends VerticalLayout {
                 String msg = "User %s does not have role '%s', cannot sent config"
                         .formatted(username, Role.USER.toString());
                 logger.error(msg);
-                Notification.show(msg);
+                ShowNotification.error("Error", msg);
             } else {
                 sendTestConfig(forUser, recipiend.getValue());
             }
@@ -472,10 +471,9 @@ public class MailSettingsView extends VerticalLayout {
                     "Arachne Test Mail with Configuration"
             );
         } catch (IOException | MessagingException | PkiException | SettingsException ex) {
-            String msg = "Cannot send Test Mail: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = Notification.show(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            String header = "Cannot send Test Mail";
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 
@@ -501,12 +499,11 @@ public class MailSettingsView extends VerticalLayout {
             mailSender.send(message);
             String msg = "Test Mail sent from %s to %s.".formatted(from, to);
             logger.info(msg);
-            Notification.show(msg);
+            ShowNotification.info(msg);
         } catch (MailException ex) {
-            String msg = "Cannot send Test Mail: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = Notification.show(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            String header = "Cannot send Test Mail";
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 

@@ -8,6 +8,7 @@ import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.utils.ShowNotification;
 import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -18,8 +19,6 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -542,10 +541,8 @@ public class SetupView extends VerticalLayout {
             });
             upload.addFileRejectedListener(event -> {
                 String errorMessage = event.getErrorMessage();
-
-                Notification notification = Notification.show(errorMessage, 5000,
-                        Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logger.error(errorMessage);
+                ShowNotification.error("Cannot upload backup", errorMessage);
             });
 
             restoreButton = upload;
