@@ -5,27 +5,31 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ssh.SshAuthType;
-import static at.nieslony.arachne.ssh.SshAuthType.PRESHARED_KEY;
+import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
+import at.nieslony.arachne.ssh.SshKeyEntity;
+import at.nieslony.arachne.ssh.SshKeyRepository;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
+import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -62,8 +66,15 @@ public class SiteConfigUploader {
     @Autowired
     OpenVpnRestController openVPnRestController;
 
+    @Autowired
+    SshKeyRepository sshKeyRepository;
+
     public SiteConfigUploader() {
         uploadSettings = new SiteUploadSettings();
+    }
+
+    @PostConstruct
+    public void init() {
         dlg = createUploadDialog();
     }
 
@@ -96,52 +107,48 @@ public class SiteConfigUploader {
         binder.forField(passwordField)
                 .bind(SiteUploadSettings::getPassword, SiteUploadSettings::setPassword);
 
-        Checkbox requireSudoField = new Checkbox("Get sudo Access");
+        Select<SshKeyEntity> sshKeys = new Select<>();
+        sshKeys.setLabel("Public SSH Key");
+        List<SshKeyEntity> sshKeyList = sshKeyRepository.findAll();
+        sshKeys.setItems(sshKeyList);
+        sshKeys.setWidthFull();
+        sshKeys.setItemLabelGenerator((item) -> item.getLabel());
+
+        Checkbox requireSudoField = new Checkbox("Sudo Access Required");
         requireSudoField.setWidthFull();
         binder.forField(requireSudoField)
                 .bind(SiteUploadSettings::isSudoRequired, SiteUploadSettings::setSudoRequired);
 
-        TextArea privateKeyField = new TextArea("Private Key");
-        privateKeyField.setHeight(10, Unit.EM);
-        privateKeyField.setWidthFull();
-
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
+        restartOpenVpnField.setWidthFull();
+
         Checkbox enableOpenVpnField = new Checkbox("Enable openVPN service");
+        enableOpenVpnField.setWidthFull();
 
-        Select<SshAuthType> authTypeSelect = new Select<>(
-                "AuthenticationType",
-                (e) -> {
-                    switch ((SshAuthType) e.getValue()) {
-                        case USERNAME_PASSWORD -> {
-                            passwordField.setVisible(true);
-                            privateKeyField.setVisible(false);
-                        }
-                        case PRESHARED_KEY -> {
-                            passwordField.setVisible(false);
-                            privateKeyField.setVisible(true);
-                        }
-
-                    }
-                }
-        );
+        Select<SshAuthType> authTypeSelect = new Select<>();
+        authTypeSelect.setLabel("AuthenticationType");
         authTypeSelect.setItems(SshAuthType.values());
         authTypeSelect.setWidthFull();
-        authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
 
-        FormLayout authLayout = new FormLayout(
+        VerticalLayout authLayout = new VerticalLayout(
                 usernameField,
                 authTypeSelect,
-                passwordField,
-                privateKeyField
+                sshKeys,
+                passwordField
         );
+        authLayout.setPadding(false);
+        authLayout.setSpacing(false);
 
-        FormLayout actionsLayout = new FormLayout(
+        VerticalLayout actionsLayout = new VerticalLayout(
+                requireSudoField,
                 destinationFolderField,
                 restartOpenVpnField,
                 enableOpenVpnField
         );
+        actionsLayout.setPadding(false);
+        actionsLayout.setSpacing(false);
 
-        FormLayout layout = new FormLayout(
+        HorizontalLayout layout = new HorizontalLayout(
                 authLayout,
                 actionsLayout
         );
@@ -149,7 +156,12 @@ public class SiteConfigUploader {
 
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
-            onUploadConfig();
+            try {
+                binder.writeBean(uploadSettings);
+                onUploadConfig();
+            } catch (ValidationException ex) {
+                logger.error("Input validation Error: " + ex.getMessage());
+            }
         });
         okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -159,12 +171,32 @@ public class SiteConfigUploader {
 
         dlg.getFooter().add(cancelButton, okButton);
 
+        requireSudoField.addValueChangeListener((e) -> {
+            passwordField.setEnabled(e.getValue() || authTypeSelect.getValue() == USERNAME_PASSWORD);
+        });
+
+        authTypeSelect.addValueChangeListener((e) -> {
+            switch ((SshAuthType) e.getValue()) {
+                case USERNAME_PASSWORD -> {
+                    passwordField.setEnabled(true);
+                    sshKeys.setEnabled(false);
+                }
+                case PUBLIC_KEY -> {
+                    passwordField.setEnabled(requireSudoField.getValue());
+                    sshKeys.setEnabled(true);
+                }
+
+            }
+        });
+
+        sshKeys.setValue(sshKeyList.get(0));
+        authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
+
         return dlg;
     }
 
     private void onUploadConfig() {
         JSch ssh = new JSch();
-        SiteUploadSettings uploadSettings = binder.getBean();
         Session session = null;
         ChannelExec execChannel = null;
         ChannelSftp sftpChannel = null;

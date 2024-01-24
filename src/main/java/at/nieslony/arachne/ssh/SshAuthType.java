@@ -9,7 +9,7 @@ package at.nieslony.arachne.ssh;
  * @author claas
  */
 public enum SshAuthType {
-    USERNAME_PASSWORD("Username/Password"), PRESHARED_KEY("Preshared Key");
+    USERNAME_PASSWORD("Username/Password"), PUBLIC_KEY("Public Key");
 
     private final String value;
 
