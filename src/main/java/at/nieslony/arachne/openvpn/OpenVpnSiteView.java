@@ -701,7 +701,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         sshKeys.setItems(sshKeyItems);
         sshKeys.setWidthFull();
         sshKeys.setItemLabelGenerator((item) -> item.getLabel());
-        sshKeys.setValue(sshKeyItems.get(0));
 
         Button createNewKeyPair = new Button("Create new Key Pair...",
                 (e) -> addSshKeyDialog.open()
@@ -753,6 +752,8 @@ public class OpenVpnSiteView extends VerticalLayout {
             sshPrivateKey.setValue(entity.getPrivateKey());
             sshPublicKey.setValue(entity.getPublicKey());
         });
+
+        sshKeys.setValue(sshKeyItems.get(0));
 
         return layout;
     }
