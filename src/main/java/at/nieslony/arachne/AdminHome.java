@@ -8,14 +8,23 @@ import at.nieslony.arachne.openvpnmanagement.ConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,47 +35,124 @@ import org.slf4j.LoggerFactory;
 @Route(value = "admin-home", layout = ViewTemplate.class)
 @PageTitle("Arachne")
 @PermitAll
-public class AdminHome extends VerticalLayout {
+public class AdminHome
+        extends VerticalLayout
+        implements BeforeEnterObserver, BeforeLeaveObserver {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminHome.class);
 
     private final OpenVpnManagement openVpnManagement;
+    private Timer refreshConnectedUsersTimer = null;
+    private Grid<ConnectedClient> connectedUsersGrid;
+    private Select<Integer> autoRefreshSelect;
+
+    private final String TIMER_NAME = "Refresh connected Users";
 
     public AdminHome(OpenVpnManagement openVpnManagement) {
         this.openVpnManagement = openVpnManagement;
 
         add(createConnectedUsersView());
+
+    }
+
+    private TimerTask createRefreshConnectedUsersTask() {
+        return new TimerTask() {
+            @Override
+            public void run() {
+                onRefreshConnectedUsers();
+            }
+        };
+    }
+
+    private void onRefreshConnectedUsers() {
+        logger.info("Refresing connected users");
+        try {
+            connectedUsersGrid.setItems(openVpnManagement.getConnectedUsers());
+        } catch (OpenVpnManagementException ex) {
+            logger.error(ex.getMessage());
+        }
     }
 
     private Component createConnectedUsersView() {
+        Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedUsers());
+
+        autoRefreshSelect = new Select<>();
+        autoRefreshSelect.setItemLabelGenerator(
+                (i) -> i == 0
+                        ? "No Auto Refresh"
+                        : "Auto Refresh %d sec".formatted(i)
+        );
+        autoRefreshSelect.setItems(0, 10, 20, 30, 45, 60);
+        autoRefreshSelect.setValue(30);
+        autoRefreshSelect.addValueChangeListener((e) -> {
+            if (refreshConnectedUsersTimer != null) {
+                refreshConnectedUsersTimer.cancel();
+                refreshConnectedUsersTimer.purge();
+            }
+            long delay = 1000L * autoRefreshSelect.getValue();
+            if (delay != 0) {
+                refreshConnectedUsersTimer = new Timer(TIMER_NAME);
+                refreshConnectedUsersTimer.scheduleAtFixedRate(
+                        createRefreshConnectedUsersTask(),
+                        delay,
+                        delay
+                );
+            } else {
+                refreshConnectedUsersTimer = null;
+            }
+        });
+
+        HorizontalLayout refreshLayout = new HorizontalLayout(
+                refreshButton,
+                autoRefreshSelect
+        );
+        refreshLayout.setMargin(false);
+        refreshLayout.setSpacing(false);
+        refreshLayout.setAlignItems(Alignment.BASELINE);
+
         VerticalLayout layout = new VerticalLayout();
         NativeLabel connectedUsersLabel = new NativeLabel("Connected Users");
         connectedUsersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
 
-        Grid<ConnectedClient> grid = new Grid<>();
-        grid.addColumn(ConnectedClient::getUsername)
+        connectedUsersGrid = new Grid<>();
+        connectedUsersGrid.addColumn(ConnectedClient::getUsername)
                 .setHeader("Username");
-        grid.addColumn(ConnectedClient::getBytesReceived)
+        connectedUsersGrid.addColumn(ConnectedClient::getBytesReceived)
                 .setHeader("Bytes Received")
                 .setTextAlign(ColumnTextAlign.END);
-        grid.addColumn(ConnectedClient::getBytesSent)
+        connectedUsersGrid.addColumn(ConnectedClient::getBytesSent)
                 .setHeader("Bytes Sent")
                 .setTextAlign(ColumnTextAlign.END);
-        grid.addColumn(ConnectedClient::getConnectedSince)
+        connectedUsersGrid.addColumn(ConnectedClient::getConnectedSince)
                 .setHeader("Connected since");
-        grid.addColumn(ConnectedClient::getRealAddress)
+        connectedUsersGrid.addColumn(ConnectedClient::getRealAddress)
                 .setHeader("Real Address");
-        grid.addColumn(ConnectedClient::getVirtualAddress)
+        connectedUsersGrid.addColumn(ConnectedClient::getVirtualAddress)
                 .setHeader("Virtual Address");
 
-        try {
-            grid.setItems(openVpnManagement.getConnectedUsers());
-        } catch (OpenVpnManagementException ex) {
-            logger.error(ex.getMessage());
-        }
+        onRefreshConnectedUsers();
 
-        layout.add(connectedUsersLabel, grid);
+        layout.add(refreshLayout, connectedUsersLabel, connectedUsersGrid);
 
         return layout;
+    }
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        if (refreshConnectedUsersTimer != null) {
+            refreshConnectedUsersTimer.cancel();
+            refreshConnectedUsersTimer.purge();
+        }
+        refreshConnectedUsersTimer = null;
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        long delay = 1000L * autoRefreshSelect.getValue();
+        refreshConnectedUsersTimer = new Timer(TIMER_NAME);
+        refreshConnectedUsersTimer.scheduleAtFixedRate(
+                createRefreshConnectedUsersTask(),
+                delay,
+                delay);
     }
 }
