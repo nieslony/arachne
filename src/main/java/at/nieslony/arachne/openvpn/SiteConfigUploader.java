@@ -14,12 +14,16 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -57,6 +61,8 @@ public class SiteConfigUploader {
         private boolean restartOpenVpn = false;
         private boolean enableOpenVpn = false;
         private String destinationFolder = "/etc/openvpn/server";
+        private SshAuthType sshAuthType;
+        private SshKeyEntity sshKey;
     }
 
     private Dialog dlg;
@@ -114,6 +120,8 @@ public class SiteConfigUploader {
         sshKeys.setItems(sshKeyList);
         sshKeys.setWidthFull();
         sshKeys.setItemLabelGenerator((item) -> item.getLabel());
+        binder.forField(sshKeys)
+                .bind(SiteUploadSettings::getSshKey, SiteUploadSettings::setSshKey);
 
         Checkbox requireSudoField = new Checkbox("Sudo Access Required");
         requireSudoField.setWidthFull();
@@ -134,6 +142,8 @@ public class SiteConfigUploader {
         authTypeSelect.setLabel("AuthenticationType");
         authTypeSelect.setItems(SshAuthType.values());
         authTypeSelect.setWidthFull();
+        binder.forField(authTypeSelect)
+                .bind(SiteUploadSettings::getSshAuthType, SiteUploadSettings::setSshAuthType);
 
         VerticalLayout authLayout = new VerticalLayout(
                 usernameField,
@@ -232,14 +242,65 @@ public class SiteConfigUploader {
     }
 
     private void onUploadConfig() {
+        Dialog uploadingDlg = new Dialog("Uploading...");
+
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setIndeterminate(true);
+
+        NativeLabel label = new NativeLabel("Connecting...");
+
+        Button cancelButton = new Button("Cancel");
+
+        UI ui = UI.getCurrent();
+        Thread uploadThread = new Thread(
+                () -> {
+                    ui.access(() -> uploadingDlg.open());
+                    Notification notification = _onUploadConfig(ui, label);
+                    ui.access(() -> uploadingDlg.close());
+                    if (notification != null) {
+                        ui.access(() -> notification.open());
+                        try {
+                            wait();
+                        } catch (InterruptedException | IllegalMonitorStateException ex) {
+                        }
+                    }
+                    logger.info("Terminated.");
+                },
+                "Upload Site Configuration"
+        );
+
+        uploadingDlg.add(label, progressBar);
+        uploadingDlg.getFooter().add(cancelButton);
+
+        cancelButton.addClickListener((t) -> {
+            uploadingDlg.close();
+            uploadThread.interrupt();
+        });
+
+        uploadThread.start();
+    }
+
+    private Notification _onUploadConfig(UI ui, NativeLabel infoLabel) {
         JSch ssh = new JSch();
         Session session = null;
         ChannelExec execChannel = null;
         String command = buildUploadCommand();
+        Notification notification = null;
 
         try {
             session = ssh.getSession(uploadSettings.getUsername(), vpnSite.getRemoteHost());
-            session.setPassword(uploadSettings.getPassword());
+            switch (uploadSettings.getSshAuthType()) {
+                case USERNAME_PASSWORD ->
+                    session.setPassword(uploadSettings.getPassword());
+                case PUBLIC_KEY -> {
+                    SshKeyEntity sshKey = uploadSettings.getSshKey();
+                    ssh.addIdentity(
+                            sshKey.getComment(),
+                            sshKey.getPrivateKey().getBytes(),
+                            sshKey.getPublicKey().getBytes(),
+                            "".getBytes());
+                }
+            }
             session.setConfig("StrictHostKeyChecking", "no");
             session.connect();
             execChannel = (ChannelExec) session.openChannel("exec");
@@ -248,6 +309,7 @@ public class SiteConfigUploader {
             OutputStream out = execChannel.getOutputStream();
             execChannel.setCommand(command);
             execChannel.setPty(true);
+            ui.access(() -> infoLabel.setText("Executing script..."));
             execChannel.connect();
 
             if (uploadSettings.isSudoRequired()) {
@@ -277,12 +339,12 @@ public class SiteConfigUploader {
                     if (exitStatus == 0) {
                         String msg = "Configuration successfully uploaded to " + vpnSite.getRemoteHost();
                         logger.info(msg);
-                        ShowNotification.info(msg);
+                        notification = ShowNotification.createInfo(msg);
                     } else {
                         String header = "Configuration upload failed";
                         String msg = msgs.toString();
                         logger.error(header + ": " + msg);
-                        ShowNotification.error(header, msg);
+                        notification = ShowNotification.createError(header, msg);
                     }
                     break;
                 }
@@ -294,7 +356,7 @@ public class SiteConfigUploader {
         } catch (IOException | JSchException ex) {
             String header = "Error connecting to " + vpnSite.getRemoteHost();
             logger.error(header + ": " + ex.getMessage());
-            ShowNotification.error(header, ex.getMessage());
+            notification = ShowNotification.createError(header, ex.getMessage());
         } finally {
             if (execChannel != null) {
                 execChannel.disconnect();
@@ -303,5 +365,7 @@ public class SiteConfigUploader {
                 session.disconnect();
             }
         }
+
+        return notification;
     }
 }

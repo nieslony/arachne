@@ -21,6 +21,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 public class ShowNotification {
 
     public static void info(String msgText) {
+        createInfo(msgText).open();
+    }
+
+    public static Notification createInfo(String msgText) {
         Notification notification = new Notification();
 
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
@@ -40,10 +44,14 @@ public class ShowNotification {
         notification.setDuration(5000);
         notification.setPosition(Notification.Position.MIDDLE);
 
-        notification.open();
+        return notification;
     }
 
     public static void error(String headerText, String msgText) {
+        createError(headerText, msgText).open();
+    }
+
+    public static Notification createError(String headerText, String msgText) {
         Notification notification = new Notification();
 
         Icon icon = VaadinIcon.WARNING.create();
@@ -64,7 +72,7 @@ public class ShowNotification {
         notification.setPosition(Notification.Position.MIDDLE);
         notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        notification.open();
+        return notification;
     }
 
     private static Button createCloseButton(Notification notification) {
