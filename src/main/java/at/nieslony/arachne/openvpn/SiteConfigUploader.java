@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  *
@@ -342,7 +343,8 @@ public class SiteConfigUploader {
                         notification = ShowNotification.createInfo(msg);
                     } else {
                         String header = "Configuration upload failed";
-                        String msg = msgs.toString();
+                        String msg = HtmlUtils.htmlEscape(msgs.toString())
+                                .replaceAll("\n", "<br>");
                         logger.error(header + ": " + msg);
                         notification = ShowNotification.createError(header, msg);
                     }
