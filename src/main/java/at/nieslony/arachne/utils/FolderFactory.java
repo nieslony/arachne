@@ -35,6 +35,9 @@ public class FolderFactory {
     @Value("${workdir}")
     private String workDir;
 
+    @Value("${openVpnRunDir}")
+    private String openVpnRunDir;
+
     static private FolderFactory instance;
 
     public FolderFactory() {
@@ -104,5 +107,34 @@ public class FolderFactory {
 
     public String getRestorePath() {
         return Path.of(workDir + "/backup.json").toAbsolutePath().toString();
+    }
+
+    private String getOpenVpnRunDir() {
+        logger.info("Creating " + openVpnRunDir);
+        try {
+            Files.createDirectories(Path.of(openVpnRunDir));
+            File f = new File(openVpnRunDir);
+            return f.getCanonicalPath();
+        } catch (IOException ex) {
+            logger.error(
+                    "Cannot create %s: %s"
+                            .formatted(openVpnRunDir, ex.getMessage())
+            );
+            return openVpnRunDir;
+        }
+    }
+
+    public String getOpenVpnPidPath(String server) {
+        return Path
+                .of("%s/server-%s.pid".formatted(getOpenVpnRunDir(), server))
+                .toAbsolutePath()
+                .toString();
+    }
+
+    public String getOpenVpnStatusPath(String server) {
+        return Path
+                .of("%s/server-%s.log".formatted(getOpenVpnRunDir(), server))
+                .toAbsolutePath()
+                .toString();
     }
 }
