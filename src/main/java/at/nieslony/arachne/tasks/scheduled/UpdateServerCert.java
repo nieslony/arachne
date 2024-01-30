@@ -18,8 +18,7 @@ package at.nieslony.arachne.tasks.scheduled;
 
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiSettings;
 import at.nieslony.arachne.settings.Settings;
@@ -29,6 +28,8 @@ import at.nieslony.arachne.tasks.TaskDescription;
 import at.nieslony.arachne.utils.ArachneTimeUnit;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -67,15 +68,14 @@ public class UpdateServerCert extends Task {
                     = beanFactory.getBean(OpenVpnRestController.class);
             openVpnRestController.writeOpenVpnUserServerConfig(openVpnUserSettings);
 
-            OpenVpnManagement openVpnManagement = beanFactory.getBean(OpenVpnManagement.class);
+            ArachneDbus arachneDbus = beanFactory.getBean(ArachneDbus.class);
             try {
-                openVpnManagement.restartServer();
+                arachneDbus.restart();
                 return "Server Certitificate renewed, openVPN server restarted";
-            } catch (OpenVpnManagementException ex) {
+            } catch (DBusException | DBusExecutionException ex) {
                 return "Server Certificate renewed but openVPN Server restart failed: "
                         + ex.getMessage();
             }
-
         } else {
             return "Server Certificate will be renewed on " + cal.getTime().toString();
         }
