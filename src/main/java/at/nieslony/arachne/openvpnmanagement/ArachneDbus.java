@@ -57,10 +57,16 @@ public class ArachneDbus {
     }
 
     public void restart() throws DBusExecutionException, DBusException {
-        IFaceServer arachneUser = conn.getRemoteObject(
-                DBUS_BUS_NAME,
+        IFaceServer arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
                 "/UserVpn",
                 IFaceServer.class);
         arachneUser.Restart();
+    }
+
+    public IFaceOpenVpnStatus getServerStatus() throws DBusExecutionException, DBusException {
+        IFaceServer arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
+                "/UserVpn",
+                IFaceServer.class);
+        return arachneUser.ServerStatus();
     }
 }

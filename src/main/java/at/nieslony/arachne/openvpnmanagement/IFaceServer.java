@@ -15,4 +15,6 @@ import org.freedesktop.dbus.interfaces.DBusInterface;
 public interface IFaceServer extends DBusInterface {
 
     void Restart();
+
+    IFaceOpenVpnStatus ServerStatus();
 }
