@@ -4,9 +4,8 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.openvpnmanagement.ConnectedClient;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
@@ -25,6 +24,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,15 +42,15 @@ public class AdminHome
 
     private static final Logger logger = LoggerFactory.getLogger(AdminHome.class);
 
-    private final OpenVpnManagement openVpnManagement;
+    private final ArachneDbus arachneDbus;
     private Timer refreshConnectedUsersTimer = null;
-    private Grid<ConnectedClient> connectedUsersGrid;
+    private Grid<IFaceConnectedClient> connectedUsersGrid;
     private Select<Integer> autoRefreshSelect;
 
     private final String TIMER_NAME = "Refresh connected Users";
 
-    public AdminHome(OpenVpnManagement openVpnManagement) {
-        this.openVpnManagement = openVpnManagement;
+    public AdminHome(ArachneDbus arachneDbus) {
+        this.arachneDbus = arachneDbus;
 
         add(createConnectedUsersView());
 
@@ -65,10 +66,10 @@ public class AdminHome
     }
 
     private void onRefreshConnectedUsers() {
-        logger.info("Refresing connected users");
         try {
-            connectedUsersGrid.setItems(openVpnManagement.getConnectedUsers());
-        } catch (OpenVpnManagementException ex) {
+            var connectedUsers = arachneDbus.getServerStatus().getConnectedClients();
+            connectedUsersGrid.setItems(connectedUsers);
+        } catch (DBusException | DBusExecutionException ex) {
             logger.error(ex.getMessage());
         }
     }
@@ -115,19 +116,19 @@ public class AdminHome
         connectedUsersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
 
         connectedUsersGrid = new Grid<>();
-        connectedUsersGrid.addColumn(ConnectedClient::getUsername)
-                .setHeader("Username");
-        connectedUsersGrid.addColumn(ConnectedClient::getBytesReceived)
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
+                .setHeader("Common Name");
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesReceived)
                 .setHeader("Bytes Received")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(ConnectedClient::getBytesSent)
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesSent)
                 .setHeader("Bytes Sent")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(ConnectedClient::getConnectedSince)
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getConnectedSinceAsDate)
                 .setHeader("Connected since");
-        connectedUsersGrid.addColumn(ConnectedClient::getRealAddress)
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getRealAddress)
                 .setHeader("Real Address");
-        connectedUsersGrid.addColumn(ConnectedClient::getVirtualAddress)
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
                 .setHeader("Virtual Address");
 
         onRefreshConnectedUsers();
