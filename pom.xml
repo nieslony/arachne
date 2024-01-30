@@ -167,6 +167,12 @@
             <artifactId>clipboardhelper</artifactId>
             <version>2.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.hypfvieh</groupId>
+            <artifactId>dbus-java</artifactId>
+            <version>3.3.2</version>
+        </dependency>
     </dependencies>
 
     <build>
