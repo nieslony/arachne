@@ -4,8 +4,11 @@
  */
 package at.nieslony.arachne.openvpnmanagement;
 
+import java.util.List;
 import org.freedesktop.dbus.annotations.DBusInterfaceName;
+import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBusInterface;
+import org.freedesktop.dbus.messages.DBusSignal;
 
 /**
  *
@@ -17,4 +20,19 @@ public interface IFaceServer extends DBusInterface {
     void Restart();
 
     IFaceOpenVpnStatus ServerStatus();
+
+    public class ServerStatusChanged extends DBusSignal {
+
+        private IFaceOpenVpnStatus status;
+
+        public ServerStatusChanged(String objectPath, long time, List<IFaceConnectedClient> clients)
+                throws DBusException {
+            super(objectPath, time, clients);
+            status = new IFaceOpenVpnStatus(time, clients);
+        }
+
+        public IFaceOpenVpnStatus getServerStatus() {
+            return status;
+        }
+    }
 }

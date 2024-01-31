@@ -5,9 +5,13 @@
 package at.nieslony.arachne.openvpnmanagement;
 
 import jakarta.annotation.PostConstruct;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
+import org.freedesktop.dbus.interfaces.DBusSigHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,14 +27,24 @@ public class ArachneDbus {
     private static final Logger logger = LoggerFactory.getLogger(ArachneDbus.class);
 
     private final String DBUS_BUS_NAME = "at.nieslony.Arachne";
+    private final String DBUS_OBJ_PATH_USERVPN = "/UserVpn";
 
     @Value("${dbusBusType}")
     private String dbusBusType;
 
-    DBusConnection conn;
+    private DBusConnection conn;
+    private IFaceServer arachneUser;
+    private final Set<Consumer<IFaceOpenVpnStatus>> serverUserStatusListeners;
+    private DBusSigHandler<IFaceServer.ServerStatusChanged> sigHandlerUserStatus;
 
     public ArachneDbus() {
+        serverUserStatusListeners = new HashSet<>();
 
+        sigHandlerUserStatus = (t) -> {
+            serverUserStatusListeners.forEach((l) -> {
+                l.accept(t.getServerStatus());
+            });
+        };
     }
 
     @PostConstruct
@@ -48,6 +62,9 @@ public class ArachneDbus {
                     yield null;
                 }
             });
+            this.arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
+                    DBUS_OBJ_PATH_USERVPN,
+                    IFaceServer.class);
         } catch (DBusException ex) {
             logger.error(
                     "Cannot connect to DBUS %s bus: %s"
@@ -56,17 +73,41 @@ public class ArachneDbus {
         }
     }
 
+    public void addServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
+        if (serverUserStatusListeners.isEmpty()) {
+            try {
+                conn.addSigHandler(
+                        IFaceServer.ServerStatusChanged.class,
+                        arachneUser,
+                        sigHandlerUserStatus
+                );
+            } catch (DBusException ex) {
+                logger.error("Cannot listen on signal: " + ex.getMessage());
+                return;
+            }
+        }
+        serverUserStatusListeners.add(listener);
+    }
+
+    public void removeServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
+        serverUserStatusListeners.remove(listener);
+        if (serverUserStatusListeners.isEmpty()) {
+            try {
+                conn.removeSigHandler(
+                        IFaceServer.ServerStatusChanged.class,
+                        sigHandlerUserStatus
+                );
+            } catch (DBusException ex) {
+                logger.error("Cannot remove signal: " + ex.getMessage());
+            }
+        }
+    }
+
     public void restart() throws DBusExecutionException, DBusException {
-        IFaceServer arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
-                "/UserVpn",
-                IFaceServer.class);
         arachneUser.Restart();
     }
 
     public IFaceOpenVpnStatus getServerStatus() throws DBusExecutionException, DBusException {
-        IFaceServer arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
-                "/UserVpn",
-                IFaceServer.class);
         return arachneUser.ServerStatus();
     }
 }
