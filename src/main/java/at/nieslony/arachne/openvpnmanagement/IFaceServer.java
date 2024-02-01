@@ -23,7 +23,7 @@ public interface IFaceServer extends DBusInterface {
 
     public class ServerStatusChanged extends DBusSignal {
 
-        private IFaceOpenVpnStatus status;
+        private final IFaceOpenVpnStatus status;
 
         public ServerStatusChanged(String objectPath, long time, List<IFaceConnectedClient> clients)
                 throws DBusException {
