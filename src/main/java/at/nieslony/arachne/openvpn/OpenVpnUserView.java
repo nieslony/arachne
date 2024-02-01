@@ -6,10 +6,12 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.FirewallBasicsSettings;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.EditableListBox;
+import at.nieslony.arachne.utils.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
@@ -49,6 +51,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,16 +67,19 @@ public class OpenVpnUserView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
 
-    private final Settings settings;
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
+
+    private final ArachneDbus arachneDbus;
 
     public OpenVpnUserView(
             Settings settings,
             OpenVpnRestController openvpnRestController,
+            ArachneDbus arachneDbus,
             Pki pki
     ) {
-        this.settings = settings;
+        this.arachneDbus = arachneDbus;
+
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         binder = new Binder<>(OpenVpnUserSettings.class);
 
@@ -87,13 +94,19 @@ public class OpenVpnUserView extends VerticalLayout {
                         = settings.getSettings(FirewallBasicsSettings.class);
                 try {
                     vpnSettings.save(settings);
-                    openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
                     openvpnRestController.writeOpenVpnPluginConfig(
                             vpnSettings,
                             firewallBasicsSettings
                     );
+                    openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
+                    arachneDbus.restart();
+                    ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
                     logger.error("Cannot save openvpn user settings: " + ex.getMessage());
+                } catch (DBusException | DBusExecutionException ex) {
+                    String header = "Cannot restart openVpn";
+                    logger.error(header + ": " + ex.getMessage());
+                    ShowNotification.error(header, ex.getMessage());
                 }
             }
         });
@@ -278,6 +291,11 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Checkbox mtuTestField = new Checkbox("MTU Test");
 
+        ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("Status Update Interval (secs)");
+        statusUpdateIntervalField.setItems(
+                10, 20, 30, 45, 60, 120
+        );
+
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
@@ -341,6 +359,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 OpenVpnUserSettings::getMtuTest,
                 OpenVpnUserSettings::setMtuTest
         );
+        binder.bind(statusUpdateIntervalField,
+                OpenVpnUserSettings::getStatusUpdateSecs,
+                OpenVpnUserSettings::setStatusUpdateSecs
+        );
 
         clientMask.addValueChangeListener((e) -> binder.validate());
         protocol.addValueChangeListener((e) -> {
@@ -356,6 +378,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(clientNetLayout);
         formLayout.add(keepaliveLayout);
         formLayout.add(mtuTestField);
+        formLayout.add(statusUpdateIntervalField);
 
         return formLayout;
     }

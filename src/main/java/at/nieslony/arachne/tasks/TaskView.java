@@ -143,7 +143,7 @@ public class TaskView extends VerticalLayout {
                     var page = taskRepository.findAll(pageable);
                     return page
                             .stream()
-                            .sorted((t1, t2) -> TaskModel.compare(t1, t2));
+                            .sorted((t1, t2) -> -TaskModel.compare(t1, t2));
                 },
                 (query) -> (int) taskRepository.count()
         );

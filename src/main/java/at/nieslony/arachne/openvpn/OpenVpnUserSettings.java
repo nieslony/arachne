@@ -78,6 +78,7 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     private int clientMask = 24;
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
+    private int statusUpdateSecs = 60;
     private List<String> pushDnsServers = NetUtils.getDnsServers();
     private List<String> dnsSearch = Arrays.asList(NetUtils.myDomain());
     private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();

@@ -7,8 +7,6 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -65,9 +63,6 @@ public class OpenVpnRestController {
 
     @Autowired
     private Pki pki;
-
-    @Autowired
-    private OpenVpnManagement openVpnManagement;
 
     @Autowired
     private FolderFactory folderFactory;
@@ -197,7 +192,6 @@ public class OpenVpnRestController {
         logger.info("Writing openvpn user server config to " + fileName);
 
         writeCrl();
-        openVpnManagement.writePasswordFile();
 
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -223,7 +217,15 @@ public class OpenVpnRestController {
             if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
                 writer.println("mtu-test");
             }
-            writer.println(openVpnManagement.getVpnConfigSetting());
+            writer.println(
+                    "status %s %d"
+                            .formatted(
+                                    folderFactory.getOpenVpnStatusPath("arachne"),
+                                    settings.getStatusUpdateSecs()
+                            )
+            );
+            writer.println("status-version 2");
+            writer.println("writepid " + folderFactory.getOpenVpnPidPath("arachne"));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }
@@ -269,7 +271,6 @@ public class OpenVpnRestController {
             writer.println("<cert>\n%s</cert>".formatted(pki.getServerCertAsBase64()));
             writer.println("<key>\n%s</key>".formatted(pki.getServerKeyAsBase64()));
             writer.println("<dh>\n%s</dh>".formatted(pki.getDhParams()));
-            openVpnManagement.restartServer();
         } catch (PkiException ex) {
             logger.error("# pki not yet initialized");
         } catch (IOException ex) {
@@ -277,10 +278,8 @@ public class OpenVpnRestController {
                     "Cannot write to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
-        } catch (OpenVpnManagementException ex) {
-            logger.error("Cannot restart openVPN: " + ex.getMessage());
-        } catch (Exception ex) {
-            logger.error("Hmmm. something went wrong: " + ex.getMessage());
+        } catch (SettingsException ex) {
+            logger.error("Settings exception: " + ex.getMessage());
         }
     }
 
