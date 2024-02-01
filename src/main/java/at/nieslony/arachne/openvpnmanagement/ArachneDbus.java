@@ -35,7 +35,7 @@ public class ArachneDbus {
     private DBusConnection conn;
     private IFaceServer arachneUser;
     private final Set<Consumer<IFaceOpenVpnStatus>> serverUserStatusListeners;
-    private DBusSigHandler<IFaceServer.ServerStatusChanged> sigHandlerUserStatus;
+    private final DBusSigHandler<IFaceServer.ServerStatusChanged> sigHandlerUserStatus;
 
     public ArachneDbus() {
         serverUserStatusListeners = new HashSet<>();
@@ -75,6 +75,7 @@ public class ArachneDbus {
 
     public void addServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
         if (serverUserStatusListeners.isEmpty()) {
+            logger.info("First listener added: Adding signal handler");
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
@@ -82,7 +83,7 @@ public class ArachneDbus {
                         sigHandlerUserStatus
                 );
             } catch (DBusException ex) {
-                logger.error("Cannot listen on signal: " + ex.getMessage());
+                logger.error("Cannot signal handler: " + ex.getMessage());
                 return;
             }
         }
@@ -92,13 +93,14 @@ public class ArachneDbus {
     public void removeServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
         serverUserStatusListeners.remove(listener);
         if (serverUserStatusListeners.isEmpty()) {
+            logger.info("Last listener removed. Removing signal handler");
             try {
                 conn.removeSigHandler(
                         IFaceServer.ServerStatusChanged.class,
                         sigHandlerUserStatus
                 );
             } catch (DBusException ex) {
-                logger.error("Cannot remove signal: " + ex.getMessage());
+                logger.error("Cannot remove signal handler: " + ex.getMessage());
             }
         }
     }
