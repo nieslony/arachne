@@ -21,6 +21,7 @@ import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.security.PermitAll;
 import java.util.function.Consumer;
 import org.freedesktop.dbus.exceptions.DBusException;
@@ -121,5 +122,10 @@ public class AdminHome
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
         arachneDbus.addServerUserStatusChangedListener(updateConnectedUserListener);
+    }
+
+    @PreDestroy
+    public void done() {
+        arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
     }
 }
