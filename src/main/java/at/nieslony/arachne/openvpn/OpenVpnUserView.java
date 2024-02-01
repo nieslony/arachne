@@ -291,6 +291,11 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Checkbox mtuTestField = new Checkbox("MTU Test");
 
+        ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("Status Update Interval (secs)");
+        statusUpdateIntervalField.setItems(
+                10, 20, 30, 45, 60, 120
+        );
+
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
@@ -354,6 +359,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 OpenVpnUserSettings::getMtuTest,
                 OpenVpnUserSettings::setMtuTest
         );
+        binder.bind(statusUpdateIntervalField,
+                OpenVpnUserSettings::getStatusUpdateSecs,
+                OpenVpnUserSettings::setStatusUpdateSecs
+        );
 
         clientMask.addValueChangeListener((e) -> binder.validate());
         protocol.addValueChangeListener((e) -> {
@@ -369,6 +378,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(clientNetLayout);
         formLayout.add(keepaliveLayout);
         formLayout.add(mtuTestField);
+        formLayout.add(statusUpdateIntervalField);
 
         return formLayout;
     }

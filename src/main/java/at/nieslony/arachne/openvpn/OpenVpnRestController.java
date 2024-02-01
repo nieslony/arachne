@@ -210,7 +210,13 @@ public class OpenVpnRestController {
             if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
                 writer.println("mtu-test");
             }
-            writer.println("status " + folderFactory.getOpenVpnStatusPath("arachne"));
+            writer.println(
+                    "status %s %d"
+                            .formatted(
+                                    folderFactory.getOpenVpnStatusPath("arachne"),
+                                    settings.getStatusUpdateSecs()
+                            )
+            );
             writer.println("status-version 2");
             writer.println("writepid " + folderFactory.getOpenVpnPidPath("arachne"));
             for (String dnsServer : settings.getPushDnsServers()) {
