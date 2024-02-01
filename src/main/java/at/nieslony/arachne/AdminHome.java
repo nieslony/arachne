@@ -21,7 +21,8 @@ import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.PreDestroy;
+import jakarta.annotation.security.RolesAllowed;
 import java.util.function.Consumer;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 @Route(value = "admin-home", layout = ViewTemplate.class)
 @PageTitle("Arachne")
-@PermitAll
+@RolesAllowed("ADMIN")
 public class AdminHome
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
@@ -121,5 +122,10 @@ public class AdminHome
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
         arachneDbus.addServerUserStatusChangedListener(updateConnectedUserListener);
+    }
+
+    @PreDestroy
+    public void done() {
+        arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
     }
 }
