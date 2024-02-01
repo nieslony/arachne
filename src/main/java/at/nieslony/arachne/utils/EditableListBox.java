@@ -140,7 +140,6 @@ public class EditableListBox
 
     @Override
     public List<String> getValue() {
-        logger.info(items.toString());
         return new LinkedList<>(items);
     }
 
