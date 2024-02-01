@@ -22,7 +22,7 @@ import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 @Route(value = "admin-home", layout = ViewTemplate.class)
 @PageTitle("Arachne")
-@PermitAll
+@RolesAllowed("ADMIN")
 public class AdminHome
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
