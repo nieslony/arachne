@@ -21,7 +21,7 @@ import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import jakarta.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.function.Consumer;
 import org.freedesktop.dbus.exceptions.DBusException;
@@ -75,6 +75,14 @@ public class AdminHome
         this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
     }
 
+    @PostConstruct
+    public void init() {
+        addDetachListener((t) -> {
+            logger.info("Detach");
+            arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
+        });
+    }
+
     private void onRefreshConnectedUsers() {
         try {
             var connectedUsers = arachneDbus.getServerStatus().getConnectedClients();
@@ -122,10 +130,5 @@ public class AdminHome
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
         arachneDbus.addServerUserStatusChangedListener(updateConnectedUserListener);
-    }
-
-    @PreDestroy
-    public void done() {
-        arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
     }
 }
