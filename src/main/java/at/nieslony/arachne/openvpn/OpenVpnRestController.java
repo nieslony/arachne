@@ -609,4 +609,11 @@ public class OpenVpnRestController {
             logger.error("Cannot write site remote configuration: " + ex.getMessage());
         }
     }
+
+    public String getOpenVpnSiteRemoiteConfigName(
+            OpenVpnSiteSettings siteSettings,
+            VpnSite vpnSite
+    ) {
+        return "arachne_%s_%s.conf".formatted(siteSettings.getRemote(), vpnSite.getRemoteHost());
+    }
 }
