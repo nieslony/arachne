@@ -53,8 +53,11 @@ import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,8 +66,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.firitin.components.DynamicFileDownloader;
 import org.vaadin.olli.ClipboardHelper;
-import org.vaadin.olli.FileDownloadWrapper;
 
 /**
  *
@@ -409,18 +412,22 @@ public class OpenVpnSiteView extends VerticalLayout {
                 new Icon(VaadinIcon.CHEVRON_DOWN)
         ));
         SubMenu subMenu = siteConfigItem.getSubMenu();
-        FileDownloadWrapper downloadComponent = new FileDownloadWrapper(
-                "bla",
-                () -> {
-                    StringWriter cfgWriter = new StringWriter();
-                    openVpnRestController.writeOpenVpnSiteRemoteConfig(
-                            sites.getValue().getId(),
-                            cfgWriter
-                    );
-                    return cfgWriter.toString().getBytes();
-                }
+
+        DynamicFileDownloader downloadComponent = new DynamicFileDownloader(
+                "Download",
+                (OutputStream out) -> openVpnRestController.writeOpenVpnSiteRemoteConfig(
+                        sites.getValue().getId(),
+                        new PrintWriter(out)
+                )
         );
-        downloadComponent.setText("Download...");
+        downloadComponent.setFileNameGenerator((vr) -> {
+            return openVpnRestController.getOpenVpnSiteRemoiteConfigName(
+                    openVpnSiteSettings,
+                    sites.getValue()
+            );
+        });
+        downloadComponent.addClassNames(LumoUtility.TextColor.BODY);
+
         subMenu.addItem(downloadComponent);
         subMenu.addItem("Upload to site...", (e) -> {
             siteConfigUploader.openDialog(sites.getValue());
