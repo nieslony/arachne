@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
@@ -76,6 +77,9 @@ public class SiteConfigUploader {
 
     @Autowired
     SshKeyRepository sshKeyRepository;
+
+    @Autowired
+    private Settings settings;
 
     public SiteConfigUploader() {
         uploadSettings = new SiteUploadSettings();
@@ -212,7 +216,8 @@ public class SiteConfigUploader {
     }
 
     private String buildUploadCommand() {
-        String configName = "arachne-%s".formatted(vpnSite.getRemoteHost());
+        OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
+        String configName = openVPnRestController.getOpenVpnSiteRemoiteConfigName(siteSettings, vpnSite);
         String outputFile = "/tmp/%s.conf".formatted(configName);
         String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
         StringWriter configWriter = new StringWriter();

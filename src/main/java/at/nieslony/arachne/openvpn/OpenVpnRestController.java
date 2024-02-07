@@ -565,7 +565,6 @@ public class OpenVpnRestController {
     public void writeOpenVpnSiteRemoteConfig(int siteId, Writer writer) {
         OpenVpnSiteSettings openVpnSiteSettings
                 = settings.getSettings(OpenVpnSiteSettings.class);
-        VpnSite defaultSite = openVpnSiteSettings.getSites().get(0);
         VpnSite site = openVpnSiteSettings.getSites().get(siteId);
 
         try (PrintWriter pw = new PrintWriter(writer)) {
