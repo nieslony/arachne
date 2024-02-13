@@ -19,6 +19,7 @@ package at.nieslony.arachne.mail;
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.utils.net.MxRecord;
 import at.nieslony.arachne.utils.net.NetUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -45,7 +46,7 @@ public class MailSettings extends AbstractSettingsGroup {
 
     private static final Logger logger = LoggerFactory.getLogger(MailSettings.class);
 
-    enum TemplateConfigType {
+    public enum TemplateConfigType {
         PLAIN("Plain Text"),
         HTML("Html");
 
@@ -71,6 +72,7 @@ public class MailSettings extends AbstractSettingsGroup {
     private String templateConfigPlain = getDefaultTemplateConfigPlain();
     private TemplateConfigType templateConfigType = TemplateConfigType.HTML;
 
+    @JsonIgnore
     private String getDefaultSmtpServer() {
         try {
             List<MxRecord> recs = NetUtils.mxLookup();
@@ -83,6 +85,7 @@ public class MailSettings extends AbstractSettingsGroup {
         return "mail." + NetUtils.myDomain();
     }
 
+    @JsonIgnore
     public JavaMailSender getMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(getSmtpServer());
@@ -100,6 +103,7 @@ public class MailSettings extends AbstractSettingsGroup {
         return mailSender;
     }
 
+    @JsonIgnore
     public String getPrettySenderMailAddress() {
         if ("".equals(senderDisplayname)) {
             return senderEmailAddress;
@@ -108,6 +112,7 @@ public class MailSettings extends AbstractSettingsGroup {
         }
     }
 
+    @JsonIgnore
     final public String getDefaultTemplateConfigHtml() {
         final String RN = "MailTemplates/openvpn-config.html";
         try {
@@ -121,6 +126,7 @@ public class MailSettings extends AbstractSettingsGroup {
         }
     }
 
+    @JsonIgnore
     final public String getDefaultTemplateConfigPlain() {
         Source htmlSource = new Source(getDefaultTemplateConfigHtml());
         Segment segment = new Segment(htmlSource, 0, htmlSource.length());
@@ -131,22 +137,27 @@ public class MailSettings extends AbstractSettingsGroup {
         return htmlRender.toString();
     }
 
+    @JsonIgnore
     public String getVarRcptName() {
         return "{rcpt-displayname}";
     }
 
+    @JsonIgnore
     public String getVarSenderName() {
         return "{sndr-displayname}";
     }
 
+    @JsonIgnore
     public String getVarLinuxInstructions() {
         return "{linux-instructions}";
     }
 
+    @JsonIgnore
     public String getVarNmConnection() {
         return "{nm-connection}";
     }
 
+    @JsonIgnore
     public String getVarAttachnement() {
         return "{attachment}";
     }
