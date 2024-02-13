@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.firewall.FirewallView;
 import at.nieslony.arachne.ldap.LdapView;
@@ -189,7 +190,8 @@ public class ViewTemplate extends AppLayout {
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),
                 new SideNavItem("Recurring Tasks", RecurringTasksView.class,
-                        VaadinIcon.CLOCK.create())
+                        VaadinIcon.CLOCK.create()),
+                new SideNavItem("API Index", ApiIndexView.class)
         );
         servicesNav.setWidthFull();
 
