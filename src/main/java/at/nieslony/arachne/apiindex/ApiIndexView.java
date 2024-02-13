@@ -5,6 +5,7 @@
 package at.nieslony.arachne.apiindex;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Text;
@@ -18,8 +19,10 @@ import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,6 +45,9 @@ public class ApiIndexView extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
 
     public ApiIndexView(ApiIndexBean apiIndexBean) {
+        String urlPath = RouteConfiguration.forApplicationScope()
+                .getUrl(getClass());
+
         H1 header = new H1("API Index");
         header.addClassName(LumoUtility.TextColor.PRIMARY);
         add(header);
@@ -86,8 +92,9 @@ public class ApiIndexView extends VerticalLayout {
                     String pattern = key.getPathPatternsCondition().getFirstPattern().getPatternString();
                     String txt = pattern + " " + key.getMethodsCondition().toString();
                     String href = (pattern + key.getMethodsCondition().toString())
-                            .replaceAll("/", "_");
-                    Anchor anchor = new Anchor("#" + href, txt);
+                            .replaceAll("[{\\[/]", "_")
+                            .replaceAll("[}\\]]", "");
+                    Anchor anchor = new Anchor(urlPath + "#" + href, txt);
                     toc.add(new ListItem(anchor));
 
                     var method = entry.getValue().getMethod();
@@ -95,17 +102,10 @@ public class ApiIndexView extends VerticalLayout {
 
                     var returnType = method.getReturnType();
                     if (returnType != void.class) {
-                        if (returnType.isInstance(AbstractSettingsGroup.class)) {
-                            methodDetails.put(
-                                    new DescriptionList.Term("Returns"),
-                                    new DescriptionList.Description(getJsonParams(returnType))
-                            );
-                        } else {
-                            methodDetails.put(
-                                    new DescriptionList.Term("Returns"),
-                                    new DescriptionList.Description(returnType.getSimpleName())
-                            );
-                        }
+                        methodDetails.put(
+                                new DescriptionList.Term("Returns"),
+                                new DescriptionList.Description(getTypeInformation(returnType))
+                        );
                     }
 
                     List<Div> requestParams = new LinkedList<>();
@@ -176,42 +176,86 @@ public class ApiIndexView extends VerticalLayout {
                         );
                     }
 
-                    Anchor toToc = new Anchor("#toc", "TOC");
+                    Anchor toToc = new Anchor(
+                            urlPath + "#toc",
+                            "TOC"
+                    );
                     H3 methodHeader = new H3();
-                    methodHeader.add(new Text(txt), toToc);
-                    methodHeader.setId("href");
+                    methodHeader.add(new Text(txt + " "), toToc);
+                    methodHeader.setId(href);
                     add(methodHeader);
                     add(new DescriptionList(methodDetails));
                 });
     }
 
-    public <T extends Enum<T>> void enumValues(Class<T> enumType) {
-        for (T c : enumType.getEnumConstants()) {
-            System.out.println(c.name());
+    public static List<String> getEnumNames(Class<?> c) {
+        List<String> enumNames = new LinkedList<>();
+        try {
+            Method valuesMeth = c.getDeclaredMethod("values");
+            Object result = valuesMeth.invoke(null);
+            for (var o : ((Object[]) result)) {
+                String name = ((Enum) o).name();
+                enumNames.add(name);
+            }
+        } catch (Exception ex) {
+            logger.error("Cannot get enum values: "
+                    + ex.getClass().getName() + ": "
+                    + ex.getMessage());
+        }
+        enumNames.sort(String::compareTo);
+
+        return enumNames;
+    }
+
+    private Component getTypeInformation(Class<?> c) {
+        if (AbstractSettingsGroup.class.isAssignableFrom(c)) {
+            return getJsonParams(c);
+        } else if (c.isEnum()) {
+            return new Text("Enum " + getEnumNames(c).toString());
+        } else {
+            return new Text(c.getSimpleName());
         }
     }
 
     private Component getJsonParams(Class<?> c) {
-        UnorderedList ul = new UnorderedList();
+        Map<String, Component> items = new HashMap<>();
+
         for (var method : c.getDeclaredMethods()) {
+            if (method.getAnnotation(JsonIgnore.class) != null) {
+                continue;
+            }
             if (Modifier.isPublic(method.getModifiers())) {
                 String name = method.getName();
-                String out = null;
+                String paramName = null;
                 if (name.startsWith("get")) {
-                    out = name.substring(3);
+                    paramName = Character.toLowerCase(name.charAt(3))
+                            + name.substring(4);
                 } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
-                    out = name.substring(2);
+                    paramName = Character.toLowerCase(name.charAt(2))
+                            + name.substring(3);
+                } else {
+                    continue;
                 }
 
-                if (out != null) {
-                    if (method.getReturnType().isEnum()) {
-                    }
-                    ListItem li = new ListItem(out);
-                    ul.add(li);
+                Component typeInfo = getTypeInformation(method.getReturnType());
+                if (paramName != null) {
+                    items.put(paramName, typeInfo);
                 }
             }
         }
 
-        return ul;
+        UnorderedList ul = new UnorderedList();
+        items
+                .keySet()
+                .stream()
+                .sorted()
+                .forEach((i) -> {
+                    Div itemContent = new Div(
+                            new Text(i + ": "),
+                            items.get(i)
+                    );
+                    ul.add(new ListItem(itemContent));
+                });
+        return new Div(new Text("Json map"), ul);
     }
 }
