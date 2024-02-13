@@ -22,6 +22,7 @@ import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.SrvRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -400,6 +401,7 @@ public class LdapSettings extends AbstractSettingsGroup {
                 .toList();
     }
 
+    @JsonIgnore
     public ArachneUser getUser(String username) {
         List<ArachneUser> users = findUsers(username, 1);
         if (users == null || users.isEmpty()) {
@@ -440,6 +442,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         return groups;
     }
 
+    @JsonIgnore
     public LdapGroup getGroup(String groupname) {
         List<LdapGroup> groups = findGroups(groupname, 1);
         if (groups.isEmpty()) {
