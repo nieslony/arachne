@@ -4,9 +4,11 @@
  */
 package at.nieslony.arachne.apiindex;
 
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.DescriptionList;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -16,6 +18,7 @@ import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -40,12 +43,18 @@ public class ApiIndexView extends VerticalLayout {
 
     public ApiIndexView(ApiIndexBean apiIndexBean) {
         H1 header = new H1("API Index");
+        header.addClassName(LumoUtility.TextColor.PRIMARY);
         add(header);
-        add(new H2("Table of Contents"));
+        H2 tocHeader = new H2("Table of Contents");
+        tocHeader.addClassName(LumoUtility.TextColor.PRIMARY);
+        tocHeader.setId("toc");
+        add(tocHeader);
 
         UnorderedList toc = new UnorderedList();
         add(toc);
-        add(new H2("API Calls"));
+        H2 apiCallsHeader = new H2("API Calls");
+        apiCallsHeader.addClassName(LumoUtility.TextColor.PRIMARY);
+        add(apiCallsHeader);
 
         apiIndexBean.getMappings()
                 .entrySet()
@@ -76,17 +85,27 @@ public class ApiIndexView extends VerticalLayout {
                     var key = entry.getKey();
                     String pattern = key.getPathPatternsCondition().getFirstPattern().getPatternString();
                     String txt = pattern + " " + key.getMethodsCondition().toString();
-                    toc.add(new ListItem(txt));
+                    String href = (pattern + key.getMethodsCondition().toString())
+                            .replaceAll("/", "_");
+                    Anchor anchor = new Anchor("#" + href, txt);
+                    toc.add(new ListItem(anchor));
 
                     var method = entry.getValue().getMethod();
                     Map<DescriptionList.Term, DescriptionList.Description> methodDetails = new HashMap<>();
 
                     var returnType = method.getReturnType();
                     if (returnType != void.class) {
-                        methodDetails.put(
-                                new DescriptionList.Term("Returns"),
-                                new DescriptionList.Description(getJsonParams(returnType))
-                        );
+                        if (returnType.isInstance(AbstractSettingsGroup.class)) {
+                            methodDetails.put(
+                                    new DescriptionList.Term("Returns"),
+                                    new DescriptionList.Description(getJsonParams(returnType))
+                            );
+                        } else {
+                            methodDetails.put(
+                                    new DescriptionList.Term("Returns"),
+                                    new DescriptionList.Description(returnType.getSimpleName())
+                            );
+                        }
                     }
 
                     List<Div> requestParams = new LinkedList<>();
@@ -157,28 +176,38 @@ public class ApiIndexView extends VerticalLayout {
                         );
                     }
 
-                    add(new H3(txt));
+                    Anchor toToc = new Anchor("#toc", "TOC");
+                    H3 methodHeader = new H3();
+                    methodHeader.add(new Text(txt), toToc);
+                    methodHeader.setId("href");
+                    add(methodHeader);
                     add(new DescriptionList(methodDetails));
                 });
     }
 
-    private Component getJsonParams(Class<?> c) {
-        if (c.isInstance(List.class)) {
-            return new Text("List");
+    public <T extends Enum<T>> void enumValues(Class<T> enumType) {
+        for (T c : enumType.getEnumConstants()) {
+            System.out.println(c.name());
         }
+    }
 
+    private Component getJsonParams(Class<?> c) {
         UnorderedList ul = new UnorderedList();
-        for (var method : c.getMethods()) {
+        for (var method : c.getDeclaredMethods()) {
             if (Modifier.isPublic(method.getModifiers())) {
                 String name = method.getName();
+                String out = null;
                 if (name.startsWith("get")) {
-                    name = name.substring(3);
+                    out = name.substring(3);
+                } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
+                    out = name.substring(2);
+                }
+
+                if (out != null) {
                     if (method.getReturnType().isEnum()) {
                     }
-                    ul.add(new ListItem(name));
-                } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
-                    name = name.substring(2);
-                    ul.add(new ListItem(name));
+                    ListItem li = new ListItem(out);
+                    ul.add(li);
                 }
             }
         }
