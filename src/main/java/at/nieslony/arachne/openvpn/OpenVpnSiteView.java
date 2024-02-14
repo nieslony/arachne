@@ -23,6 +23,7 @@ import at.nieslony.arachne.utils.validators.SubnetValidator;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
+import com.vaadin.flow.component.HasLabel;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -122,7 +123,11 @@ public class OpenVpnSiteView extends VerticalLayout {
         public void accept(Boolean isDefaultSite) {
             logger.info("isDefaultSite: " + isDefaultSite.toString());
             Boolean enable = condition.test(siteModified);
-            logger.info(component.toString() + ": " + enable.toString());
+            if (component instanceof HasLabel lbl) {
+                logger.info(lbl.getLabel() + ": " + enable.toString());
+            } else {
+                logger.info(component.toString() + ": " + enable.toString());
+            }
             component.setEnabled(enable);
         }
     }
@@ -726,7 +731,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         siteVerificationField.addValueChangeListener((e) -> {
             siteIpWhiteList.setEnabled(
-                    e.getValue().equals(VpnSite.SiteVerification.WHITELIST)
+                    e.getValue() != null
+                    && e.getValue().equals(VpnSite.SiteVerification.WHITELIST)
             );
         });
 
