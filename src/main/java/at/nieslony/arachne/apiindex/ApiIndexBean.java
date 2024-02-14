@@ -32,7 +32,6 @@ public class ApiIndexBean {
                 .getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
         apiMap = requestMappingHandlerMapping
                 .getHandlerMethods();
-        apiMap.forEach((key, value) -> logger.info("Mapping: {} {}", key, value));
     }
 
     public Map<RequestMappingInfo, HandlerMethod> getMappings() {
