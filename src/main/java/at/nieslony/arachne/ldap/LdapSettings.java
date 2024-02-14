@@ -178,6 +178,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         return ldapServers;
     }
 
+    @JsonIgnore
     public LdapTemplate getLdapTemplate() throws Exception {
         logger.info(toString());
         String[] urls = ldapUrls.stream()
