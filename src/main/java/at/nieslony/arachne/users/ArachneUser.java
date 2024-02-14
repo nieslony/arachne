@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.roles.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -43,6 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Entity
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
+@ShowApiDetails
 public class ArachneUser implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(ArachneUser.class);
@@ -70,7 +72,7 @@ public class ArachneUser implements Serializable {
     private String displayName;
 
     @Column
-    @Setter(AccessLevel.NONE)
+    @JsonIgnore
     private String password;
 
     @JsonSetter("password")

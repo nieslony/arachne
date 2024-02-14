@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.setup;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.pki.CertSpecs;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@ShowApiDetails
 public class SetupData {
 
     private String adminUsername = "admin";

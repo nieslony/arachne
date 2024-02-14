@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.backup;
 
+import at.nieslony.arachne.apiindex.ApiMethodDescription;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.KeyRepository;
@@ -46,6 +47,12 @@ public class BackupRestController {
 
     @GetMapping("/api/backup")
     @RolesAllowed(value = {"ADMIN", "BACKUP"})
+    @ApiMethodDescription(
+            """
+            Creates backup of all settings. Can be restored with
+            setup wizard after disaster.
+            """
+    )
     public Backup getBackup() {
         return new Backup(
                 firewallRuleRepository,

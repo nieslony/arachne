@@ -4,13 +4,8 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.roles.RolesCollector;
 import jakarta.annotation.security.RolesAllowed;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,28 +38,10 @@ public class UserRestController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RolesCollector rolesCollector;
-
     @GetMapping
     @RolesAllowed(value = {"ADMIN"})
-    public Map<String, Object> findAll() {
-        Map<String, Object> root = new HashMap<>();
-
-        List<Map<String, Object>> users = new LinkedList<>();
-        for (ArachneUser arachneUser : userRepository.findAll()) {
-            Map<String, Object> user = new HashMap<>();
-            user.put("details", arachneUser);
-
-            Set<String> roles
-                    = rolesCollector.findRoleDescriptionsForUser(arachneUser.getUsername());
-            user.put("roles", roles);
-
-            users.add(user);
-        }
-
-        root.put("data", users);
-        return root;
+    public List<ArachneUser> findAll() {
+        return userRepository.findAll();
     }
 
     @GetMapping("/{id}")

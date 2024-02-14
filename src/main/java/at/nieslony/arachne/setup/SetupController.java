@@ -5,6 +5,7 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.Arachne;
+import at.nieslony.arachne.apiindex.ApiMethodDescription;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
@@ -167,6 +168,11 @@ public class SetupController {
 
     @PostMapping("/setup")
     @AnonymousAllowed
+    @ApiMethodDescription(
+            """
+            Automized setup. Only possible if setup not already performed.
+            """
+    )
     public String onStupArachne(@RequestBody SetupData setupData)
             throws SettingsException {
         return setupArachne(setupData);

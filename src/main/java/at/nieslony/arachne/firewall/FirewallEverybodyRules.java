@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ShowApiDetails
 public class FirewallEverybodyRules {
 
     private FirewallBasicsSettings.IcmpRules icmpRules;
