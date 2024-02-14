@@ -28,6 +28,10 @@ public class ShowNotification {
         createInfo(headerText, msgText).open();
     }
 
+    public static Notification createInfo(String headerText) {
+        return createInfo(headerText, null);
+    }
+
     public static Notification createInfo(String headerText, String msgText) {
         Notification notification = new Notification();
 
