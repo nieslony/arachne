@@ -121,7 +121,7 @@ public class FirewallView extends VerticalLayout {
             logger.info("Saving firewall settings");
             try {
                 firewallBasicSettings.save(settings);
-                openVpnRestController.writeOpenVpnPluginConfig(
+                openVpnRestController.writeOpenVpnPluginUserConfig(
                         openVpnUserSettings,
                         firewallBasicSettings
                 );

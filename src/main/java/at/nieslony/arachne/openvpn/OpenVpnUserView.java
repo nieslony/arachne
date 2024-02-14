@@ -94,7 +94,7 @@ public class OpenVpnUserView extends VerticalLayout {
                         = settings.getSettings(FirewallBasicsSettings.class);
                 try {
                     vpnSettings.save(settings);
-                    openvpnRestController.writeOpenVpnPluginConfig(
+                    openvpnRestController.writeOpenVpnPluginUserConfig(
                             vpnSettings,
                             firewallBasicsSettings
                     );

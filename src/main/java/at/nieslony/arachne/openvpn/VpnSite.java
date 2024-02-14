@@ -9,6 +9,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,14 +28,33 @@ import lombok.ToString;
 @ToString
 public class VpnSite extends AbstractSettingsGroup {
 
+    public enum SiteVerification {
+        NONE("No Verification"),
+        DNS("Hostname matches DNS A-record"),
+        WHITELIST("IP in Whitelist");
+
+        private SiteVerification(String label) {
+            this.label = label;
+        }
+
+        private final String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     private Integer id;
     private String name;
     private String description;
     private String remoteHost;
+    @Builder.Default
+    private SiteVerification siteVerification = SiteVerification.DNS;
+    @Builder.Default
+    private List<String> ipWhiteList = new LinkedList<>();
     private String sshUser;
     private String sshPrivateKey;
-    private String preSharedKey;
-
     @Builder.Default
     private boolean inheritDnsServers = true;
     @Builder.Default

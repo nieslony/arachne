@@ -62,6 +62,8 @@ import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
@@ -86,34 +88,42 @@ public class OpenVpnSiteView extends VerticalLayout {
     private class ComponentEnabler implements Consumer<Boolean> {
 
         final private HasEnabled component;
-        final private Checkbox inheritdCheckBox;
-        final private OnDefSiteEnabled onDefSiteEnabled;
+        final private Predicate<Boolean> condition;
+
+        ComponentEnabler(OnDefSiteEnabled onDefSiteEnabled, Supplier<Boolean> condition, HasEnabled component) {
+            this.component = component;
+            this.condition = (isDefaultSite) -> switch (onDefSiteEnabled) {
+                case DefSiteDisabled ->
+                    !isDefaultSite && condition.get();
+                case DefSiteEnabled ->
+                    isDefaultSite && condition.get();
+            };
+        }
 
         ComponentEnabler(OnDefSiteEnabled onDefSiteEnabled, HasEnabled component) {
             this.component = component;
-            this.inheritdCheckBox = null;
-            this.onDefSiteEnabled = onDefSiteEnabled;
+            this.condition = (isDefaultSite) -> switch (onDefSiteEnabled) {
+                case DefSiteDisabled ->
+                    !isDefaultSite;
+                case DefSiteEnabled ->
+                    isDefaultSite;
+            };
         }
 
         ComponentEnabler(Checkbox inheritedCheckbox, HasEnabled component) {
             this.component = component;
-            this.inheritdCheckBox = inheritedCheckbox;
-            this.onDefSiteEnabled = OnDefSiteEnabled.DefSiteEnabled;
+            this.condition = (isDefaultSite) -> {
+                inheritedCheckbox.setEnabled(!isDefaultSite);
+                return isDefaultSite || !inheritedCheckbox.getValue();
+            };
         }
 
         @Override
         public void accept(Boolean isDefaultSite) {
-            if (inheritdCheckBox == null) {
-                component.setEnabled(
-                        switch (onDefSiteEnabled) {
-                    case DefSiteDisabled ->
-                        !isDefaultSite;
-                    case DefSiteEnabled ->
-                        isDefaultSite;
-                });
-            } else {
-                component.setEnabled(isDefaultSite || !inheritdCheckBox.getValue());
-            }
+            logger.info("isDefaultSite: " + isDefaultSite.toString());
+            Boolean enable = condition.test(siteModified);
+            logger.info(component.toString() + ": " + enable.toString());
+            component.setEnabled(enable);
         }
     }
 
@@ -661,6 +671,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         remoteHostField = new TextField("Remote Host");
         remoteHostField.setWidthFull();
         remoteHostField.setValueChangeMode(ValueChangeMode.EAGER);
+        remoteHostField.setWidthFull();
         siteBinder.forField(remoteHostField)
                 .asRequired((v, vc) -> {
                     if (siteBinder.getBean().getId() == 0) {
@@ -681,23 +692,43 @@ public class OpenVpnSiteView extends VerticalLayout {
                 );
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 
-        preSharedKeyField = new TextArea("Preshared Key");
-        preSharedKeyField.setMinWidth(80, Unit.EM);
-        preSharedKeyField.setHeight(10, Unit.EX);
-        siteBinder.bind(preSharedKeyField,
-                VpnSite::getPreSharedKey,
-                VpnSite::setPreSharedKey
+        ComboBox<VpnSite.SiteVerification> siteVerificationField = new ComboBox<>("Site Verification");
+        siteVerificationField.setItems(VpnSite.SiteVerification.values());
+        siteVerificationField.setWidthFull();
+        siteBinder.forField(siteVerificationField)
+                .bind(VpnSite::getSiteVerification, VpnSite::setSiteVerification);
+
+        EditableListBox siteIpWhiteList = new EditableListBox("IP Whitelist") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new IpValidator();
+            }
+        };
+        siteBinder.bind(
+                siteIpWhiteList,
+                (source) -> source.getIpWhiteList(),
+                (source, value) -> source.setIpWhiteList(value)
         );
-        Button createPSKButton = new Button("Create", (e) -> {
-            preSharedKeyField.setValue(OpenVpnSiteSettings.createPreSharedKey());
-        });
-        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, preSharedKeyField));
+        nonDefaultComponents.add(new ComponentEnabler(
+                OnDefSiteEnabled.DefSiteEnabled,
+                () -> siteVerificationField.getValue().equals(VpnSite.SiteVerification.WHITELIST),
+                siteIpWhiteList
+        ));
 
         layout.add(
                 remoteHostField,
-                preSharedKeyField,
-                createPSKButton
+                siteVerificationField,
+                siteIpWhiteList
         );
+
+        nonDefaultComponents.add(
+                new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteVerificationField)
+        );
+        siteVerificationField.addValueChangeListener((e) -> {
+            siteIpWhiteList.setEnabled(
+                    e.getValue().equals(VpnSite.SiteVerification.WHITELIST)
+            );
+        });
 
         return layout;
     }
@@ -775,6 +806,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
+            openVpnRestController.writeOpenVpnPluginSiteConfig(openVpnSiteSettings);
             sites.setItems(openVpnSiteSettings.getVpnSites());
             logger.info(openVpnSiteSettings.getVpnSites().toString());
             siteModified = false;
@@ -808,7 +840,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private void onChangeSite(
             AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
     ) {
-        boolean isDefaultSiteSelected
+        Boolean isDefaultSiteSelected
                 = e.getValue() != null && e.getValue().getId() == 0;
 
         if (siteModified) {
@@ -851,6 +883,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         } else {
             logger.info("No site selected");
         }
+        logger.info("isdefaultSite: " + isDefaultSiteSelected.toString());
         enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }
