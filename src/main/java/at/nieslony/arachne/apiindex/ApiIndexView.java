@@ -16,6 +16,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -24,6 +25,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,7 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author claas
  */
 @Route(value = "api-index")
-@RolesAllowed("USER")
+@RolesAllowed("ADMIN")
 public class ApiIndexView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
@@ -207,13 +210,26 @@ public class ApiIndexView extends VerticalLayout {
         return enumNames;
     }
 
-    private Component getTypeInformation(Class<?> c) {
-        if (AbstractSettingsGroup.class.isAssignableFrom(c)) {
-            return getJsonParams(c);
-        } else if (c.isEnum()) {
-            return new Text("Enum " + getEnumNames(c).toString());
+    private Component getTypeInformation(Type returnType) {
+        if (returnType instanceof ParameterizedType pt) {
+            if (pt.getRawType().getTypeName().equals(List.class.getName())) {
+                return new Span(
+                        new Text("List of "),
+                        getTypeInformation(pt.getActualTypeArguments()[0])
+                );
+            } else {
+                return new Text("Unknown parameterized type: " + pt.toString());
+            }
+        } else if (returnType instanceof Class c) {
+            if (AbstractSettingsGroup.class.isAssignableFrom(c)) {
+                return getJsonParams(c);
+            } else if (c.isEnum()) {
+                return new Text("Enum " + getEnumNames(c).toString());
+            } else {
+                return new Text(c.getSimpleName());
+            }
         } else {
-            return new Text(c.getSimpleName());
+            return new Text(returnType.getTypeName());
         }
     }
 
@@ -226,10 +242,11 @@ public class ApiIndexView extends VerticalLayout {
             }
             if (Modifier.isPublic(method.getModifiers())) {
                 String name = method.getName();
-                String paramName = null;
+                String paramName;
                 if (name.startsWith("get")) {
                     paramName = Character.toLowerCase(name.charAt(3))
                             + name.substring(4);
+
                 } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
                     paramName = Character.toLowerCase(name.charAt(2))
                             + name.substring(3);
@@ -237,10 +254,10 @@ public class ApiIndexView extends VerticalLayout {
                     continue;
                 }
 
-                Component typeInfo = getTypeInformation(method.getReturnType());
-                if (paramName != null) {
-                    items.put(paramName, typeInfo);
-                }
+                items.put(
+                        paramName,
+                        getTypeInformation(method.getGenericReturnType())
+                );
             }
         }
 
