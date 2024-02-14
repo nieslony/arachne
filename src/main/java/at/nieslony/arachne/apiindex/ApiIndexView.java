@@ -54,6 +54,10 @@ public class ApiIndexView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
 
+    enum JsonMode {
+        READ, WRITE
+    }
+
     public ApiIndexView(ApiIndexBean apiIndexBean) {
         String urlPath = RouteConfiguration.forApplicationScope()
                 .getUrl(getClass());
@@ -214,7 +218,10 @@ public class ApiIndexView extends VerticalLayout {
                 body = new Div(
                         new Text("is required: " + (isRequired ? "yes" : "no")),
                         new HtmlComponent("br"),
-                        getTypeInformation(param.getType())
+                        getTypeInformation(
+                                param.getType(),
+                                JsonMode.WRITE
+                        )
                 );
                 continue;
             }
@@ -282,7 +289,9 @@ public class ApiIndexView extends VerticalLayout {
         if (returnType != void.class) {
             methodDetails.put(
                     new DescriptionList.Term("Returns"),
-                    new DescriptionList.Description(getTypeInformation(returnType))
+                    new DescriptionList.Description(
+                            getTypeInformation(returnType, JsonMode.READ)
+                    )
             );
         }
 
@@ -308,20 +317,20 @@ public class ApiIndexView extends VerticalLayout {
         return enumNames;
     }
 
-    private Component getTypeInformation(Type returnType) {
+    private Component getTypeInformation(Type returnType, JsonMode jsonMode) {
         if (returnType instanceof ParameterizedType pt) {
             if (pt.getRawType().getTypeName().equals(List.class.getName())
                     || pt.getRawType().getTypeName().equals(Set.class.getName())) {
                 return new Span(
                         new Text("List of "),
-                        getTypeInformation(pt.getActualTypeArguments()[0])
+                        getTypeInformation(pt.getActualTypeArguments()[0], jsonMode)
                 );
             } else if (pt.getRawType().getTypeName().equals(Map.class.getName())) {
                 return new Span(
                         new Text("Json map  of "),
-                        getTypeInformation(pt.getActualTypeArguments()[0]),
+                        getTypeInformation(pt.getActualTypeArguments()[0], jsonMode),
                         new Text(":"),
-                        getTypeInformation(pt.getActualTypeArguments()[1])
+                        getTypeInformation(pt.getActualTypeArguments()[1], jsonMode)
                 );
             } else {
                 return new Text("Unknown parameterized type: " + pt.toString());
@@ -330,12 +339,12 @@ public class ApiIndexView extends VerticalLayout {
             if (AbstractSettingsGroup.class.isAssignableFrom(c)
                     || c.isAnnotationPresent(Entity.class)
                     || c.isAnnotationPresent(ShowApiDetails.class)) {
-                return getJsonParams(c);
+                return getJsonParams(c, jsonMode);
             } else if (c.isEnum()) {
                 return new Text("Enum " + getEnumNames(c).toString());
             } else if (c.isAnnotationPresent(ShowApiType.class)) {
                 ShowApiType showApiType = (ShowApiType) c.getAnnotation(ShowApiType.class);
-                return getTypeInformation(showApiType.value());
+                return getTypeInformation(showApiType.value(), jsonMode);
             } else {
                 return new Text(c.getSimpleName());
             }
@@ -344,7 +353,7 @@ public class ApiIndexView extends VerticalLayout {
         }
     }
 
-    private Component getJsonParams(Class<?> c) {
+    private Component getJsonParams(Class<?> c, JsonMode jsonMode) {
         Map<String, Component> items = new HashMap<>();
 
         for (var method : c.getDeclaredMethods()) {
@@ -354,21 +363,37 @@ public class ApiIndexView extends VerticalLayout {
             if (Modifier.isPublic(method.getModifiers())) {
                 String name = method.getName();
                 String paramName;
-                if (name.startsWith("get")) {
-                    paramName = Character.toLowerCase(name.charAt(3))
-                            + name.substring(4);
-
-                } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
-                    paramName = Character.toLowerCase(name.charAt(2))
-                            + name.substring(3);
-                } else {
-                    continue;
+                switch (jsonMode) {
+                    case READ -> {
+                        if (name.startsWith("get")) {
+                            paramName = Character.toLowerCase(name.charAt(3))
+                                    + name.substring(4);
+                        } else if (name.startsWith("is") && method.getReturnType() == boolean.class) {
+                            paramName = Character.toLowerCase(name.charAt(2))
+                                    + name.substring(3);
+                        } else {
+                            continue;
+                        }
+                        items.put(
+                                paramName,
+                                getTypeInformation(method.getGenericReturnType(), jsonMode)
+                        );
+                    }
+                    case WRITE -> {
+                        if (name.startsWith("set") && method.getParameters().length == 1) {
+                            paramName = Character.toLowerCase(name.charAt(3))
+                                    + name.substring(4);
+                        } else {
+                            continue;
+                        }
+                        items.put(
+                                paramName,
+                                getTypeInformation(
+                                        method.getParameters()[0].getType(),
+                                        jsonMode)
+                        );
+                    }
                 }
-
-                items.put(
-                        paramName,
-                        getTypeInformation(method.getGenericReturnType())
-                );
             }
         }
 
