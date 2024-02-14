@@ -209,9 +209,18 @@ public class SiteConfigUploader {
             }
         });
 
-        sshKeys.setValue(sshKeyList.get(0));
         authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
 
+        dlg.addOpenedChangeListener((ocl) -> {
+            if (ocl.isOpened()) {
+                sshKeyList.clear();
+                sshKeyList.addAll(sshKeyRepository.findAll());
+                sshKeys.setItems(sshKeyList);
+                if (!sshKeyList.isEmpty()) {
+                    sshKeys.setValue(sshKeyList.get(0));
+                }
+            }
+        });
         return dlg;
     }
 

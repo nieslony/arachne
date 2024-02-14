@@ -150,7 +150,6 @@ public class OpenVpnSiteView extends VerticalLayout {
     private MenuBar siteConfigMenu;
 
     private TextField remoteHostField;
-    private TextArea preSharedKeyField;
 
     private Checkbox inheritDnsServers;
     private EditableListBox dnsServers;
@@ -797,7 +796,9 @@ public class OpenVpnSiteView extends VerticalLayout {
             sshPublicKey.setValue(entity.getPublicKey());
         });
 
-        sshKeys.setValue(sshKeyItems.get(0));
+        if (!sshKeyItems.isEmpty()) {
+            sshKeys.setValue(sshKeyItems.get(0));
+        }
 
         return layout;
     }
