@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -25,6 +26,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 @Getter
 @Setter
 @ToString
+@ShowApiDetails
 public class CertSpecs extends AbstractSettingsGroup {
 
     public enum CertSpecKey {

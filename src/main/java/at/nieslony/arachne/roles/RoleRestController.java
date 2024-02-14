@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.roles;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import jakarta.annotation.security.RolesAllowed;
@@ -44,8 +45,8 @@ public class RoleRestController {
 
     @GetMapping("/rules")
     @RolesAllowed(value = {"ADMIN"})
-    public Map<String, Object> findAllRoleRules() {
-        Map<String, Object> map = new HashMap<>();
+    public Map<String, List<RoleRuleModel>> findAllRoleRules() {
+        Map<String, List<RoleRuleModel>> map = new HashMap<>();
         List<RoleRuleModel> roleRules = roleRuleRepository.findAll();
         map.put("data", roleRules);
         return map;
@@ -89,6 +90,7 @@ public class RoleRestController {
 
     @Getter
     @RolesAllowed(value = {"ADMIN"})
+    @ShowApiDetails
     public class RoleInfo {
 
         public RoleInfo(Role r) {

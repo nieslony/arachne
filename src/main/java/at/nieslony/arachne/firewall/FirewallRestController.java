@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
@@ -63,6 +64,7 @@ public class FirewallRestController {
     @Setter
     @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @ShowApiDetails
     public class RichRule {
 
         private String destinationAddress;
