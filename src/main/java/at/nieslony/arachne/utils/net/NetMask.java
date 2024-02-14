@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.utils.net;
 
-import at.nieslony.arachne.utils.net.NetUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
