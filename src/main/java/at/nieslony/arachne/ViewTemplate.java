@@ -191,8 +191,10 @@ public class ViewTemplate extends AppLayout {
                         VaadinIcon.AUTOMATION.create()),
                 new SideNavItem("Recurring Tasks", RecurringTasksView.class,
                         VaadinIcon.CLOCK.create()),
-                new SideNavItem("API Index", ApiIndexView.class)
+                new SideNavItem("API Index", ApiIndexView.class,
+                        VaadinIcon.LIST.create())
         );
+
         servicesNav.setWidthFull();
 
         VerticalLayout layout = new VerticalLayout(
