@@ -694,6 +694,9 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteVerificationField.setWidthFull();
         siteBinder.forField(siteVerificationField)
                 .bind(VpnSite::getSiteVerification, VpnSite::setSiteVerification);
+        nonDefaultComponents.add(
+                new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteVerificationField)
+        );
 
         EditableListBox siteIpWhiteList = new EditableListBox("IP Whitelist") {
             @Override
@@ -720,9 +723,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                 siteIpWhiteList
         );
 
-        nonDefaultComponents.add(
-                new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteVerificationField)
-        );
         siteVerificationField.addValueChangeListener((e) -> {
             siteIpWhiteList.setEnabled(
                     e.getValue() != null
@@ -885,7 +885,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         } else {
             logger.info("No site selected");
         }
-        logger.info("isdefaultSite: " + isDefaultSiteSelected.toString());
         enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }
