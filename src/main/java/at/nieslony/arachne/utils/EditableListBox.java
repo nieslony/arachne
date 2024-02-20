@@ -20,6 +20,7 @@ import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -32,6 +33,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,8 @@ public class EditableListBox
     private Binder<String> binder;
     private TextField editField;
     private Button clearButton;
+    private Button loadDefaultsButton;
+    private Supplier<List<String>> defaultsSupplier = null;
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
@@ -69,15 +73,16 @@ public class EditableListBox
         editField = new TextField();
         editField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addButton = new Button(
-                "Add",
+                VaadinIcon.PLUS.create(),
                 e -> {
                     var items = getValue();
                     items.add(editField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
                 });
+        addButton.setTooltipText("Add");
         Button updateButton = new Button(
-                "Update",
+                VaadinIcon.REFRESH.create(),
                 e -> {
                     var items = getValue();
                     items.remove(itemsField.getValue());
@@ -85,17 +90,19 @@ public class EditableListBox
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
                 });
+        updateButton.setTooltipText("Update");
         updateButton.setEnabled(false);
         Button removeButton = new Button(
-                "Remove",
+                VaadinIcon.DEL_A.create(),
                 e -> {
                     var items = getValue();
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
                 });
+        removeButton.setTooltipText("Delete");
         removeButton.setEnabled(false);
-        clearButton = new Button("Clear",
+        clearButton = new Button(VaadinIcon.TRASH.create(),
                 (t) -> {
                     var items = getValue();
                     items.clear();
@@ -103,7 +110,17 @@ public class EditableListBox
                     setModelValue(new LinkedList<>(items), true);
                 }
         );
+        clearButton.setTooltipText("Delete All");
         clearButton.setEnabled(false);
+        loadDefaultsButton = new Button(
+                VaadinIcon.DOWNLOAD.create(),
+                (e) -> {
+                    if (defaultsSupplier != null) {
+                        setValue(defaultsSupplier.get());
+                    }
+                }
+        );
+        loadDefaultsButton.setVisible(false);
 
         getContent().add(
                 elbLabel,
@@ -113,7 +130,8 @@ public class EditableListBox
                         addButton,
                         updateButton,
                         removeButton,
-                        clearButton
+                        clearButton,
+                        loadDefaultsButton
                 )
         );
         itemsField.setWidthFull();
@@ -163,10 +181,21 @@ public class EditableListBox
 
     @Override
     public boolean valueEquals(List<String> l1, List<String> l2) {
-        logger.debug("l1: " + l1.toString());
-        logger.debug("l2: " + l2.toString());
         boolean eq = l1.equals(l2);
-        logger.debug(eq ? "equal" : "not equal");
         return eq;
+    }
+
+    public void setDefaultValuesSupplier(Supplier<List<String>> defaultsSupplier) {
+        setDefaultValuesSupplier(null, defaultsSupplier);
+    }
+
+    public void setDefaultValuesSupplier(String toolTipText, Supplier<List<String>> defaultsSupplier) {
+        this.defaultsSupplier = defaultsSupplier;
+        loadDefaultsButton.setVisible(true);
+        if (toolTipText == null || toolTipText.isEmpty()) {
+            loadDefaultsButton.setTooltipText("Load default values");
+        } else {
+            loadDefaultsButton.setTooltipText(toolTipText);
+        }
     }
 }
