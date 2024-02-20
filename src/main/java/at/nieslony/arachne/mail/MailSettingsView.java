@@ -80,7 +80,7 @@ import org.vaadin.pekka.WysiwygE;
  * @author claas
  */
 @Route(value = "mail-settings", layout = ViewTemplate.class)
-@PageTitle("E-Mail Settings | Arachne")
+@PageTitle("E-Mail Settings")
 @RolesAllowed("ADMIN")
 public class MailSettingsView extends VerticalLayout {
 
@@ -134,6 +134,7 @@ public class MailSettingsView extends VerticalLayout {
                 new Hr(),
                 buttons
         );
+        setPadding(false);
 
         tabs.setSelectedTab(null);
         tabs.addSelectedChangeListener((t) -> {

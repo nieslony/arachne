@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "admin-home", layout = ViewTemplate.class)
-@PageTitle("Arachne")
+@PageTitle("Admin Dashboard")
 @RolesAllowed("ADMIN")
 public class AdminHome
         extends VerticalLayout
@@ -52,7 +52,7 @@ public class AdminHome
         this.openVpnManagement = openVpnManagement;
 
         add(createConnectedUsersView());
-
+        setPadding(false);
     }
 
     private TimerTask createRefreshConnectedUsersTask() {
@@ -133,6 +133,7 @@ public class AdminHome
         onRefreshConnectedUsers();
 
         layout.add(refreshLayout, connectedUsersLabel, connectedUsersGrid);
+        layout.setPadding(false);
 
         return layout;
     }

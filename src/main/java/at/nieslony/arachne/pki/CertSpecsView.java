@@ -187,15 +187,15 @@ public class CertSpecsView
     @Override
     public String getPageTitle() {
         if (certSpecType == null) {
-            return "Ceritificate Specification | Arachne";
+            return "Ceritificate Specification";
         } else {
             return switch (certSpecType) {
                 case CA_SPEC:
-                    yield "Certificate Authority Specification | Arachne";
+                    yield "Certificate Authority Specification";
                 case SERVER_SPEC:
-                    yield "Server Certificate Specification | Arachne";
+                    yield "Server Certificate Specification";
                 case USER_SPEC:
-                    yield "User Certificate Specification | Arachne";
+                    yield "User Certificate Specification";
             };
         }
     }

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "roles", layout = ViewTemplate.class)
-@PageTitle("Roles | Arachne")
+@PageTitle("Roles")
 @RolesAllowed("ADMIN")
 public class RolesView extends VerticalLayout {
 
@@ -94,6 +94,7 @@ public class RolesView extends VerticalLayout {
         editRoleBuffered();
 
         add(topButtons, roleRules);
+        setPadding(false);
     }
 
     private void editRoleBuffered() {

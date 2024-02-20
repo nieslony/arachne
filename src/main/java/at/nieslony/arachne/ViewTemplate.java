@@ -21,12 +21,14 @@ import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
@@ -35,6 +37,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -49,12 +53,13 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author claas
  */
 @StyleSheet("/frontend/styles/styles.css")
-public class ViewTemplate extends AppLayout {
+public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
+    private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepositoty,
@@ -79,8 +84,8 @@ public class ViewTemplate extends AppLayout {
             userInfo = username;
         }
 
-        H1 logo = new H1("Arachne");
-        logo.getStyle()
+        H1 pageTitle = new H1("Arachne");
+        pageTitle.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
@@ -96,12 +101,14 @@ public class ViewTemplate extends AppLayout {
         }
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
-                logo,
+                pageTitle,
                 menuBar
         );
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        header.expand(logo);
+        header.expand(pageTitle);
         header.setWidth("100%");
+        header.setSpacing(false);
+        header.setPadding(false);
         header.addClassNames("py-0", "px-m");
 
         addToNavbar(header);
@@ -213,5 +220,34 @@ public class ViewTemplate extends AppLayout {
     void changePassword() {
         ChangePasswordDialog dlg = new ChangePasswordDialog(userRepository);
         dlg.open();
+    }
+
+    @Override
+    public void setContent(Component content) {
+        PageTitle title = content.getClass().getAnnotation(PageTitle.class);
+        if (title != null) {
+            pageTitleStr = title.value();
+        } else if (content instanceof HasDynamicTitle hdt) {
+            pageTitleStr = hdt.getPageTitle();
+        }
+
+        if (pageTitleStr != null) {
+            VerticalLayout layout = new VerticalLayout(
+                    new H2(pageTitleStr),
+                    content
+            );
+            super.setContent(layout);
+        } else {
+            super.setContent(content);
+        }
+    }
+
+    @Override
+    public String getPageTitle() {
+        if (pageTitleStr != null) {
+            return pageTitleStr + " | Arachne";
+        } else {
+            return "Arachne";
+        }
     }
 }

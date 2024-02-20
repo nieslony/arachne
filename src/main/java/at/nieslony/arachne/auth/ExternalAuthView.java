@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "kerberos", layout = ViewTemplate.class)
-@PageTitle("Kerberos| Arachne")
+@PageTitle("External Authentication")
 @RolesAllowed("ADMIN")
 public class ExternalAuthView extends VerticalLayout {
 
@@ -93,6 +93,7 @@ public class ExternalAuthView extends VerticalLayout {
         tabs.setWidthFull();
 
         add(tabs, saveButton);
+        setPadding(false);
     }
 
     private Component createKerberosView(Settings settings) {

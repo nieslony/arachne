@@ -65,7 +65,7 @@ import org.vaadin.olli.FileDownloadWrapper;
  * @author claas
  */
 @Route(value = "users", layout = ViewTemplate.class)
-@PageTitle("Users | Arachne")
+@PageTitle("Users")
 @RolesAllowed("ADMIN")
 public class UsersView extends VerticalLayout {
 
@@ -167,6 +167,7 @@ public class UsersView extends VerticalLayout {
         usersGrid.setItems(userDataProvider);
 
         add(buttons, usersGrid);
+        setPadding(false);
     }
 
     private Component getUserEditMenu(ArachneUser user, Editor<ArachneUser> editor) {
@@ -297,8 +298,7 @@ public class UsersView extends VerticalLayout {
                 cancelButton
         );
 
-        actions.setPadding(
-                false);
+        actions.setPadding(false);
         editColumn.setEditorComponent(actions);
 
         binder.addStatusChangeListener(
