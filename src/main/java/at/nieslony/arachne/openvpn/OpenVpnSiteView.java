@@ -76,7 +76,7 @@ import org.vaadin.olli.ClipboardHelper;
  * @author claas
  */
 @Route(value = "openvpn-site2site", layout = ViewTemplate.class)
-@PageTitle("OpenVPN Site 2 Site | Arachne")
+@PageTitle("OpenVPN Site to Site VPN")
 @RolesAllowed("ADMIN")
 public class OpenVpnSiteView extends VerticalLayout {
 
@@ -198,6 +198,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         binder.setBean(openVpnSiteSettings);
         binder.validate();
         enableNonDefaultCopmponents(true);
+        setPadding(false);
     }
 
     private Component createPageBasics() {
