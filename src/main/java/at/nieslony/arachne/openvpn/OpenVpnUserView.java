@@ -11,6 +11,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
+import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
@@ -376,6 +377,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 return new IpValidator();
             }
         };
+        editDnsServerField.setDefaultValuesSupplier(
+                "Default DNS Servers",
+                () -> NetUtils.getDnsServers()
+        );
         binder.bind(
                 editDnsServerField,
                 OpenVpnUserSettings::getPushDnsServers,
@@ -387,8 +392,11 @@ public class OpenVpnUserView extends VerticalLayout {
             protected Validator<String> getValidator() {
                 return new HostnameValidator();
             }
-
         };
+        searchDomainsField.setDefaultValuesSupplier(
+                "Default Search Domains",
+                () -> NetUtils.getDefaultSearchDomains()
+        );
         binder.bind(
                 searchDomainsField,
                 OpenVpnUserSettings::getDnsSearch,
@@ -412,6 +420,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 return new SubnetValidator(false);
             }
         };
+        pushRoutesField.setDefaultValuesSupplier(
+                "Default Routes",
+                () -> NetUtils.getDefaultPushRoutes()
+        );
 
         Checkbox routeInternetThroughVpn
                 = new Checkbox("Route Internet Traffic through VPN");
