@@ -49,7 +49,7 @@ import org.springframework.data.util.CastUtils;
  * @author claas
  */
 @Route(value = "tasks", layout = ViewTemplate.class)
-@PageTitle("Tasks | Arachne")
+@PageTitle("All Tasks")
 @RolesAllowed("ADMIN")
 public class TaskView extends VerticalLayout {
 
@@ -153,6 +153,7 @@ public class TaskView extends VerticalLayout {
                 createTaskMenu,
                 grid
         );
+        setPadding(false);
     }
 
     private String getTaskName(Class<? extends Task> c) {

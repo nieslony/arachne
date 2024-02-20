@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "openvpn-user", layout = ViewTemplate.class)
-@PageTitle("OpenVPN User | Arachne")
+@PageTitle("OpenVPN User VPN")
 @RolesAllowed("ADMIN")
 public class OpenVpnUserView extends VerticalLayout {
 
@@ -117,7 +117,9 @@ public class OpenVpnUserView extends VerticalLayout {
 
         add(
                 tabSheet,
-                saveSettings);
+                saveSettings
+        );
+        setPadding(false);
 
         binder.setBean(vpnSettings);
         binder.validate();

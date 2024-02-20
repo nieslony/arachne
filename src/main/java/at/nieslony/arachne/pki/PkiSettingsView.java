@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "pki", layout = ViewTemplate.class)
-@PageTitle("Pki | Arachne")
+@PageTitle("Pki")
 @RolesAllowed("ADMIN")
 public class PkiSettingsView extends VerticalLayout {
 
@@ -124,6 +124,7 @@ public class PkiSettingsView extends VerticalLayout {
                 crlLayout,
                 saveButton
         );
+        setPadding(false);
 
         binder.setBean(pkiSettings);
     }

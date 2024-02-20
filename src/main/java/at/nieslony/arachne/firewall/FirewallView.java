@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "firewall", layout = ViewTemplate.class)
-@PageTitle("Firewall | Arachne")
+@PageTitle("Firewall")
 @RolesAllowed("ADMIN")
 public class FirewallView extends VerticalLayout {
 
@@ -132,6 +132,7 @@ public class FirewallView extends VerticalLayout {
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(tabs, saveButton);
+        setPadding(false);
     }
 
     private Component createBasicsTab() {

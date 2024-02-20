@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "admin-home", layout = ViewTemplate.class)
-@PageTitle("Arachne")
+@PageTitle("Admin Dashboard")
 @RolesAllowed("ADMIN")
 public class AdminHome
         extends VerticalLayout
@@ -69,10 +69,10 @@ public class AdminHome
 
     public AdminHome(ArachneDbus arachneDbus) {
         this.arachneDbus = arachneDbus;
+        this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
 
         add(createConnectedUsersView());
-
-        this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
+        setPadding(false);
     }
 
     @PostConstruct
@@ -118,6 +118,7 @@ public class AdminHome
         onRefreshConnectedUsers();
 
         layout.add(refreshButton, connectedUsersLabel, connectedUsersGrid);
+        layout.setPadding(false);
 
         return layout;
     }

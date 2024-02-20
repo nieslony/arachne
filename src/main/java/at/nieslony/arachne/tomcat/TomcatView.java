@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "tomcat", layout = ViewTemplate.class)
-@PageTitle("Tomcat | Arachne")
+@PageTitle("Tomcat Settings")
 @RolesAllowed("ADMIN")
 public class TomcatView extends VerticalLayout {
 
@@ -158,5 +158,6 @@ public class TomcatView extends VerticalLayout {
                 settingsLayout,
                 saveAndRestartButton
         );
+        setPadding(false);
     }
 }
