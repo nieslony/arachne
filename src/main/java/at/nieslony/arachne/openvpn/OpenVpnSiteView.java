@@ -808,7 +808,8 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
-            openVpnRestController.writeOpenVpnPluginSiteConfig(openVpnSiteSettings);
+            openVpnRestController.writeOpenVpnPluginSiteConfig();
+            openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
             sites.setItems(openVpnSiteSettings.getVpnSites());
             logger.info(openVpnSiteSettings.getVpnSites().toString());
             siteModified = false;
