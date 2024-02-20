@@ -45,47 +45,67 @@ public class EditableListBox
     private static final Logger logger = LoggerFactory.getLogger(EditableListBox.class);
 
     private ListBox<String> itemsField;
-    private List<String> items;
     private Binder<String> binder;
     private TextField editField;
+    private Button clearButton;
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
         binder = new Binder<>();
-        items = new LinkedList<>();
 
         itemsField = new ListBox<>();
-        itemsField.setHeight(16, Unit.EM);
-        itemsField.getStyle()
-                .setBorder("1px solid var(--lumo-primary-color)")
-                .setBackground("var(--lumo-primary-color-10pct)");
+        itemsField.setHeight(30, Unit.EX);
+        itemsField.addClassNames(
+                LumoUtility.Border.ALL,
+                LumoUtility.BorderColor.PRIMARY,
+                LumoUtility.Background.PRIMARY_10
+        );
 
         NativeLabel elbLabel = new NativeLabel(label);
-        elbLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+        elbLabel.addClassNames(
+                LumoUtility.FontSize.SMALL,
+                LumoUtility.FontWeight.BOLD,
+                LumoUtility.TextColor.BODY
+        );
 
         editField = new TextField();
         editField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addButton = new Button(
                 "Add",
                 e -> {
+                    var items = getValue();
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         Button updateButton = new Button(
                 "Update",
                 e -> {
+                    var items = getValue();
                     items.remove(itemsField.getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         updateButton.setEnabled(false);
         Button removeButton = new Button(
                 "Remove",
                 e -> {
+                    var items = getValue();
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
         removeButton.setEnabled(false);
+        clearButton = new Button("Clear",
+                (t) -> {
+                    var items = getValue();
+                    items.clear();
+                    itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
+                }
+        );
+        clearButton.setEnabled(false);
 
         getContent().add(
                 elbLabel,
@@ -94,7 +114,8 @@ public class EditableListBox
                 new HorizontalLayout(
                         addButton,
                         updateButton,
-                        removeButton
+                        removeButton,
+                        clearButton
                 )
         );
         itemsField.setWidthFull();
@@ -127,20 +148,6 @@ public class EditableListBox
                 removeButton.setEnabled(false);
             }
         });
-
-        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
-    }
-
-    @Override
-    public void setValue(List<String> items) {
-        this.items.clear();
-        this.items.addAll(items);
-        itemsField.setItems(this.items);
-    }
-
-    @Override
-    public List<String> getValue() {
-        return new LinkedList<>(items);
     }
 
     protected Validator<String> getValidator() {
@@ -149,10 +156,17 @@ public class EditableListBox
 
     @Override
     protected void setPresentationValue(List<String> v) {
-        items.clear();
-        if (v != null) {
-            items.addAll(v);
-        }
-        itemsField.setItems(items);
+        v.removeIf((t) -> t == null || t.isEmpty() || t.isBlank());
+        itemsField.setItems(v);
+        clearButton.setEnabled(!v.isEmpty());
+    }
+
+    @Override
+    public boolean valueEquals(List<String> l1, List<String> l2) {
+        logger.debug("l1: " + l1.toString());
+        logger.debug("l2: " + l2.toString());
+        boolean eq = l1.equals(l2);
+        logger.debug(eq ? "equal" : "not equal");
+        return eq;
     }
 }
