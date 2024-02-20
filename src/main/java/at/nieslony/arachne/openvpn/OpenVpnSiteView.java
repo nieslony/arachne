@@ -454,6 +454,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteSettingsTab.add("Connection", createPageSitesConnection());
         siteSettingsTab.add("DNS", createPageSitesDns());
         siteSettingsTab.add("Routes", createPageSitesRoutes());
+        siteSettingsTab.setWidthFull();
 
         layout.add(
                 sitesLayout,
@@ -591,6 +592,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                         pushDomains
                 )
         );
+        layout.setMaxWidth(60, Unit.EM);
 
         return layout;
     }
@@ -602,9 +604,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 return new SubnetValidator(true);
             }
         };
-
-        Button defaultPushRoutes = new Button("Defails Push Routes",
-                (t) -> pushRoutes.setValue(NetUtils.getDefaultPushRoutes())
+        pushRoutes.setDefaultValuesSupplier(
+                "Default Push Routes",
+                () -> NetUtils.getDefaultPushRoutes()
         );
 
         siteBinder.bind(
@@ -617,14 +619,12 @@ public class OpenVpnSiteView extends VerticalLayout {
             boolean enabled = !e.getValue() || sites.getValue().getId() == 0;
             logger.info("value=" + e.getValue() + " siteId=" + sites.getValue().getId());
             pushRoutes.setEnabled(enabled);
-            defaultPushRoutes.setEnabled(enabled);
         });
         siteBinder.bind(
                 inheritPushRoutes,
                 VpnSite::isInheritPushRoutes,
                 VpnSite::setInheritPushRoutes
         );
-        nonDefaultComponents.add(new ComponentEnabler(inheritPushRoutes, defaultPushRoutes));
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritPushRoutes));
         nonDefaultComponents.add(new ComponentEnabler(inheritPushRoutes, pushRoutes));
 
@@ -648,13 +648,13 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 inheritPushRoutes,
-                defaultPushRoutes,
                 pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
                 )
         );
+        layout.setMaxWidth(30, Unit.EM);
 
         return layout;
     }
@@ -686,7 +686,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                 );
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 
-        ComboBox<VpnSite.SiteVerification> siteVerificationField = new ComboBox<>("Site Verification");
+        Select<VpnSite.SiteVerification> siteVerificationField = new Select<>();
+        siteVerificationField.setLabel("Site Verification");
         siteVerificationField.setItems(VpnSite.SiteVerification.values());
         siteVerificationField.setWidthFull();
         siteBinder.forField(siteVerificationField)
@@ -719,6 +720,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 siteVerificationField,
                 siteIpWhiteList
         );
+        layout.setMaxWidth(30, Unit.EM);
 
         siteVerificationField.addValueChangeListener((e) -> {
             siteIpWhiteList.setEnabled(
