@@ -54,12 +54,10 @@ public class EditableListBox
         binder = new Binder<>();
 
         itemsField = new ListBox<>();
-        itemsField.setHeight(30, Unit.EX);
-        itemsField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
+        itemsField.setHeight(16, Unit.EM);
+        itemsField.getStyle()
+                .setBorder("1px solid var(--lumo-primary-color)")
+                .setBackground("var(--lumo-primary-color-10pct)");
 
         NativeLabel elbLabel = new NativeLabel(label);
         elbLabel.addClassNames(
@@ -148,6 +146,8 @@ public class EditableListBox
                 removeButton.setEnabled(false);
             }
         });
+
+        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<String> getValidator() {

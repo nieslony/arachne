@@ -186,10 +186,7 @@ public class LdapView extends VerticalLayout {
                 usersFormLabel,
                 usersFormLayout
         );
-        usersLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
+        usersLayout.getStyle().setBorder("1px solid black");
 
         TextField groupsOu = new TextField("Groups OU");
         binder.forField(groupsOu)
@@ -249,10 +246,7 @@ public class LdapView extends VerticalLayout {
                 groupsLabel,
                 groupsFormLayout
         );
-        groupsLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
+        groupsLayout.getStyle().setBorder("1px solid black");
 
         MenuBar loadDefaultsMenu = new MenuBar();
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");
@@ -480,12 +474,7 @@ public class LdapView extends VerticalLayout {
 
         ListBox<LdapUrl> ldapUrlsField = new ListBox<>();
         ldapUrlsField.setHeight(24, Unit.EX);
-        ldapUrlsField.setItems(ldapSettings.getLdapUrls());
-        ldapUrlsField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
+        ldapUrlsField.getStyle().setBorder("1px solid black");
         ldapUrlsField.setWidthFull();
 
         Select<LdapProtocol> protocolField = new Select<>();

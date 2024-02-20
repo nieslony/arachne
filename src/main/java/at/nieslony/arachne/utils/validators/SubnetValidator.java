@@ -56,12 +56,16 @@ public class SubnetValidator implements Validator<String> {
         if (getPrefix != null) {
             prefix = getPrefix.get();
         } else {
-            String[] s = value.split("/");
-            if (s.length != 2) {
-                return ValidationResult.error("xxx.xxx.xxx.xxx/pp required");
+            String[] strs = value.split("/");
+            if (strs.length != 2) {
+                return ValidationResult.error("expected format: aaa.bbb.ccc.ddd/ee");
             }
-            value = s[0];
-            prefix = Integer.parseInt(s[1]);
+            try {
+                prefix = Integer.parseInt(strs[1]);
+            } catch (NumberFormatException ex) {
+                return ValidationResult.error(strs[1] + " is not an integer");
+            }
+            value = strs[0];
         }
         if (prefix < 1 || prefix > 32) {
             return ValidationResult.error("prefix not in 1…32");

@@ -90,6 +90,7 @@ public class ExternalAuthView extends VerticalLayout {
         TabSheet tabs = new TabSheet();
         tabs.add("Kerberos", createKerberosView(settings));
         tabs.add("Pre Authentication", createPreAuthView(settings));
+        tabs.setWidthFull();
 
         add(tabs, saveButton);
     }
@@ -175,7 +176,7 @@ public class ExternalAuthView extends VerticalLayout {
                 keytabPathField,
                 servicePrincipalLayout
         );
-        setMaxWidth(50, Unit.EM);
+        layout.setMaxWidth(50, Unit.EM);
 
         onUpdateEnableKerberos(enableKerberosAuthField.getValue());
 
@@ -193,6 +194,8 @@ public class ExternalAuthView extends VerticalLayout {
                 .bind(PreAuthSettings::isPreAuthtEnabled, PreAuthSettings::setPreAuthtEnabled);
 
         preAuthEnvVar = new TextField("Environment Variable");
+        preAuthEnvVar.setWidthFull();
+        preAuthEnvVar.setClearButtonVisible(true);
         preAuthBinder
                 .forField(preAuthEnvVar)
                 .asRequired()
@@ -204,6 +207,8 @@ public class ExternalAuthView extends VerticalLayout {
                 .bind(PreAuthSettings::isWriteApachePreAuthConfig, PreAuthSettings::setWriteApachePreAuthConfig);
 
         apacheKeytabFile = new TextField("Keytab Location");
+        apacheKeytabFile.setWidthFull();
+        apacheKeytabFile.setClearButtonVisible(true);
         preAuthBinder
                 .forField(apacheKeytabFile)
                 .bind(PreAuthSettings::getKeytabFile, PreAuthSettings::setKeytabFile);
@@ -222,6 +227,7 @@ public class ExternalAuthView extends VerticalLayout {
                 createApacheConfig,
                 apacheKeytabFile
         );
+        layout.setMaxWidth(50, Unit.EM);
 
         preAuthBinder.validate();
         onEnablePreAuthentication(preAuthEnabled.getValue());
