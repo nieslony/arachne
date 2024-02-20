@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.utils.validators;
 
-import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
@@ -26,24 +25,50 @@ public class SubnetValidator implements Validator<String> {
 
     private final boolean emptyAllowed;
     private final Supplier<Integer> getPrefix;
-    private final Supplier<NetMask> getNetMask;
+
+    public SubnetValidator() {
+        this.emptyAllowed = true;
+        this.getPrefix = null;
+    }
+
+    public SubnetValidator(boolean emptyAllowed) {
+        this.emptyAllowed = emptyAllowed;
+        this.getPrefix = null;
+    }
 
     public SubnetValidator(Supplier<Integer> getPrefix) {
         this.emptyAllowed = true;
         this.getPrefix = getPrefix;
-        this.getNetMask = null;
     }
 
     public SubnetValidator(boolean emptyAllowed, Supplier<Integer> getPrefix) {
         this.emptyAllowed = emptyAllowed;
         this.getPrefix = getPrefix;
-        this.getNetMask = null;
     }
 
     @Override
     public ValidationResult apply(String value, ValueContext vc) {
         if (emptyAllowed && (value == null || value.equals(""))) {
             return ValidationResult.ok();
+        }
+
+        int prefix;
+        if (getPrefix != null) {
+            prefix = getPrefix.get();
+        } else {
+            String[] strs = value.split("/");
+            if (strs.length != 2) {
+                return ValidationResult.error("expected format: aaa.bbb.ccc.ddd/ee");
+            }
+            try {
+                prefix = Integer.parseInt(strs[1]);
+            } catch (NumberFormatException ex) {
+                return ValidationResult.error(strs[1] + " is not an integer");
+            }
+            value = strs[0];
+        }
+        if (prefix < 1 || prefix > 32) {
+            return ValidationResult.error("prefix not in 1…32");
         }
 
         String[] bytesStr = value.split("\\.");
@@ -61,11 +86,6 @@ public class SubnetValidator implements Validator<String> {
             }
         } catch (NumberFormatException ex) {
             return ValidationResult.error(ERROR_MSG);
-        }
-
-        int prefix = getPrefix.get();
-        if (prefix < 1 || prefix > 32) {
-            return ValidationResult.error("prefix not in 1…32");
         }
 
         try {
