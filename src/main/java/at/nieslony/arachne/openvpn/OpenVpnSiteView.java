@@ -531,8 +531,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 return new IpValidator();
             }
         };
-        Button defaultDnsServers = new Button("Default DNS Servers",
-                (e) -> dnsServers.setValue(NetUtils.getDnsServers())
+        dnsServers.setDefaultValuesSupplier(
+                "Default DNS Servers",
+                () -> NetUtils.getDnsServers()
         );
 
         siteBinder.bind(
@@ -543,7 +544,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                 });
         inheritDnsServers = new Checkbox("Inherit");
         inheritDnsServers.addValueChangeListener((e) -> {
-            defaultDnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
             dnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
         });
         siteBinder.bind(
@@ -551,7 +551,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritDnsServers,
                 VpnSite::setInheritDnsServers
         );
-        nonDefaultComponents.add(new ComponentEnabler(inheritDnsServers, defaultDnsServers));
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritDnsServers));
         nonDefaultComponents.add(new ComponentEnabler(inheritDnsServers, dnsServers));
 
@@ -561,8 +560,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 return new HostnameValidator();
             }
         };
-        Button defaultPushDomains = new Button("Default Push Domains",
-                (e) -> pushDomains.setValue(NetUtils.getDefaultSearchDomains())
+        pushDomains.setDefaultValuesSupplier(
+                "Default Search Domains",
+                () -> NetUtils.getDefaultSearchDomains()
         );
         siteBinder.bind(
                 pushDomains,
@@ -571,7 +571,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         inheritPushDomains = new Checkbox("Inherit");
         inheritPushDomains.addValueChangeListener((e) -> {
-            defaultPushDomains.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
             pushDomains.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
         });
         siteBinder.bind(
@@ -579,19 +578,16 @@ public class OpenVpnSiteView extends VerticalLayout {
                 VpnSite::isInheritPushDomains,
                 VpnSite::setInheritPushDomains
         );
-        nonDefaultComponents.add(new ComponentEnabler(inheritPushDomains, defaultPushDomains));
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritPushDomains));
         nonDefaultComponents.add(new ComponentEnabler(inheritPushDomains, pushDomains));
 
         HorizontalLayout layout = new HorizontalLayout(
                 new VerticalLayout(
                         inheritDnsServers,
-                        defaultDnsServers,
                         dnsServers
                 ),
                 new VerticalLayout(
                         inheritPushDomains,
-                        defaultPushDomains,
                         pushDomains
                 )
         );
