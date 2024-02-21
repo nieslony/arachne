@@ -22,6 +22,7 @@ BuildRequires:  pkgconfig(systemd)
 Requires:       java-17-openjdk-headless
 Requires:       openvpn
 Requires:       openvpn-plugin-arachne
+Requires:       arachne-dbus
 
 Recommends:     httpd
 
@@ -200,13 +201,13 @@ fi
 - Add empty OpenVpnSiteView.java (github@nieslony.at)
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at> 1.3.3-1
-- 
+-
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at>
--  
+-
 
 * Sun Jan 21 2024 Claas Nieslony <github@nieslony.at> 1.3.2-1
-- 
+-
 
 * Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
 - Bump arachne version to 1.3.1 (claas@nieslony.at)
