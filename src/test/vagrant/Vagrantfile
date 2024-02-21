@@ -1,13 +1,16 @@
 hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
 arachne_repo = ENV['ARACHNE_REPO']
+arachne_copr = ENV['ARACHNE_COPR'] || "nieslony/arachne"
 
 if not arachne_repo
-    arachne_repo = "http://localhost/repo"
-    puts "Warning: environment variable ARACHNE_REPO not set, falling back to #{arachne_repo}"
+    arachne_repo = ""
+    puts "Warning: environment variable ARACHNE_REPO not set, falling back to copr repository"
 end
 
 Vagrant.configure("2") do |config|
-    config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
+    config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone", "vagrant-proxyconf" ]
+
+    config.timezone.value = :host
 
     config.vm.provider :libvirt do |libvirt|
         libvirt.cpus = 2
@@ -60,15 +63,20 @@ Vagrant.configure("2") do |config|
 
         arachne.vm.provision "Install arachne #{arachne.vm.hostname}",
             type: "shell",
-            args: [ arachne_repo ],
+            args: [ arachne_repo, arachne_copr ],
             inline: <<-SCRIPT
                 echo "--- Install updates on $HOSTNAME ---"
                 dnf update -y
 
                 REPO_URL=$1
-                echo "--- Install arachne from $REPO_URL ---"
-                dnf config-manager --add-repo $REPO_URL
-                dnf install arachne -y
+                if [ -z "$REPO_URL" ]; then
+                    echo "--- Enabling copr repository $2 ---"
+                    dnf -y copr enable $2 || exit 1
+                else
+                    echo "--- Install arachne from $REPO_URL ---"
+                    dnf config-manager --add-repo $REPO_URL || exit 1
+                fi
+                dnf install arachne -y || exit 1
 
                 ln -vs /var/lib/arachne/arachneconfig/arachne.conf \
                     /etc/httpd/conf.d/$HOSTNAME.conf.inc
