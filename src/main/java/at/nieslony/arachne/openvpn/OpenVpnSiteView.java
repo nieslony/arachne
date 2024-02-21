@@ -708,7 +708,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 (source, value) -> source.setIpWhiteList(value)
         );
         nonDefaultComponents.add(new ComponentEnabler(
-                OnDefSiteEnabled.DefSiteEnabled,
+                OnDefSiteEnabled.DefSiteDisabled,
                 ()
                 -> siteVerificationField.getValue() != null
                 && siteVerificationField.getValue().equals(VpnSite.SiteVerification.WHITELIST),
