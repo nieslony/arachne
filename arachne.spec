@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        0.1.3_testing
+Version:        0.1.3.git_2402212143_ad0faa6
 
 Release:        1
 License:        GPLv3
@@ -84,6 +84,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Feb 21 2024 Claas Nieslony <github@nieslony.at>
+- Add dependency (github@nieslony.at)
+
 * Wed Feb 21 2024 Claas Nieslony <github@nieslony.at>
 - Support copr (github@nieslony.at)
 - Add supported files (github@nieslony.at)
