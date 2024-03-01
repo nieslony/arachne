@@ -19,6 +19,8 @@ package at.nieslony.arachne.utils.validators;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,14 +30,29 @@ import java.util.regex.Pattern;
  */
 public class HostnameValidator implements Validator<String> {
 
-    private final boolean emptyAllowed;
-
-    public HostnameValidator(boolean emptyAllowed) {
-        this.emptyAllowed = emptyAllowed;
-    }
+    private boolean emptyAllowed;
+    private boolean ipAllowed;
+    private boolean resolvableRequired;
 
     public HostnameValidator() {
         this.emptyAllowed = true;
+        this.ipAllowed = false;
+        this.resolvableRequired = false;
+    }
+
+    public HostnameValidator withEmptyAllowed(boolean emptyAllowed) {
+        this.emptyAllowed = emptyAllowed;
+        return this;
+    }
+
+    public HostnameValidator withIpAllowed(boolean ipAllowed) {
+        this.ipAllowed = ipAllowed;
+        return this;
+    }
+
+    public HostnameValidator withResolvableRequired(boolean resolveRequired) {
+        this.resolvableRequired = resolveRequired;
+        return this;
     }
 
     @Override
@@ -49,9 +66,39 @@ public class HostnameValidator implements Validator<String> {
         );
         Matcher matcher = pattern.matcher(hostname);
         if (matcher.find()) {
+            if (resolvableRequired) {
+                try {
+                    InetAddress.getByName(hostname);
+                } catch (UnknownHostException ex) {
+                    return ValidationResult.error("Cannot resolve hostname ");
+                }
+            }
             return ValidationResult.ok();
-        } else {
-            return ValidationResult.error("Not a valid hostname");
         }
+        if (ipAllowed) {
+            String[] bytes = hostname.split("\\.");
+            if (bytes.length != 4) {
+                return ValidationResult.error(getErrorMsg());
+            }
+            try {
+                for (String b : bytes) {
+                    int intVal = Integer.parseInt(b);
+                    if (intVal < 0 || intVal > 255) {
+                        return ValidationResult.error(getErrorMsg());
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                return ValidationResult.error(getErrorMsg());
+            }
+            return ValidationResult.ok();
+        }
+
+        return ValidationResult.error(getErrorMsg());
+    }
+
+    private String getErrorMsg() {
+        return ipAllowed
+                ? "Not a valid hostname or IP address"
+                : "  Not a valid hostname";
     }
 }
