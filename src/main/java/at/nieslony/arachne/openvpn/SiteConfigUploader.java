@@ -11,6 +11,7 @@ import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -30,6 +31,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,13 +59,14 @@ public class SiteConfigUploader {
     @Setter
     private class SiteUploadSettings {
 
+        private String remoteHostName;
         private String username = "";
         private String password = "";
         private boolean sudoRequired = false;
         private boolean restartOpenVpn = false;
         private boolean enableOpenVpn = false;
         private String destinationFolder = "/etc/openvpn/server";
-        private SshAuthType sshAuthType;
+        private SshAuthType sshAuthType = USERNAME_PASSWORD;
         private SshKeyEntity sshKey;
     }
 
@@ -93,6 +96,10 @@ public class SiteConfigUploader {
     public void openDialog(VpnSite site) {
         dlg.setHeaderTitle("Upload Configuration to " + site.getRemoteHost());
         this.vpnSite = site;
+        if (uploadSettings.remoteHostName == null || uploadSettings.getRemoteHostName().isEmpty()) {
+            uploadSettings.setRemoteHostName(site.getRemoteHost());
+        }
+        binder.setBean(uploadSettings);
 
         dlg.open();
     }
@@ -100,13 +107,24 @@ public class SiteConfigUploader {
     private Dialog createUploadDialog() {
         dlg = new Dialog();
         binder = new Binder<>(SiteUploadSettings.class);
-        binder.setBean(uploadSettings);
 
         TextField destinationFolderField = new TextField("Destination folder");
         destinationFolderField.setWidthFull();
         binder.forField(destinationFolderField)
                 .asRequired()
                 .bind(SiteUploadSettings::getDestinationFolder, SiteUploadSettings::setDestinationFolder);
+
+        TextField remoteHostNameField = new TextField("Remote Host Name/IP");
+        remoteHostNameField.setWidthFull();
+        remoteHostNameField.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(remoteHostNameField)
+                .asRequired()
+                .withValidator(
+                        new HostnameValidator()
+                                .withIpAllowed(true)
+                                .withResolvableRequired(true)
+                )
+                .bind(SiteUploadSettings::getRemoteHostName, SiteUploadSettings::setRemoteHostName);
 
         TextField usernameField = new TextField("Username");
         usernameField.setWidthFull();
@@ -151,6 +169,7 @@ public class SiteConfigUploader {
                 .bind(SiteUploadSettings::getSshAuthType, SiteUploadSettings::setSshAuthType);
 
         VerticalLayout authLayout = new VerticalLayout(
+                remoteHostNameField,
                 usernameField,
                 authTypeSelect,
                 sshKeys,
@@ -196,16 +215,18 @@ public class SiteConfigUploader {
         });
 
         authTypeSelect.addValueChangeListener((e) -> {
-            switch ((SshAuthType) e.getValue()) {
-                case USERNAME_PASSWORD -> {
-                    passwordField.setEnabled(true);
-                    sshKeys.setEnabled(false);
-                }
-                case PUBLIC_KEY -> {
-                    passwordField.setEnabled(requireSudoField.getValue());
-                    sshKeys.setEnabled(true);
-                }
+            if (e.getValue() != null) {
+                switch (e.getValue()) {
+                    case USERNAME_PASSWORD -> {
+                        passwordField.setEnabled(true);
+                        sshKeys.setEnabled(false);
+                    }
+                    case PUBLIC_KEY -> {
+                        passwordField.setEnabled(requireSudoField.getValue());
+                        sshKeys.setEnabled(true);
+                    }
 
+                }
             }
         });
 
@@ -303,7 +324,7 @@ public class SiteConfigUploader {
         Notification notification = null;
 
         try {
-            session = ssh.getSession(uploadSettings.getUsername(), vpnSite.getRemoteHost());
+            session = ssh.getSession(uploadSettings.getUsername(), uploadSettings.getRemoteHostName());
             switch (uploadSettings.getSshAuthType()) {
                 case USERNAME_PASSWORD ->
                     session.setPassword(uploadSettings.getPassword());
@@ -366,7 +387,8 @@ public class SiteConfigUploader {
                 }
                 try {
                     Thread.sleep(1000);
-                } catch (Exception ee) {
+                } catch (InterruptedException ee) {
+                    logger.info("Upload interrupted");
                 }
             }
         } catch (IOException | JSchException ex) {
