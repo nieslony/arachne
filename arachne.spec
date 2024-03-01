@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        0.1.3.git_2402212143_ad0faa6
+Version:        0.1.3.git_2403011547_2b59921
 
 Release:        1
 License:        GPLv3
@@ -84,6 +84,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Mar 01 2024 Claas Nieslony <github@nieslony.at>
+- Specify destination host on upload (github@nieslony.at)
+- Remove some debugging code (github@nieslony.at)
+- - enable IPs allowed\n- enable DNS check (github@nieslony.at)
+- Replace constructor by with... (github@nieslony.at)
+
 * Wed Feb 21 2024 Claas Nieslony <github@nieslony.at>
 - Add dependency (github@nieslony.at)
 
