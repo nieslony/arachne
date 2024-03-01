@@ -690,7 +690,7 @@ public class FirewallView extends VerticalLayout {
         hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
         whereBinder.forField(hostnameField)
                 .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
-                        new HostnameValidator(false))
+                        new HostnameValidator().withEmptyAllowed(false))
                 )
                 .bind(FirewallWhere::getHostname, FirewallWhere::setHostname);
 

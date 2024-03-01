@@ -28,14 +28,15 @@ import java.util.regex.Pattern;
  */
 public class HostnameValidator implements Validator<String> {
 
-    private final boolean emptyAllowed;
-
-    public HostnameValidator(boolean emptyAllowed) {
-        this.emptyAllowed = emptyAllowed;
-    }
+    private boolean emptyAllowed;
 
     public HostnameValidator() {
         this.emptyAllowed = true;
+    }
+
+    public HostnameValidator withEmptyAllowed(boolean emptyAllowed) {
+        this.emptyAllowed = emptyAllowed;
+        return this;
     }
 
     @Override
