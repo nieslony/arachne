@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -467,7 +468,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         sites.addValueChangeListener(this::onChangeSite);
 
         siteBinder.addValueChangeListener((e) -> {
-            logger.info("------ Site modified. From client: " + e.isFromClient());
             siteModified |= e.isFromClient();
         });
 
@@ -617,7 +617,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         inheritPushRoutes = new Checkbox("Inherit");
         inheritPushRoutes.addValueChangeListener((e) -> {
             boolean enabled = !e.getValue() || sites.getValue().getId() == 0;
-            logger.info("value=" + e.getValue() + " siteId=" + sites.getValue().getId());
             pushRoutes.setEnabled(enabled);
         });
         siteBinder.bind(
@@ -810,7 +809,6 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnRestController.writeOpenVpnPluginSiteConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
             sites.setItems(openVpnSiteSettings.getVpnSites());
-            logger.info(openVpnSiteSettings.getVpnSites().toString());
             siteModified = false;
             sites.setValue(curSite);
         } catch (SettingsException ex) {
@@ -846,7 +844,6 @@ public class OpenVpnSiteView extends VerticalLayout {
                 = e.getValue() != null && e.getValue().getId() == 0;
 
         if (siteModified) {
-            logger.info("Site modified");
             if (e.isFromClient()) {
                 ConfirmDialog dlg = new ConfirmDialog(
                         "Unsaved Changes",
@@ -873,18 +870,12 @@ public class OpenVpnSiteView extends VerticalLayout {
                 dlg.open();
             }
         } else {
-            logger.info("Site not modified");
             if (e.getValue() != null) {
                 siteBinder.setBean(e.getValue());
             }
         }
         siteBinder.validate();
         siteBinder.refreshFields();
-        if (e.getValue() != null) {
-            logger.info("Selected site: " + e.getValue().toString());
-        } else {
-            logger.info("No site selected");
-        }
         enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }
