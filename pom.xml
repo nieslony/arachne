@@ -8,14 +8,14 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.3.5</vaadin.version>
+        <vaadin.version>24.3.6</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.3</version>
     </parent>
 
     <repositories>
@@ -159,7 +159,7 @@
         <dependency>
             <groupId>com.vaadin.componentfactory</groupId>
             <artifactId>autocomplete</artifactId>
-            <version>24.1.6</version>
+            <version>24.1.7</version>
         </dependency>
 
         <dependency>
