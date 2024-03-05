@@ -120,6 +120,7 @@ public class FirewallRestController {
     }
 
     @GetMapping("/everybody_rules")
+    @RolesAllowed(value = {"USER"})
     public FirewallEverybodyRules getEverybodyRules() {
         FirewallEverybodyRules firewallEveryBodyRules = new FirewallEverybodyRules();
         List<RichRule> richRules = new LinkedList<>();
