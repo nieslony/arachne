@@ -310,7 +310,7 @@ public class OpenVpnRestController {
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
         String userCertFn = "$HOME/.cert/arachne-%s.crt".formatted(username);
-        String caCertFn = "$HOME/.cert/arachne-%s.crt".formatted(vpnSettings.getRemote());
+        String caCertFn = "$HOME/.cert/arachne-ca-%s.crt".formatted(vpnSettings.getRemote());
         String privateKeyFn = "$HOME/.cert/arachne-%s.key".formatted(username);
         int port = vpnSettings.getListenPort();
 
@@ -342,14 +342,14 @@ public class OpenVpnRestController {
          */
         configWriter.append("vpn_opts=\"\n");
         if (!vpnSettings.getInternetThrouphVpn()) {
-            configWriter.append("    ipv4.never-default yes\"\n");
+            configWriter.append("    ipv4.never-default yes\n");
         }
         configWriter.append(
-                "    ipv4.dns-search %s\"\n"
+                "    ipv4.dns-search %s\n"
                         .formatted(String.join(",", vpnSettings.getDnsSearch()))
         );
         configWriter.append(
-                "    ipv4.dns %s\"\n"
+                "    ipv4.dns %s\n"
                         .formatted(String.join(",", vpnSettings.getPushDnsServers()))
         );
         configWriter.append("\"\n");
