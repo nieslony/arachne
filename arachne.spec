@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.3
+Version:        1.3.4
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,45 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Mar 10 2024 Claas Nieslony <github@nieslony.at>
+- Fix: shell syntax (github@nieslony.at)
+- UserMatcher matches user not username now\n- LdapGroupUserMatcher retruns
+  false for not LDAP users (github@nieslony.at)
+- Bump dependencies (github@nieslony.at)
+- Fix: make member final (github@nieslony.at)
+- API requires role (github@nieslony.at)
+- Add some documentation (github@nieslony.at)
+- Show page title above content (github@nieslony.at)
+- Set default values (github@nieslony.at)
+- Replace button text by icon, add optional default value supplier
+  (github@nieslony.at)
+- Merge from branch origin/openvpn-site (github@nieslony.at)
+- Merge from branch origin/master (github@nieslony.at)
+- - bump vaadin version\n- revert to older version of autocomplete
+  (github@nieslony.at)
+- Fix: styling (github@nieslony.at)
+- Make use of EditableListbox (github@nieslony.at)
+- Validate ip/prefix without supplier (github@nieslony.at)
+- Remove the arachne (github@nieslony.at)
+- Adjust widget width (github@nieslony.at)
+- Add icon (github@nieslony.at)
+- Handle json read and write differently (github@nieslony.at)
+- Remove debug message (github@nieslony.at)
+- Many GUI improvements for API index (github@nieslony.at)
+- Show Lists (github@nieslony.at)
+- Hide getLdapTemplate from Json (github@nieslony.at)
+- Fix links, show possible enum values (github@nieslony.at)
+- Hide some methdos from json (github@nieslony.at)
+- Hide methods from json, make TemplateConfigType public (github@nieslony.at)
+- TomcatView: GUI improvements (github@nieslony.at)
+- Enable message to info notofications (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Show more information (github@nieslony.at)
+- Add SiteNav item (github@nieslony.at)
+- Start woth API index (github@nieslony.at)
+- Fix: permissions on admin home page (github@nieslony.at)
+- removver logging (github@nieslony.at)
+
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at> 1.3.3-1
 - 
 
