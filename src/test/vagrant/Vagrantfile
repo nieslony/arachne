@@ -35,6 +35,13 @@ Vagrant.configure("2") do |config|
         arachne.vm.box = "generic/centos9s"
         arachne.timezone.value = :host
 
+        if File.exist?("provision.d/extra_vars.yml")
+            puts "Including extra_vars.yml"
+            inc_extra_vars = "provision.d/extra_vars.yml"
+        else
+            inc_extra_vars = {}
+        end
+
         Dir["provision.d/*"].each do |filename|
             case File.extname(filename)
                 when ".rb"
@@ -45,15 +52,21 @@ Vagrant.configure("2") do |config|
                     config.vm.provision "shell",
                         path: "#{filename}"
                 when ".yml"
-                    puts "Including #{filename} as Ansible Provisioner"
-                    ansible_cfg = "#{File.dirname(File.realdirpath(filename))}/ansible.cfg"
-                    if File.exist?(ansible_cfg)
-                        config.vm.provision "ansible",
-                            playbook: filename,
-                            config_file: ansible_cfg
+                    if filename == "provision.d/extra_vars.yml"
+                        puts "Ignoring extra_vars.yml"
                     else
-                        config.vm.provision "ansible",
-                            playbook: filename
+                        puts "Including #{filename} as Ansible Provisioner"
+                        ansible_cfg = "#{File.dirname(File.realdirpath(filename))}/ansible.cfg"
+                        if File.exist?(ansible_cfg)
+                            config.vm.provision "ansible",
+                                playbook: filename,
+                                extra_vars: inc_extra_vars,
+                                config_file: ansible_cfg
+                        else
+                            config.vm.provision "ansible",
+                                playbook: filename,
+                                extra_vars: inc_extra_vars
+                        end
                     end
                 else
                     puts "Ignoring #{filename}"
@@ -97,6 +110,10 @@ Vagrant.configure("2") do |config|
                 done
                 echo -n "Reload: "
                 firewall-cmd --reload
+
+                echo "--- Allow network connect ---"
+                setsebool httpd_can_network_connect=1
+                setsebool -P httpd_can_network_connect=1
 
                 if [ -e "/etc/httpd/krb5.keytab" ]; then
                     cp -v \
