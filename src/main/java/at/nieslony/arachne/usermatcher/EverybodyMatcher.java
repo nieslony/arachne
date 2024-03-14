@@ -4,6 +4,8 @@
  */
 package at.nieslony.arachne.usermatcher;
 
+import at.nieslony.arachne.users.ArachneUser;
+
 /**
  *
  * @author claas
@@ -16,7 +18,7 @@ public class EverybodyMatcher extends UserMatcher {
     }
 
     @Override
-    public boolean isUserMatching(String username) {
+    public boolean isUserMatching(ArachneUser user) {
         return true;
     }
 }

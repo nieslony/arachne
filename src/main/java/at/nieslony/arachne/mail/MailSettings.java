@@ -50,7 +50,7 @@ public class MailSettings extends AbstractSettingsGroup {
         PLAIN("Plain Text"),
         HTML("Html");
 
-        private String typeName;
+        private final String typeName;
 
         private TemplateConfigType(String tn) {
             typeName = tn;

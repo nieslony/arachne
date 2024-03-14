@@ -6,6 +6,7 @@ package at.nieslony.arachne.usermatcher;
 
 import at.nieslony.arachne.ldap.LdapGroup;
 import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUser;
 import org.slf4j.Logger;
@@ -29,10 +30,17 @@ public class LdapGroupUserMatcher extends UserMatcher {
     }
 
     @Override
-    public boolean isUserMatching(String username) {
-        logger.info("Try to match " + username);
+    public boolean isUserMatching(ArachneUser user) {
+        logger.info("Try to match " + user.getUsername());
         Settings settings = Settings.getInstance();
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+        String userSourceName = user.getExternalProvider();
+        if (userSourceName == null || !userSourceName.equals(LdapUserSource.getName())) {
+            logger.info(
+                    "User %s is not a LDAP user -> user doesn_t match"
+                            .formatted(user.getUsername()));
+            return false;
+        }
         if (!ldapSettings.isEnableLdapUserSource()) {
             logger.info("LDAP user source not enabled -> user does't match");
             return false;
@@ -41,11 +49,6 @@ public class LdapGroupUserMatcher extends UserMatcher {
             LdapGroup ldapGroup = ldapSettings.getGroup(this.parameter);
             if (ldapGroup == null) {
                 logger.info("Group %s not found".formatted(parameter));
-                return false;
-            }
-            ArachneUser user = ldapSettings.getUser(username);
-            if (user == null) {
-                logger.info("User %s not found".formatted(username));
                 return false;
             }
             return ldapGroup.hasMember(user);
