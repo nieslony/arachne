@@ -4,6 +4,8 @@
  */
 package at.nieslony.arachne.utils;
 
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
@@ -13,6 +15,9 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.dom.Style;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -20,68 +25,87 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
  */
 public class ShowNotification {
 
-    public static void info(String headerText) {
-        info(headerText, null);
+    private static final Logger logger = LoggerFactory.getLogger(ShowNotification.class);
+
+    public static void info(String msgText) {
+        createInfo(msgText, new Text("")).open();
     }
 
     public static void info(String headerText, String msgText) {
-        Notification notification = new Notification();
+        createInfo(headerText, new Text(msgText)).open();
+    }
 
-        Icon icon = VaadinIcon.CHECK_CIRCLE.create();
-        icon.setColor("var(--lumo-success-color)");
+    public static void info(String headerText, Component msg) {
+        createInfo(headerText, msg).open();
+    }
 
-        var header = new Div(headerText);
-        header.getStyle()
-                .set("font-weight", "600")
-                .setColor("var(--lumo-success-text-color)");
+    public static Notification createInfo(String headerText) {
+        return createInfo(headerText, (Component) null);
+    }
 
-        HorizontalLayout layout = new HorizontalLayout();
-        if (msgText != null) {
-            Div msg = new Div(msgText);
-            Div content = new Div(header, msg);
-            layout.add(
-                    icon,
-                    content,
-                    createCloseButton(notification)
-            );
-        } else {
-            layout.add(
-                    icon,
-                    header,
-                    createCloseButton(notification)
-            );
-        }
+    public static Notification createInfo(String headerText, String msgText) {
+        return createInfo(headerText, new Text(msgText));
+    }
 
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
-        notification.add(layout);
-        notification.setDuration(5000);
-        notification.setPosition(Notification.Position.MIDDLE);
+    public static Notification createInfo(String headerText, Component msg) {
+        Notification notification = createNotification(
+                VaadinIcon.CHECK_CIRCLE,
+                headerText,
+                "var(--lumo-success-text-color)",
+                msg);
+        notification.setDuration(10000);
 
-        notification.open();
+        return notification;
     }
 
     public static void error(String headerText, String msgText) {
-        Notification notification = new Notification();
+        createError(headerText, new Text(msgText)).open();
+    }
 
-        Icon icon = VaadinIcon.WARNING.create();
+    public static void error(String headerText, Component msg) {
+        createError(headerText, msg).open();
+    }
+
+    public static Notification createError(String headerText, String msgText) {
+        return createError(headerText, new Text(msgText));
+    }
+
+    public static Notification createError(String headerText, Component msg) {
+        Notification notification = createNotification(
+                VaadinIcon.WARNING,
+                headerText,
+                "var(--lumo-base-text-color)",
+                msg);
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+
+        return notification;
+    }
+
+    private static Notification createNotification(
+            VaadinIcon vaadinIcon,
+            String headerText,
+            String headerColor,
+            Component msg) {
+        Notification notification = new Notification();
+        HorizontalLayout layout = new HorizontalLayout();
+
+        Icon icon = vaadinIcon.create();
+        icon.setColor(headerColor);
 
         var header = new Div(headerText);
         header.getStyle()
-                .set("font-weight", "600");
-
-        var msg = new Div(msgText);
-        var content = new Div(header, msg);
-
-        HorizontalLayout layout = new HorizontalLayout(
+                .setFontWeight(Style.FontWeight.BOLD)
+                .setColor(headerColor);
+        layout.add(
                 icon,
-                content,
+                new Div(header, msg),
                 createCloseButton(notification)
         );
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
         notification.add(layout);
         notification.setPosition(Notification.Position.MIDDLE);
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        notification.open();
+        return notification;
     }
 
     private static Button createCloseButton(Notification notification) {
