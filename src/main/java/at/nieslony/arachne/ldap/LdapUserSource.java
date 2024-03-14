@@ -21,7 +21,10 @@ import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.ExternalUserSource;
 import at.nieslony.arachne.users.UserRepository;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.CommunicationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,6 +33,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LdapUserSource implements ExternalUserSource {
+
+    private static final Logger logger = LoggerFactory.getLogger(LdapUserSource.class);
 
     @Autowired
     private Settings settings;
@@ -44,7 +49,12 @@ public class LdapUserSource implements ExternalUserSource {
     @Override
     public ArachneUser findUser(String username) {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
-        ArachneUser user = ldapSettings.getUser(username);
+        ArachneUser user = null;
+        try {
+            user = ldapSettings.getUser(username);
+        } catch (CommunicationException ex) {
+            logger.error("Cannot connect to LDAP server: " + ex.getMessage());
+        }
         if (user == null) {
             return null;
         }

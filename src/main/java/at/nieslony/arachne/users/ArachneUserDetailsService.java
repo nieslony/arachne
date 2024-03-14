@@ -49,7 +49,10 @@ public class ArachneUserDetailsService implements UserDetailsService {
             String externalProvider = user.getExternalProvider();
             if (externalProvider != null) {
                 if (user.getExternalProvider().equals(LdapUserSource.getName())) {
-                    user.update(ldapUserSource.findUser(user.getUsername()));
+                    var updatedUser = ldapUserSource.findUser(user.getUsername());
+                    if (updatedUser != null) {
+                        user.update(updatedUser);
+                    }
                 }
             }
             Set<String> roles = rolesCollector.findRolesForUser(user);
