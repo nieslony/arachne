@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.3.6</vaadin.version>
+        <vaadin.version>24.3.7</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
@@ -124,7 +124,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20240205</version>
+            <version>20240303</version>
         </dependency>
 
         <dependency>
