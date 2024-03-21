@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        0.1.3.git_2403011547_2b59921
+Version:        0.1.3.git_2403211021_85d8b28
 
 Release:        1
 License:        GPLv3
@@ -84,6 +84,16 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Mar 21 2024 Claas Nieslony <github@nieslony.at> 0.1.3.git_2403211021_85d8b28-1
+- Show HTML messager (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2403011547_2b59921-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2402212143_ad0faa6-1]. (github@nieslony.at)
+- Add dependency (github@nieslony.at)
+- Automatic commit of package [arachne] release [0.1.3_testing-1].
+  (github@nieslony.at)
+
 <<<<<<< HEAD
 * Fri Mar 01 2024 Claas Nieslony <github@nieslony.at>
 =======
