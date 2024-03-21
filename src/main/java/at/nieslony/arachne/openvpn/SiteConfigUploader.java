@@ -16,6 +16,7 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -381,7 +382,10 @@ public class SiteConfigUploader {
                         String msg = HtmlUtils.htmlEscape(msgs.toString())
                                 .replaceAll("\n", "<br>");
                         logger.error(header + ": " + msg);
-                        notification = ShowNotification.createError(header, msg);
+                        notification = ShowNotification.createError(
+                                header,
+                                new Html(msg)
+                        );
                     }
                     break;
                 }
