@@ -6,6 +6,7 @@ package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,12 +26,14 @@ public class LdapRestController {
     Settings settings;
 
     @GetMapping("/settings")
+    @RolesAllowed(value = {"ADMIN"})
     public LdapSettings getSettings() {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         return ldapSettings;
     }
 
     @PutMapping("/settings")
+    @RolesAllowed(value = {"ADMIN"})
     public void putSettings(@RequestBody LdapSettings ldapSettings)
             throws SettingsException {
         ldapSettings.save(settings);

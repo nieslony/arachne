@@ -84,22 +84,32 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+<<<<<<< HEAD
 * Fri Mar 01 2024 Claas Nieslony <github@nieslony.at>
+=======
+* Thu Mar 21 2024 Claas Nieslony <github@nieslony.at> 1.3.5.git_2403211001_016b011-1
+- Bump dependencies (github@nieslony.at)
+- add extra_vars (github@nieslony.at)
+>>>>>>> openvpn-site
 - Specify destination host on upload (github@nieslony.at)
 - Remove some debugging code (github@nieslony.at)
 - - enable IPs allowed\n- enable DNS check (github@nieslony.at)
 - Replace constructor by with... (github@nieslony.at)
+<<<<<<< HEAD
 
 * Wed Feb 21 2024 Claas Nieslony <github@nieslony.at>
 - Add dependency (github@nieslony.at)
 
 * Wed Feb 21 2024 Claas Nieslony <github@nieslony.at>
+=======
+>>>>>>> openvpn-site
 - Support copr (github@nieslony.at)
 - Add supported files (github@nieslony.at)
 - Fix: enable whitelist on non default page (github@nieslony.at)
 - use EditableListBox's default button (github@nieslony.at)
 - use EditableListBox's default button (github@nieslony.at)
 - Fix:page title (github@nieslony.at)
+<<<<<<< HEAD
 - Show page title above content (github@nieslony.at)
 - Set default values (github@nieslony.at)
 - Replace button text by icon, add optional default value supplier
@@ -112,6 +122,8 @@ fi
 - Make use of EditableListbox (github@nieslony.at)
 - Validate ip/prefix without supplier (github@nieslony.at)
 - Remove the arachne (github@nieslony.at)
+=======
+>>>>>>> openvpn-site
 - Write plugin site configuration (github@nieslony.at)
 - Remove debug message (github@nieslony.at)
 - Fix: disable/enable cpomponents (github@nieslony.at)
@@ -120,6 +132,7 @@ fi
 - Write plugin config for site VPN, renme method (github@nieslony.at)
 - Remove useless import (github@nieslony.at)
 - Add createInfo(String headerText) (github@nieslony.at)
+<<<<<<< HEAD
 - Adjust widget width (github@nieslony.at)
 - Add icon (github@nieslony.at)
 - Handle json read and write differently (github@nieslony.at)
@@ -141,6 +154,12 @@ fi
 - Add getOpenVpnSiteRemoiteConfigName (github@nieslony.at)
 - Add Detach listener (github@nieslony.at)
 - Fix: permissions on admin home page (github@nieslony.at)
+=======
+- Replace FileDownloadWrapper by DynamicFileDownloader (github@nieslony.at)
+- standard fole name (github@nieslony.at)
+- Add getOpenVpnSiteRemoiteConfigName (github@nieslony.at)
+- Add Detach listener (github@nieslony.at)
+>>>>>>> openvpn-site
 - Add @PreDestroy (github@nieslony.at)
 - Enable polling (github@nieslony.at)
 - Configure status update interval (claas@nieslony.at)
@@ -148,7 +167,10 @@ fi
 - Make member final (claas@nieslony.at)
 - Enable push (claas@nieslony.at)
 - Add signal handler (claas@nieslony.at)
+<<<<<<< HEAD
 - removver logging (github@nieslony.at)
+=======
+>>>>>>> openvpn-site
 - Remove old openvpn management (claas@nieslony.at)
 - Replace OpenVpnManagement by ArachneDbus (claas@nieslony.at)
 - Replace OpenVpnManagement by ArachneDbus (claas@nieslony.at)
@@ -209,6 +231,53 @@ fi
 - Add OpenVpnSiteSettings.java (github@nieslony.at)
 - Add empty OpenVpnSiteView.java (github@nieslony.at)
 
+<<<<<<< HEAD
+=======
+* Thu Mar 14 2024 Claas Nieslony <github@nieslony.at>
+- Bump dependencies (github@nieslony.at)
+- Handle unavailable LDAP server on authentication (github@nieslony.at)
+- Allow components as message text (github@nieslony.at)
+
+* Sun Mar 10 2024 Claas Nieslony <github@nieslony.at>
+- Fix: shell syntax (github@nieslony.at)
+- UserMatcher matches user not username now\n- LdapGroupUserMatcher retruns
+  false for not LDAP users (github@nieslony.at)
+- Bump dependencies (github@nieslony.at)
+- Fix: make member final (github@nieslony.at)
+- API requires role (github@nieslony.at)
+- Add some documentation (github@nieslony.at)
+- Show page title above content (github@nieslony.at)
+- Set default values (github@nieslony.at)
+- Replace button text by icon, add optional default value supplier
+  (github@nieslony.at)
+- Merge from branch origin/openvpn-site (github@nieslony.at)
+- Merge from branch origin/master (github@nieslony.at)
+- - bump vaadin version\n- revert to older version of autocomplete
+  (github@nieslony.at)
+- Fix: styling (github@nieslony.at)
+- Make use of EditableListbox (github@nieslony.at)
+- Validate ip/prefix without supplier (github@nieslony.at)
+- Remove the arachne (github@nieslony.at)
+- Adjust widget width (github@nieslony.at)
+- Add icon (github@nieslony.at)
+- Handle json read and write differently (github@nieslony.at)
+- Remove debug message (github@nieslony.at)
+- Many GUI improvements for API index (github@nieslony.at)
+- Show Lists (github@nieslony.at)
+- Hide getLdapTemplate from Json (github@nieslony.at)
+- Fix links, show possible enum values (github@nieslony.at)
+- Hide some methdos from json (github@nieslony.at)
+- Hide methods from json, make TemplateConfigType public (github@nieslony.at)
+- TomcatView: GUI improvements (github@nieslony.at)
+- Enable message to info notofications (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Show more information (github@nieslony.at)
+- Add SiteNav item (github@nieslony.at)
+- Start woth API index (github@nieslony.at)
+- Fix: permissions on admin home page (github@nieslony.at)
+- removver logging (github@nieslony.at)
+
+>>>>>>> openvpn-site
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at> 1.3.3-1
 -
 

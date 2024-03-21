@@ -7,6 +7,7 @@ package at.nieslony.arachne.roles;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherDescription;
+import at.nieslony.arachne.users.ArachneUser;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class RolesCollector {
     @Autowired
     UserMatcherCollector userMatcherCollector;
 
-    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(String username, boolean isInternal) {
+    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(ArachneUser user, boolean isInternal) {
         Set<SimpleGrantedAuthority> auths = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -40,14 +41,14 @@ public class RolesCollector {
                     continue;
                 }
             }
-            if (userMatcher.isUserMatching(username)) {
+            if (userMatcher.isUserMatching(user)) {
                 auths.add(new SimpleGrantedAuthority(rrm.getRole().name()));
             }
         }
         return auths;
     }
 
-    public Set<String> findRolesForUser(String username) {
+    public Set<String> findRolesForUser(ArachneUser user) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -55,14 +56,14 @@ public class RolesCollector {
                     rrm.getUserMatcherClassName(),
                     rrm.getParameter()
             );
-            if (userMatcher.isUserMatching(username)) {
+            if (userMatcher.isUserMatching(user)) {
                 roles.add(rrm.getRole().name());
             }
         }
         return roles;
     }
 
-    public Set<String> findRoleDescriptionsForUser(String username) {
+    public Set<String> findRoleDescriptionsForUser(ArachneUser user) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -70,7 +71,7 @@ public class RolesCollector {
                     rrm.getUserMatcherClassName(),
                     rrm.getParameter()
             );
-            if (userMatcher.isUserMatching(username)) {
+            if (userMatcher.isUserMatching(user)) {
                 roles.add(rrm.getRole().toString());
             }
         }

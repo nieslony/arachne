@@ -16,6 +16,7 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -248,7 +249,7 @@ public class SiteConfigUploader {
     private String buildUploadCommand() {
         OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String configName = openVPnRestController.getOpenVpnSiteRemoiteConfigName(siteSettings, vpnSite);
-        String outputFile = "/tmp/%s.conf".formatted(configName);
+        String outputFile = "/tmp/%s".formatted(configName);
         String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
         StringWriter configWriter = new StringWriter();
         openVPnRestController.writeOpenVpnSiteRemoteConfig(vpnSite.getId(), configWriter);
@@ -381,7 +382,10 @@ public class SiteConfigUploader {
                         String msg = HtmlUtils.htmlEscape(msgs.toString())
                                 .replaceAll("\n", "<br>");
                         logger.error(header + ": " + msg);
-                        notification = ShowNotification.createError(header, msg);
+                        notification = ShowNotification.createError(
+                                header,
+                                new Html(msg)
+                        );
                     }
                     break;
                 }

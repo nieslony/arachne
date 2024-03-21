@@ -49,10 +49,13 @@ public class ArachneUserDetailsService implements UserDetailsService {
             String externalProvider = user.getExternalProvider();
             if (externalProvider != null) {
                 if (user.getExternalProvider().equals(LdapUserSource.getName())) {
-                    user.update(ldapUserSource.findUser(user.getUsername()));
+                    var updatedUser = ldapUserSource.findUser(user.getUsername());
+                    if (updatedUser != null) {
+                        user.update(updatedUser);
+                    }
                 }
             }
-            Set<String> roles = rolesCollector.findRolesForUser(user.getUsername());
+            Set<String> roles = rolesCollector.findRolesForUser(user);
             user.setRoles(roles);
             userRepository.save(user);
         }
@@ -67,12 +70,12 @@ public class ArachneUserDetailsService implements UserDetailsService {
 
         ArachneUser user = userRepository.findByUsername(username);
         if (user == null) {
-            logger.info("User found, try LDAP");
+            logger.info("User not found, try LDAP");
             user = ldapUserSource.findUser(username);
             if (user == null) {
                 throw new UsernameNotFoundException("User %s not found".formatted(username));
             }
-            Set<String> roles = rolesCollector.findRolesForUser(username);
+            Set<String> roles = rolesCollector.findRolesForUser(user);
             user.setRoles(roles);
             userRepository.save(user);
         } else {

@@ -144,7 +144,7 @@ public class SetupController {
                         setupData.getAdminEmail()
                 );
         adminUser.setRoles(
-                rolesCollector.findRolesForUser(setupData.getAdminUsername())
+                rolesCollector.findRolesForUser(adminUser)
         );
         userRepository.save(adminUser);
 

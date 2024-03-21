@@ -88,8 +88,8 @@ public class ExternalAuthView extends VerticalLayout {
         saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();
-        tabs.add("Kerberos", createKerberosView(settings));
         tabs.add("Pre Authentication", createPreAuthView(settings));
+        tabs.add("Kerberos", createKerberosView(settings));
         tabs.setWidthFull();
 
         add(tabs, saveButton);
