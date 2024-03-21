@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.4
+Version:        1.3.5
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Mar 14 2024 Claas Nieslony <github@nieslony.at>
+- Bump dependencies (github@nieslony.at)
+- Handle unavailable LDAP server on authentication (github@nieslony.at)
+- Allow components as message text (github@nieslony.at)
+
 * Sun Mar 10 2024 Claas Nieslony <github@nieslony.at>
 - Fix: shell syntax (github@nieslony.at)
 - UserMatcher matches user not username now\n- LdapGroupUserMatcher retruns
