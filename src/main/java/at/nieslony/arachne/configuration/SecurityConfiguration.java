@@ -188,8 +188,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     public void configure(WebSecurity web) throws Exception {
         // Customize your WebSecurity configuration.
-//        web.ignoring().requestMatchers("/unauthorized");
-//        web.ignoring().requestMatchers("/unauthorized");
         super.configure(web);
     }
 
