@@ -16,6 +16,8 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +39,10 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 /**
  *
@@ -53,6 +57,18 @@ import org.springframework.security.web.authentication.preauth.RequestAttributeA
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+
+    private static final String ERROR_401
+            = """
+            <html>
+                <head>
+                    <meta http-equiv="refresh" content="0; URL=/arachne/login" />
+                </head>
+                <body>
+                    Redirecting to login page...
+                </body>
+            </html>
+            """;
 
     @Autowired
     private Settings settings;
@@ -83,10 +99,40 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
 
         super.configure(http);
-        setLoginView(http, LoginOrSetupView.class);
+        setLoginView(http, LoginOrSetupView.class, "/arachne/login");
 
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
+        }
+        if (kerberosSettings.isEnableKrbAuth()) {
+            http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
+                    BasicAuthenticationFilter.class);
+            http.addFilterBefore(
+                    (req, res, fc) -> {
+                        HttpServletRequest httpRequest = (HttpServletRequest) req;
+                        HttpServletResponse httpResponse = (HttpServletResponse) res;
+                        var session = httpRequest.getSession(true);
+                        var userPrincipal = httpRequest.getUserPrincipal();
+
+                        if (userPrincipal == null
+                        && !httpRequest.getServletPath().equals("/login")
+                        && session.getAttribute("LoginPage") == null) {
+                            var writer = httpResponse.getWriter();
+                            writer.println(ERROR_401);
+                            httpResponse.addHeader("WWW-Authenticate", "Negotiate");
+                            httpResponse.setContentType("text/html; charset=iso-8859-1");
+                            httpResponse.setStatus(401);
+                            session.setAttribute("LoginPage", "yes");
+                        } else {
+                            fc.doFilter(req, res);
+//                            if (userPrincipal != null && userPrincipal instanceof KerberosServiceRequestToken) {
+                            if (userPrincipal != null) {
+                                session.setAttribute("LoginPage", null);
+                            }
+                        }
+                    },
+                    AuthorizationFilter.class
+            );
         }
     }
 
