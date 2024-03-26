@@ -127,7 +127,11 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                             fc.doFilter(req, res);
 //                            if (userPrincipal != null && userPrincipal instanceof KerberosServiceRequestToken) {
                             if (userPrincipal != null) {
-                                session.setAttribute("LoginPage", null);
+                                try {
+                                    session.setAttribute("LoginPage", null);
+                                } catch (IllegalStateException ex) {
+                                    logger.info("Session already invalidated");
+                                }
                             }
                         }
                     },
