@@ -16,8 +16,6 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +37,6 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
-import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -70,6 +67,16 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             </html>
             """;
 
+    public enum UnAuthorizedHandler {
+        None,
+        Error401,
+        FormLogin
+    }
+
+    public static String getUnAuthoAttr() {
+        return UnAuthorizedHandler.class.getName();
+    }
+
     @Autowired
     private Settings settings;
 
@@ -90,7 +97,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        SpnegoEntryPoint sep = new SpnegoEntryPoint("/login");
+        SpnegoEntryPoint sep = new SpnegoEntryPoint("/unauthorized");
         return sep;
     }
 
@@ -104,39 +111,72 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
         }
+        http.exceptionHandling((eh) -> {
+            eh.authenticationEntryPoint(spnegoEntryPoint());
+        });
         if (kerberosSettings.isEnableKrbAuth()) {
             http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
                     BasicAuthenticationFilter.class);
-            http.addFilterBefore(
+            /*http.addFilterBefore(
                     (req, res, fc) -> {
                         HttpServletRequest httpRequest = (HttpServletRequest) req;
                         HttpServletResponse httpResponse = (HttpServletResponse) res;
                         var session = httpRequest.getSession(true);
+                        logger.info("[%s] %s %s"
+                                .formatted(
+                                        httpRequest.getMethod(),
+                                        session.getId(),
+                                        httpRequest.getServletPath()
+                                )
+                        );
                         var userPrincipal = httpRequest.getUserPrincipal();
-
+                        if (session.getAttribute(getUnAuthoAttr()) == null) {
+                            session.setAttribute(
+                                    getUnAuthoAttr(),
+                                    UnAuthorizedHandler.None
+                            );
+                        }
                         if (userPrincipal == null
                         && !httpRequest.getServletPath().equals("/login")
-                        && session.getAttribute("LoginPage") == null) {
+                        && session.getAttribute(getUnAuthoAttr()) == UnAuthorizedHandler.None) {
                             var writer = httpResponse.getWriter();
                             writer.println(ERROR_401);
                             httpResponse.addHeader("WWW-Authenticate", "Negotiate");
                             httpResponse.setContentType("text/html; charset=iso-8859-1");
                             httpResponse.setStatus(401);
-                            session.setAttribute("LoginPage", "yes");
+                            session.setAttribute(
+                                    getUnAuthoAttr(),
+                                    UnAuthorizedHandler.Error401
+                            );
+                            logger.info("Error 401");
                         } else {
-                            fc.doFilter(req, res);
-//                            if (userPrincipal != null && userPrincipal instanceof KerberosServiceRequestToken) {
                             if (userPrincipal != null) {
-                                try {
-                                    session.setAttribute("LoginPage", null);
-                                } catch (IllegalStateException ex) {
-                                    logger.info("Session already invalidated");
+                                logger.info("Authtenticated as " + userPrincipal.getName());
+                            } else {
+                                logger.info("Not yet authenticated");
+                            }
+                            fc.doFilter(req, res);
+                            try {
+                                if (userPrincipal != null
+                                && userPrincipal instanceof KerberosServiceRequestToken ksrt
+                                && session.getAttribute(getUnAuthoAttr()) == UnAuthorizedHandler.Error401) {
+                                    try {
+                                        session.setAttribute(
+                                                getUnAuthoAttr(),
+                                                UnAuthorizedHandler.None
+                                        );
+                                        logger.info("AuthHandler -> None");
+                                    } catch (IllegalStateException ex) {
+                                        logger.info("Session already invalidated");
+                                    }
                                 }
+                            } catch (IllegalStateException ex) {
+                                logger.info("Session already invalidated");
                             }
                         }
                     },
                     AuthorizationFilter.class
-            );
+            );*/
         }
     }
 

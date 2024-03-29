@@ -81,6 +81,14 @@ public class LoginOrSetupView
             toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             toSSoButton.setWidthFull();
             login.getFooter().add(toSSoButton);
+            /*login.addLoginListener((ll) -> {
+                var session = VaadinSession.getCurrent().getSession();
+                session.setAttribute(
+                        getUnAuthoAttr(),
+                        SecurityConfiguration.UnAuthorizedHandler.FormLogin
+                );
+                logger.info("Form login successful");
+            });*/
         }
     }
 
