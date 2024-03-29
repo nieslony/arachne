@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.5
+Version:        1.3.6
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.6-1
+- Bump dependencies (github@nieslony.at)
+
 * Thu Mar 14 2024 Claas Nieslony <github@nieslony.at>
 - Bump dependencies (github@nieslony.at)
 - Handle unavailable LDAP server on authentication (github@nieslony.at)
