@@ -669,10 +669,17 @@ public class OpenVpnRestController {
         }
     }
 
-    public String getOpenVpnSiteRemoiteConfigName(
+    public String getOpenVpnSiteRemoteConfigFileName(
             OpenVpnSiteSettings siteSettings,
             VpnSite vpnSite
     ) {
-        return "arachne_%s_%s.conf".formatted(siteSettings.getRemote(), vpnSite.getRemoteHost());
+        return getOpenVpnSiteRemoteConfigName(siteSettings, vpnSite) + ".conf";
+    }
+
+    public String getOpenVpnSiteRemoteConfigName(
+            OpenVpnSiteSettings siteSettings,
+            VpnSite vpnSite
+    ) {
+        return "arachne_%s_%s".formatted(siteSettings.getRemote(), vpnSite.getRemoteHost());
     }
 }
