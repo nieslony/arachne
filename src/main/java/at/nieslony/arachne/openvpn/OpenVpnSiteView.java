@@ -430,7 +430,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 )
         );
         downloadComponent.setFileNameGenerator((vr) -> {
-            return openVpnRestController.getOpenVpnSiteRemoiteConfigName(
+            return openVpnRestController.getOpenVpnSiteRemoteConfigName(
                     openVpnSiteSettings,
                     sites.getValue()
             );

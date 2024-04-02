@@ -66,7 +66,7 @@ public class SiteConfigUploader {
         private boolean sudoRequired = false;
         private boolean restartOpenVpn = false;
         private boolean enableOpenVpn = false;
-        private String destinationFolder = "/etc/openvpn/server";
+        private String destinationFolder = "/etc/openvpn/client";
         private SshAuthType sshAuthType = USERNAME_PASSWORD;
         private SshKeyEntity sshKey;
     }
@@ -248,7 +248,8 @@ public class SiteConfigUploader {
 
     private String buildUploadCommand() {
         OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        String configName = openVPnRestController.getOpenVpnSiteRemoiteConfigName(siteSettings, vpnSite);
+        String configName = openVPnRestController.getOpenVpnSiteRemoteConfigName(siteSettings, vpnSite);
+        String configFileName = openVPnRestController.getOpenVpnSiteRemoteConfigFileName(siteSettings, vpnSite);
         String outputFile = "/tmp/%s".formatted(configName);
         String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
         StringWriter configWriter = new StringWriter();
@@ -267,11 +268,11 @@ public class SiteConfigUploader {
                         uploadSettings.getDestinationFolder()
                 ))
                 .append(uploadSettings.isRestartOpenVpn()
-                        ? "%s systemctl restart openvpn@%s || exit 1\n".formatted(sudo, configName)
+                        ? "%s SYSTEMD_COLORS=false systemctl restart openvpn-client@%s || exit 1\n".formatted(sudo, configName)
                         : ""
                 )
                 .append(uploadSettings.isEnableOpenVpn()
-                        ? "%s systemctl enable openvpn@%s || exit 1\n".formatted(sudo, configName)
+                        ? "%s SYSTEMD_COLORS=false systemctl enable openvpn-client@%s || exit 1\n".formatted(sudo, configName)
                         : ""
                 )
                 .append("sleep 1\n")
@@ -384,7 +385,7 @@ public class SiteConfigUploader {
                         logger.error(header + ": " + msg);
                         notification = ShowNotification.createError(
                                 header,
-                                new Html(msg)
+                                new Html("<text>" + msg + "</text>")
                         );
                     }
                     break;

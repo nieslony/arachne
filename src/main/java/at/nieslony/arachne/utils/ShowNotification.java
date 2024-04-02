@@ -40,7 +40,7 @@ public class ShowNotification {
     }
 
     public static Notification createInfo(String headerText) {
-        return createInfo(headerText, (Component) null);
+        return createInfo(headerText, new Text(""));
     }
 
     public static Notification createInfo(String headerText, String msgText) {
