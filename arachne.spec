@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.6
+Version:        1.3.8
 
 Release:        1
 License:        GPLv3
@@ -83,7 +83,6 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
-<<<<<<< HEAD
 * Thu Mar 21 2024 Claas Nieslony <github@nieslony.at> 1.3.5.git_2403211001_016b011-1
 - Bump dependencies (github@nieslony.at)
 - add extra_vars (github@nieslony.at)
@@ -175,10 +174,9 @@ fi
 - Add more settings (github@nieslony.at)
 - Add OpenVpnSiteSettings.java (github@nieslony.at)
 - Add empty OpenVpnSiteView.java (github@nieslony.at)
-=======
+
 * Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.6-1
 - Bump dependencies (github@nieslony.at)
->>>>>>> origin/master
 
 * Thu Mar 14 2024 Claas Nieslony <github@nieslony.at>
 - Bump dependencies (github@nieslony.at)
