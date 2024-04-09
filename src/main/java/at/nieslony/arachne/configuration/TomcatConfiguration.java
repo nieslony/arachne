@@ -5,23 +5,35 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.PreAuthSettings;
+import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.utils.net.NetUtils;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.ajp.AbstractAjpProtocol;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -36,6 +48,8 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +71,9 @@ public class TomcatConfiguration {
     @Autowired
     Settings settings;
 
+    @Autowired
+    Pki pki;
+
     @Value("${some.key:true}")
     boolean enableTomcatSsl;
 
@@ -77,8 +94,15 @@ public class TomcatConfiguration {
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             try (JcaPEMWriter pemWriter = new JcaPEMWriter(
                     new FileWriter(tomcatKeyPath))) {
-                pemWriter.writeObject(keyPair.getPrivate());
+                pemWriter.writeObject((PrivateKey) keyPair.getPrivate());
             }
+            Path path = Paths.get(tomcatKeyPath);
+
+            Set<PosixFilePermission> perms = new HashSet<>();
+            perms.add(PosixFilePermission.OWNER_READ);
+            perms.add(PosixFilePermission.OWNER_WRITE);
+            Files.setPosixFilePermissions(path, perms);
+
             return keyPair;
         } catch (NoSuchAlgorithmException | IOException ex) {
             logger.error("Cannot write key to %s: %s".formatted(
@@ -88,8 +112,8 @@ public class TomcatConfiguration {
         }
     }
 
-    // https://gamlor.info/posts-output/2019-10-29-java-create-certs-bouncy/en/
     private void createSslCertificate(KeyPair keyPair) {
+        logger.info("Creating SSL certificate " + tomcatCertPath);
         X509Certificate cert;
 
         String myHostname = NetUtils.myHostname();
@@ -109,10 +133,12 @@ public class TomcatConfiguration {
             certBuilder.addExtension(
                     Extension.subjectAlternativeName,
                     false,
-                    new GeneralNames(new GeneralName[]{
-                new GeneralName(GeneralName.dNSName, NetUtils.myDomain()),
-                new GeneralName(GeneralName.dNSName, NetUtils.myHostname()),
-                new GeneralName(GeneralName.dNSName, "localhost"),}
+                    new GeneralNames(
+                            new GeneralName[]{
+                                new GeneralName(GeneralName.dNSName, NetUtils.myDomain()),
+                                new GeneralName(GeneralName.dNSName, NetUtils.myHostname()),
+                                new GeneralName(GeneralName.dNSName, "localhost")
+                            }
                     )
             );
             ContentSigner certSigner = new JcaContentSignerBuilder("SHA256WithRSA")
@@ -134,6 +160,29 @@ public class TomcatConfiguration {
         }
     }
 
+    private KeyPair readSslKey() {
+        try (PemReader pemReader = new PemReader(new FileReader(tomcatKeyPath))) {
+            PemObject pemObject = pemReader.readPemObject();
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            byte[] content = pemObject.getContent();
+            PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
+            RSAPrivateKey privateKey = (RSAPrivateKey) factory.generatePrivate(privKeySpec);
+            PublicKey publicKey = factory.generatePublic(
+                    new RSAPublicKeySpec(
+                            privateKey.getModulus(),
+                            privateKey.getPrivateExponent()
+                    )
+            );
+            return new KeyPair(publicKey, privateKey);
+        } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
+            logger.error("Cannot read SSL key from %s: %s"
+                    .formatted(tomcatKeyPath, ex.getMessage())
+            );
+        }
+
+        return null;
+    }
+
     @Bean
     public TomcatServletWebServerFactory servletContainer() {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
@@ -142,15 +191,18 @@ public class TomcatConfiguration {
 
         if (enableTomcatSsl) {
             logger.info("Enabling Tomcat SSL");
-            Path keyPath = Paths.get(tomcatKeyPath);
-            if (!Files.exists(keyPath)) {
+            if (!Files.exists(Paths.get(tomcatKeyPath))) {
                 KeyPair keyPair = createSslKey();
+                createSslCertificate(keyPair);
+            } else if (!Files.exists(Paths.get(tomcatCertPath))) {
+                KeyPair keyPair = readSslKey();
                 createSslCertificate(keyPair);
             }
 
             Ssl ssl = new Ssl();
             ssl.setCertificate(tomcatCertPath);
             ssl.setCertificatePrivateKey(tomcatKeyPath);
+            ssl.setEnabled(true);
 
             tomcat.setSsl(ssl);
             tomcat.setPort(8443);
