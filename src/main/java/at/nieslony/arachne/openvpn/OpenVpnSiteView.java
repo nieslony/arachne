@@ -190,6 +190,24 @@ public class OpenVpnSiteView extends VerticalLayout {
         tabs.add("Sites", createPageSites());
         tabs.add("SSH keys", createPageSshKeys());
         tabs.setWidthFull();
+        tabs.addSelectedChangeListener((t) -> {
+            if (t.getSelectedTab().getLabel().equals("Sites")) {
+                var oldValue = sites.getOptionalValue();
+                var vpnSites = openVpnSiteSettings.getVpnSites();
+                logger.info(vpnSites.toString());
+                sites.setItems(vpnSites);
+                if (oldValue.isPresent()) {
+                    int oldId = oldValue.get().getId();
+                    if (openVpnSiteSettings.getSites().get(oldId) != null) {
+                        sites.setValue(oldValue.get());
+                    } else {
+                        sites.setValue(openVpnSiteSettings.getVpnSite(0));
+                    }
+                } else {
+                    sites.setValue(openVpnSiteSettings.getVpnSite(0));
+                }
+            }
+        });
 
         Button saveButton = new Button("Save", (t) -> onSaveSite());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -359,7 +377,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         sites.setItemLabelGenerator((site) -> site.label());
         sites.setLabel("Sites");
         sites.setWidthFull();
-        sites.setItems(openVpnSiteSettings.getVpnSites());
 
         Button renameButton = new Button(
                 "Rename...",
@@ -401,6 +418,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             setNameDescDialog(null, (site) -> {
                 sites.setItems(openVpnSiteSettings.getVpnSites());
                 sites.setValue(site);
+                siteBinder.validate();
                 logger.info("Created: " + site.toString());
             });
         });
@@ -874,8 +892,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 siteBinder.setBean(e.getValue());
             }
         }
-        siteBinder.validate();
         siteBinder.refreshFields();
+        siteBinder.validate();
+
         enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }
