@@ -24,7 +24,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -57,13 +57,14 @@ public class TomcatView extends VerticalLayout {
         Checkbox enableAjpField = new Checkbox("Enable AJP Connector");
         enableAjpField.setValue(true);
 
-        IntegerField ajpPortField = new IntegerField("Port");
+        IntegerField ajpPortField = new IntegerField("AJP Port");
         ajpPortField.setMin(1);
         ajpPortField.setMax(65535);
         ajpPortField.setStepButtonsVisible(true);
 
         TextField ajpLocationField = new TextField("Outsite Location");
         ajpLocationField.setClearButtonVisible(true);
+        ajpLocationField.setWidthFull();
 
         Checkbox enableAjpSecretField = new Checkbox("Enable AJP Secret");
         enableAjpField.addClassNames(LumoUtility.FlexWrap.NOWRAP);
@@ -75,14 +76,23 @@ public class TomcatView extends VerticalLayout {
                     ajpSecretField.setValue(tomcatSettings.createSecret());
                 }
         );
-        HorizontalLayout secretLayout = new HorizontalLayout();
-        secretLayout.add(
+        HorizontalLayout ajpSecretLayout = new HorizontalLayout();
+        ajpSecretLayout.add(
                 enableAjpSecretField,
                 ajpSecretField,
                 createSecret
         );
-        secretLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
-        secretLayout.setFlexGrow(1, ajpSecretField);
+        ajpSecretLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
+        ajpSecretLayout.setFlexGrow(1, ajpSecretField);
+        ajpSecretLayout.setWidthFull();
+
+        Checkbox httpsEnabledField = new Checkbox("Enable HTTPS");
+        httpsEnabledField.setValue(true);
+
+        IntegerField httpsPortField = new IntegerField("HTTPS Port");
+        httpsPortField.setMin(1);
+        httpsPortField.setMax(65535);
+        httpsPortField.setStepButtonsVisible(true);
 
         Button saveAndRestartButton = new Button(
                 "Save",
@@ -120,6 +130,10 @@ public class TomcatView extends VerticalLayout {
                 .bind(TomcatSettings::getAjpSecret, TomcatSettings::setAjpSecret);
         binder.forField(ajpLocationField)
                 .bind(TomcatSettings::getAjpLocation, TomcatSettings::setAjpLocation);
+        binder.forField(httpsEnabledField)
+                .bind(TomcatSettings::isHttpConnectorEnabled, TomcatSettings::setHttpConnectorEnabled);
+        binder.forField(httpsPortField)
+                .bind(TomcatSettings::getHttpsPort, TomcatSettings::setHttpsPort);
 
         enableAjpField.addValueChangeListener(
                 e -> {
@@ -141,21 +155,36 @@ public class TomcatView extends VerticalLayout {
                 e -> {
                     ajpSecretField.setEnabled(e.getValue());
                 });
+        httpsEnabledField.addValueChangeListener(
+                e -> {
+                    httpsPortField.setEnabled(e.getValue());
+                }
+        );
 
         binder.setBean(tomcatSettings);
         binder.validate();
 
-        FormLayout settingsLayout = new FormLayout(
-                ajpPortField,
-                ajpLocationField,
-                secretLayout
+        Details ajpDetails = new Details("AJP Connector",
+                new VerticalLayout(
+                        enableAjpField,
+                        ajpPortField,
+                        ajpLocationField,
+                        ajpSecretLayout
+                )
         );
-        settingsLayout.setMaxWidth(100, Unit.EX);
-        settingsLayout.setColspan(secretLayout, 2);
+        ajpDetails.setOpened(true);
+        ajpDetails.setMinWidth(50, Unit.EM);
+        Details httpsDetails = new Details("HTTPS Connector",
+                new VerticalLayout(
+                        httpsEnabledField,
+                        httpsPortField
+                )
+        );
+        httpsDetails.setOpened(true);
 
         add(
-                enableAjpField,
-                settingsLayout,
+                ajpDetails,
+                httpsDetails,
                 saveAndRestartButton
         );
         setPadding(false);
