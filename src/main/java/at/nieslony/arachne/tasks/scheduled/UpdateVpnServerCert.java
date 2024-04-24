@@ -37,15 +37,15 @@ import org.springframework.beans.factory.BeanFactory;
  *
  * @author claas
  */
-@TaskDescription(name = "Update Server Certificate")
+@TaskDescription(name = "Update VPN Server Certificate")
 @RecurringTaskDescription(
         defaulnterval = 7,
         timeUnit = ArachneTimeUnit.DAY,
         startAt = "01:00:00"
 )
-public class UpdateServerCert extends Task {
+public class UpdateVpnServerCert extends Task {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpdateServerCert.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpdateVpnServerCert.class);
 
     @Override
     public String run(BeanFactory beanFactory) throws Exception {

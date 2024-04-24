@@ -18,7 +18,8 @@ package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.tasks.scheduled.UpdateCrl;
 import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
-import at.nieslony.arachne.tasks.scheduled.UpdateServerCert;
+import at.nieslony.arachne.tasks.scheduled.UpdateVpnServerCert;
+import at.nieslony.arachne.tasks.scheduled.UpdateWebServerCertificate;
 import at.nieslony.arachne.utils.ArachneTimeUnit;
 import jakarta.annotation.PostConstruct;
 import java.util.Calendar;
@@ -252,9 +253,10 @@ public class TaskScheduler implements BeanFactoryAware {
 
     @PostConstruct
     public void init() {
-        taskTypes.add(UpdateServerCert.class);
+        taskTypes.add(UpdateVpnServerCert.class);
         taskTypes.add(UpdateDhParams.class);
         taskTypes.add(UpdateCrl.class);
+        taskTypes.add(UpdateWebServerCertificate.class);
 
         killTerminatedTasks();
         registerTaskTypes();
