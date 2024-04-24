@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "tomcat", layout = ViewTemplate.class)
-@PageTitle("Tomcat Settings")
+@PageTitle("Integrated Tomcat")
 @RolesAllowed("ADMIN")
 public class TomcatView extends VerticalLayout {
 
