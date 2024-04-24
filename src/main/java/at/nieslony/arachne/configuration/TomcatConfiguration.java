@@ -9,7 +9,6 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.utils.net.NetUtils;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -17,18 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -48,8 +41,6 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,9 +64,6 @@ public class TomcatConfiguration {
 
     @Autowired
     Pki pki;
-
-    @Value("${some.key:true}")
-    boolean enableTomcatSsl;
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -160,42 +148,16 @@ public class TomcatConfiguration {
         }
     }
 
-    private KeyPair readSslKey() {
-        try (PemReader pemReader = new PemReader(new FileReader(tomcatKeyPath))) {
-            PemObject pemObject = pemReader.readPemObject();
-            KeyFactory factory = KeyFactory.getInstance("RSA");
-            byte[] content = pemObject.getContent();
-            PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-            RSAPrivateKey privateKey = (RSAPrivateKey) factory.generatePrivate(privKeySpec);
-            PublicKey publicKey = factory.generatePublic(
-                    new RSAPublicKeySpec(
-                            privateKey.getModulus(),
-                            privateKey.getPrivateExponent()
-                    )
-            );
-            return new KeyPair(publicKey, privateKey);
-        } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
-            logger.error("Cannot read SSL key from %s: %s"
-                    .formatted(tomcatKeyPath, ex.getMessage())
-            );
-        }
-
-        return null;
-    }
-
     @Bean
     public TomcatServletWebServerFactory servletContainer() {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
-        if (enableTomcatSsl) {
+        if (tomcatSettings.isHttpConnectorEnabled()) {
             logger.info("Enabling Tomcat SSL");
             if (!Files.exists(Paths.get(tomcatKeyPath))) {
                 KeyPair keyPair = createSslKey();
-                createSslCertificate(keyPair);
-            } else if (!Files.exists(Paths.get(tomcatCertPath))) {
-                KeyPair keyPair = readSslKey();
                 createSslCertificate(keyPair);
             }
 
@@ -205,10 +167,11 @@ public class TomcatConfiguration {
             ssl.setEnabled(true);
 
             tomcat.setSsl(ssl);
-            tomcat.setPort(8443);
+            tomcat.setPort(tomcatSettings.getHttpsPort());
 
             Connector httpConnector = new Connector();
             httpConnector.setPort(8080);
+            httpConnector.setRedirectPort(8443);
             tomcat.addAdditionalTomcatConnectors(httpConnector);
         } else {
             logger.info("Tomcat SSL is disabled");
