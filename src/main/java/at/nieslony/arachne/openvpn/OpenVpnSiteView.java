@@ -500,7 +500,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteSettingsTab.add("Routes", createPageSitesRoutes());
         siteSettingsTab.setWidthFull();
 
-        Button saveSitesButton = new Button("Save Sites", (e) -> onSaveSite());
+        Button saveSitesButton = new Button("Save Site", (e) -> onSaveSite());
         saveSitesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         layout.add(
@@ -516,8 +516,9 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         siteBinder.addValueChangeListener((e) -> {
             siteModified |= e.isFromClient();
+            saveSitesButton.setEnabled(siteBinder.isValid());
         });
-
+        
         siteBinder.addStatusChangeListener((sce) -> {
             saveSitesButton.setEnabled(sce.getBinder().isValid());
         });

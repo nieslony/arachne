@@ -56,7 +56,8 @@ public class VpnSite {
     private String description;
     @Builder.Default
     private boolean defaultSite = false;
-    private String remoteHost;
+    @Builder.Default
+    private String remoteHost = "www.example.com";
     @Builder.Default
     private SiteVerification siteVerification = SiteVerification.DNS;
     @Builder.Default
