@@ -399,8 +399,10 @@ public class OpenVpnSiteView extends VerticalLayout {
                             (site) -> {
                                 try {
                                     site = vpnSiteController.addSite(site);
-                                    sites.setItems(vpnSiteController.getAll());
-                                    sites.setValue(site);
+                                    var allSites = vpnSiteController.getAll();
+                                    sites.setItems(allSites);
+                                    var setSite = vpnSiteController.getSite(site, allSites);
+                                    sites.setValue(setSite);
                                 } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
                                     logger.error(ex.getMessage());
                                 }
@@ -438,8 +440,9 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         Button addButton = new Button("Add...", (e) -> {
             setNameDescDialog(null, (site) -> {
-                sites.setItems(vpnSiteController.getAll());
-                sites.setValue(site);
+                var allSites = vpnSiteController.getAll();
+                sites.setItems(allSites);
+                sites.setValue(vpnSiteController.getSite(site, allSites));
                 siteBinder.validate();
                 logger.info("Created: " + site.toString());
             });
