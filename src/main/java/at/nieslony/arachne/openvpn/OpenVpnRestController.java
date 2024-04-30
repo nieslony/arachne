@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import java.util.Optional;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,9 @@ public class OpenVpnRestController {
 
     @Autowired
     private CertificateRepository certificateRepository;
+
+    @Autowired
+    private VpnSiteController vpnSiteController;
 
     @Value("${plugin_path}")
     String pluginPath;
@@ -484,9 +488,8 @@ public class OpenVpnRestController {
     }
 
     public void writeOpenVpnSiteServerSitesPluginConfig() {
-        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        for (VpnSite site : openVpnSiteSettings.getVpnSites()) {
-            if (site.getId() == 0) {
+        for (VpnSite site : vpnSiteController.getAll()) {
+            if (site.isDefaultSite()) {
                 continue;
             }
             String fileName = getSitePluginConf(site.getRemoteHost());
@@ -509,12 +512,8 @@ public class OpenVpnRestController {
     }
 
     public void writeOpenVpnSiteServerSitesConfig() {
-        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        VpnSite defaultSite = openVpnSiteSettings.getSites().get(0);
-        for (VpnSite site : openVpnSiteSettings.getVpnSites()) {
-            if (site.getId() == 0) {
-                continue;
-            }
+        VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
             String fileName
                     = "%s/%s".formatted(
                             folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR),
@@ -622,10 +621,14 @@ public class OpenVpnRestController {
         }
     }
 
-    public void writeOpenVpnSiteRemoteConfig(int siteId, Writer writer) {
+    public void writeOpenVpnSiteRemoteConfig(long siteId, Writer writer) {
         OpenVpnSiteSettings openVpnSiteSettings
                 = settings.getSettings(OpenVpnSiteSettings.class);
-        VpnSite site = openVpnSiteSettings.getSites().get(siteId);
+        Optional<VpnSite> site = vpnSiteController.getById(siteId);
+        if (site.isEmpty()) {
+            logger.error("Site %i not found".formatted(siteId));
+            return;
+        }
 
         try (PrintWriter pw = new PrintWriter(writer)) {
             pw.println(
@@ -655,14 +658,14 @@ public class OpenVpnRestController {
                    %s
                    </cert>
                    """
-                    .formatted(pki.getUserCertAsBase64(site.getRemoteHost()))
+                    .formatted(pki.getUserCertAsBase64(site.get().getRemoteHost()))
             );
             pw.println("""
                    <key>
                    %s
                    </key>
                    """
-                    .formatted(pki.getUserKeyAsBase64(site.getRemoteHost()))
+                    .formatted(pki.getUserKeyAsBase64(site.get().getRemoteHost()))
             );
         } catch (PkiException | SettingsException ex) {
             logger.error("Cannot write site remote configuration: " + ex.getMessage());

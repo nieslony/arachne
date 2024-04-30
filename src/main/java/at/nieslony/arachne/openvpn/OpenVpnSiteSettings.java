@@ -5,24 +5,18 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
-import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -47,62 +41,6 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private Integer keepaliveTimeout = 60;
     private Integer keepaliveInterval = 10;
     private List<Integer> vpnSiteIds = new LinkedList<>();
-
-    private final Map<Integer, VpnSite> sites = new HashMap<>();
-
-    public OpenVpnSiteSettings() {
-    }
-
-    public VpnSite getVpnSite(int id) {
-        return sites.get(id);
-    }
-
-    public Collection<VpnSite> getVpnSites() {
-        return sites.values();
-    }
-
-    @Override
-    public void load(Settings settings) throws SettingsException {
-        super.load(settings);
-        if (vpnSiteIds == null || vpnSiteIds.isEmpty()) {
-            addSite("Default", "Default Settings for all Sites");
-        } else {
-            for (int id : vpnSiteIds) {
-                VpnSite site = new VpnSite(settings, id);
-                sites.put(id, site);
-            }
-        }
-    }
-
-    @Override
-    public void save(Settings settings) throws SettingsException {
-        super.save(settings);
-        for (VpnSite site : sites.values()) {
-            site.save(settings);
-        }
-    }
-
-    @Transactional
-    public VpnSite addSite(String name, String description) {
-        logger.info("Adding site " + name);
-        int id = vpnSiteIds.stream().max(Integer::compare).orElse(-1) + 1;
-        VpnSite site = VpnSite.builder()
-                .id(id)
-                .name(name)
-                .description(description)
-                .build();
-        vpnSiteIds.add(id);
-        sites.put(id, site);
-        return site;
-    }
-
-    @Transactional
-    public void deleteSite(Settings settings, int id) {
-        logger.info("Removing site %d".formatted(id));
-        VpnSite site = sites.remove(id);
-        site.delete(settings);
-        vpnSiteIds.remove(id);
-    }
 
     public static String createPreSharedKey() {
         SecureRandom secureRandom;
