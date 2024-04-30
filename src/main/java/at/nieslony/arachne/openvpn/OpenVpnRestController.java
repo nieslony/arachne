@@ -17,6 +17,7 @@ import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -487,6 +488,23 @@ public class OpenVpnRestController {
         return "";
     }
 
+    public void prepareSiteClientDir() {
+        String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
+        try {
+            Files.createDirectories(Path.of(clientConfDirName));
+        } catch (IOException ex) {
+            logger.error("Cannot create %s: %s".formatted(clientConfDirName, ex.getMessage()));
+            return;
+        }
+        File clientConfDir = new File(clientConfDirName);
+        for (File f : clientConfDir.listFiles()) {
+            if (f.isFile()) {
+                logger.info("Removing " + f.getPath());
+                f.delete();
+            }
+        }
+    }
+
     public void writeOpenVpnSiteServerSitesPluginConfig() {
         for (VpnSite site : vpnSiteController.getAll()) {
             if (site.isDefaultSite()) {
@@ -513,13 +531,15 @@ public class OpenVpnRestController {
 
     public void writeOpenVpnSiteServerSitesConfig() {
         VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
+
         for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
             String fileName
                     = "%s/%s".formatted(
-                            folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR),
+                            clientConfDirName,
                             site.getRemoteHost()
                     );
-            logger.info("Creating site confiuration " + fileName);
+            logger.info("Creating site configuration " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 PrintWriter pw = new PrintWriter(fos);
                 writeConfigHeader(pw);

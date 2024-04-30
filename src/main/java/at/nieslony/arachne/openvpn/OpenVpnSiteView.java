@@ -518,7 +518,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             siteModified |= e.isFromClient();
             saveSitesButton.setEnabled(siteBinder.isValid());
         });
-        
+
         siteBinder.addStatusChangeListener((sce) -> {
             saveSitesButton.setEnabled(sce.getBinder().isValid());
         });
@@ -863,6 +863,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         try {
             vpnSiteController.saveSite(curSite);
+            openVpnRestController.prepareSiteClientDir();
             openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             siteModified = false;
