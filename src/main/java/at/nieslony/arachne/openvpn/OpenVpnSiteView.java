@@ -836,8 +836,13 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         sshKeys.addValueChangeListener((e) -> {
             SshKeyEntity entity = e.getValue();
-            sshPrivateKey.setValue(entity.getPrivateKey());
-            sshPublicKey.setValue(entity.getPublicKey());
+            if (entity != null) {
+                sshPrivateKey.setValue(entity.getPrivateKey());
+                sshPublicKey.setValue(entity.getPublicKey());
+            } else {
+                sshPrivateKey.setValue("");
+                sshPublicKey.setValue("");
+            }
         });
 
         if (!sshKeyItems.isEmpty()) {
