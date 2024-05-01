@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.8
+Version:        1.3.9
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,14 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.9-1
+- Bump dependencies (github@nieslony.at)
+- Bump to vaadin 24.3.9 (github@nieslony.at)
+- set key file permissisons (github@nieslony.at)
+- Enable SSL on port 8443, create RSA key and certificate if not exists
+  (github@nieslony.at)
+- Add version template (github@nieslony.at)
+
 * Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.8-1
 - add version
 
