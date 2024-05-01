@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.8
+Version:        1.3.10
 
 Release:        1
 License:        GPLv3
@@ -174,6 +174,25 @@ fi
 - Add more settings (github@nieslony.at)
 - Add OpenVpnSiteSettings.java (github@nieslony.at)
 - Add empty OpenVpnSiteView.java (github@nieslony.at)
+
+* Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.10-1
+- Document Tomcat Settings (github@nieslony.at)
+- Enable PreAuth with HTTP header (github@nieslony.at)
+- Configure Tomcat HTTPS (github@nieslony.at)
+
+* Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.9-1
+- Bump dependencies (github@nieslony.at)
+- Bump to vaadin 24.3.9 (github@nieslony.at)
+- set key file permissisons (github@nieslony.at)
+- Enable SSL on port 8443, create RSA key and certificate if not exists
+  (github@nieslony.at)
+- Add version template (github@nieslony.at)
+
+* Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.8-1
+- add version
+
+* Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.7-1
+- add version
 
 * Fri Mar 29 2024 Claas Nieslony <github@nieslony.at> 1.3.6-1
 - Bump dependencies (github@nieslony.at)

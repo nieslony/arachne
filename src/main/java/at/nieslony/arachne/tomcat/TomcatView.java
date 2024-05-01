@@ -17,14 +17,21 @@
 package at.nieslony.arachne.tomcat;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.pki.Pki;
+import at.nieslony.arachne.pki.PkiException;
+import at.nieslony.arachne.pki.UpdateWebServerCertificateException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.ShowNotification;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -35,35 +42,85 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
  * @author claas
  */
 @Route(value = "tomcat", layout = ViewTemplate.class)
-@PageTitle("Tomcat Settings")
+@PageTitle("Integrated Tomcat")
 @RolesAllowed("ADMIN")
 public class TomcatView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(TomcatView.class);
 
-    public TomcatView(Settings settings, TomcatService tomcatService) {
-        Binder<TomcatSettings> binder = new Binder<>(TomcatSettings.class);
-        TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
+    @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
+    String tomcatCertPath;
+
+    @Value("${tomcatKeyPath:${arachneConfigDir}/server.key}")
+    String tomcatKeyPath;
+
+    @Autowired
+    private Pki pki;
+
+    private final Settings settings;
+    private final TomcatService tomcatService;
+    private final FolderFactory folderFactory;
+    private final Binder<TomcatSettings> binder;
+    private TomcatSettings tomcatSettings;
+
+    public TomcatView(
+            Settings settings,
+            TomcatService tomcatService,
+            FolderFactory folderFactory
+    ) {
+        this.settings = settings;
+
+        this.tomcatService = tomcatService;
+        this.folderFactory = folderFactory;
+        this.binder = new Binder<>(TomcatSettings.class);
+    }
+
+    @PostConstruct
+    public void init() {
+        tomcatSettings = settings.getSettings(TomcatSettings.class);
+        Button saveAndRestartButton = new Button(
+                "Save",
+                e -> onSave()
+        );
+        saveAndRestartButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        add(
+                createAjpDetails(),
+                createHttpsDetails(),
+                saveAndRestartButton
+        );
+        setPadding(false);
+
+        binder.setBean(tomcatSettings);
+        binder.validate();
+    }
+
+    private Component createAjpDetails() {
 
         Checkbox enableAjpField = new Checkbox("Enable AJP Connector");
         enableAjpField.setValue(true);
 
-        IntegerField ajpPortField = new IntegerField("Port");
+        IntegerField ajpPortField = new IntegerField("AJP Port");
         ajpPortField.setMin(1);
         ajpPortField.setMax(65535);
         ajpPortField.setStepButtonsVisible(true);
 
         TextField ajpLocationField = new TextField("Outsite Location");
         ajpLocationField.setClearButtonVisible(true);
+        ajpLocationField.setWidthFull();
 
         Checkbox enableAjpSecretField = new Checkbox("Enable AJP Secret");
         enableAjpField.addClassNames(LumoUtility.FlexWrap.NOWRAP);
@@ -75,38 +132,15 @@ public class TomcatView extends VerticalLayout {
                     ajpSecretField.setValue(tomcatSettings.createSecret());
                 }
         );
-        HorizontalLayout secretLayout = new HorizontalLayout();
-        secretLayout.add(
+        HorizontalLayout ajpSecretLayout = new HorizontalLayout();
+        ajpSecretLayout.add(
                 enableAjpSecretField,
                 ajpSecretField,
                 createSecret
         );
-        secretLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
-        secretLayout.setFlexGrow(1, ajpSecretField);
-
-        Button saveAndRestartButton = new Button(
-                "Save",
-                e -> {
-                    try {
-                        tomcatSettings.save(settings);
-                        tomcatService.saveApacheConfig();
-                        ShowNotification.info(
-                                "Tomcat Configuration Saved",
-                                """
-                                You can also find a configuration for Apache
-                                HTTP Server at %s.
-
-                                Please copy or symlink it to your apache
-                                configuration folder e.g. /etc/httpt/conf.d and
-                                restart apache.
-                                """.formatted(tomcatService.getApacheConfigFileName())
-                        );
-                    } catch (SettingsException ex) {
-                        logger.error("Cannot save tomcat settings: " + ex.getMessage());
-                    }
-                    e.getSource().setEnabled(true);
-                });
-        saveAndRestartButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        ajpSecretLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
+        ajpSecretLayout.setFlexGrow(1, ajpSecretField);
+        ajpSecretLayout.setWidthFull();
 
         binder.forField(enableAjpField)
                 .bind(TomcatSettings::isEnableAjpConnector, TomcatSettings::setEnableAjpConnector);
@@ -142,22 +176,106 @@ public class TomcatView extends VerticalLayout {
                     ajpSecretField.setEnabled(e.getValue());
                 });
 
-        binder.setBean(tomcatSettings);
-        binder.validate();
-
-        FormLayout settingsLayout = new FormLayout(
-                ajpPortField,
-                ajpLocationField,
-                secretLayout
+        Details ajpDetails = new Details("AJP Connector",
+                new VerticalLayout(
+                        enableAjpField,
+                        ajpPortField,
+                        ajpLocationField,
+                        ajpSecretLayout
+                )
         );
-        settingsLayout.setMaxWidth(100, Unit.EX);
-        settingsLayout.setColspan(secretLayout, 2);
+        ajpDetails.setOpened(true);
+        ajpDetails.setMinWidth(50, Unit.EM);
 
-        add(
-                enableAjpField,
-                settingsLayout,
-                saveAndRestartButton
+        return ajpDetails;
+    }
+
+    private Component createHttpsDetails() {
+
+        Checkbox httpsEnabledField = new Checkbox("Enable HTTPS");
+        httpsEnabledField.setValue(true);
+
+        IntegerField httpsPortField = new IntegerField("HTTPS Port");
+        httpsPortField.setMin(1);
+        httpsPortField.setMax(65535);
+        httpsPortField.setStepButtonsVisible(true);
+
+        Checkbox httpsServerCertAsWebCertField = new Checkbox(
+                "Use Server Certificate from Internal CA for Web Server"
         );
-        setPadding(false);
+        HorizontalLayout certIsSymlinkHint = new HorizontalLayout(
+                VaadinIcon.WARNING.create(),
+                new Text(
+                        """
+                        %s/server.crt and/or %s/server.key exist but are not
+                        files.
+                        They cannot be replaced by internal certificate.
+                        """.formatted(
+                                folderFactory.getArachneConfigDir(),
+                                folderFactory.getArachneConfigDir()
+                        )
+                )
+        );
+        if (!isCertWritable()) {
+            httpsServerCertAsWebCertField.setEnabled(false);
+        } else {
+            certIsSymlinkHint.setVisible(false);
+        }
+
+        binder.forField(httpsEnabledField)
+                .bind(TomcatSettings::isHttpConnectorEnabled, TomcatSettings::setHttpConnectorEnabled);
+        binder.forField(httpsPortField)
+                .bind(TomcatSettings::getHttpsPort, TomcatSettings::setHttpsPort);
+        binder.forField(httpsServerCertAsWebCertField)
+                .bind(TomcatSettings::isServerCertAsWebCert, TomcatSettings::setServerCertAsWebCert);
+
+        httpsEnabledField.addValueChangeListener(
+                e -> {
+                    httpsPortField.setEnabled(e.getValue());
+                }
+        );
+
+        Details httpsDetails = new Details("HTTPS Connector",
+                new VerticalLayout(
+                        httpsEnabledField,
+                        httpsPortField,
+                        httpsServerCertAsWebCertField,
+                        certIsSymlinkHint
+                )
+        );
+        httpsDetails.setOpened(true);
+
+        return httpsDetails;
+    }
+
+    private boolean isCertWritable() {
+        File certFile = new File(tomcatCertPath);
+        File keyFile = new File(tomcatKeyPath);
+        return (certFile.isFile() && keyFile.isFile())
+                || (!certFile.exists() && !certFile.exists());
+    }
+
+    private void onSave() {
+        try {
+            pki.updateWebServerCertificate();
+            tomcatSettings.save(settings);
+            tomcatService.saveApacheConfig();
+            ShowNotification.info(
+                    "Tomcat Configuration Saved",
+                    """
+                                You can also find a configuration for Apache
+                                HTTP Server at %s.
+
+                                Please copy or symlink it to your apache
+                                configuration folder e.g. /etc/httpt/conf.d and
+                                restart apache.
+                                """.formatted(tomcatService.getApacheConfigFileName())
+            );
+        } catch (UpdateWebServerCertificateException ex) {
+            logger.error(ex.getMessage());
+            ShowNotification.error("Cannot write %s", ex.getRoorMessage());
+        } catch (SettingsException | PkiException ex) {
+            logger.error("Cannot save tomcat settings: " + ex.getMessage());
+        }
     }
 }
