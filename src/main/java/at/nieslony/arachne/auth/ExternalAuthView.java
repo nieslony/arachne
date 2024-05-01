@@ -34,6 +34,8 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -70,7 +72,9 @@ public class ExternalAuthView extends VerticalLayout {
     private Binder<KerberosSettings> kerberosBinder;
 
     private Checkbox preAuthEnabled;
+    private RadioButtonGroup<PreAuthSettings.PreAuthSource> preAuthSource;
     private TextField preAuthEnvVar;
+    private TextField preAuthHttpHeader;
     private Checkbox createApacheConfig;
     private TextField apacheKeytabFile;
 
@@ -202,6 +206,34 @@ public class ExternalAuthView extends VerticalLayout {
                 .asRequired()
                 .bind(PreAuthSettings::getEnvironmentVariable, PreAuthSettings::setEnvironmentVariable);
 
+        preAuthHttpHeader = new TextField("HTTP Header");
+        preAuthHttpHeader.setWidthFull();
+        preAuthHttpHeader.setClearButtonVisible(true);
+        preAuthBinder
+                .forField(preAuthHttpHeader)
+                .asRequired()
+                .bind(PreAuthSettings::getHttpHeader, PreAuthSettings::setHttpHeader);
+
+        preAuthSource = new RadioButtonGroup<>();
+        preAuthSource.setLabel("Authentication Source");
+        preAuthSource.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+        preAuthSource.setItems(PreAuthSettings.PreAuthSource.values());
+        preAuthSource.setWidthFull();
+        preAuthSource.addValueChangeListener((e) -> {
+            switch (e.getValue()) {
+                case ENVIRONMENT_VARIABLE -> {
+                    preAuthEnvVar.setVisible(true);
+                    preAuthHttpHeader.setVisible(false);
+                }
+                case HTTP_HEADER -> {
+                    preAuthEnvVar.setVisible(false);
+                    preAuthHttpHeader.setVisible(true);
+                }
+            }
+        });
+        preAuthBinder.forField(preAuthSource)
+                .bind(PreAuthSettings::getPreAuthSource, PreAuthSettings::setPreAuthSource);
+
         createApacheConfig = new Checkbox("Create Apache Configuration");
         preAuthBinder
                 .forField(createApacheConfig)
@@ -224,7 +256,9 @@ public class ExternalAuthView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 preAuthEnabled,
+                preAuthSource,
                 preAuthEnvVar,
+                preAuthHttpHeader,
                 createApacheConfig,
                 apacheKeytabFile
         );
@@ -244,6 +278,7 @@ public class ExternalAuthView extends VerticalLayout {
     }
 
     private void onEnablePreAuthentication(boolean enable) {
+        preAuthSource.setEnabled(enable);
         preAuthEnvVar.setEnabled(enable);
         createApacheConfig.setEnabled(enable);
         apacheKeytabFile.setEnabled(enable && createApacheConfig.getValue());

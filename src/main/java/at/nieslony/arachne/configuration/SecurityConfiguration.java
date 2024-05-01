@@ -39,6 +39,7 @@ import org.springframework.security.kerberos.web.authentication.SpnegoAuthentica
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 /**
  *
@@ -95,9 +96,20 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             AuthenticationManager authenticationManager
     ) {
         if (preAuthSettings.isPreAuthtEnabled()) {
-            RequestAttributeAuthenticationFilter filter = new RequestAttributeAuthenticationFilter();
-            filter.setExceptionIfVariableMissing(false);
-            filter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+            var filter = switch (preAuthSettings.getPreAuthSource()) {
+                case ENVIRONMENT_VARIABLE -> {
+                    RequestAttributeAuthenticationFilter envFilter = new RequestAttributeAuthenticationFilter();
+                    envFilter.setExceptionIfVariableMissing(false);
+                    envFilter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+                    yield envFilter;
+                }
+                case HTTP_HEADER -> {
+                    RequestHeaderAuthenticationFilter headerFilter = new RequestHeaderAuthenticationFilter();
+                    headerFilter.setExceptionIfHeaderMissing(false);
+                    headerFilter.setPrincipalRequestHeader(preAuthSettings.getHttpHeader());
+                    yield headerFilter;
+                }
+            };
             filter.setAuthenticationManager(authenticationManager);
             filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
                 logger.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());

@@ -20,8 +20,26 @@ import lombok.ToString;
 @NoArgsConstructor
 public class PreAuthSettings extends AbstractSettingsGroup {
 
+    public enum PreAuthSource {
+        ENVIRONMENT_VARIABLE("Environment Variable"),
+        HTTP_HEADER("HTTP Header");
+
+        private String sourceName;
+
+        PreAuthSource(String sourceName) {
+            this.sourceName = sourceName;
+        }
+
+        @Override
+        public String toString() {
+            return sourceName;
+        }
+    }
+
     private boolean preAuthtEnabled = false;
+    private PreAuthSource preAuthSource = PreAuthSource.ENVIRONMENT_VARIABLE;
     private String environmentVariable = "REMOTE_USER";
+    private String httpHeader = "X_REMOTE_USER";
 
     private boolean writeApachePreAuthConfig = true;
     private String keytabFile = "/etc/httpd/krb5.keytab";
