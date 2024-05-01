@@ -39,6 +39,7 @@ public class TomcatSettings extends AbstractSettingsGroup {
 
     private boolean httpConnectorEnabled;
     private int httpsPort = 8443;
+    private boolean serverCertAsWebCert = false;
 
     public TomcatSettings() {
     }
