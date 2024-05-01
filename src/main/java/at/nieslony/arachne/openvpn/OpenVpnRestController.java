@@ -17,6 +17,7 @@ import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import java.util.Optional;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +71,9 @@ public class OpenVpnRestController {
 
     @Autowired
     private CertificateRepository certificateRepository;
+
+    @Autowired
+    private VpnSiteController vpnSiteController;
 
     @Value("${plugin_path}")
     String pluginPath;
@@ -483,10 +488,26 @@ public class OpenVpnRestController {
         return "";
     }
 
+    public void prepareSiteClientDir() {
+        String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
+        try {
+            Files.createDirectories(Path.of(clientConfDirName));
+        } catch (IOException ex) {
+            logger.error("Cannot create %s: %s".formatted(clientConfDirName, ex.getMessage()));
+            return;
+        }
+        File clientConfDir = new File(clientConfDirName);
+        for (File f : clientConfDir.listFiles()) {
+            if (f.isFile()) {
+                logger.info("Removing " + f.getPath());
+                f.delete();
+            }
+        }
+    }
+
     public void writeOpenVpnSiteServerSitesPluginConfig() {
-        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        for (VpnSite site : openVpnSiteSettings.getVpnSites()) {
-            if (site.getId() == 0) {
+        for (VpnSite site : vpnSiteController.getAll()) {
+            if (site.isDefaultSite()) {
                 continue;
             }
             String fileName = getSitePluginConf(site.getRemoteHost());
@@ -509,18 +530,16 @@ public class OpenVpnRestController {
     }
 
     public void writeOpenVpnSiteServerSitesConfig() {
-        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        VpnSite defaultSite = openVpnSiteSettings.getSites().get(0);
-        for (VpnSite site : openVpnSiteSettings.getVpnSites()) {
-            if (site.getId() == 0) {
-                continue;
-            }
+        VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
+
+        for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
             String fileName
                     = "%s/%s".formatted(
-                            folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR),
+                            clientConfDirName,
                             site.getRemoteHost()
                     );
-            logger.info("Creating site confiuration " + fileName);
+            logger.info("Creating site configuration " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 PrintWriter pw = new PrintWriter(fos);
                 writeConfigHeader(pw);
@@ -622,10 +641,14 @@ public class OpenVpnRestController {
         }
     }
 
-    public void writeOpenVpnSiteRemoteConfig(int siteId, Writer writer) {
+    public void writeOpenVpnSiteRemoteConfig(long siteId, Writer writer) {
         OpenVpnSiteSettings openVpnSiteSettings
                 = settings.getSettings(OpenVpnSiteSettings.class);
-        VpnSite site = openVpnSiteSettings.getSites().get(siteId);
+        Optional<VpnSite> site = vpnSiteController.getById(siteId);
+        if (site.isEmpty()) {
+            logger.error("Site %i not found".formatted(siteId));
+            return;
+        }
 
         try (PrintWriter pw = new PrintWriter(writer)) {
             pw.println(
@@ -655,14 +678,14 @@ public class OpenVpnRestController {
                    %s
                    </cert>
                    """
-                    .formatted(pki.getUserCertAsBase64(site.getRemoteHost()))
+                    .formatted(pki.getUserCertAsBase64(site.get().getRemoteHost()))
             );
             pw.println("""
                    <key>
                    %s
                    </key>
                    """
-                    .formatted(pki.getUserKeyAsBase64(site.getRemoteHost()))
+                    .formatted(pki.getUserKeyAsBase64(site.get().getRemoteHost()))
             );
         } catch (PkiException | SettingsException ex) {
             logger.error("Cannot write site remote configuration: " + ex.getMessage());

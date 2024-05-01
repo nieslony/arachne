@@ -4,10 +4,12 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.settings.AbstractSettingsGroup;
-import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +28,9 @@ import lombok.ToString;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @ToString
-public class VpnSite extends AbstractSettingsGroup {
+@Entity
+@Table(name = "vpn-sites")
+public class VpnSite {
 
     public enum SiteVerification {
         NONE("No Verification"),
@@ -45,10 +49,15 @@ public class VpnSite extends AbstractSettingsGroup {
         }
     }
 
-    private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
     private String name;
     private String description;
-    private String remoteHost;
+    @Builder.Default
+    private boolean defaultSite = false;
+    @Builder.Default
+    private String remoteHost = "www.example.com";
     @Builder.Default
     private SiteVerification siteVerification = SiteVerification.DNS;
     @Builder.Default
@@ -63,6 +72,9 @@ public class VpnSite extends AbstractSettingsGroup {
     private boolean inheritPushDomains = true;
     @Builder.Default
     private List<String> pushSearchDomains = Arrays.asList(NetUtils.myDomain());
+
+    public VpnSite() {
+    }
 
     public List<String> getPushDnsServers(VpnSite defaultSite) {
         return inheritDnsServers
@@ -89,16 +101,6 @@ public class VpnSite extends AbstractSettingsGroup {
         return inheritPushRoutes
                 ? defaultSite.getPushRoutes()
                 : getPushRoutes();
-    }
-
-    public VpnSite(Settings settings, int id) throws SettingsException {
-        this.id = id;
-        load(settings);
-    }
-
-    @Override
-    protected String groupName() {
-        return "%s.%d".formatted(super.groupName(), id);
     }
 
     public String label() {

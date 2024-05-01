@@ -193,7 +193,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         servicesNav.addItem(
                 new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
-                new SideNavItem("Tomcat AJP Connector", TomcatView.class,
+                new SideNavItem("Integrated Tomcat", TomcatView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),

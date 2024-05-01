@@ -161,12 +161,14 @@ public class OpenVpnSiteView extends VerticalLayout {
     ClipboardHelper copySshPrivateKey;
 
     private final SiteConfigUploader siteConfigUploader;
+    private final VpnSiteController vpnSiteController;
 
     public OpenVpnSiteView(
             Settings settings,
             OpenVpnRestController openVpnRestController,
             SiteConfigUploader siteConfigUploader,
-            SshKeyRepository sshKeyRepository
+            SshKeyRepository sshKeyRepository,
+            VpnSiteController vpnSiteController
     ) {
         this.settings = settings;
         this.openVpnRestController = openVpnRestController;
@@ -177,6 +179,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             keyEntity = sshKeyRepository.save(keyEntity);
             sshKeys.setValue(keyEntity);
         });
+        this.vpnSiteController = vpnSiteController;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
@@ -190,11 +193,22 @@ public class OpenVpnSiteView extends VerticalLayout {
         tabs.add("Sites", createPageSites());
         tabs.add("SSH keys", createPageSshKeys());
         tabs.setWidthFull();
+        tabs.addSelectedChangeListener((t) -> {
+            if (t.getSelectedTab().getLabel().equals("Sites")) {
+                var oldValue = sites.getOptionalValue();
+                var allSites = vpnSiteController.getAll();
+                sites.setItems(allSites);
+                if (oldValue.isPresent()) {
+                    VpnSite value = vpnSiteController.getSite(oldValue.get(), allSites);
+                    sites.setValue(value);
+                } else {
+                    VpnSite defSite = vpnSiteController.getDefaultSite(allSites);
+                    sites.setValue(defSite);
+                }
+            }
+        });
 
-        Button saveButton = new Button("Save", (t) -> onSaveSite());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        add(tabs, saveButton);
+        add(tabs);
 
         binder.setBean(openVpnSiteSettings);
         binder.validate();
@@ -242,11 +256,17 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         TextField connectToHost = new TextField("Connect to host");
         connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
-        binder.bind(
-                connectToHost,
-                OpenVpnSiteSettings::getRemote,
-                OpenVpnSiteSettings::setRemote
-        );
+        binder.forField(connectToHost)
+                .asRequired()
+                .withValidator(
+                        new HostnameValidator()
+                                .withIpAllowed(true)
+                                .withResolvableRequired(true)
+                )
+                .bind(
+                        OpenVpnSiteSettings::getRemote,
+                        OpenVpnSiteSettings::setRemote
+                );
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
@@ -340,14 +360,25 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OpenVpnSiteSettings::setMtuTest
         );
 
-        FormLayout layout = new FormLayout();
-        layout.add(listenLayout,
+        Button saveBasicsButton = new Button("Save Basics", (e) -> onSaveBasics());
+        binder.addStatusChangeListener((sce) -> {
+            saveBasicsButton.setEnabled(sce.getBinder().isValid());
+        });
+        saveBasicsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.add(listenLayout,
                 connectToHost,
                 interfaceLayout,
                 siteNetLayout,
                 keepaliveLayout,
                 mtuTestField
         );
+        VerticalLayout layout = new VerticalLayout(
+                formLayout, saveBasicsButton
+        );
+        layout.setMargin(false);
+        layout.setPadding(false);
 
         return layout;
     }
@@ -359,7 +390,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         sites.setItemLabelGenerator((site) -> site.label());
         sites.setLabel("Sites");
         sites.setWidthFull();
-        sites.setItems(openVpnSiteSettings.getVpnSites());
 
         Button renameButton = new Button(
                 "Rename...",
@@ -367,8 +397,15 @@ public class OpenVpnSiteView extends VerticalLayout {
                     setNameDescDialog(
                             sites.getValue(),
                             (site) -> {
-                                sites.setItems(openVpnSiteSettings.getVpnSites());
-                                sites.setValue(site);
+                                try {
+                                    site = vpnSiteController.addSite(site);
+                                    var allSites = vpnSiteController.getAll();
+                                    sites.setItems(allSites);
+                                    var setSite = vpnSiteController.getSite(site, allSites);
+                                    sites.setValue(setSite);
+                                } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
+                                    logger.error(ex.getMessage());
+                                }
                             }
                     );
                 }
@@ -389,18 +426,24 @@ public class OpenVpnSiteView extends VerticalLayout {
             dlg.setCancelable(true);
             dlg.addConfirmListener((ce) -> {
                 VpnSite site = sites.getValue();
-                openVpnSiteSettings.deleteSite(settings, site.getId());
-                sites.setItems(openVpnSiteSettings.getVpnSites());
-                sites.setValue(openVpnSiteSettings.getVpnSite(0));
+                vpnSiteController.deleteSite(site);
+                List<VpnSite> allSites = vpnSiteController.getAll();
+                sites.setItems(allSites);
+                sites.setValue(vpnSiteController.getDefaultSite(allSites));
             });
             dlg.open();
         });
-        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, deleteButton));
+        nonDefaultComponents.add(new ComponentEnabler(
+                OnDefSiteEnabled.DefSiteDisabled,
+                deleteButton
+        ));
 
         Button addButton = new Button("Add...", (e) -> {
             setNameDescDialog(null, (site) -> {
-                sites.setItems(openVpnSiteSettings.getVpnSites());
-                sites.setValue(site);
+                var allSites = vpnSiteController.getAll();
+                sites.setItems(allSites);
+                sites.setValue(vpnSiteController.getSite(site, allSites));
+                siteBinder.validate();
                 logger.info("Created: " + site.toString());
             });
         });
@@ -457,10 +500,14 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteSettingsTab.add("Routes", createPageSitesRoutes());
         siteSettingsTab.setWidthFull();
 
+        Button saveSitesButton = new Button("Save Site", (e) -> onSaveSite());
+        saveSitesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         layout.add(
                 sitesLayout,
                 siteConfigMenu,
-                siteSettingsTab
+                siteSettingsTab,
+                saveSitesButton
         );
         layout.setMargin(false);
         layout.setPadding(false);
@@ -469,9 +516,13 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         siteBinder.addValueChangeListener((e) -> {
             siteModified |= e.isFromClient();
+            saveSitesButton.setEnabled(siteBinder.isValid());
         });
 
-        sites.setValue(openVpnSiteSettings.getVpnSite(0));
+        siteBinder.addStatusChangeListener((sce) -> {
+            saveSitesButton.setEnabled(sce.getBinder().isValid());
+        });
+
         return layout;
     }
 
@@ -505,7 +556,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
             if (site == null) {
-                onOk.accept(openVpnSiteSettings.addSite(
+                onOk.accept(vpnSiteController.addSite(
                         nameField.getValue(),
                         descriptionField.getValue()
                 ));
@@ -785,8 +836,13 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         sshKeys.addValueChangeListener((e) -> {
             SshKeyEntity entity = e.getValue();
-            sshPrivateKey.setValue(entity.getPrivateKey());
-            sshPublicKey.setValue(entity.getPublicKey());
+            if (entity != null) {
+                sshPrivateKey.setValue(entity.getPrivateKey());
+                sshPublicKey.setValue(entity.getPublicKey());
+            } else {
+                sshPrivateKey.setValue("");
+                sshPublicKey.setValue("");
+            }
         });
 
         if (!sshKeyItems.isEmpty()) {
@@ -796,23 +852,31 @@ public class OpenVpnSiteView extends VerticalLayout {
         return layout;
     }
 
-    private void onSaveSite() {
+    private void onSaveBasics() {
         try {
-            VpnSite curSite = siteBinder.getBean();
-            if (curSite != null) {
-                logger.info("Saving " + curSite.toString());
-                openVpnSiteSettings.getSites().put(curSite.getId(), curSite);
-            }
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
-            openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             openVpnRestController.writeOpenVpnPluginSiteConfig();
-            openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
-            sites.setItems(openVpnSiteSettings.getVpnSites());
-            siteModified = false;
-            sites.setValue(curSite);
+
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+        }
+    }
+
+    private void onSaveSite() {
+        VpnSite curSite = siteBinder.getBean();
+
+        try {
+            vpnSiteController.saveSite(curSite);
+            openVpnRestController.prepareSiteClientDir();
+            openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
+            openVpnRestController.writeOpenVpnSiteServerSitesConfig();
+            siteModified = false;
+            sites.setValue(curSite);
+        } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
+            logger.error("Cannot save site %s: %s"
+                    .formatted(curSite.toString(), ex.getMessage())
+            );
         }
     }
 
@@ -841,26 +905,16 @@ public class OpenVpnSiteView extends VerticalLayout {
             AbstractField.ComponentValueChangeEvent<Select<VpnSite>, VpnSite> e
     ) {
         Boolean isDefaultSiteSelected
-                = e.getValue() != null && e.getValue().getId() == 0;
+                = e.getValue() != null && e.getValue().isDefaultSite();
 
         if (siteModified) {
             if (e.isFromClient()) {
                 ConfirmDialog dlg = new ConfirmDialog(
                         "Unsaved Changes",
                         "Site has unsaved changes. Save now?",
-                        "Save", (ce) -> {
-                            VpnSite modValue = siteBinder.getBean();
-                            binder.getBean().getSites().put(modValue.getId(), modValue);
-                            sites.setItems(binder.getBean().getVpnSites());
-                            sites.setValue(e.getValue());
-
-                            siteBinder.setBean(e.getValue());
-
-                            siteModified = false;
-                        },
+                        "Save", (ce) -> onSaveSite(),
                         "Reject", (ce) -> {
                             siteModified = false;
-
                             siteBinder.setBean(e.getOldValue());
                         },
                         "Cancel", (ce) -> {
@@ -874,8 +928,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 siteBinder.setBean(e.getValue());
             }
         }
-        siteBinder.validate();
         siteBinder.refreshFields();
+        siteBinder.validate();
+
         enableNonDefaultCopmponents(isDefaultSiteSelected);
     }
 }

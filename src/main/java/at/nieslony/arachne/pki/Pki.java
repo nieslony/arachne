@@ -7,9 +7,15 @@ package at.nieslony.arachne.pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.setup.SetupData;
+import at.nieslony.arachne.tomcat.TomcatSettings;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -23,7 +29,9 @@ import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
@@ -60,6 +68,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -79,6 +88,12 @@ public class Pki {
 
     @Autowired
     private KeyRepository keyRepository;
+
+    @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
+    String tomcatCertPath;
+
+    @Value("${tomcatKeyPath:${arachneConfigDir}/server.key}")
+    String tomcatKeyPath;
 
     private static final Logger logger = LoggerFactory.getLogger(Pki.class);
 
@@ -571,5 +586,30 @@ public class Pki {
         }
 
         return crl;
+    }
+
+    public void updateWebServerCertificate()
+            throws UpdateWebServerCertificateException, PkiException, SettingsException {
+        TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
+        if (tomcatSettings.isServerCertAsWebCert()) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter(tomcatKeyPath))) {
+                logger.info("Writing private key to " + tomcatKeyPath);
+                writer.print(getServerKeyAsBase64());
+
+                Set<PosixFilePermission> perms = new HashSet<>();
+                perms.add(PosixFilePermission.OWNER_READ);
+                perms.add(PosixFilePermission.OWNER_WRITE);
+                Files.setPosixFilePermissions(Path.of(tomcatKeyPath), perms);
+            } catch (IOException ex) {
+                throw new UpdateWebServerCertificateException(tomcatKeyPath, ex);
+            }
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter(tomcatCertPath))) {
+                logger.info("Writing server cert to " + tomcatCertPath);
+                writer.print(getServerCertAsBase64());
+            } catch (IOException ex) {
+                throw new UpdateWebServerCertificateException(tomcatCertPath, ex);
+            }
+        }
     }
 }
