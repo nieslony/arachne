@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405012121_8ebfbf8
+Version:        1.3.10.git_2405052034_fe3f0ad
 
 Release:        1
 License:        GPLv3
@@ -84,6 +84,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052034_fe3f0ad-1
+- 
+
 * Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405012121_8ebfbf8-1
 - Fix: empty SSH key (github@nieslony.at)
 - Prepare site-client-conf.d before saving site config (github@nieslony.at)
