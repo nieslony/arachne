@@ -66,7 +66,10 @@ mkdir -pv /var/lib/arachne/{arachneconfig,vpnconfig}
 chown -v arachne.arachne /var/lib/arachne/{arachneconfig,vpnconfig}
 ln -fsv \
     /var/lib/arachne/vpnconfig/openvpn-user-server.conf \
-    /etc/openvpn/server/arachne.conf
+    /etc/openvpn/server/arachne-user.conf
+ln -fsv \
+    /var/lib/arachne/vpnconfig/openvpn-site-server.conf \
+    /etc/openvpn/server/arachne-site.conf
 
 %postun
 if [ $1 -eq 0 ]; then

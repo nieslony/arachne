@@ -1,10 +1,15 @@
 hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
-arachne_repo = ENV['ARACHNE_REPO']
-arachne_copr = ENV['ARACHNE_COPR'] || "nieslony/arachne"
+def_copr_repo = "nieslony/arachne"
 
-if not arachne_repo
+if not ENV.key?("ARACHNE_REPO")
     arachne_repo = ""
-    puts "Warning: environment variable ARACHNE_REPO not set, falling back to copr repository"
+    if not ENV.key?("ARACHNE_COPR")
+        arachne_copr = def_copr_repo
+        puts "Warning neither ARACHNE_REPO nor ARACHNE_COPR set. Falling back to copr repo " + "nieslony/arachne"
+    else
+        arachne_copr = ENV['ARACHNE_COPR']
+        puts "Warning: ARACHNE_REPO noit set falling back to given ARACHNE_COPR " + arachne_copr
+    end
 end
 
 Vagrant.configure("2") do |config|
