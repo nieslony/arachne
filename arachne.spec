@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405052034_fe3f0ad
+Version:        1.3.10.git_2405052121_b2c0998
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052121_b2c0998-1
+- Add symlink for site vpn (github@nieslony.at)
+- Give more hints on ENV variables (github@nieslony.at)
+- Write CRL when saving site VPN basics (github@nieslony.at)
+
 * Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052034_fe3f0ad-1
 - 
 
