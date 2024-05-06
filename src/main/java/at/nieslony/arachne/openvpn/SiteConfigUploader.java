@@ -249,7 +249,6 @@ public class SiteConfigUploader {
     private String buildUploadCommand() {
         OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String configName = openVPnRestController.getOpenVpnSiteRemoteConfigName(siteSettings, vpnSite);
-        String configFileName = openVPnRestController.getOpenVpnSiteRemoteConfigFileName(siteSettings, vpnSite);
         String outputFile = "/tmp/%s".formatted(configName);
         String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
         StringWriter configWriter = new StringWriter();
@@ -262,6 +261,12 @@ public class SiteConfigUploader {
                            %s
                            EOF
                            """.formatted(outputFile, configWriter.toString()))
+                .append("""
+                        chown 600 %s
+                        """.formatted(outputFile))
+                .append("""
+                        %s chown root:root %s
+                        """.formatted(sudo, outputFile))
                 .append("%s mv -v %s %s || exit 1\n".formatted(
                         sudo,
                         outputFile,
