@@ -75,7 +75,7 @@ public class EditableListBox
         Button addButton = new Button(
                 VaadinIcon.PLUS.create(),
                 e -> {
-                    var items = getValue();
+                    List<String> items = new LinkedList<>(getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
@@ -84,7 +84,7 @@ public class EditableListBox
         Button updateButton = new Button(
                 VaadinIcon.REFRESH.create(),
                 e -> {
-                    var items = getValue();
+                    List<String> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
@@ -95,7 +95,7 @@ public class EditableListBox
         Button removeButton = new Button(
                 VaadinIcon.DEL_A.create(),
                 e -> {
-                    var items = getValue();
+                    List<String> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
@@ -104,7 +104,7 @@ public class EditableListBox
         removeButton.setEnabled(false);
         clearButton = new Button(VaadinIcon.TRASH.create(),
                 (t) -> {
-                    var items = getValue();
+                    List<String> items = new LinkedList<>(getValue());
                     items.clear();
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
@@ -177,12 +177,7 @@ public class EditableListBox
         v.removeIf((t) -> t == null || t.isEmpty() || t.isBlank());
         itemsField.setItems(v);
         clearButton.setEnabled(!v.isEmpty());
-    }
-
-    @Override
-    public boolean valueEquals(List<String> l1, List<String> l2) {
-        boolean eq = l1.equals(l2);
-        return eq;
+        getElement().setPropertyList("value", v);
     }
 
     public void setDefaultValuesSupplier(Supplier<List<String>> defaultsSupplier) {
