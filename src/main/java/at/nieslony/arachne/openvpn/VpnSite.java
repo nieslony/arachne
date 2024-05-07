@@ -72,22 +72,6 @@ public class VpnSite {
     private boolean inheritPushDomains = true;
     @Builder.Default
     private List<String> pushSearchDomains = Arrays.asList(NetUtils.myDomain());
-
-    public VpnSite() {
-    }
-
-    public List<String> getPushDnsServers(VpnSite defaultSite) {
-        return inheritDnsServers
-                ? defaultSite.getPushDnsServers()
-                : getPushDnsServers();
-    }
-
-    public List<String> getPushSearchDomains(VpnSite defaultSite) {
-        return inheritPushDomains
-                ? defaultSite.getPushSearchDomains()
-                : getPushSearchDomains();
-    }
-
     @Builder.Default
     private boolean inheritPushRoutes = true;
     @Builder.Default
@@ -97,10 +81,24 @@ public class VpnSite {
     @Builder.Default
     private boolean routeInternetThroughVpn = false;
 
-    public List<String> getPushRoutes(VpnSite defaultSite) {
-        return inheritPushRoutes
-                ? defaultSite.getPushRoutes()
-                : getPushRoutes();
+    public VpnSite() {
+    }
+
+    public void updateInheritedValues(VpnSite copyFrom) {
+        if (!defaultSite && copyFrom != null) {
+            if (inheritDnsServers) {
+                pushDnsServers = copyFrom.getPushDnsServers();
+            }
+            if (inheritPushDomains) {
+                pushSearchDomains = copyFrom.getPushSearchDomains();
+            }
+            if (inheritPushRoutes) {
+                pushRoutes = copyFrom.getPushRoutes();
+            }
+            if (inheritRouteInternetThroughVpn) {
+                routeInternetThroughVpn = copyFrom.isRouteInternetThroughVpn();
+            }
+        }
     }
 
     public String label() {

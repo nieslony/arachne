@@ -539,17 +539,18 @@ public class OpenVpnRestController {
                             clientConfDirName,
                             site.getRemoteHost()
                     );
+            site.updateInheritedValues(defaultSite);
             logger.info("Creating site configuration " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 PrintWriter pw = new PrintWriter(fos);
                 writeConfigHeader(pw);
-                for (String dnsServer : site.getPushDnsServers(defaultSite)) {
+                for (String dnsServer : site.getPushDnsServers()) {
                     pw.println(
                             "push \"dhcp-option DNS %s\""
                                     .formatted(dnsServer)
                     );
                 }
-                for (String route : site.getPushRoutes(defaultSite)) {
+                for (String route : site.getPushRoutes()) {
                     String[] components = route.split("/");
                     if (components.length == 2) {
                         components[1] = NetUtils.maskLen2Mask(Integer.parseInt(components[1]));
@@ -560,6 +561,15 @@ public class OpenVpnRestController {
                     } else {
                         logger.warn("Invalid route: " + route);
                     }
+                }
+                if (site.isRouteInternetThroughVpn()) {
+                    pw.println("push \"redirect-gateway\"");
+                }
+                if (!site.getPushSearchDomains().isEmpty()) {
+                    pw.println(
+                            "push \"dns search-domains %s\""
+                                    .formatted(String.join(" ", site.getPushSearchDomains()))
+                    );
                 }
                 pw.close();
                 fos.close();

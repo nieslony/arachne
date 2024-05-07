@@ -590,10 +590,9 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         siteBinder.bind(
                 dnsServers,
-                (source) -> source.getPushDnsServers(),
-                (source, value) -> {
-                    source.setPushDnsServers(value);
-                });
+                VpnSite::getPushDnsServers,
+                VpnSite::setPushDnsServers
+        );
         inheritDnsServers = new Checkbox("Inherit");
         inheritDnsServers.addValueChangeListener((e) -> {
             dnsServers.setEnabled(!e.getValue() || siteBinder.getBean().getId() == 0);
@@ -618,8 +617,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
         siteBinder.bind(
                 pushDomains,
-                (source) -> source.getPushSearchDomains(),
-                (source, value) -> source.setPushSearchDomains(value)
+                VpnSite::getPushSearchDomains,
+                VpnSite::setPushSearchDomains
         );
         inheritPushDomains = new Checkbox("Inherit");
         inheritPushDomains.addValueChangeListener((e) -> {
@@ -662,8 +661,8 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         siteBinder.bind(
                 pushRoutes,
-                (source) -> source.getPushRoutes(),
-                (source, value) -> source.setPushRoutes(value)
+                VpnSite::getPushRoutes,
+                VpnSite::setPushRoutes
         );
         inheritPushRoutes = new Checkbox("Inherit");
         inheritPushRoutes.addValueChangeListener((e) -> {
@@ -754,8 +753,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         };
         siteBinder.bind(
                 siteIpWhiteList,
-                (source) -> source.getIpWhiteList(),
-                (source, value) -> source.setIpWhiteList(value)
+                VpnSite::getIpWhiteList,
+                VpnSite::setIpWhiteList
         );
         nonDefaultComponents.add(new ComponentEnabler(
                 OnDefSiteEnabled.DefSiteDisabled,
@@ -872,7 +871,6 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnRestController.writeOpenVpnSiteServerSitesPluginConfig();
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             siteModified = false;
-            sites.setValue(curSite);
         } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
             logger.error("Cannot save site %s: %s"
                     .formatted(curSite.toString(), ex.getMessage())
@@ -925,7 +923,10 @@ public class OpenVpnSiteView extends VerticalLayout {
             }
         } else {
             if (e.getValue() != null) {
-                siteBinder.setBean(e.getValue());
+                VpnSite site = e.getValue();
+                VpnSite defSite = vpnSiteController.getDefaultSite();
+                site.updateInheritedValues(defSite);
+                siteBinder.setBean(site);
             }
         }
         siteBinder.refreshFields();
