@@ -11,13 +11,16 @@ import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -27,11 +30,13 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -45,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.util.HtmlUtils;
 
 /**
@@ -52,9 +58,26 @@ import org.springframework.web.util.HtmlUtils;
  * @author claas
  */
 @Service
+@SessionScope
 public class SiteConfigUploader {
 
     private static final Logger logger = LoggerFactory.getLogger(SiteConfigUploader.class);
+
+    enum UploadConfigType {
+        OvpnConfig(".ovpn file"),
+        NMCL("NetworkManger");
+
+        private UploadConfigType(String label) {
+            this.label = label;
+        }
+
+        private String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
 
     @Getter
     @Setter
@@ -66,6 +89,13 @@ public class SiteConfigUploader {
         private boolean sudoRequired = false;
         private boolean restartOpenVpn = false;
         private boolean enableOpenVpn = false;
+
+        private UploadConfigType uploadConfigType = UploadConfigType.NMCL;
+
+        private String connectionName = "OpenVPN_" + NetUtils.myHostname();
+        private boolean enableConnection;
+        private boolean autostartConnection;
+
         private String destinationFolder = "/etc/openvpn/client";
         private SshAuthType sshAuthType = USERNAME_PASSWORD;
         private SshKeyEntity sshKey;
@@ -101,7 +131,7 @@ public class SiteConfigUploader {
             uploadSettings.setRemoteHostName(site.getRemoteHost());
         }
         binder.setBean(uploadSettings);
-
+        binder.validate();
         dlg.open();
     }
 
@@ -110,12 +140,17 @@ public class SiteConfigUploader {
         binder = new Binder<>(SiteUploadSettings.class);
 
         TextField destinationFolderField = new TextField("Destination folder");
+        destinationFolderField.setClearButtonVisible(true);
         destinationFolderField.setWidthFull();
+        destinationFolderField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(destinationFolderField)
-                .asRequired()
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
                 .bind(SiteUploadSettings::getDestinationFolder, SiteUploadSettings::setDestinationFolder);
 
         TextField remoteHostNameField = new TextField("Remote Host Name/IP");
+        remoteHostNameField.setClearButtonVisible(true);
         remoteHostNameField.setWidthFull();
         remoteHostNameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(remoteHostNameField)
@@ -128,7 +163,9 @@ public class SiteConfigUploader {
                 .bind(SiteUploadSettings::getRemoteHostName, SiteUploadSettings::setRemoteHostName);
 
         TextField usernameField = new TextField("Username");
+        usernameField.setClearButtonVisible(true);
         usernameField.setWidthFull();
+        usernameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(usernameField)
                 .asRequired()
                 .bind(SiteUploadSettings::getUsername, SiteUploadSettings::setUsername);
@@ -151,6 +188,32 @@ public class SiteConfigUploader {
         requireSudoField.setWidthFull();
         binder.forField(requireSudoField)
                 .bind(SiteUploadSettings::isSudoRequired, SiteUploadSettings::setSudoRequired);
+
+        RadioButtonGroup<UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
+                "Upload Type",
+                UploadConfigType.values()
+        );
+        binder.forField(uploadConfigTypeField)
+                .bind(SiteUploadSettings::getUploadConfigType, SiteUploadSettings::setUploadConfigType);
+
+        TextField connectionNameField = new TextField("Connection Name");
+        connectionNameField.setClearButtonVisible(true);
+        connectionNameField.setWidthFull();
+        connectionNameField.setClearButtonVisible(true);
+        connectionNameField.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(connectionNameField)
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
+                .bind(SiteUploadSettings::getConnectionName, SiteUploadSettings::setConnectionName);
+
+        Checkbox enableConnectionField = new Checkbox("Enable Connection");
+        binder.forField(enableConnectionField)
+                .bind(SiteUploadSettings::isEnableConnection, SiteUploadSettings::setEnableConnection);
+
+        Checkbox autostartConnectionField = new Checkbox("Autostart Connection on Boot");
+        binder.forField(autostartConnectionField)
+                .bind(SiteUploadSettings::isAutostartConnection, SiteUploadSettings::setAutostartConnection);
 
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
         restartOpenVpnField.setWidthFull();
@@ -181,6 +244,10 @@ public class SiteConfigUploader {
 
         VerticalLayout actionsLayout = new VerticalLayout(
                 requireSudoField,
+                uploadConfigTypeField,
+                connectionNameField,
+                enableConnectionField,
+                autostartConnectionField,
                 destinationFolderField,
                 restartOpenVpnField,
                 enableOpenVpnField
@@ -193,6 +260,7 @@ public class SiteConfigUploader {
                 actionsLayout
         );
         dlg.add(layout);
+        dlg.setMinWidth(50, Unit.EM);
 
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
@@ -230,6 +298,32 @@ public class SiteConfigUploader {
                 }
             }
         });
+
+        uploadConfigTypeField.addValueChangeListener((e) -> {
+            switch (e.getValue()) {
+                case NMCL -> {
+                    connectionNameField.setVisible(true);
+                    enableConnectionField.setVisible(true);
+                    autostartConnectionField.setVisible(true);
+                    destinationFolderField.setVisible(false);
+                    restartOpenVpnField.setVisible(false);
+                    enableOpenVpnField.setVisible(false);
+                }
+                case OvpnConfig -> {
+                    connectionNameField.setVisible(false);
+                    enableConnectionField.setVisible(false);
+                    autostartConnectionField.setVisible(false);
+                    destinationFolderField.setVisible(true);
+                    restartOpenVpnField.setVisible(true);
+                    enableOpenVpnField.setVisible(true);
+                }
+            }
+            binder.validate();
+        });
+
+        binder.addStatusChangeListener(
+                (e) -> okButton.setEnabled(!e.hasValidationErrors())
+        );
 
         authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
 
