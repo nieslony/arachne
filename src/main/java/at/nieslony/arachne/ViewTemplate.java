@@ -26,7 +26,6 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
-import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -52,7 +51,6 @@ import org.springframework.security.core.userdetails.UserDetails;
  *
  * @author claas
  */
-@StyleSheet("/frontend/styles/styles.css")
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
@@ -192,7 +190,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         servicesNav.addItem(
                 new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
-                new SideNavItem("Tomcat AJP Connector", TomcatView.class,
+                new SideNavItem("Integrated Tomcat", TomcatView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),

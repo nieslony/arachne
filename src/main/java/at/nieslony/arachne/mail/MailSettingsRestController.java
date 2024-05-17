@@ -106,6 +106,7 @@ public class MailSettingsRestController {
         logger.info("Recipient: " + forUser.getDisplayName());
         logger.info("rcpt var: " + mailSettings.getVarRcptName());
         logger.info("sender var; " + mailSettings.getVarSenderName());
+        logger.info("attachment var: " + mailSettings.getVarAttachnement());
         switch (mailSettings.getTemplateConfigType()) {
             case HTML -> {
                 String msg = mailSettings
@@ -121,7 +122,8 @@ public class MailSettingsRestController {
                                 mailSettings.getVarLinuxInstructions(),
                                 HtmlUtils.htmlEscape(linuxConfig)
                         )
-                        .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname());
+                        .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname())
+                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName());
                 String style = """
                                <style>
                                code {
@@ -145,7 +147,8 @@ public class MailSettingsRestController {
                         )
                         .replace(mailSettings.getVarSenderName(), forUser.getDisplayName())
                         .replace(mailSettings.getVarLinuxInstructions(), linuxConfig)
-                        .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname());
+                        .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname())
+                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName());
                 helper.setText(msg, false);
             }
         }

@@ -36,9 +36,9 @@ There are precompiled packages for CentOS and Fedora.
 
        systemctl enable --now arachne arachne-dbus
 
-1. enable port 8080 in firewall
+1. enable port 8080 and 8443 in firewall
 
-       firewall-cmd --add-port 8080/tcp
+       firewall-cmd --add-port 8080/tcp --add-port 8443/tcp
 
     It's strongly recommended to run arachne behind a reverse proxy like
     Apache HTTPD.
@@ -103,6 +103,23 @@ The internal Kerberos authentication is currently not recommended.
 If Arachne is runng bind a reverse proxy e.g. Apache HTTPD with AJP you can
 forward the authentication to the proxy and trust the remote user provides by an
 environment variable. Don't forget to enable the AJP connector.
+
+## Integrated Tomcat
+
+Tomcat settings can be found in the left menu under _Integrated Tomcat_,
+
+### AJP Connector
+
+If you enable the AJP connector a configuration file for Apache https is
+created with provided AJP password. You can copy or symlink
+_${workdir}/arachneconfig/arachne.conf_ to the Apache configuration folder.
+
+### HTTPS
+
+If HTTPS is enabled the integrated tomcat reads the sercer certificate from
+_${workdir}/arachneconfig/server.crt_ and the private key from
+_${workdir}/arachneconfig/server.key_. _server.crt_ and _server.key_ may be
+symlinks e.g. to certificates maintained by certmonger (FreeIPA).
 
 ## Backup and Restore
 
