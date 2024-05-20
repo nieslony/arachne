@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -74,6 +75,9 @@ public class OpenVpnRestController {
 
     @Autowired
     private VpnSiteController vpnSiteController;
+
+    @Autowired
+    private VpnSiteRepository vpnSiteRepository;
 
     @Value("${plugin_path}")
     String pluginPath;
@@ -161,6 +165,21 @@ public class OpenVpnRestController {
         String username = authentication.getName();
 
         return getUserVpnConfig(username, format);
+    }
+
+    @GetMapping("/site")
+    @RolesAllowed(value = {"ADMIN"})
+    public List<VpnSite> getSiteVpnSite() {
+        return vpnSiteRepository.findAll();
+    }
+
+    @GetMapping("/site/{id}")
+    @RolesAllowed(value = {"ADMIN"})
+    public VpnSite getSiteVpnSite(@PathVariable Long id) {
+        return vpnSiteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "VPN Site %d not found".formatted(id)));
     }
 
     private void writeConfigHeader(PrintWriter pw) {
