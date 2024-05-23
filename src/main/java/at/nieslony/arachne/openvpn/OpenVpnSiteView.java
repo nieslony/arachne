@@ -6,6 +6,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.ssh.AddSshKeyDialog;

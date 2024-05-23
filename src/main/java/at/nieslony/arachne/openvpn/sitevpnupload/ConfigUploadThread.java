@@ -2,8 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.openvpn;
+package at.nieslony.arachne.openvpn.sitevpnupload;
 
+import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
+import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.settings.Settings;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
