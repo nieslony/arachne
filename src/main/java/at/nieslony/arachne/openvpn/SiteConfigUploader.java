@@ -48,6 +48,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
@@ -59,7 +62,7 @@ import org.springframework.web.util.HtmlUtils;
  */
 @Service
 @SessionScope
-public class SiteConfigUploader {
+public class SiteConfigUploader implements BeanFactoryAware {
 
     private static final Logger logger = LoggerFactory.getLogger(SiteConfigUploader.class);
 
@@ -81,7 +84,7 @@ public class SiteConfigUploader {
 
     @Getter
     @Setter
-    private class SiteUploadSettings {
+    public class SiteUploadSettings {
 
         private String remoteHostName;
         private String username = "";
@@ -93,6 +96,7 @@ public class SiteConfigUploader {
         private UploadConfigType uploadConfigType = UploadConfigType.NMCL;
 
         private String connectionName = "OpenVPN_" + NetUtils.myHostname();
+        private String certitifaceFolder = "/etc/pki/arachne";
         private boolean enableConnection;
         private boolean autostartConnection;
 
@@ -105,6 +109,7 @@ public class SiteConfigUploader {
     private Binder<SiteUploadSettings> binder;
     private VpnSite vpnSite;
     private final SiteUploadSettings uploadSettings;
+    private BeanFactory beanFactory;
 
     @Autowired
     OpenVpnRestController openVPnRestController;
@@ -114,6 +119,9 @@ public class SiteConfigUploader {
 
     @Autowired
     private Settings settings;
+
+    @Autowired
+    private VpnSiteRepository vpnSiteRepository;
 
     public SiteConfigUploader() {
         uploadSettings = new SiteUploadSettings();
@@ -197,7 +205,6 @@ public class SiteConfigUploader {
                 .bind(SiteUploadSettings::getUploadConfigType, SiteUploadSettings::setUploadConfigType);
 
         TextField connectionNameField = new TextField("Connection Name");
-        connectionNameField.setClearButtonVisible(true);
         connectionNameField.setWidthFull();
         connectionNameField.setClearButtonVisible(true);
         connectionNameField.setValueChangeMode(ValueChangeMode.EAGER);
@@ -206,6 +213,16 @@ public class SiteConfigUploader {
                         new StringLengthValidator("Value required", 1, 65535)
                 ))
                 .bind(SiteUploadSettings::getConnectionName, SiteUploadSettings::setConnectionName);
+
+        TextField certificateFolderField = new TextField("Certificate Folder");
+        certificateFolderField.setClearButtonVisible(true);
+        certificateFolderField.setWidthFull();
+        certificateFolderField.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(certificateFolderField)
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
+                .bind(SiteUploadSettings::getCertitifaceFolder, SiteUploadSettings::setCertitifaceFolder);
 
         Checkbox enableConnectionField = new Checkbox("Enable Connection");
         binder.forField(enableConnectionField)
@@ -246,6 +263,7 @@ public class SiteConfigUploader {
                 requireSudoField,
                 uploadConfigTypeField,
                 connectionNameField,
+                certificateFolderField,
                 enableConnectionField,
                 autostartConnectionField,
                 destinationFolderField,
@@ -266,7 +284,13 @@ public class SiteConfigUploader {
             dlg.close();
             try {
                 binder.writeBean(uploadSettings);
-                onUploadConfig();
+                OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
+                Thread thread = new NMConfigUploadThread(
+                        uploadSettings,
+                        vpnSite,
+                        beanFactory
+                );
+                thread.start();
             } catch (ValidationException ex) {
                 logger.error("Input validation Error: " + ex.getMessage());
             }
@@ -303,6 +327,7 @@ public class SiteConfigUploader {
             switch (e.getValue()) {
                 case NMCL -> {
                     connectionNameField.setVisible(true);
+                    certificateFolderField.setEnabled(true);
                     enableConnectionField.setVisible(true);
                     autostartConnectionField.setVisible(true);
                     destinationFolderField.setVisible(false);
@@ -311,6 +336,7 @@ public class SiteConfigUploader {
                 }
                 case OvpnConfig -> {
                     connectionNameField.setVisible(false);
+                    certificateFolderField.setEnabled(false);
                     enableConnectionField.setVisible(false);
                     autostartConnectionField.setVisible(false);
                     destinationFolderField.setVisible(true);
@@ -378,7 +404,7 @@ public class SiteConfigUploader {
                 .toString();
     }
 
-    private void onUploadConfig() {
+    private void onUploadConfig__() {
         Dialog uploadingDlg = new Dialog("Uploading...");
 
         ProgressBar progressBar = new ProgressBar();
@@ -389,6 +415,7 @@ public class SiteConfigUploader {
         Button cancelButton = new Button("Cancel");
 
         UI ui = UI.getCurrent();
+
         Thread uploadThread = new Thread(
                 () -> {
                     ui.access(() -> uploadingDlg.open());
@@ -509,5 +536,10 @@ public class SiteConfigUploader {
         }
 
         return notification;
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }
