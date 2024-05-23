@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405052121_b2c0998
+Version:        1.3.10.git_2405232055_d18c4d1
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,25 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 23 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405232055_d18c4d1-1
+- Move classes for site upload to own package (github@nieslony.at)
+- Move .ovpn upload to OvpnConfigUploadThread (github@nieslony.at)
+- Add NetworkManager connection for site VPN, implement ConfigUploadThread
+  (github@nieslony.at)
+- Add /site and /site/{id} (github@nieslony.at)
+- Removed unused attributes, add NM con uuid (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Add upload type NetworkManager (github@nieslony.at)
+- Fix: update value (github@nieslony.at)
+- Bump vaadin and spring versions (github@nieslony.at)
+- Make API simpler (github@nieslony.at)
+- Replace attachment name (github@nieslony.at)
+- Handle MailSendException (github@nieslony.at)
+- Bump version of dependency (github@nieslony.at)
+- Change permissions of remote config (github@nieslony.at)
+- Bump version of bouncycastle (github@nieslony.at)
+- Add icons, set button as primary (github@nieslony.at)
+
 * Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052121_b2c0998-1
 - Add symlink for site vpn (github@nieslony.at)
 - Give more hints on ENV variables (github@nieslony.at)
