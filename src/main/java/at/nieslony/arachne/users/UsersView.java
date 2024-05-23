@@ -56,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.olli.FileDownloadWrapper;
@@ -487,7 +488,7 @@ public class UsersView extends VerticalLayout {
                         subject
                 );
                 ShowNotification.info("Config sent to " + mailAddr);
-            } catch (IOException | MessagingException | PkiException | SettingsException ex) {
+            } catch (IOException | MailSendException | MessagingException | PkiException | SettingsException ex) {
                 String header = "Error sending e-mail to %s".formatted(user.getEmail());
                 logger.error(header + ": " + ex.getMessage());
                 ShowNotification.error(header, ex.getMessage());

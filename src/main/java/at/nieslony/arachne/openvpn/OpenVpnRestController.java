@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -74,6 +75,9 @@ public class OpenVpnRestController {
 
     @Autowired
     private VpnSiteController vpnSiteController;
+
+    @Autowired
+    private VpnSiteRepository vpnSiteRepository;
 
     @Value("${plugin_path}")
     String pluginPath;
@@ -161,6 +165,21 @@ public class OpenVpnRestController {
         String username = authentication.getName();
 
         return getUserVpnConfig(username, format);
+    }
+
+    @GetMapping("/site")
+    @RolesAllowed(value = {"ADMIN"})
+    public List<VpnSite> getSiteVpnSite() {
+        return vpnSiteRepository.findAll();
+    }
+
+    @GetMapping("/site/{id}")
+    @RolesAllowed(value = {"ADMIN"})
+    public VpnSite getSiteVpnSite(@PathVariable Long id) {
+        return vpnSiteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "VPN Site %d not found".formatted(id)));
     }
 
     private void writeConfigHeader(PrintWriter pw) {
@@ -539,17 +558,18 @@ public class OpenVpnRestController {
                             clientConfDirName,
                             site.getRemoteHost()
                     );
+            site.updateInheritedValues(defaultSite);
             logger.info("Creating site configuration " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 PrintWriter pw = new PrintWriter(fos);
                 writeConfigHeader(pw);
-                for (String dnsServer : site.getPushDnsServers(defaultSite)) {
+                for (String dnsServer : site.getPushDnsServers()) {
                     pw.println(
                             "push \"dhcp-option DNS %s\""
                                     .formatted(dnsServer)
                     );
                 }
-                for (String route : site.getPushRoutes(defaultSite)) {
+                for (String route : site.getPushRoutes()) {
                     String[] components = route.split("/");
                     if (components.length == 2) {
                         components[1] = NetUtils.maskLen2Mask(Integer.parseInt(components[1]));
@@ -560,6 +580,15 @@ public class OpenVpnRestController {
                     } else {
                         logger.warn("Invalid route: " + route);
                     }
+                }
+                if (site.isRouteInternetThroughVpn()) {
+                    pw.println("push \"redirect-gateway\"");
+                }
+                if (!site.getPushSearchDomains().isEmpty()) {
+                    pw.println(
+                            "push \"dns search-domains %s\""
+                                    .formatted(String.join(" ", site.getPushSearchDomains()))
+                    );
                 }
                 pw.close();
                 fos.close();

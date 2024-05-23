@@ -5,6 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.utils.net.NetUtils;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,18 +53,20 @@ public class VpnSite {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+    // Basics
+    @Column(nullable = false, unique = true)
     private String name;
     private String description;
     @Builder.Default
     private boolean defaultSite = false;
+    // Connection
     @Builder.Default
     private String remoteHost = "www.example.com";
     @Builder.Default
     private SiteVerification siteVerification = SiteVerification.DNS;
     @Builder.Default
     private List<String> ipWhiteList = new LinkedList<>();
-    private String sshUser;
-    private String sshPrivateKey;
+    // DNS
     @Builder.Default
     private boolean inheritDnsServers = true;
     @Builder.Default
@@ -72,22 +75,7 @@ public class VpnSite {
     private boolean inheritPushDomains = true;
     @Builder.Default
     private List<String> pushSearchDomains = Arrays.asList(NetUtils.myDomain());
-
-    public VpnSite() {
-    }
-
-    public List<String> getPushDnsServers(VpnSite defaultSite) {
-        return inheritDnsServers
-                ? defaultSite.getPushDnsServers()
-                : getPushDnsServers();
-    }
-
-    public List<String> getPushSearchDomains(VpnSite defaultSite) {
-        return inheritPushDomains
-                ? defaultSite.getPushSearchDomains()
-                : getPushSearchDomains();
-    }
-
+    // Routing
     @Builder.Default
     private boolean inheritPushRoutes = true;
     @Builder.Default
@@ -96,11 +84,26 @@ public class VpnSite {
     boolean inheritRouteInternetThroughVpn = true;
     @Builder.Default
     private boolean routeInternetThroughVpn = false;
+    private String networkManagerConnectionUuid;
 
-    public List<String> getPushRoutes(VpnSite defaultSite) {
-        return inheritPushRoutes
-                ? defaultSite.getPushRoutes()
-                : getPushRoutes();
+    public VpnSite() {
+    }
+
+    public void updateInheritedValues(VpnSite copyFrom) {
+        if (!defaultSite && copyFrom != null) {
+            if (inheritDnsServers) {
+                pushDnsServers = copyFrom.getPushDnsServers();
+            }
+            if (inheritPushDomains) {
+                pushSearchDomains = copyFrom.getPushSearchDomains();
+            }
+            if (inheritPushRoutes) {
+                pushRoutes = copyFrom.getPushRoutes();
+            }
+            if (inheritRouteInternetThroughVpn) {
+                routeInternetThroughVpn = copyFrom.isRouteInternetThroughVpn();
+            }
+        }
     }
 
     public String label() {

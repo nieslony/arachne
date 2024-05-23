@@ -2,63 +2,77 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.openvpn;
+package at.nieslony.arachne.openvpn.sitevpnupload;
 
+import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.VpnSite;
+import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.UI;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.NativeLabel;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.HtmlUtils;
+import org.springframework.web.context.annotation.SessionScope;
 
 /**
  *
  * @author claas
  */
 @Service
-public class SiteConfigUploader {
+@SessionScope
+public class SiteConfigUploader implements BeanFactoryAware {
 
     private static final Logger logger = LoggerFactory.getLogger(SiteConfigUploader.class);
 
+    enum UploadConfigType {
+        OvpnConfig(".ovpn file"),
+        NMCL("NetworkManger");
+
+        private UploadConfigType(String label) {
+            this.label = label;
+        }
+
+        private String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     @Getter
     @Setter
-    private class SiteUploadSettings {
+    public class SiteUploadSettings {
 
         private String remoteHostName;
         private String username = "";
@@ -66,6 +80,14 @@ public class SiteConfigUploader {
         private boolean sudoRequired = false;
         private boolean restartOpenVpn = false;
         private boolean enableOpenVpn = false;
+
+        private UploadConfigType uploadConfigType = UploadConfigType.NMCL;
+
+        private String connectionName = "OpenVPN_" + NetUtils.myHostname();
+        private String certitifaceFolder = "/etc/pki/arachne";
+        private boolean enableConnection;
+        private boolean autostartConnection;
+
         private String destinationFolder = "/etc/openvpn/client";
         private SshAuthType sshAuthType = USERNAME_PASSWORD;
         private SshKeyEntity sshKey;
@@ -75,6 +97,7 @@ public class SiteConfigUploader {
     private Binder<SiteUploadSettings> binder;
     private VpnSite vpnSite;
     private final SiteUploadSettings uploadSettings;
+    private BeanFactory beanFactory;
 
     @Autowired
     OpenVpnRestController openVPnRestController;
@@ -84,6 +107,9 @@ public class SiteConfigUploader {
 
     @Autowired
     private Settings settings;
+
+    @Autowired
+    private VpnSiteRepository vpnSiteRepository;
 
     public SiteConfigUploader() {
         uploadSettings = new SiteUploadSettings();
@@ -101,7 +127,7 @@ public class SiteConfigUploader {
             uploadSettings.setRemoteHostName(site.getRemoteHost());
         }
         binder.setBean(uploadSettings);
-
+        binder.validate();
         dlg.open();
     }
 
@@ -110,12 +136,17 @@ public class SiteConfigUploader {
         binder = new Binder<>(SiteUploadSettings.class);
 
         TextField destinationFolderField = new TextField("Destination folder");
+        destinationFolderField.setClearButtonVisible(true);
         destinationFolderField.setWidthFull();
+        destinationFolderField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(destinationFolderField)
-                .asRequired()
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
                 .bind(SiteUploadSettings::getDestinationFolder, SiteUploadSettings::setDestinationFolder);
 
         TextField remoteHostNameField = new TextField("Remote Host Name/IP");
+        remoteHostNameField.setClearButtonVisible(true);
         remoteHostNameField.setWidthFull();
         remoteHostNameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(remoteHostNameField)
@@ -128,7 +159,9 @@ public class SiteConfigUploader {
                 .bind(SiteUploadSettings::getRemoteHostName, SiteUploadSettings::setRemoteHostName);
 
         TextField usernameField = new TextField("Username");
+        usernameField.setClearButtonVisible(true);
         usernameField.setWidthFull();
+        usernameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(usernameField)
                 .asRequired()
                 .bind(SiteUploadSettings::getUsername, SiteUploadSettings::setUsername);
@@ -151,6 +184,41 @@ public class SiteConfigUploader {
         requireSudoField.setWidthFull();
         binder.forField(requireSudoField)
                 .bind(SiteUploadSettings::isSudoRequired, SiteUploadSettings::setSudoRequired);
+
+        RadioButtonGroup<UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
+                "Upload Type",
+                UploadConfigType.values()
+        );
+        binder.forField(uploadConfigTypeField)
+                .bind(SiteUploadSettings::getUploadConfigType, SiteUploadSettings::setUploadConfigType);
+
+        TextField connectionNameField = new TextField("Connection Name");
+        connectionNameField.setWidthFull();
+        connectionNameField.setClearButtonVisible(true);
+        connectionNameField.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(connectionNameField)
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
+                .bind(SiteUploadSettings::getConnectionName, SiteUploadSettings::setConnectionName);
+
+        TextField certificateFolderField = new TextField("Certificate Folder");
+        certificateFolderField.setClearButtonVisible(true);
+        certificateFolderField.setWidthFull();
+        certificateFolderField.setValueChangeMode(ValueChangeMode.EAGER);
+        binder.forField(certificateFolderField)
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
+                        new StringLengthValidator("Value required", 1, 65535)
+                ))
+                .bind(SiteUploadSettings::getCertitifaceFolder, SiteUploadSettings::setCertitifaceFolder);
+
+        Checkbox enableConnectionField = new Checkbox("Enable Connection");
+        binder.forField(enableConnectionField)
+                .bind(SiteUploadSettings::isEnableConnection, SiteUploadSettings::setEnableConnection);
+
+        Checkbox autostartConnectionField = new Checkbox("Autostart Connection on Boot");
+        binder.forField(autostartConnectionField)
+                .bind(SiteUploadSettings::isAutostartConnection, SiteUploadSettings::setAutostartConnection);
 
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
         restartOpenVpnField.setWidthFull();
@@ -181,6 +249,11 @@ public class SiteConfigUploader {
 
         VerticalLayout actionsLayout = new VerticalLayout(
                 requireSudoField,
+                uploadConfigTypeField,
+                connectionNameField,
+                certificateFolderField,
+                enableConnectionField,
+                autostartConnectionField,
                 destinationFolderField,
                 restartOpenVpnField,
                 enableOpenVpnField
@@ -193,12 +266,19 @@ public class SiteConfigUploader {
                 actionsLayout
         );
         dlg.add(layout);
+        dlg.setMinWidth(50, Unit.EM);
 
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
             try {
                 binder.writeBean(uploadSettings);
-                onUploadConfig();
+                Thread thread = switch (uploadSettings.getUploadConfigType()) {
+                    case NMCL ->
+                        new NMConfigUploadThread(uploadSettings, vpnSite, beanFactory);
+                    case OvpnConfig ->
+                        new OvpnConfigUploadThread(uploadSettings, vpnSite, beanFactory);
+                };
+                thread.start();
             } catch (ValidationException ex) {
                 logger.error("Input validation Error: " + ex.getMessage());
             }
@@ -231,6 +311,34 @@ public class SiteConfigUploader {
             }
         });
 
+        uploadConfigTypeField.addValueChangeListener((e) -> {
+            switch (e.getValue()) {
+                case NMCL -> {
+                    connectionNameField.setVisible(true);
+                    certificateFolderField.setVisible(true);
+                    enableConnectionField.setVisible(true);
+                    autostartConnectionField.setVisible(true);
+                    destinationFolderField.setVisible(false);
+                    restartOpenVpnField.setVisible(false);
+                    enableOpenVpnField.setVisible(false);
+                }
+                case OvpnConfig -> {
+                    connectionNameField.setVisible(false);
+                    certificateFolderField.setVisible(false);
+                    enableConnectionField.setVisible(false);
+                    autostartConnectionField.setVisible(false);
+                    destinationFolderField.setVisible(true);
+                    restartOpenVpnField.setVisible(true);
+                    enableOpenVpnField.setVisible(true);
+                }
+            }
+            binder.validate();
+        });
+
+        binder.addStatusChangeListener(
+                (e) -> okButton.setEnabled(!e.hasValidationErrors())
+        );
+
         authTypeSelect.setValue(SshAuthType.USERNAME_PASSWORD);
 
         dlg.addOpenedChangeListener((ocl) -> {
@@ -246,169 +354,8 @@ public class SiteConfigUploader {
         return dlg;
     }
 
-    private String buildUploadCommand() {
-        OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
-        String configName = openVPnRestController.getOpenVpnSiteRemoteConfigName(siteSettings, vpnSite);
-        String configFileName = openVPnRestController.getOpenVpnSiteRemoteConfigFileName(siteSettings, vpnSite);
-        String outputFile = "/tmp/%s".formatted(configName);
-        String sudo = uploadSettings.isSudoRequired() ? "sudo -S -p 'Sudo: '" : "";
-        StringWriter configWriter = new StringWriter();
-        openVPnRestController.writeOpenVpnSiteRemoteConfig(vpnSite.getId(), configWriter);
-
-        return new StringBuilder()
-                .append("%s mkdir -pv %s || exit 1\n".formatted(sudo, uploadSettings.getDestinationFolder()))
-                .append("""
-                           cat <<EOF > %s
-                           %s
-                           EOF
-                           """.formatted(outputFile, configWriter.toString()))
-                .append("%s mv -v %s %s || exit 1\n".formatted(
-                        sudo,
-                        outputFile,
-                        uploadSettings.getDestinationFolder()
-                ))
-                .append(uploadSettings.isRestartOpenVpn()
-                        ? "%s SYSTEMD_COLORS=false systemctl restart openvpn-client@%s || exit 1\n".formatted(sudo, configName)
-                        : ""
-                )
-                .append(uploadSettings.isEnableOpenVpn()
-                        ? "%s SYSTEMD_COLORS=false systemctl enable openvpn-client@%s || exit 1\n".formatted(sudo, configName)
-                        : ""
-                )
-                .append("sleep 1\n")
-                .toString();
-    }
-
-    private void onUploadConfig() {
-        Dialog uploadingDlg = new Dialog("Uploading...");
-
-        ProgressBar progressBar = new ProgressBar();
-        progressBar.setIndeterminate(true);
-
-        NativeLabel label = new NativeLabel("Connecting...");
-
-        Button cancelButton = new Button("Cancel");
-
-        UI ui = UI.getCurrent();
-        Thread uploadThread = new Thread(
-                () -> {
-                    ui.access(() -> uploadingDlg.open());
-                    Notification notification = _onUploadConfig(ui, label);
-                    ui.access(() -> uploadingDlg.close());
-                    if (notification != null) {
-                        ui.access(() -> notification.open());
-                        try {
-                            wait();
-                        } catch (InterruptedException | IllegalMonitorStateException ex) {
-                        }
-                    }
-                    logger.info("Terminated.");
-                },
-                "Upload Site Configuration"
-        );
-
-        uploadingDlg.add(label, progressBar);
-        uploadingDlg.getFooter().add(cancelButton);
-
-        cancelButton.addClickListener((t) -> {
-            uploadingDlg.close();
-            uploadThread.interrupt();
-        });
-
-        uploadThread.start();
-    }
-
-    private Notification _onUploadConfig(UI ui, NativeLabel infoLabel) {
-        JSch ssh = new JSch();
-        Session session = null;
-        ChannelExec execChannel = null;
-        String command = buildUploadCommand();
-        Notification notification = null;
-
-        try {
-            session = ssh.getSession(uploadSettings.getUsername(), uploadSettings.getRemoteHostName());
-            switch (uploadSettings.getSshAuthType()) {
-                case USERNAME_PASSWORD ->
-                    session.setPassword(uploadSettings.getPassword());
-                case PUBLIC_KEY -> {
-                    SshKeyEntity sshKey = uploadSettings.getSshKey();
-                    ssh.addIdentity(
-                            sshKey.getComment(),
-                            sshKey.getPrivateKey().getBytes(),
-                            sshKey.getPublicKey().getBytes(),
-                            "".getBytes());
-                }
-            }
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
-            execChannel = (ChannelExec) session.openChannel("exec");
-            InputStream in = execChannel.getInputStream();
-            InputStream err = execChannel.getErrStream();
-            OutputStream out = execChannel.getOutputStream();
-            execChannel.setCommand(command);
-            execChannel.setPty(true);
-            ui.access(() -> infoLabel.setText("Executing script..."));
-            execChannel.connect();
-
-            if (uploadSettings.isSudoRequired()) {
-                logger.info("Sending passwortd for sudo");
-                out.write((uploadSettings.getPassword() + "\n").getBytes());
-                out.flush();
-            }
-            byte[] tmp = new byte[1024];
-            StringBuilder msgs = new StringBuilder();
-            while (true) {
-                while (in.available() > 0) {
-                    int i = in.read(tmp, 0, 1024);
-                    if (i < 0) {
-                        break;
-                    }
-                    msgs.append(new String(tmp, 0, i));
-                }
-                while (err.available() > 0) {
-                    int i = err.read(tmp, 0, 1024);
-                    if (i < 0) {
-                        break;
-                    }
-                    msgs.append(new String(tmp, 0, i));
-                }
-                if (execChannel.isClosed()) {
-                    var exitStatus = execChannel.getExitStatus();
-                    if (exitStatus == 0) {
-                        String msg = "Configuration successfully uploaded to " + vpnSite.getRemoteHost();
-                        logger.info(msg);
-                        notification = ShowNotification.createInfo(msg);
-                    } else {
-                        String header = "Configuration upload failed";
-                        String msg = HtmlUtils.htmlEscape(msgs.toString())
-                                .replaceAll("\n", "<br>");
-                        logger.error(header + ": " + msg);
-                        notification = ShowNotification.createError(
-                                header,
-                                new Html("<text>" + msg + "</text>")
-                        );
-                    }
-                    break;
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ee) {
-                    logger.info("Upload interrupted");
-                }
-            }
-        } catch (IOException | JSchException ex) {
-            String header = "Error connecting to " + vpnSite.getRemoteHost();
-            logger.error(header + ": " + ex.getMessage());
-            notification = ShowNotification.createError(header, ex.getMessage());
-        } finally {
-            if (execChannel != null) {
-                execChannel.disconnect();
-            }
-            if (session != null) {
-                session.disconnect();
-            }
-        }
-
-        return notification;
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }
