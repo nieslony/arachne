@@ -14,14 +14,19 @@ import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -29,18 +34,26 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.kerberos.authentication.KerberosAuthenticationProvider;
 import org.springframework.security.kerberos.authentication.KerberosServiceAuthenticationProvider;
+import org.springframework.security.kerberos.authentication.KerberosServiceRequestToken;
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosClient;
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 /**
  *
@@ -55,15 +68,18 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+    /*
+                    <head>
+                    <meta http-equiv="refresh" content="0; URL=/arachne/login" />
+                </head>
 
+     */
     private static final String ERROR_401
             = """
             <html>
-                <head>
-                    <meta http-equiv="refresh" content="0; URL=/arachne/login" />
-                </head>
+                <head></head>
                 <body>
-                    Redirecting to login page...
+                    Redirecting to <a href="/arachne/login>login page</a>...
                 </body>
             </html>
             """;
@@ -98,7 +114,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        SpnegoEntryPoint sep = new SpnegoEntryPoint("/unauthorized");
+        SpnegoEntryPoint sep = new SpnegoEntryPoint("/bla");
         return sep;
     }
 
@@ -108,17 +124,18 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
+        http.httpBasic((t) -> {
+            t.realmName("Arachne");
+        });
 
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
         }
-        http.exceptionHandling((eh) -> {
-            eh.authenticationEntryPoint(spnegoEntryPoint());
-        });
         if (kerberosSettings.isEnableKrbAuth()) {
             http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
                     BasicAuthenticationFilter.class);
-            /*http.addFilterBefore(
+            //http.addFilterBefore(
+            http.addFilterAfter(
                     (req, res, fc) -> {
                         HttpServletRequest httpRequest = (HttpServletRequest) req;
                         HttpServletResponse httpResponse = (HttpServletResponse) res;
@@ -137,14 +154,21 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                                     UnAuthorizedHandler.None
                             );
                         }
+                        String authHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
+                        if (authHeader != null && authHeader.startsWith("Basic ")) {
+                            logger.info("Basic auth");
+                            //fc.doFilter(req, res);
+                            return;
+                        }
                         if (userPrincipal == null
                         && !httpRequest.getServletPath().equals("/login")
-                        && session.getAttribute(getUnAuthoAttr()) == UnAuthorizedHandler.None) {
+                        && session.getAttribute(getUnAuthoAttr()) != UnAuthorizedHandler.Error401) {
                             var writer = httpResponse.getWriter();
                             writer.println(ERROR_401);
-                            httpResponse.addHeader("WWW-Authenticate", "Negotiate");
                             httpResponse.setContentType("text/html; charset=iso-8859-1");
-                            httpResponse.setStatus(401);
+                            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            httpResponse.setHeader(HttpHeaders.LOCATION, "/arachne/login");
+                            httpResponse.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Negotiate");
                             session.setAttribute(
                                     getUnAuthoAttr(),
                                     UnAuthorizedHandler.Error401
@@ -176,8 +200,10 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                             }
                         }
                     },
-                    AuthorizationFilter.class
-            );*/
+                    //AuthorizationFilter.class
+                    //SpnegoAuthenticationProcessingFilter.class
+                    BasicAuthenticationFilter.class
+            );
         }
     }
 
@@ -230,9 +256,28 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 logger.error("Cannot authenticate with Kerberos: " + exception.getMessage());
                 response.sendError(HttpStatus.UNAUTHORIZED.value());
             });
-            filter.setSuccessHandler((request, response, authentication) -> {
+            /*filter.setSuccessHandler((request, response, authentication) -> {
                 logger.info("Access to %s granted".formatted(request.getContextPath()));
+            });*/
+            filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
+                private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+
+                private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+
+                @Override
+                public void onAuthenticationSuccess(
+                        final HttpServletRequest request,
+                        final HttpServletResponse response,
+                        final Authentication authentication
+                ) throws IOException, ServletException {
+                    logger.info("Access to %s granted".formatted(request.getContextPath()));
+                    SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+                    context.setAuthentication(authentication);
+                    securityContextHolderStrategy.setContext(context);
+                    securityContextRepository.saveContext(context, request, response);
+                }
             });
+
             return filter;
         } else {
             return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {

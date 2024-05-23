@@ -16,7 +16,10 @@
  */
 package at.nieslony.arachne.auth;
 
+import com.vaadin.flow.server.VaadinSession;
 import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
@@ -28,9 +31,25 @@ import org.springframework.web.servlet.view.RedirectView;
 @RestController
 public class SsoRestController {
 
+    private static final org.slf4j.Logger logger
+            = LoggerFactory.getLogger(SsoRestController.class);
+
     @GetMapping("/sso")
     @PermitAll
-    public RedirectView getSso() {
+    public RedirectView getSso(HttpServletRequest request) {
+        logger.info("Try sso from /sso");
+        var session = request.getSession();
+        if (session != null) {
+            logger.info("Invalidating http session");
+            session.invalidate();
+        }
+        var vaadinSession = VaadinSession.getCurrent();
+        if (vaadinSession != null) try {
+            logger.info("Invalidating vaadon session");
+            vaadinSession.close();
+        } catch (IllegalStateException ex) {
+            logger.info("Vaadin session already invalidated");
+        }
         RedirectView view = new RedirectView("/", true);
         return view;
     }

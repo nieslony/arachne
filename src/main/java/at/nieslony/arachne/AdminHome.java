@@ -59,7 +59,7 @@ public class AdminHome
         return new TimerTask() {
             @Override
             public void run() {
-                onRefreshConnectedUsers();
+                //---> onRefreshConnectedUsers();
             }
         };
     }

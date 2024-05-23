@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.configuration.SecurityConfiguration;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.setup.SetupController;
@@ -18,6 +19,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
 
@@ -75,20 +77,27 @@ public class LoginOrSetupView
                     "Login with SSO",
                     e -> {
                         login.setOpened(false);
-                        UI.getCurrent().getPage().setLocation("/arachne/sso");
+                        var vaadinSession = VaadinSession.getCurrent();
+                        if (vaadinSession != null) try {
+                            logger.info("Invalidating vaadon session");
+                            vaadinSession.close();
+                        } catch (IllegalStateException ex) {
+                            logger.info("Vaadin session already invalidated");
+                        }
+                        UI.getCurrent().getPage().setLocation("/arachne");
                     }
             );
             toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             toSSoButton.setWidthFull();
             login.getFooter().add(toSSoButton);
-            /*login.addLoginListener((ll) -> {
+            login.addLoginListener((ll) -> {
                 var session = VaadinSession.getCurrent().getSession();
                 session.setAttribute(
-                        getUnAuthoAttr(),
+                        SecurityConfiguration.getUnAuthoAttr(),
                         SecurityConfiguration.UnAuthorizedHandler.FormLogin
                 );
                 logger.info("Form login successful");
-            });*/
+            });
         }
     }
 
