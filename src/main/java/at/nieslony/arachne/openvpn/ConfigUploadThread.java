@@ -172,7 +172,6 @@ public abstract class ConfigUploadThread extends Thread {
                 stderrBuilder.toString(),
                 execChannel.getExitStatus()
         );
-        logger.info(ret.toString());
         return ret;
     }
 
