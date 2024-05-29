@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405232055_d18c4d1
+Version:        1.3.10.git_2405291215_b7819cd
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405291215_b7819cd-1
+- Make clear which 'remote host' is meant (github@nieslony.at)
+
 * Thu May 23 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405232055_d18c4d1-1
 - Move classes for site upload to own package (github@nieslony.at)
 - Move .ovpn upload to OvpnConfigUploadThread (github@nieslony.at)
