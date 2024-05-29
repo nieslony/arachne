@@ -10,7 +10,6 @@ import at.nieslony.arachne.settings.Settings;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
-import at.nieslony.arachne.utils.ShowNotification;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -18,9 +17,10 @@ import com.jcraft.jsch.Session;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import java.io.IOException;
@@ -68,6 +68,12 @@ public abstract class ConfigUploadThread extends Thread {
     private final Dialog uploadingDlg;
     private final UI ui;
     private final VerticalLayout commandsItems;
+    private final Paragraph successMessage;
+    private final Paragraph errorHeader;
+    private final Paragraph errorMessage;
+    private final Button cancelButton;
+    private final Button closeButton;
+
     protected final SiteConfigUploader.SiteUploadSettings uploadSettings;
     protected final OpenVpnSiteSettings openVpnSiteSettings;
     protected final VpnSite vpnSite;
@@ -111,15 +117,41 @@ public abstract class ConfigUploadThread extends Thread {
 
         commandsItems = new VerticalLayout();
 
-        Button cancelButton = new Button("Cancel");
+        successMessage = new Paragraph("");
+        successMessage.getStyle()
+                .set("color", "green");
 
-        uploadingDlg.add(commandsItems);
-        uploadingDlg.getFooter().add(cancelButton);
+        errorHeader = new Paragraph("");
+        errorHeader.getStyle()
+                .set("color", "red")
+                .set("font-weight", "bold");
 
-        cancelButton.addClickListener((t) -> {
-            uploadingDlg.close();
-            interrupt();
-        });
+        errorMessage = new Paragraph("");
+        errorMessage.getStyle()
+                .set("color", "red");
+
+        cancelButton = new Button(
+                "Cancel",
+                (e) -> {
+                    uploadingDlg.close();
+                    interrupt();
+                }
+        );
+        closeButton = new Button(
+                "Close",
+                (e) -> uploadingDlg.close()
+        );
+        closeButton.setVisible(false);
+        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        uploadingDlg.add(
+                commandsItems,
+                successMessage,
+                errorHeader,
+                errorMessage
+        );
+        uploadingDlg.getFooter().add(cancelButton, closeButton);
+
     }
 
     protected CommandReturn execCommand(String command)
@@ -184,7 +216,6 @@ public abstract class ConfigUploadThread extends Thread {
         ui.access(() -> uploadingDlg.open());
 
         JSch ssh = new JSch();
-        AtomicReference<Notification> notification = new AtomicReference<>(null);
 
         try {
             comdLineDescriptors.add(new CommandDescriptor(
@@ -193,7 +224,7 @@ public abstract class ConfigUploadThread extends Thread {
                         try {
                             session = ssh.getSession(
                                     uploadSettings.getUsername(),
-                                    uploadSettings.getConnectionName()
+                                    uploadSettings.getUploadToHost()
                             );
                             switch (uploadSettings.getSshAuthType()) {
                                 case USERNAME_PASSWORD ->
@@ -224,16 +255,17 @@ public abstract class ConfigUploadThread extends Thread {
 
             comdLineDescriptors.forEach((item) -> {
                 HorizontalLayout layout = new HorizontalLayout(
-                        VaadinIcon.CLOCK.create(),
+                        VaadinIcon.HOURGLASS.create(),
                         new Text(item.getLabel())
                 );
                 ui.access(() -> commandsItems.add(layout));
                 item.setLayout(layout);
             });
 
-            for (var cmd : comdLineDescriptors) {
-
-                try {
+            AtomicReference<HorizontalLayout> layout = new AtomicReference<>();
+            try {
+                for (var cmd : comdLineDescriptors) {
+                    layout.set(cmd.layout);
                     ui.access(() -> {
                         var curIcon = cmd.layout.getComponentAt(0);
                         var newIcon = VaadinIcon.ARROWS_LONG_RIGHT.create();
@@ -253,17 +285,27 @@ public abstract class ConfigUploadThread extends Thread {
                         newIcon.addClassName("--lumo-success-color");
                         cmd.layout.replace(curIcon, newIcon);
                     });
-                } catch (CommandException ex) {
-                    notification.set(ShowNotification.createError(ex.getWhat(), ex.getWhy()));
-                    break;
-                } catch (Exception ex) {
-                    notification.set(ShowNotification.createError("Error", ex.getMessage()));
-                    StringWriter wr = new StringWriter();
-                    ex.printStackTrace(new PrintWriter(wr));
-                    logger.error(ex.getMessage());
-                    logger.error(wr.toString());
-                    break;
                 }
+                ui.access(() -> successMessage.setText("Configuration successfully uploaded"));
+            } catch (CommandException ex) {
+                ui.access(() -> {
+                    var curIcon = layout.get().getComponentAt(0);
+                    var newIcon = VaadinIcon.CLOSE.create();
+                    layout.get().replace(curIcon, newIcon);
+                    errorHeader.setText(ex.getWhat());
+                    errorMessage.setText(ex.getWhy());
+                });
+            } catch (Exception ex) {
+                ui.access(() -> {
+                    var curIcon = layout.get().getComponentAt(0);
+                    var newIcon = VaadinIcon.CLOSE.create();
+                    layout.get().replace(curIcon, newIcon);
+                    errorMessage.setText(ex.getMessage());
+                });
+                StringWriter wr = new StringWriter();
+                ex.printStackTrace(new PrintWriter(wr));
+                logger.error(ex.getMessage());
+                logger.error(wr.toString());
             }
         } finally {
             if (session != null) {
@@ -271,13 +313,9 @@ public abstract class ConfigUploadThread extends Thread {
             }
         }
 
-        ui.access(() -> uploadingDlg.close());
-        if (notification.get() != null) {
-            ui.access(() -> notification.get().open());
-            try {
-                wait();
-            } catch (InterruptedException | IllegalMonitorStateException ex) {
-            }
-        }
+        ui.access(() -> {
+            cancelButton.setVisible(false);
+            closeButton.setVisible(true);
+        });
     }
 }
