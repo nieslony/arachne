@@ -265,8 +265,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                                 .withResolvableRequired(true)
                 )
                 .bind(
-                        OpenVpnSiteSettings::getRemote,
-                        OpenVpnSiteSettings::setRemote
+                        OpenVpnSiteSettings::getConnectToHost,
+                        OpenVpnSiteSettings::setConnectToHost
                 );
 
         Select<String> interfaceType = new Select<>();
@@ -731,8 +731,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                         new HostnameValidator()
                 ))
                 .bind(
-                        VpnSite::getRemoteHost,
-                        VpnSite::setRemoteHost
+                        VpnSite::getSiteHostname,
+                        VpnSite::setSiteHostname
                 );
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 

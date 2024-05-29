@@ -529,7 +529,7 @@ public class OpenVpnRestController {
             if (site.isDefaultSite()) {
                 continue;
             }
-            String fileName = getSitePluginConf(site.getRemoteHost());
+            String fileName = getSitePluginConf(site.getSiteHostname());
             logger.info("Creating plugin site config " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 PrintWriter pw = new PrintWriter(fos);
@@ -556,7 +556,7 @@ public class OpenVpnRestController {
             String fileName
                     = "%s/%s".formatted(
                             clientConfDirName,
-                            site.getRemoteHost()
+                            site.getSiteHostname()
                     );
             site.updateInheritedValues(defaultSite);
             logger.info("Creating site configuration " + fileName);
@@ -688,7 +688,7 @@ public class OpenVpnRestController {
             pw.println(
                     "remote %s %s %s"
                             .formatted(
-                                    openVpnSiteSettings.getRemote(),
+                                    openVpnSiteSettings.getConnectToHost(),
                                     openVpnSiteSettings.getListenPort(),
                                     openVpnSiteSettings.getListenProtocol()
                                             .toString()
@@ -707,14 +707,14 @@ public class OpenVpnRestController {
                    %s
                    </cert>
                    """
-                    .formatted(pki.getUserCertAsBase64(site.get().getRemoteHost()))
+                    .formatted(pki.getUserCertAsBase64(site.get().getSiteHostname()))
             );
             pw.println("""
                    <key>
                    %s
                    </key>
                    """
-                    .formatted(pki.getUserKeyAsBase64(site.get().getRemoteHost()))
+                    .formatted(pki.getUserKeyAsBase64(site.get().getSiteHostname()))
             );
         } catch (PkiException | SettingsException ex) {
             logger.error("Cannot write site remote configuration: " + ex.getMessage());
@@ -732,6 +732,6 @@ public class OpenVpnRestController {
             OpenVpnSiteSettings siteSettings,
             VpnSite vpnSite
     ) {
-        return "arachne_%s_%s".formatted(siteSettings.getRemote(), vpnSite.getRemoteHost());
+        return "arachne_%s_%s".formatted(siteSettings.getConnectToHost(), vpnSite.getSiteHostname());
     }
 }

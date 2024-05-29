@@ -74,7 +74,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
     @Setter
     public class SiteUploadSettings {
 
-        private String remoteHostName;
+        private String uploadToHost;
         private String username = "";
         private String password = "";
         private boolean sudoRequired = false;
@@ -121,10 +121,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
     }
 
     public void openDialog(VpnSite site) {
-        dlg.setHeaderTitle("Upload Configuration to " + site.getRemoteHost());
+        dlg.setHeaderTitle("Upload Configuration to " + site.getSiteHostname());
         this.vpnSite = site;
-        if (uploadSettings.remoteHostName == null || uploadSettings.getRemoteHostName().isEmpty()) {
-            uploadSettings.setRemoteHostName(site.getRemoteHost());
+        if (uploadSettings.uploadToHost == null || uploadSettings.getUploadToHost().isEmpty()) {
+            uploadSettings.setUploadToHost(site.getSiteHostname());
         }
         binder.setBean(uploadSettings);
         binder.validate();
@@ -156,7 +156,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
                                 .withIpAllowed(true)
                                 .withResolvableRequired(true)
                 )
-                .bind(SiteUploadSettings::getRemoteHostName, SiteUploadSettings::setRemoteHostName);
+                .bind(SiteUploadSettings::getUploadToHost, SiteUploadSettings::setUploadToHost);
 
         TextField usernameField = new TextField("Username");
         usernameField.setClearButtonVisible(true);

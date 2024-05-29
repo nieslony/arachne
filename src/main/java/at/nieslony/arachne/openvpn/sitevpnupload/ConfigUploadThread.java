@@ -106,7 +106,7 @@ public abstract class ConfigUploadThread extends Thread {
         this.openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         uploadingDlg = new Dialog("Uploading configuration to %s..."
-                .formatted(uploadSettings.getRemoteHostName())
+                .formatted(vpnSite.getSiteHostname())
         );
 
         commandsItems = new VerticalLayout();
@@ -188,10 +188,13 @@ public abstract class ConfigUploadThread extends Thread {
 
         try {
             comdLineDescriptors.add(new CommandDescriptor(
-                    "Connect",
+                    "Connect to " + uploadSettings.getUploadToHost(),
                     () -> {
                         try {
-                            session = ssh.getSession(uploadSettings.getUsername(), uploadSettings.getRemoteHostName());
+                            session = ssh.getSession(
+                                    uploadSettings.getUsername(),
+                                    uploadSettings.getConnectionName()
+                            );
                             switch (uploadSettings.getSshAuthType()) {
                                 case USERNAME_PASSWORD ->
                                     session.setPassword(uploadSettings.getPassword());
@@ -209,7 +212,7 @@ public abstract class ConfigUploadThread extends Thread {
                             logger.info("Connected.");
                         } catch (JSchException ex) {
                             throw new CommandException(
-                                    "Cannot connect to " + uploadSettings.getRemoteHostName(),
+                                    "Cannot connect to " + uploadSettings.getUploadToHost(),
                                     ex.getMessage()
                             );
                         }

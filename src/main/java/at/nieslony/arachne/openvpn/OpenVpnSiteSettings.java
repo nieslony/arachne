@@ -33,7 +33,7 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private int listenPort = 1194;
     private TransportProtocol listenProtocol = TransportProtocol.UDP;
     private Boolean mtuTest = true;
-    private String remote = NetUtils.myHostname();
+    private String connectToHost = NetUtils.myHostname();
     private String deviceType = "tun";
     private String deviceName = "arachne-site";
     private String siteNetwork = "192.168.101.0";

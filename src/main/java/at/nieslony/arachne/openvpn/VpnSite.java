@@ -61,7 +61,7 @@ public class VpnSite {
     private boolean defaultSite = false;
     // Connection
     @Builder.Default
-    private String remoteHost = "www.example.com";
+    private String siteHostname = "www.example.com";
     @Builder.Default
     private SiteVerification siteVerification = SiteVerification.DNS;
     @Builder.Default

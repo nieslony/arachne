@@ -107,8 +107,8 @@ public class NMConfigUploadThread extends ConfigUploadThread {
                 """
                             .replace("${CERT_FOLDER}", uploadSettings.getCertitifaceFolder())
                             .replace("${CA_CERT}", pki.getRootCertAsBase64())
-                            .replace("${CERT}", pki.getUserCertAsBase64(vpnSite.getRemoteHost()))
-                            .replace("${KEY}", pki.getUserKeyAsBase64(vpnSite.getRemoteHost()))
+                            .replace("${CERT}", pki.getUserCertAsBase64(vpnSite.getSiteHostname()))
+                            .replace("${KEY}", pki.getUserKeyAsBase64(vpnSite.getSiteHostname()))
                             .replace("${CA_CERT_FN}", getCaCertFileName())
                             .replace("${CERT_FN}", getCertFileName())
                             .replace("${KEY_FN}", getKeyFileName());
@@ -132,7 +132,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
             + (openVpnSiteSettings.getListenProtocol() == TransportProtocol.TCP
             ? "yes"
             : "no"),
-            "remote = " + vpnSite.getRemoteHost(),
+            "remote = " + openVpnSiteSettings.getConnectToHost(),
             "remote-random = no",
             "tun-ipv6 = no"
         };
@@ -175,7 +175,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         return "%s/arachne_ca_%s.crt"
                 .formatted(
                         uploadSettings.getCertitifaceFolder(),
-                        openVpnSiteSettings.getRemote()
+                        openVpnSiteSettings.getConnectToHost()
                 );
     }
 
@@ -183,7 +183,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         return "%s/%s.crt"
                 .formatted(
                         uploadSettings.getCertitifaceFolder(),
-                        vpnSite.getRemoteHost()
+                        vpnSite.getSiteHostname()
                 );
     }
 
@@ -191,7 +191,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         return "%s/%s.key"
                 .formatted(
                         uploadSettings.getCertitifaceFolder(),
-                        vpnSite.getRemoteHost()
+                        vpnSite.getSiteHostname()
                 );
     }
 }
