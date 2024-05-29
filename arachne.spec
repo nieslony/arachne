@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405291215_b7819cd
+Version:        1.3.10.git_2405292333_b74de79
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405292333_b74de79-1
+- - Fix: connect to host - make upload progress dialog prettier
+  (github@nieslony.at)
+
 * Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405291215_b7819cd-1
 - Make clear which 'remote host' is meant (github@nieslony.at)
 
