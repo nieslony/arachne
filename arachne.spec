@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2405292333_b74de79
+Version:        1.3.10.git_2406141752_1e6049b
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Jun 14 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2406141752_1e6049b-1
+- Enable HTTPS by default (github@nieslony.at)
+- Bump dependencies (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+
 * Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405292333_b74de79-1
 - - Fix: connect to host - make upload progress dialog prettier
   (github@nieslony.at)
