@@ -223,7 +223,7 @@ public class TomcatView extends VerticalLayout {
         }
 
         binder.forField(httpsEnabledField)
-                .bind(TomcatSettings::isHttpConnectorEnabled, TomcatSettings::setHttpConnectorEnabled);
+                .bind(TomcatSettings::isHttpsConnectorEnabled, TomcatSettings::setHttpsConnectorEnabled);
         binder.forField(httpsPortField)
                 .bind(TomcatSettings::getHttpsPort, TomcatSettings::setHttpsPort);
         binder.forField(httpsServerCertAsWebCertField)

@@ -154,7 +154,7 @@ public class TomcatConfiguration {
         PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
-        if (tomcatSettings.isHttpConnectorEnabled()) {
+        if (tomcatSettings.isHttpsConnectorEnabled()) {
             logger.info("Enabling Tomcat SSL");
             if (!Files.exists(Paths.get(tomcatKeyPath))) {
                 KeyPair keyPair = createSslKey();
