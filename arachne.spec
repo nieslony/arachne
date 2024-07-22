@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2406141752_1e6049b
+Version:        1.3.10.git_2407221316_a37f326
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,15 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon Jul 22 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2407221316_a37f326-1
+- Bump spring-security-kerberos, spring-boot-starter-parent
+  (github@nieslony.at)
+- Ignore src/main/bundles (github@nieslony.at)
+- Get SSL cert from IPA server, openfirewall for 8443 (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Open API docs in new tab (github@nieslony.at)
+- Bump vaadin vertsion to 24.4 (github@nieslony.at)
+
 * Fri Jun 14 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2406141752_1e6049b-1
 - Enable HTTPS by default (github@nieslony.at)
 - Bump dependencies (github@nieslony.at)
