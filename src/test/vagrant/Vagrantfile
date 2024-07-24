@@ -1,3 +1,5 @@
+require 'yaml'
+
 hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
 def_copr_repo = "nieslony/arachne"
 
@@ -11,6 +13,19 @@ if not ENV.key?("ARACHNE_REPO")
         puts "Warning: ARACHNE_REPO noit set falling back to given ARACHNE_COPR " + arachne_copr
     end
 end
+
+if File.exist?("provision.d/ansible.cfg")
+    ansible_cfg = "provision.d/ansible.cfg"
+else
+    ansible_cfg = ""
+end
+
+if File.exist?("provision.d/extra_vars.yml")
+    extra_vars = YAML.load_file("provision.d/extra_vars.yml")
+else
+    extra_vars = {}
+end
+extra_vars["vhosts"] = [hostname]
 
 Vagrant.configure("2") do |config|
     config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone", "vagrant-proxyconf" ]
@@ -37,15 +52,8 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.define "arachne" do |arachne|
-        arachne.vm.box = "generic/centos9s"
+        arachne.vm.box = "almalinux/9"
         arachne.timezone.value = :host
-
-        if File.exist?("provision.d/extra_vars.yml")
-            puts "Including extra_vars.yml"
-            inc_extra_vars = "provision.d/extra_vars.yml"
-        else
-            inc_extra_vars = {}
-        end
 
         Dir["provision.d/*"].each do |filename|
             case File.extname(filename)
@@ -57,20 +65,19 @@ Vagrant.configure("2") do |config|
                     config.vm.provision "shell",
                         path: "#{filename}"
                 when ".yml"
-                    if filename == "provision.d/extra_vars.yml"
-                        puts "Ignoring extra_vars.yml"
-                    else
-                        puts "Including #{filename} as Ansible Provisioner"
-                        ansible_cfg = "#{File.dirname(File.realdirpath(filename))}/ansible.cfg"
-                        if File.exist?(ansible_cfg)
-                            config.vm.provision "ansible",
+                    puts "Including #{filename} as Ansible Provisioner"
+                    if filename != "provision.d/extra_vars.yml"
+                        if ansible_cfg != ""
+                            config.vm.provision "Provision #{filename}",
+                                type: "ansible",
                                 playbook: filename,
-                                extra_vars: inc_extra_vars,
-                                config_file: ansible_cfg
+                                config_file: ansible_cfg,
+                                extra_vars: extra_vars
                         else
-                            config.vm.provision "ansible",
+                            config.vm.provision "Provision #{filename}",
+                                type: "ansible",
                                 playbook: filename,
-                                extra_vars: inc_extra_vars
+                                extra_vars: extra_vars
                         end
                     end
                 else
