@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
@@ -56,22 +57,29 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             ui.access(() -> {
                 var clients = status.getConnectedClients();
-                logger.info("Updating users list: " + clients.toString());
                 grid.setItems(clients);
                 ui.push();
             });
         }
     };
 
+    private final VpnSiteRepository vpnSiteRepository;
     private final ArachneDbus arachneDbus;
     private Grid<IFaceConnectedClient> connectedUsersGrid;
+    private Grid<IFaceConnectedClient> connectedSitesGrid;
     private final Consumer<IFaceOpenVpnStatus> updateConnectedUserListener;
+    private final Consumer<IFaceOpenVpnStatus> updateConnectedSitesListener;
 
-    public AdminHome(ArachneDbus arachneDbus) {
+    public AdminHome(ArachneDbus arachneDbus, VpnSiteRepository vpnSiteRepository) {
         this.arachneDbus = arachneDbus;
+        this.vpnSiteRepository = vpnSiteRepository;
         this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
+        this.updateConnectedSitesListener = new ConnectedClientsListener(UI.getCurrent(), connectedSitesGrid);
 
-        add(createConnectedUsersView());
+        add(
+                createConnectedUsersView(),
+                createConnectedSitesView()
+        );
         setPadding(false);
     }
 
@@ -79,17 +87,24 @@ public class AdminHome
     public void init() {
         addDetachListener((t) -> {
             logger.info("Detach");
-            arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
+            arachneDbus.removeServerStatusChangedListener(
+                    ArachneDbus.ServerType.USER,
+                    updateConnectedUserListener
+            );
         });
     }
 
     private void onRefreshConnectedUsers() {
         try {
-            var connectedUsers = arachneDbus.getServerStatus().getConnectedClients();
+            var connectedUsers = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER).getConnectedClients();
             connectedUsersGrid.setItems(connectedUsers);
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("Error getting connected users: " + ex.getMessage());
         }
+    }
+
+    private void onRefreshConnectedSites() {
+        vpnSiteRepository.findAll();
     }
 
     private Component createConnectedUsersView() {
@@ -117,19 +132,62 @@ public class AdminHome
 
         onRefreshConnectedUsers();
 
-        layout.add(refreshButton, connectedUsersLabel, connectedUsersGrid);
+        layout.add(
+                refreshButton,
+                connectedUsersLabel,
+                connectedUsersGrid
+        );
         layout.setPadding(false);
+
+        return layout;
+    }
+
+    private Component createConnectedSitesView() {
+        VerticalLayout layout = new VerticalLayout();
+
+        Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedSites());
+
+        NativeLabel connectedSitesLabel = new NativeLabel("Connected Sites");
+        connectedSitesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
+        connectedSitesGrid = new Grid<>();
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getCommonName)
+                .setHeader("Common Name");
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getBytesReceived)
+                .setHeader("Bytes Received")
+                .setTextAlign(ColumnTextAlign.END);
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getBytesSent)
+                .setHeader("Bytes Sent")
+                .setTextAlign(ColumnTextAlign.END);
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getConnectedSinceAsDate)
+                .setHeader("Connected since");
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getRealAddress)
+                .setHeader("Real Address");
+        connectedSitesGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
+                .setHeader("Virtual Address");
+
+        layout.add(
+                refreshButton,
+                connectedSitesLabel,
+                connectedSitesGrid
+        );
 
         return layout;
     }
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
-        arachneDbus.removeServerUserStatusChangedListener(updateConnectedUserListener);
+        arachneDbus.removeServerStatusChangedListener(
+                ArachneDbus.ServerType.USER,
+                updateConnectedUserListener
+        );
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
-        arachneDbus.addServerUserStatusChangedListener(updateConnectedUserListener);
+        arachneDbus.addServerStatusChangedListener(
+                ArachneDbus.ServerType.USER,
+                updateConnectedUserListener
+        );
     }
 }

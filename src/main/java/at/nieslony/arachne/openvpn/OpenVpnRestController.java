@@ -278,12 +278,12 @@ public class OpenVpnRestController {
             writer.println(
                     "status %s %d"
                             .formatted(
-                                    folderFactory.getOpenVpnStatusPath("arachne"),
+                                    folderFactory.getOpenVpnStatusPath("user"),
                                     settings.getStatusUpdateSecs()
                             )
             );
             writer.println("status-version 2");
-            writer.println("writepid " + folderFactory.getOpenVpnPidPath("arachne"));
+            writer.println("writepid " + folderFactory.getOpenVpnPidPath("site"));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }

@@ -72,7 +72,7 @@ public class UpdateVpnServerCert extends Task {
 
             ArachneDbus arachneDbus = beanFactory.getBean(ArachneDbus.class);
             try {
-                arachneDbus.restart();
+                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
                 pki.updateWebServerCertificate();
                 return "Server Certitificate renewed, openVPN server restarted";
             } catch (DBusException | DBusExecutionException ex) {
