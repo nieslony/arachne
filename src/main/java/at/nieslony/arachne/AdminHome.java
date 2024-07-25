@@ -73,13 +73,14 @@ public class AdminHome
     public AdminHome(ArachneDbus arachneDbus, VpnSiteRepository vpnSiteRepository) {
         this.arachneDbus = arachneDbus;
         this.vpnSiteRepository = vpnSiteRepository;
-        this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
-        this.updateConnectedSitesListener = new ConnectedClientsListener(UI.getCurrent(), connectedSitesGrid);
 
         add(
                 createConnectedUsersView(),
                 createConnectedSitesView()
         );
+
+        this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
+        this.updateConnectedSitesListener = new ConnectedClientsListener(UI.getCurrent(), connectedSitesGrid);
         setPadding(false);
     }
 
