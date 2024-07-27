@@ -28,6 +28,7 @@ public class ArachneDbus {
 
     private final String DBUS_BUS_NAME = "at.nieslony.Arachne";
     private final String DBUS_OBJ_PATH_USERVPN = "/UserVpn";
+    private final String DBUS_OBJ_PATH_SITEVPN = "/SiteVpn";
 
     @Value("${dbusBusType}")
     private String dbusBusType;
@@ -78,6 +79,9 @@ public class ArachneDbus {
             });
             this.arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
                     DBUS_OBJ_PATH_USERVPN,
+                    IFaceServer.class);
+            this.arachneSite = conn.getRemoteObject(DBUS_BUS_NAME,
+                    DBUS_OBJ_PATH_SITEVPN,
                     IFaceServer.class);
         } catch (DBusException ex) {
             logger.error(
