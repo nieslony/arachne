@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2407221316_a37f326
+Version:        1.3.10.git_2407291427_8628f1c
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,18 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon Jul 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2407291427_8628f1c-1
+- Bump version of in.virit (github@nieslony.at)
+- Fix: download site VPN config (github@nieslony.at)
+- Add status of site VPN (github@nieslony.at)
+- Fix: initialization order (github@nieslony.at)
+- Fix: file name (github@nieslony.at)
+- Make ArachneDbus ready for site vpn (github@nieslony.at)
+- - switch from CentOS stream9 to AlmaLinux 9 - optimize custom provisioners
+  (github@nieslony.at)
+- Update and rename README.txt -> README. (github@nieslony.at)
+- Update and rename README.txt -> README.md (github@nieslony.at)
+
 * Mon Jul 22 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2407221316_a37f326-1
 - Bump spring-security-kerberos, spring-boot-starter-parent
   (github@nieslony.at)
