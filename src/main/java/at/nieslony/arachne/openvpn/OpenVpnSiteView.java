@@ -471,14 +471,14 @@ public class OpenVpnSiteView extends VerticalLayout {
                 (OutputStream out) -> openVpnRestController.writeOpenVpnSiteRemoteConfig(
                         sites.getValue().getId(),
                         new PrintWriter(out)
-                )
-        );
-        downloadComponent.setFileNameGenerator((vr) -> {
-            return openVpnRestController.getOpenVpnSiteRemoteConfigName(
-                    openVpnSiteSettings,
-                    sites.getValue()
-            );
-        });
+                ))
+                .withFileNameGenerator((vr) -> {
+                    String filename = openVpnRestController.getOpenVpnSiteRemoteConfigName(
+                            openVpnSiteSettings,
+                            sites.getValue()
+                    );
+                    return filename;
+                });
         downloadComponent.addClassNames(LumoUtility.TextColor.BODY);
 
         subMenu.addItem(downloadComponent);
@@ -494,6 +494,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             createDialogRemoteConfig(cfgWriter.toString()).open();
         });
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, siteConfigMenu));
+        nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, downloadComponent));
 
         TabSheet siteSettingsTab = new TabSheet();
         siteSettingsTab.add("Connection", createPageSitesConnection());

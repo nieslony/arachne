@@ -278,12 +278,12 @@ public class OpenVpnRestController {
             writer.println(
                     "status %s %d"
                             .formatted(
-                                    folderFactory.getOpenVpnStatusPath("arachne"),
+                                    folderFactory.getOpenVpnStatusPath("user"),
                                     settings.getStatusUpdateSecs()
                             )
             );
             writer.println("status-version 2");
-            writer.println("writepid " + folderFactory.getOpenVpnPidPath("arachne"));
+            writer.println("writepid " + folderFactory.getOpenVpnPidPath("user"));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }
@@ -646,6 +646,17 @@ public class OpenVpnRestController {
                             )
             );
             pw.println("topology subnet");
+
+            pw.println(
+                    "status %s %d"
+                            .formatted(
+                                    folderFactory.getOpenVpnStatusPath("site"),
+                                    60
+                            )
+            );
+            pw.println("status-version 2");
+            pw.println("writepid " + folderFactory.getOpenVpnPidPath("site"));
+
             if (openVpnSiteSettings.getListenProtocol() == TransportProtocol.UDP
                     && openVpnSiteSettings.getMtuTest()) {
                 pw.println("mtu-test");

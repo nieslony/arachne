@@ -28,20 +28,35 @@ public class ArachneDbus {
 
     private final String DBUS_BUS_NAME = "at.nieslony.Arachne";
     private final String DBUS_OBJ_PATH_USERVPN = "/UserVpn";
+    private final String DBUS_OBJ_PATH_SITEVPN = "/SiteVpn";
 
     @Value("${dbusBusType}")
     private String dbusBusType;
 
     private DBusConnection conn;
     private IFaceServer arachneUser;
-    private final Set<Consumer<IFaceOpenVpnStatus>> serverUserStatusListeners;
+    private IFaceServer arachneSite;
+    private final Set<Consumer<IFaceOpenVpnStatus>> userServerStatusListeners;
+    private final Set<Consumer<IFaceOpenVpnStatus>> siteServerStatusListeners;
     private final DBusSigHandler<IFaceServer.ServerStatusChanged> sigHandlerUserStatus;
+    private final DBusSigHandler<IFaceServer.ServerStatusChanged> sigHandlerSiteStatus;
+
+    public enum ServerType {
+        USER,
+        SITE
+    }
 
     public ArachneDbus() {
-        serverUserStatusListeners = new HashSet<>();
+        userServerStatusListeners = new HashSet<>();
+        siteServerStatusListeners = new HashSet<>();
 
         sigHandlerUserStatus = (t) -> {
-            serverUserStatusListeners.forEach((l) -> {
+            userServerStatusListeners.forEach((l) -> {
+                l.accept(t.getServerStatus());
+            });
+        };
+        sigHandlerSiteStatus = (t) -> {
+            siteServerStatusListeners.forEach((l) -> {
                 l.accept(t.getServerStatus());
             });
         };
@@ -65,6 +80,9 @@ public class ArachneDbus {
             this.arachneUser = conn.getRemoteObject(DBUS_BUS_NAME,
                     DBUS_OBJ_PATH_USERVPN,
                     IFaceServer.class);
+            this.arachneSite = conn.getRemoteObject(DBUS_BUS_NAME,
+                    DBUS_OBJ_PATH_SITEVPN,
+                    IFaceServer.class);
         } catch (DBusException ex) {
             logger.error(
                     "Cannot connect to DBUS %s bus: %s"
@@ -73,31 +91,61 @@ public class ArachneDbus {
         }
     }
 
-    public void addServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
-        if (serverUserStatusListeners.isEmpty()) {
+    public void addServerStatusChangedListener(
+            ServerType serverType,
+            Consumer<IFaceOpenVpnStatus> listener
+    ) {
+        var statusListener = switch (serverType) {
+            case USER ->
+                userServerStatusListeners;
+            case SITE ->
+                siteServerStatusListeners;
+        };
+        var signalHandlerStatus = switch (serverType) {
+            case USER ->
+                sigHandlerUserStatus;
+            case SITE ->
+                sigHandlerSiteStatus;
+        };
+        if (statusListener.isEmpty()) {
             logger.info("First listener added: Adding signal handler");
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
                         arachneUser,
-                        sigHandlerUserStatus
+                        signalHandlerStatus
                 );
             } catch (DBusException ex) {
                 logger.error("Cannot signal handler: " + ex.getMessage());
                 return;
             }
         }
-        serverUserStatusListeners.add(listener);
+        userServerStatusListeners.add(listener);
     }
 
-    public void removeServerUserStatusChangedListener(Consumer<IFaceOpenVpnStatus> listener) {
-        serverUserStatusListeners.remove(listener);
-        if (serverUserStatusListeners.isEmpty()) {
+    public void removeServerStatusChangedListener(
+            ServerType serverType,
+            Consumer<IFaceOpenVpnStatus> listener
+    ) {
+        var statusListener = switch (serverType) {
+            case USER ->
+                userServerStatusListeners;
+            case SITE ->
+                siteServerStatusListeners;
+        };
+        var signalHandlerStatus = switch (serverType) {
+            case USER ->
+                sigHandlerUserStatus;
+            case SITE ->
+                sigHandlerSiteStatus;
+        };
+        statusListener.remove(listener);
+        if (statusListener.isEmpty()) {
             logger.info("Last listener removed. Removing signal handler");
             try {
                 conn.removeSigHandler(
                         IFaceServer.ServerStatusChanged.class,
-                        sigHandlerUserStatus
+                        signalHandlerStatus
                 );
             } catch (DBusException ex) {
                 logger.error("Cannot remove signal handler: " + ex.getMessage());
@@ -105,11 +153,21 @@ public class ArachneDbus {
         }
     }
 
-    public void restart() throws DBusExecutionException, DBusException {
-        arachneUser.Restart();
+    public void restartServer(ServerType serverType) throws DBusExecutionException, DBusException {
+        switch (serverType) {
+            case SITE ->
+                arachneSite.Restart();
+            case USER ->
+                arachneUser.Restart();
+        }
     }
 
-    public IFaceOpenVpnStatus getServerStatus() throws DBusExecutionException, DBusException {
-        return arachneUser.ServerStatus();
+    public IFaceOpenVpnStatus getServerStatus(ServerType serverType) throws DBusExecutionException, DBusException {
+        return switch (serverType) {
+            case USER ->
+                arachneUser.ServerStatus();
+            case SITE ->
+                arachneSite.ServerStatus();
+        };
     }
 }

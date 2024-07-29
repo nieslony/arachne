@@ -126,14 +126,14 @@ public class FolderFactory {
 
     public String getOpenVpnPidPath(String server) {
         return Path
-                .of("%s/server-%s.pid".formatted(getOpenVpnRunDir(), server))
+                .of("%s/arachne-%s-server.pid".formatted(getOpenVpnRunDir(), server))
                 .toAbsolutePath()
                 .toString();
     }
 
     public String getOpenVpnStatusPath(String server) {
         return Path
-                .of("%s/server-%s.log".formatted(getOpenVpnRunDir(), server))
+                .of("%s/arachne-%s-server.log".formatted(getOpenVpnRunDir(), server))
                 .toAbsolutePath()
                 .toString();
     }

@@ -97,7 +97,7 @@ public class OpenVpnUserView extends VerticalLayout {
                             firewallBasicsSettings
                     );
                     openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-                    arachneDbus.restart();
+                    arachneDbus.restartServer(ArachneDbus.ServerType.USER);
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
                     logger.error("Cannot save openvpn user settings: " + ex.getMessage());
