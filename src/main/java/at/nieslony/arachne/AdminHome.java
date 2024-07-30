@@ -11,11 +11,13 @@ import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -24,7 +26,6 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
@@ -126,6 +127,8 @@ public class AdminHome
     private final ArachneDbus arachneDbus;
     private Grid<IFaceConnectedClient> connectedUsersGrid;
     private Grid<SiteStatus> connectedSitesGrid;
+    private Span msgConnectedUsers;
+    private Span msgConnectedSites;
     private final Consumer<IFaceOpenVpnStatus> updateConnectedUserListener;
     private final Consumer<IFaceOpenVpnStatus> updateConnectedSitesListener;
 
@@ -133,10 +136,11 @@ public class AdminHome
         this.arachneDbus = arachneDbus;
         this.vpnSiteRepository = vpnSiteRepository;
 
-        add(
-                createConnectedUsersView(),
-                createConnectedSitesView()
-        );
+        Accordion content = new Accordion();
+        content.add("Connected Users", createConnectedUsersView());
+        content.add("Connected Sites", createConnectedSitesView());
+        content.setWidthFull();
+        add(content);
 
         this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
         this.updateConnectedSitesListener = new ConnectedSitesListener(UI.getCurrent(), connectedSitesGrid);
@@ -163,29 +167,42 @@ public class AdminHome
 
     private void onRefreshConnectedUsers() {
         try {
-            var connectedUsers = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER).getConnectedClients();
-            connectedUsersGrid.setItems(connectedUsers);
+            var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
+            updateConnectedUserListener.accept(status);
+            msgConnectedUsers.setText("%d users connected".formatted(status.getConnectedClients().size()));
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("Error getting connected users: " + ex.getMessage());
+            msgConnectedUsers.setText("DBusError: " + ex.getMessage());
         }
     }
 
     private void onRefreshConnectedSites() {
         try {
-            updateConnectedSitesListener.accept(
-                    arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE)
-            );
+            var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE);
+            updateConnectedSitesListener.accept(status);
+            msgConnectedSites.setText("%d/%d sites connected"
+                    .formatted(status.getConnectedClients().size(),
+                            vpnSiteRepository.count()
+                    ));
         } catch (DBusException | DBusExecutionException ex) {
-            logger.error("Error getting connected sites: " + ex.getMessage());
+            logger.error("DBus Error: " + ex.getMessage());
+            msgConnectedSites.setText("DBusError: " + ex.getMessage());
         }
     }
 
     private Component createConnectedUsersView() {
-        Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedUsers());
-
         VerticalLayout layout = new VerticalLayout();
-        NativeLabel connectedUsersLabel = new NativeLabel("Connected Users");
-        connectedUsersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+
+        Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedUsers());
+        msgConnectedUsers = new Span("");
+
+        HorizontalLayout headerLayout = new HorizontalLayout(
+                refreshButton,
+                msgConnectedUsers
+        );
+        headerLayout.setPadding(false);
+        headerLayout.setMargin(false);
+        headerLayout.setAlignItems(Alignment.BASELINE);
 
         connectedUsersGrid = new Grid<>();
         connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
@@ -204,8 +221,7 @@ public class AdminHome
                 .setHeader("Virtual Address");
 
         layout.add(
-                refreshButton,
-                connectedUsersLabel,
+                headerLayout,
                 connectedUsersGrid
         );
         layout.setPadding(false);
@@ -217,9 +233,15 @@ public class AdminHome
         VerticalLayout layout = new VerticalLayout();
 
         Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedSites());
+        msgConnectedSites = new Span("");
 
-        NativeLabel connectedSitesLabel = new NativeLabel("Connected Sites");
-        connectedSitesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+        HorizontalLayout headerLayout = new HorizontalLayout(
+                refreshButton,
+                msgConnectedSites
+        );
+        headerLayout.setPadding(false);
+        headerLayout.setMargin(false);
+        headerLayout.setAlignItems(Alignment.BASELINE);
 
         connectedSitesGrid = new Grid<>();
         connectedSitesGrid.addColumn(site -> site.getVpnSite().getName())
@@ -260,8 +282,7 @@ public class AdminHome
                 .setHeader("Virtual Address");
 
         layout.add(
-                refreshButton,
-                connectedSitesLabel,
+                headerLayout,
                 connectedSitesGrid
         );
         layout.setPadding(false);
