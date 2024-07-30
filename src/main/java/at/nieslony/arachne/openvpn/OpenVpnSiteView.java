@@ -77,7 +77,7 @@ import org.vaadin.olli.ClipboardHelper;
  *
  * @author claas
  */
-@Route(value = "openvpn-site2site", layout = ViewTemplate.class)
+@Route(value = "site2siteVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN Site to Site VPN")
 @RolesAllowed("ADMIN")
 public class OpenVpnSiteView extends VerticalLayout {

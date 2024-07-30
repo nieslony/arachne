@@ -83,7 +83,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "firewall", layout = ViewTemplate.class)
+@Route(value = "userVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("Firewall")
 @RolesAllowed("ADMIN")
 public class UserFirewallView extends VerticalLayout {
