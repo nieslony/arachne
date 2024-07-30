@@ -6,7 +6,7 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
-import at.nieslony.arachne.firewall.FirewallView;
+import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
@@ -156,9 +156,8 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         networkNav.setLabel("OpenVPN");
         SideNavItem openVpnUserMenu = new SideNavItem("User VPN");
         openVpnUserMenu.setPrefixComponent(VaadinIcon.USERS.create());
-        openVpnUserMenu.addItem(
-                new SideNavItem("Settings", OpenVpnUserView.class),
-                new SideNavItem("Firewall", FirewallView.class)
+        openVpnUserMenu.addItem(new SideNavItem("Settings", OpenVpnUserView.class),
+                new SideNavItem("Firewall", UserFirewallView.class)
         );
         SideNavItem openVpnSite2Site = new SideNavItem("Site 2 Site VPN");
         openVpnSite2Site.setPrefixComponent(VaadinIcon.SERVER.create());

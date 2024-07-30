@@ -16,8 +16,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @ShowApiDetails
-public class FirewallEverybodyRules {
+public class UserFirewallEverybodyRules {
 
-    private FirewallBasicsSettings.IcmpRules icmpRules;
+    private UserFirewallBasicsSettings.IcmpRules icmpRules;
     private List<FirewallRestController.RichRule> richRules;
 }

@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -23,4 +24,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author claas
  */
 public interface FirewallRuleRepository extends JpaRepository<FirewallRuleModel, Long> {
+
+    List<FirewallRuleModel> findByVpnTypeAndRuleDirection(
+            FirewallRuleModel.VpnType vpnType,
+            FirewallRuleModel.RuleDirection ruleDirection
+    );
 }

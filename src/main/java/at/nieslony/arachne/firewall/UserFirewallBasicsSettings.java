@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class FirewallBasicsSettings extends AbstractSettingsGroup {
+public class UserFirewallBasicsSettings extends AbstractSettingsGroup {
 
     public enum EnableRoutingMode {
         OFF("Don't change"),

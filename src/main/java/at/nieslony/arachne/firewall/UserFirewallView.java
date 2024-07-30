@@ -86,18 +86,18 @@ import org.slf4j.LoggerFactory;
 @Route(value = "firewall", layout = ViewTemplate.class)
 @PageTitle("Firewall")
 @RolesAllowed("ADMIN")
-public class FirewallView extends VerticalLayout {
+public class UserFirewallView extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(FirewallView.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserFirewallView.class);
 
     final private FirewallRuleRepository firewallRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
 
-    private final Binder<FirewallBasicsSettings> binder;
-    private FirewallBasicsSettings firewallBasicSettings;
+    private final Binder<UserFirewallBasicsSettings> binder;
+    private UserFirewallBasicsSettings firewallBasicSettings;
     private final LdapSettings ldapSettings;
 
-    public FirewallView(
+    public UserFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             OpenVpnRestController openVpnRestController,
@@ -107,7 +107,7 @@ public class FirewallView extends VerticalLayout {
         this.userMatcherCollector = userMatcherCollector;
 
         binder = new Binder<>();
-        firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
+        firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         ldapSettings = settings.getSettings(LdapSettings.class);
 
         TabSheet tabs = new TabSheet();
@@ -140,17 +140,17 @@ public class FirewallView extends VerticalLayout {
 
         Checkbox enableFirewallField = new Checkbox("Enable Firewall");
         binder.forField(enableFirewallField)
-                .bind(FirewallBasicsSettings::isEnableFirewall, FirewallBasicsSettings::setEnableFirewall);
+                .bind(UserFirewallBasicsSettings::isEnableFirewall, UserFirewallBasicsSettings::setEnableFirewall);
 
         TextField firewallZoneField = new TextField("Firewall Zone");
         binder.forField(firewallZoneField)
-                .bind(FirewallBasicsSettings::getFirewallZone, FirewallBasicsSettings::setFirewallZone);
+                .bind(UserFirewallBasicsSettings::getFirewallZone, UserFirewallBasicsSettings::setFirewallZone);
 
-        RadioButtonGroup<FirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
+        RadioButtonGroup<UserFirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
                 = new RadioButtonGroup<>("Enable Routing");
-        enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
+        enableRoutingMode.setItems(UserFirewallBasicsSettings.EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
-                .bind(FirewallBasicsSettings::getEnableRoutingMode, FirewallBasicsSettings::setEnableRoutingMode);
+                .bind(UserFirewallBasicsSettings::getEnableRoutingMode, UserFirewallBasicsSettings::setEnableRoutingMode);
 
         binder.setBean(firewallBasicSettings);
 
@@ -163,13 +163,13 @@ public class FirewallView extends VerticalLayout {
     }
 
     private Component createIncomingTab() {
-        Select<FirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
-        icmpRules.setItems(FirewallBasicsSettings.IcmpRules.values());
+        Select<UserFirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
+        icmpRules.setItems(UserFirewallBasicsSettings.IcmpRules.values());
         icmpRules.setMinWidth("20em");
         binder.bind(
                 icmpRules,
-                FirewallBasicsSettings::getIcmpRules,
-                FirewallBasicsSettings::setIcmpRules
+                UserFirewallBasicsSettings::getIcmpRules,
+                UserFirewallBasicsSettings::setIcmpRules
         );
         icmpRules.setLabel("Allow PING");
 
@@ -197,7 +197,7 @@ public class FirewallView extends VerticalLayout {
         grid
                 .addColumn(new ComponentRenderer<>(
                         (var model) -> {
-                            Collection<FirewallWhere> wheres = model.getWhere();
+                            Collection<FirewallWhere> wheres = model.getTo();
                             return switch (wheres.size()) {
                         case 0 ->
                             new Text("");
@@ -263,12 +263,18 @@ public class FirewallView extends VerticalLayout {
                 .setFlexGrow(0);
 
         Button addRule = new Button("Add...", e -> {
-            FirewallRuleModel rule = new FirewallRuleModel();
+            FirewallRuleModel rule = new FirewallRuleModel(
+                    FirewallRuleModel.VpnType.USER,
+                    FirewallRuleModel.RuleDirection.INCOMING
+            );
             editRule(grid, rule);
         });
 
         if (firewallRuleRepository.count() == 0) {
-            FirewallRuleModel allowDns = new FirewallRuleModel();
+            FirewallRuleModel allowDns = new FirewallRuleModel(
+                    FirewallRuleModel.VpnType.USER,
+                    FirewallRuleModel.RuleDirection.INCOMING
+            );
             allowDns.setDescription("Allow DNS acces for everybody");
             allowDns.setEnabled(true);
 
@@ -279,8 +285,8 @@ public class FirewallView extends VerticalLayout {
 
             FirewallWhere where = new FirewallWhere();
             where.setType(FirewallWhere.Type.PushedDnsServers);
-            allowDns.setWhere(new LinkedList<>());
-            allowDns.getWhere().add(where);
+            allowDns.setTo(new LinkedList<>());
+            allowDns.getTo().add(where);
 
             FirewallWhat what = new FirewallWhat();
             what.setType(FirewallWhat.Type.Service);
@@ -293,7 +299,10 @@ public class FirewallView extends VerticalLayout {
             firewallRuleRepository.save(allowDns);
         }
 
-        grid.setItems(firewallRuleRepository.findAll());
+        grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.RuleDirection.INCOMING
+        ));
 
         VerticalLayout layout = new VerticalLayout(
                 icmpRules,
@@ -316,7 +325,10 @@ public class FirewallView extends VerticalLayout {
         confirm.addConfirmListener(
                 e -> {
                     firewallRuleRepository.delete(rule);
-                    grid.setItems(firewallRuleRepository.findAll());
+                    grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+                            FirewallRuleModel.VpnType.USER,
+                            FirewallRuleModel.RuleDirection.INCOMING
+                    ));
                 });
 
         confirm.open();
@@ -372,8 +384,8 @@ public class FirewallView extends VerticalLayout {
                 LumoUtility.BorderColor.PRIMARY,
                 LumoUtility.Background.PRIMARY_10
         );
-        if (rule.getWhere() != null) {
-            whereList.setItems(rule.getWhere());
+        if (rule.getTo() != null) {
+            whereList.setItems(rule.getTo());
         }
         whereList.setWidthFull();
         Button addWhereButton = new Button("Add...");
@@ -447,7 +459,10 @@ public class FirewallView extends VerticalLayout {
         Button saveButton = new Button("Save", e -> {
             firewallRuleRepository.save(rule);
             dlg.close();
-            grid.setItems(firewallRuleRepository.findAll());
+            grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+                    FirewallRuleModel.VpnType.USER,
+                    FirewallRuleModel.RuleDirection.INCOMING
+            ));
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setAutofocus(true);
@@ -507,10 +522,10 @@ public class FirewallView extends VerticalLayout {
         addWhereButton.addClickListener((e) -> {
             FirewallWhere where = new FirewallWhere();
             editWhere(where, (FirewallWhere w) -> {
-                List<FirewallWhere> l = rule.getWhere();
+                List<FirewallWhere> l = rule.getTo();
                 if (l == null) {
                     l = new LinkedList<>();
-                    rule.setWhere(l);
+                    rule.setTo(l);
                 }
                 l.add(w);
                 whereList.setItems(l);
@@ -520,14 +535,14 @@ public class FirewallView extends VerticalLayout {
         editWhereButton.addClickListener((e) -> {
             FirewallWhere where = whereList.getValue();
             editWhere(where, (FirewallWhere w) -> {
-                List<FirewallWhere> l = rule.getWhere();
+                List<FirewallWhere> l = rule.getTo();
                 whereList.setItems(l);
             });
         });
 
         removeWhereButton.addClickListener((e) -> {
             FirewallWhere where = whereList.getValue();
-            List<FirewallWhere> l = rule.getWhere();
+            List<FirewallWhere> l = rule.getTo();
             l.remove(where);
             whereList.setItems(l);
             saveButton.setEnabled(rule.isValid());

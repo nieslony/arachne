@@ -5,7 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.firewall.FirewallBasicsSettings;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
@@ -88,8 +88,8 @@ public class OpenVpnUserView extends VerticalLayout {
         });
         saveSettings.addClickListener((t) -> {
             if (binder.writeBeanIfValid(vpnSettings)) {
-                FirewallBasicsSettings firewallBasicsSettings
-                        = settings.getSettings(FirewallBasicsSettings.class);
+                UserFirewallBasicsSettings firewallBasicsSettings
+                        = settings.getSettings(UserFirewallBasicsSettings.class);
                 try {
                     vpnSettings.save(settings);
                     openvpnRestController.writeOpenVpnPluginUserConfig(

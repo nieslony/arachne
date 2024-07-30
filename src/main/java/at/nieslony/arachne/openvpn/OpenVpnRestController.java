@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.firewall.FirewallBasicsSettings;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -200,7 +200,7 @@ public class OpenVpnRestController {
     public void writeOpenVpnPluginSiteConfig() {
         OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
-        FirewallBasicsSettings firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
+        UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -217,7 +217,7 @@ public class OpenVpnRestController {
 
     public void writeOpenVpnPluginUserConfig(
             OpenVpnUserSettings openVpnSettings,
-            FirewallBasicsSettings firewallBasicsSettings
+            UserFirewallBasicsSettings firewallBasicsSettings
     ) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_USER_CONF);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);

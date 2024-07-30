@@ -42,6 +42,22 @@ import lombok.ToString;
 @Table(name = "firewallRules")
 public class FirewallRuleModel {
 
+    public enum VpnType {
+        USER, SITE
+    }
+
+    public enum RuleDirection {
+        INCOMING, OUTGOING
+    }
+
+    public FirewallRuleModel() {
+    }
+
+    public FirewallRuleModel(VpnType vpnType, RuleDirection ruleDirection) {
+        this.vpnType = vpnType;
+        this.ruleDirection = ruleDirection;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -52,20 +68,32 @@ public class FirewallRuleModel {
     @Column(nullable = false)
     private boolean enabled;
 
+    @Column(nullable = false)
+    private VpnType vpnType;
+
+    @Column(nullable = false)
+    private RuleDirection ruleDirection;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FirewallWho> who;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FirewallWhere> where;
+    private List<FirewallWhere> to;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FirewallWhat> what;
 
     @JsonIgnore
     public Boolean isValid() {
-        if (who == null || where == null || what == null) {
+        if (who == null || to == null || what == null) {
             return false;
         }
-        return !who.isEmpty() && !where.isEmpty() && !what.isEmpty();
+        return !who.isEmpty() && !to.isEmpty() && !what.isEmpty();
     }
 }
+
+// who  from   to
+//   y          y     user incoming
+//   y     y          user outgoing
+//              y     site incoming
+//         y          site outgoing
