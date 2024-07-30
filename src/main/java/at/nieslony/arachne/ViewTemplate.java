@@ -152,16 +152,21 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         usersNav.setWidthFull();
 
         SideNav networkNav = new SideNav();
-        networkNav.setLabel("VPN");
-        networkNav.addItem(
-                new SideNavItem("OpenVPN User", OpenVpnUserView.class,
-                        VaadinIcon.CONTROLLER.create()),
-                new SideNavItem("OpenVPN Site 2 Site", OpenVpnSiteView.class,
-                        VaadinIcon.SERVER.create()),
-                new SideNavItem("Firewall", FirewallView.class,
-                        VaadinIcon.FIRE.create())
+
+        networkNav.setLabel("OpenVPN");
+        SideNavItem openVpnUserMenu = new SideNavItem("User VPN");
+        openVpnUserMenu.setPrefixComponent(VaadinIcon.USERS.create());
+        openVpnUserMenu.addItem(
+                new SideNavItem("Settings", OpenVpnUserView.class),
+                new SideNavItem("Firewall", FirewallView.class)
+        );
+        SideNavItem openVpnSite2Site = new SideNavItem("Site 2 Site VPN");
+        openVpnSite2Site.setPrefixComponent(VaadinIcon.SERVER.create());
+        openVpnSite2Site.addItem(
+                new SideNavItem("Settings", OpenVpnSiteView.class)
         );
         networkNav.setWidthFull();
+        networkNav.addItem(openVpnUserMenu, openVpnSite2Site);
 
         SideNav certificatesNav = new SideNav("Certificates");
         certificatesNav.addItem(
