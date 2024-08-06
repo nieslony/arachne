@@ -22,7 +22,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -132,12 +132,17 @@ public class FirewalldService {
     static private Map<String, FirewalldService> allServices = null;
     FolderFactory folderFactory = FolderFactory.getInstance();
 
-    static public Collection<FirewalldService> getAllServices() {
+    static public List<FirewalldService> getAllServices() {
         if (allServices == null) {
             readAll();
         }
 
-        return allServices.values();
+        List<FirewalldService> services = new LinkedList<>(allServices.values());
+        Collections.sort(
+                services,
+                (s1, s2) -> s1.getShortDescription().compareTo(s2.getShortDescription())
+        );
+        return services;
     }
 
     static public FirewalldService getService(String name) {
@@ -146,6 +151,43 @@ public class FirewalldService {
         }
 
         return allServices.get(name);
+    }
+
+    public boolean matchesPortAndProtocol(int port, String protocol) {
+        if (getPorts() != null
+                && getPorts()
+                        .stream()
+                        .filter((p) -> p.port() == port && p.protocol().equals(protocol))
+                        .findFirst()
+                        .isPresent()) {
+            return true;
+        }
+        if (getPortRanges() != null
+                && getPortRanges()
+                        .stream()
+                        .filter(
+                                (pr)
+                                -> ((port >= pr.from && port <= pr.to)
+                                && pr.protocol.equals(protocol))
+                        )
+                        .findFirst()
+                        .isPresent()) {
+            return true;
+        }
+        return false;
+    }
+
+    static public FirewalldService getByPortAndProtocol(int port, String protocol) {
+        if (allServices == null) {
+            readAll();
+        }
+
+        return allServices
+                .values()
+                .stream()
+                .filter((s) -> s.matchesPortAndProtocol(port, protocol))
+                .findFirst()
+                .orElse(null);
     }
 
     static private Set<FirewalldService> getServiceRecursive(String name, int count) {
