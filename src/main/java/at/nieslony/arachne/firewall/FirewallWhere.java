@@ -85,16 +85,16 @@ public class FirewallWhere {
 
     private Type type = Type.Hostname;
 
-    private String hostname;
+    private String hostname = NetUtils.myHostname();
 
-    private String subnet;
-    private int subnetMask;
+    private String subnet = "0.0.0.0";
+    private int subnetMask = 32;
 
-    private TransportProtocol serviceRecProtocol;
-    private String serviceRecName;
-    private String serviceRecDomain;
+    private TransportProtocol serviceRecProtocol = TransportProtocol.TCP;
+    private String serviceRecName = "";
+    private String serviceRecDomain = NetUtils.myDomain();
 
-    private String mxDomain;
+    private String mxDomain = NetUtils.myDomain();
 
     @Override
     public String toString() {
