@@ -73,8 +73,8 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     private Boolean mtuTest = true;
     private String remote = NetUtils.myHostname();
     private String deviceType = "tun";
-    private String deviceName = "arachne";
-    private String clientNetwork = "192.168.100.0";
+    private String deviceName = "arachne-user";
+    private String clientNetwork = "192.168.102.0";
     private int clientMask = 24;
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
