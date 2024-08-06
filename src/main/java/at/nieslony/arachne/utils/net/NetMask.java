@@ -19,19 +19,24 @@ public class NetMask {
     @Setter
     private int bits;
 
-    @Getter
-    private String mask;
-
     public NetMask() {
     }
 
     public NetMask(int bits) {
         this.bits = bits;
-        this.mask = NetUtils.maskLen2Mask(bits);
+    }
+
+    public String getMask() {
+        return NetUtils.maskLen2Mask(bits);
     }
 
     @Override
     public String toString() {
+        return format(bits);
+    }
+
+    public static String format(int bits) {
+        String mask = NetUtils.maskLen2Mask(bits);
         return "%d - %s".formatted(bits, mask);
     }
 }
