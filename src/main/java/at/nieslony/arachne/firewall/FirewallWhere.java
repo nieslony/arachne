@@ -17,6 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.utils.net.DnsServiceName;
 import at.nieslony.arachne.utils.net.MxRecord;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.SrvRecord;
@@ -91,7 +92,8 @@ public class FirewallWhere {
     private int subnetMask = 32;
 
     private TransportProtocol serviceRecProtocol = TransportProtocol.TCP;
-    private String serviceRecName = "";
+    private String serviceRecName = DnsServiceName.getKnownServices()
+            .keySet().toArray(new String[0])[0];
     private String serviceRecDomain = NetUtils.myDomain();
 
     private String mxDomain = NetUtils.myDomain();
