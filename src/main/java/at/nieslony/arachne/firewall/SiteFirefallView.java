@@ -5,10 +5,6 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
@@ -24,40 +20,23 @@ import jakarta.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class SiteFirefallView extends VerticalLayout {
 
-    private FirewallRuleRepository fireRuleRepository;
+    private FirewallRulesEditor incomingRulesEditor;
 
     public SiteFirefallView(FirewallRuleRepository fireRuleRepository) {
-        this.fireRuleRepository = fireRuleRepository;
-
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
-        tabs.add("Incoming", createIncomingTab());
 
-        Button saveButton = new Button("Save");
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        add(tabs, saveButton);
-        setPadding(false);
-    }
-
-    private Component createIncomingTab() {
-        Grid<FirewallRuleModel> grid = new Grid<>();
-        grid.setWidthFull();
-
-        Button addRule = new Button("Add...", e -> {
-            FirewallRuleModel rule = new FirewallRuleModel(
-                    FirewallRuleModel.VpnType.SITE,
-                    FirewallRuleModel.RuleDirection.INCOMING
-            );
-            //editRule(grid, rule);
-        });
-
-        VerticalLayout layout = new VerticalLayout(
-                addRule,
-                grid
+        incomingRulesEditor = new FirewallRulesEditor(
+                fireRuleRepository,
+                FirewallRuleModel.VpnType.SITE,
+                FirewallRuleModel.RuleDirection.INCOMING
         );
-        layout.setWidthFull();
+        tabs.add(
+                "Incoming",
+                incomingRulesEditor
+        );
 
-        return layout;
+        add(tabs);
+        setPadding(false);
     }
 }
