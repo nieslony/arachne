@@ -299,7 +299,7 @@ public class UserFirewallView extends VerticalLayout {
             firewallRuleRepository.save(allowDns);
         }
 
-        grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+        grid.setItems(firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         ));
@@ -325,7 +325,7 @@ public class UserFirewallView extends VerticalLayout {
         confirm.addConfirmListener(
                 e -> {
                     firewallRuleRepository.delete(rule);
-                    grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+                    grid.setItems(firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                             FirewallRuleModel.VpnType.USER,
                             FirewallRuleModel.RuleDirection.INCOMING
                     ));
@@ -459,7 +459,7 @@ public class UserFirewallView extends VerticalLayout {
         Button saveButton = new Button("Save", e -> {
             firewallRuleRepository.save(rule);
             dlg.close();
-            grid.setItems(firewallRuleRepository.findByVpnTypeAndRuleDirection(
+            grid.setItems(firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                     FirewallRuleModel.VpnType.USER,
                     FirewallRuleModel.RuleDirection.INCOMING
             ));
