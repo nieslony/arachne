@@ -17,6 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import java.util.List;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -25,7 +26,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface FirewallRuleRepository extends JpaRepository<FirewallRuleModel, Long> {
 
-    List<FirewallRuleModel> findByVpnTypeAndRuleDirection(
+    List<FirewallRuleModel> findAllByVpnTypeAndRuleDirection(
+            FirewallRuleModel.VpnType vpnType,
+            FirewallRuleModel.RuleDirection ruleDirection
+    );
+
+    List<FirewallRuleModel> findAllByVpnTypeAndRuleDirection(
+            FirewallRuleModel.VpnType vpnType,
+            FirewallRuleModel.RuleDirection ruleDirection,
+            Pageable pageable
+    );
+
+    long countByVpnTypeAndRuleDirection(
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection ruleDirection
     );

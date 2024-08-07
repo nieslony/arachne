@@ -99,7 +99,7 @@ public class FirewallRestController {
             return richRules;
         }
         logger.info("Get firewall rules for " + username);
-        for (FirewallRuleModel rule : firewallRuleRepository.findByVpnTypeAndRuleDirection(
+        for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         )) {
@@ -145,7 +145,7 @@ public class FirewallRestController {
         UserFirewallEverybodyRules firewallEveryBodyRules = new UserFirewallEverybodyRules();
         List<RichRule> richRules = new LinkedList<>();
 
-        for (FirewallRuleModel rule : firewallRuleRepository.findByVpnTypeAndRuleDirection(
+        for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         )) {
