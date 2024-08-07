@@ -84,7 +84,6 @@ public class MagicEditableListBox<T extends Object>
             getFooter().add(cancelButton, okButton);
 
             if (valueEditor instanceof HasValidator<E> hasVal) {
-                okButton.setEnabled(false);
                 hasVal.addValidationStatusChangeListener((e) -> {
                     okButton.setEnabled(e.getNewStatus());
                 });
