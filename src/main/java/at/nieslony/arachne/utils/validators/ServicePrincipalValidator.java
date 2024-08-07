@@ -10,9 +10,9 @@ import com.vaadin.flow.data.validator.RegexpValidator;
  *
  * @author claas
  */
-public class SerivePrincipalValidator extends RegexpValidator {
+public class ServicePrincipalValidator extends RegexpValidator {
 
-    public SerivePrincipalValidator() {
+    public ServicePrincipalValidator() {
         super(
                 "Not a valid Service Principal",
                 "^"

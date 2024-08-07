@@ -25,7 +25,7 @@ import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tomcat.TomcatService;
 import at.nieslony.arachne.utils.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
-import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
+import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -123,7 +123,7 @@ public class ExternalAuthView extends VerticalLayout {
         servicePrincipalField.setItems("");
         kerberosBinder.forField(servicePrincipalField)
                 .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
-                        new SerivePrincipalValidator()
+                        new ServicePrincipalValidator()
                 ))
                 .bind(KerberosSettings::getServicePrincipal, KerberosSettings::setServicePrincipal);
 
