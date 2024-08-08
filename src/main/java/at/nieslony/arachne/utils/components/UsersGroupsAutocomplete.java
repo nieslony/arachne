@@ -67,14 +67,15 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         if (pattern == null || pattern.isEmpty()) {
             return new LinkedList<>();
         }
-        List<String> options = switch (completeMode) {
+        List<String> options = ldapSettings != null
+                ? switch (completeMode) {
             case GROUPS ->
                 ldapSettings.findGroupsPretty("*" + pattern + "*", maxValues);
             case USERS ->
                 ldapSettings.findUsersPretty("*" + pattern + "*", maxValues);
             case NULL ->
                 new LinkedList<>();
-        };
+        } : new LinkedList<>();
         logger.info("Found: " + options.toString());
         return options;
     }
