@@ -5,6 +5,9 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
@@ -22,12 +25,20 @@ public class SiteFirefallView extends VerticalLayout {
 
     private FirewallRulesEditor incomingRulesEditor;
 
-    public SiteFirefallView(FirewallRuleRepository fireRuleRepository) {
+    public SiteFirefallView(
+            FirewallRuleRepository fireRuleRepository,
+            UserMatcherCollector userMatcherCollector,
+            Settings settings
+    ) {
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
 
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+
         incomingRulesEditor = new FirewallRulesEditor(
                 fireRuleRepository,
+                userMatcherCollector,
+                ldapSettings,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         );

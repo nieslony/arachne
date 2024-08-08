@@ -4,6 +4,8 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.MagicEditableListBox;
 import at.nieslony.arachne.utils.YesNoIcon;
 import com.vaadin.flow.component.Text;
@@ -40,15 +42,21 @@ class FirewallRulesEditor extends VerticalLayout {
     private static final Logger logger = LoggerFactory.getLogger(FirewallRulesEditor.class);
 
     private final FirewallRuleRepository firewallRuleRepository;
+    private final UserMatcherCollector userMatcherCollector;
+    private final LdapSettings ldapSettings;
 
     private final Grid<FirewallRuleModel> grid;
 
     public FirewallRulesEditor(
             FirewallRuleRepository firewallRuleRepository,
+            UserMatcherCollector userMatcherCollector,
+            LdapSettings ldapSettings,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
+        this.userMatcherCollector = userMatcherCollector;
+        this.ldapSettings = ldapSettings;
 
         DataProvider<FirewallRuleModel, Void> dataProvider = DataProvider.fromCallbacks(
                 query -> {
@@ -177,8 +185,8 @@ class FirewallRulesEditor extends VerticalLayout {
 
         Button addRule = new Button("Add...", e -> {
             FirewallRuleModel rule = new FirewallRuleModel(
-                    FirewallRuleModel.VpnType.SITE,
-                    FirewallRuleModel.RuleDirection.INCOMING
+                    vpnType,
+                    direction
             );
             editRule(rule);
         });
@@ -254,8 +262,8 @@ class FirewallRulesEditor extends VerticalLayout {
         if (rule.getVpnType() == FirewallRuleModel.VpnType.USER) {
             who = new MagicEditableListBox<>(
                     FirewallWho.class,
-                    "From",
-                    () -> new EditFirewallWho()
+                    "Who",
+                    () -> new EditFirewallWho(userMatcherCollector, ldapSettings)
             );
             who.setMinWidth(25, Unit.EM);
             binder.forField(who)

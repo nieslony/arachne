@@ -282,7 +282,6 @@ class EditFirewallWhere extends AbstractCompositeField<VerticalLayout, EditFirew
                             .get()
                             .name());
         }
-        logger.info("Set value " + value.toString());
         binder.setBean(value);
         binder.validate();
     }

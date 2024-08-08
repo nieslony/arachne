@@ -65,7 +65,7 @@ public class UserFirewallBasicsSettings extends AbstractSettingsGroup {
     }
 
     private boolean enableFirewall = false;
-    private String firewallZone = "arachne";
+    private String firewallZone = "arachne-user";
     private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
     private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }
