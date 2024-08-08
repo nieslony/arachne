@@ -8,7 +8,7 @@ import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;

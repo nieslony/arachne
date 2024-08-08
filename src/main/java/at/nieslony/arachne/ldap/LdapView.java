@@ -24,7 +24,7 @@ import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
