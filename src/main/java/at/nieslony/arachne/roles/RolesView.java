@@ -11,7 +11,7 @@ import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;

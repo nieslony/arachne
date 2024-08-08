@@ -23,7 +23,7 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tomcat.TomcatService;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
 import com.vaadin.flow.component.Component;

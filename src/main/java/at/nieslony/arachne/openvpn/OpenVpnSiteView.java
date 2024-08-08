@@ -12,7 +12,7 @@ import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.ssh.AddSshKeyDialog;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
-import at.nieslony.arachne.utils.EditableListBox;
+import at.nieslony.arachne.utils.components.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;

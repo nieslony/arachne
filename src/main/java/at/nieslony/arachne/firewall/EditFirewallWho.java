@@ -9,7 +9,7 @@ import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;

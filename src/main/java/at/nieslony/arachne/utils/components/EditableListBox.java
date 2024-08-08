@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.utils;
+package at.nieslony.arachne.utils.components;
 
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Unit;
