@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.auth;
 
-import at.nieslony.arachne.configuration.SecurityConfiguration;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.setup.SetupController;
@@ -90,14 +89,6 @@ public class LoginOrSetupView
             toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             toSSoButton.setWidthFull();
             login.getFooter().add(toSSoButton);
-            login.addLoginListener((ll) -> {
-                var session = VaadinSession.getCurrent().getSession();
-                session.setAttribute(
-                        SecurityConfiguration.getUnAuthoAttr(),
-                        SecurityConfiguration.UnAuthorizedHandler.FormLogin
-                );
-                logger.info("Form login successful");
-            });
         }
     }
 

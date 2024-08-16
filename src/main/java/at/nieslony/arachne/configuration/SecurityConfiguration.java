@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -42,7 +41,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.kerberos.authentication.KerberosAuthenticationProvider;
 import org.springframework.security.kerberos.authentication.KerberosServiceAuthenticationProvider;
-import org.springframework.security.kerberos.authentication.KerberosServiceRequestToken;
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosClient;
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
@@ -68,31 +66,6 @@ import org.springframework.security.web.context.SecurityContextRepository;
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
-    /*
-                    <head>
-                    <meta http-equiv="refresh" content="0; URL=/arachne/login" />
-                </head>
-
-     */
-    private static final String ERROR_401
-            = """
-            <html>
-                <head></head>
-                <body>
-                    Redirecting to <a href="/arachne/login>login page</a>...
-                </body>
-            </html>
-            """;
-
-    public enum UnAuthorizedHandler {
-        None,
-        Error401,
-        FormLogin
-    }
-
-    public static String getUnAuthoAttr() {
-        return UnAuthorizedHandler.class.getName();
-    }
 
     @Autowired
     private Settings settings;
@@ -114,7 +87,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        SpnegoEntryPoint sep = new SpnegoEntryPoint("/bla");
+        SpnegoEntryPoint sep = new SpnegoEntryPoint("/login");
         return sep;
     }
 
@@ -132,78 +105,16 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
         }
         if (kerberosSettings.isEnableKrbAuth()) {
-            http.addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
-                    BasicAuthenticationFilter.class);
-            //http.addFilterBefore(
-            http.addFilterAfter(
-                    (req, res, fc) -> {
-                        HttpServletRequest httpRequest = (HttpServletRequest) req;
-                        HttpServletResponse httpResponse = (HttpServletResponse) res;
-                        var session = httpRequest.getSession(true);
-                        logger.info("[%s] %s %s"
-                                .formatted(
-                                        httpRequest.getMethod(),
-                                        session.getId(),
-                                        httpRequest.getServletPath()
-                                )
-                        );
-                        var userPrincipal = httpRequest.getUserPrincipal();
-                        if (session.getAttribute(getUnAuthoAttr()) == null) {
-                            session.setAttribute(
-                                    getUnAuthoAttr(),
-                                    UnAuthorizedHandler.None
-                            );
-                        }
-                        String authHeader = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
-                        if (authHeader != null && authHeader.startsWith("Basic ")) {
-                            logger.info("Basic auth");
-                            //fc.doFilter(req, res);
-                            return;
-                        }
-                        if (userPrincipal == null
-                        && !httpRequest.getServletPath().equals("/login")
-                        && session.getAttribute(getUnAuthoAttr()) != UnAuthorizedHandler.Error401) {
-                            var writer = httpResponse.getWriter();
-                            writer.println(ERROR_401);
-                            httpResponse.setContentType("text/html; charset=iso-8859-1");
-                            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            httpResponse.setHeader(HttpHeaders.LOCATION, "/arachne/login");
-                            httpResponse.addHeader(HttpHeaders.WWW_AUTHENTICATE, "Negotiate");
-                            session.setAttribute(
-                                    getUnAuthoAttr(),
-                                    UnAuthorizedHandler.Error401
-                            );
-                            logger.info("Error 401");
-                        } else {
-                            if (userPrincipal != null) {
-                                logger.info("Authtenticated as " + userPrincipal.getName());
-                            } else {
-                                logger.info("Not yet authenticated");
-                            }
-                            fc.doFilter(req, res);
-                            try {
-                                if (userPrincipal != null
-                                && userPrincipal instanceof KerberosServiceRequestToken ksrt
-                                && session.getAttribute(getUnAuthoAttr()) == UnAuthorizedHandler.Error401) {
-                                    try {
-                                        session.setAttribute(
-                                                getUnAuthoAttr(),
-                                                UnAuthorizedHandler.None
-                                        );
-                                        logger.info("AuthHandler -> None");
-                                    } catch (IllegalStateException ex) {
-                                        logger.info("Session already invalidated");
-                                    }
-                                }
-                            } catch (IllegalStateException ex) {
-                                logger.info("Session already invalidated");
-                            }
-                        }
-                    },
-                    //AuthorizationFilter.class
-                    //SpnegoAuthenticationProcessingFilter.class
-                    BasicAuthenticationFilter.class
-            );
+            http
+                    .addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
+                            BasicAuthenticationFilter.class
+                    )
+                    .exceptionHandling(
+                            (exceptions) -> exceptions
+                                    .authenticationEntryPoint(
+                                            spnegoEntryPoint()
+                                    )
+                    );
         }
     }
 
@@ -256,9 +167,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 logger.error("Cannot authenticate with Kerberos: " + exception.getMessage());
                 response.sendError(HttpStatus.UNAUTHORIZED.value());
             });
-            /*filter.setSuccessHandler((request, response, authentication) -> {
-                logger.info("Access to %s granted".formatted(request.getContextPath()));
-            });*/
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
                 private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
 
