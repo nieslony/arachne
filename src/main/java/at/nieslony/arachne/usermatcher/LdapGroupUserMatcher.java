@@ -37,7 +37,7 @@ public class LdapGroupUserMatcher extends UserMatcher {
         String userSourceName = user.getExternalProvider();
         if (userSourceName == null || !userSourceName.equals(LdapUserSource.getName())) {
             logger.info(
-                    "User %s is not a LDAP user -> user doesn_t match"
+                    "User %s is not a LDAP user -> user doesn't match"
                             .formatted(user.getUsername()));
             return false;
         }
