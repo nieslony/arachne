@@ -225,18 +225,22 @@ public class OpenVpnRestController {
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("auth-url = %s/api/auth".formatted(openVpnSettings.getAuthHttpUrl()));
-            writer.println("enable-firewall = " + firewallBasicsSettings.isEnableFirewall());
+            writer.println("auth_url = \"%s/api/auth\"".formatted(
+                    openVpnSettings.getAuthHttpUrl()));
+            writer.println("enable_firewall = %b".formatted(
+                    firewallBasicsSettings.isEnableFirewall()
+            ));
             if (firewallBasicsSettings.isEnableFirewall()) {
-                writer.println("firewall-zone = " + firewallBasicsSettings.getFirewallZone());
-                writer.println(
-                        "firewall-url = %s/api/firewall"
-                                .formatted(openVpnSettings.getAuthHttpUrl())
+                writer.println("firewall_zone = \"%s\"".formatted(
+                        firewallBasicsSettings.getFirewallZone()
+                ));
+                writer.println("firewall_url = \"%s/api/firewall/user_rules\""
+                        .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
-            writer.println("enable-routing = "
-                    + firewallBasicsSettings.getEnableRoutingMode().name()
-            );
+            writer.println("enable_routing = \"%s\"".formatted(
+                    firewallBasicsSettings.getEnableRoutingMode().name()
+            ));
         } catch (IOException ex) {
             logger.error(
                     "Cannot write to %s: %s"
