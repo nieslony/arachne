@@ -59,7 +59,11 @@ public class UsersGroupsAutocomplete extends Autocomplete {
     }
 
     private String cleanValue(String value) {
-        return value.replaceAll("\\s*\\(.*\\)", "");
+        if (value != null) {
+            return value.replaceAll("\\s*\\(.*\\)", "");
+        } else {
+            return value;
+        }
     }
 
     private List<String> complete(String pattern) {
