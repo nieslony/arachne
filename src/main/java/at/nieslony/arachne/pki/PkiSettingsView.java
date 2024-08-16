@@ -20,7 +20,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;

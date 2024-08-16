@@ -187,6 +187,9 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         );
 
         SideNav servicesNav = new SideNav("Services");
+        SideNavItem apiItem = new SideNavItem("API Index", ApiIndexView.class,
+                VaadinIcon.LIST.create());
+        apiItem.setOpenInNewBrowserTab(true);
         servicesNav.addItem(
                 new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
@@ -196,8 +199,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                         VaadinIcon.AUTOMATION.create()),
                 new SideNavItem("Recurring Tasks", RecurringTasksView.class,
                         VaadinIcon.CLOCK.create()),
-                new SideNavItem("API Index", ApiIndexView.class,
-                        VaadinIcon.LIST.create())
+                apiItem
         );
 
         servicesNav.setWidthFull();

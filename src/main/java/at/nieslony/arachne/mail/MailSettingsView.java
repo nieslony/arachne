@@ -25,7 +25,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.UserRepository;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;

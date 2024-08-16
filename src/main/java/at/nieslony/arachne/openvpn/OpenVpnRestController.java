@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +137,7 @@ public class OpenVpnRestController {
                             HttpStatus.UNPROCESSABLE_ENTITY,
                             "Cannot get user config");
             };
-        } catch (PkiException ex) {
+        } catch (PkiException | JSONException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -382,7 +383,7 @@ public class OpenVpnRestController {
         return configWriter.toString();
     }
 
-    String openVpnUserConfigJson(String username) throws PkiException, SettingsException {
+    String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);

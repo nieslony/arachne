@@ -27,7 +27,7 @@ import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;

@@ -74,7 +74,7 @@ public class TomcatService {
                          Require             valid-user
 
                          RewriteEngine       on
-                         RewriteRule         ^(.*) $1 [E=AJP_%3$s:%%{%3$s}]
+                         RewriteRule         ^(.*) $1 [E=AJP_%3$s:%%{%3$s},UnsafeAllow3F]
                          RewriteCond         %%{ENV:%3$s} !^$
                      </Location>
                      """
