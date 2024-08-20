@@ -45,11 +45,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 @ShowApiDetails
-public class ArachneUser implements Serializable {
+public class UserModel implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArachneUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserModel.class);
 
-    public ArachneUser(String username, String password, String displayName, String email) {
+    public UserModel(String username, String password, String displayName, String email) {
         this.username = username;
         setPassword(password);
         this.displayName = displayName;
@@ -57,7 +57,7 @@ public class ArachneUser implements Serializable {
         this.expirationEnforced = false;
     }
 
-    public ArachneUser() {
+    public UserModel() {
         this.expirationEnforced = false;
     }
 
@@ -122,7 +122,7 @@ public class ArachneUser implements Serializable {
         return cal.before(now);
     }
 
-    public void update(ArachneUser user) {
+    public void update(UserModel user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
         this.expirationEnforced = false;

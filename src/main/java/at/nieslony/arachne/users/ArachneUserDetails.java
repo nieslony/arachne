@@ -19,7 +19,7 @@ public class ArachneUserDetails extends User {
 
     private String displayName;
 
-    public ArachneUserDetails(ArachneUser arachneUser) {
+    public ArachneUserDetails(UserModel arachneUser) {
         super(
                 arachneUser.getUsername(),
                 arachneUser.getPassword(),

@@ -38,12 +38,12 @@ public class ArachneUserDetailsService implements UserDetailsService {
     @Autowired
     private LdapUserSource ldapUserSource;
 
-    public Set<ArachneUser> findAllUsersMatchRoleRule(RoleRuleModel roleRule) {
+    public Set<UserModel> findAllUsersMatchRoleRule(RoleRuleModel roleRule) {
 
         return null;
     }
 
-    public void ensureUpdated(ArachneUser user, int expirationTimeout) {
+    public void ensureUpdated(UserModel user, int expirationTimeout) {
         if (user.isExpired(expirationTimeout)) {
             logger.info("User is expired, updating");
             String externalProvider = user.getExternalProvider();
@@ -68,7 +68,7 @@ public class ArachneUserDetailsService implements UserDetailsService {
         UserSettings userSettings = settings.getSettings(UserSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
-        ArachneUser user = userRepository.findByUsername(username);
+        UserModel user = userRepository.findByUsername(username);
         if (user == null) {
             logger.info("User not found, try LDAP");
             user = ldapUserSource.findUser(username);

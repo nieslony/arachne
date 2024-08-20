@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.ldap;
 
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class LdapGroup {
         }
     }
 
-    public boolean hasMember(ArachneUser user) {
+    public boolean hasMember(UserModel user) {
         if (!user.getExternalProvider().equals(LdapUserSource.getName())) {
             logger.info("User %s is not a LDAP user".formatted(user.getUsername()));
         }

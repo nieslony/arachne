@@ -17,7 +17,7 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.ExternalUserSource;
 import at.nieslony.arachne.users.UserRepository;
 import java.util.List;
@@ -47,9 +47,9 @@ public class LdapUserSource implements ExternalUserSource {
     }
 
     @Override
-    public ArachneUser findUser(String username) {
+    public UserModel findUser(String username) {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
-        ArachneUser user = null;
+        UserModel user = null;
         try {
             user = ldapSettings.getUser(username);
         } catch (CommunicationException ex) {
@@ -63,17 +63,17 @@ public class LdapUserSource implements ExternalUserSource {
     }
 
     @Override
-    public List<ArachneUser> findMatchingUsers(String userPattern) {
+    public List<UserModel> findMatchingUsers(String userPattern) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public void update(ArachneUser user) {
+    public void update(UserModel user) {
         if (user.getExternalProvider().equals(getName())) {
             return;
         }
 
-        ArachneUser oldUser = userRepository.findByUsername(user.getUsername());
+        UserModel oldUser = userRepository.findByUsername(user.getUsername());
         if (oldUser.getExternalProvider().equals(getName())) {
             return;
         }
