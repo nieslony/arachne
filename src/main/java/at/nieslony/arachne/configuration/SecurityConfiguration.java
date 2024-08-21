@@ -5,17 +5,22 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
+import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUserDetailsService;
+import at.nieslony.arachne.users.InternalUserDetailsService;
+import at.nieslony.arachne.users.LdapUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import java.util.Arrays;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +30,14 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.kerberos.authentication.KerberosAuthenticationProvider;
@@ -36,16 +46,24 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 /**
  *
  * @author claas
  */
-@EnableWebSecurity
 @Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled = true,
+        jsr250Enabled = true)
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
@@ -54,18 +72,21 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private Settings settings;
 
     @Autowired
-    private ArachneUserDetailsService arachneUserDetailsService;
+    private InternalUserDetailsService internalUserDetailsService;
 
-    /*@Autowired
-    private WwwAuthenticateFilter wwwAuthenticateFilter;*/
+    @Autowired
+    private LdapUserDetailsService ldapUserDetailsService;
+
     @Autowired
     private FolderFactory folderFactory;
 
     private KerberosSettings kerberosSettings;
+    private PreAuthSettings preAuthSettings;
 
     @PostConstruct
     public void init() {
         kerberosSettings = settings.getSettings(KerberosSettings.class);
+        preAuthSettings = settings.getSettings(PreAuthSettings.class);
     }
 
     @Bean
@@ -77,107 +98,70 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                /*       .authorizeHttpRequests(auth -> {
-                    auth
-                            .requestMatchers(
-                                    AntPathRequestMatcher.antMatcher(
-                                            HttpMethod.GET,
-                                            "/images/*.png"
-                                    )
-                            )
-                            .permitAll();
-                })*/
-                .csrf((csrf) -> csrf.disable())
-                .cors((t) -> {
-                    CorsConfiguration conf = new CorsConfiguration();
-                    conf.setAllowedOrigins(Arrays.asList("*"));
-                    conf.setAllowedMethods(Arrays.asList("GET", "PUT", "POST", "DELETE"));
-
-                    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                    source.registerCorsConfiguration("/**", conf);
-                    t.configurationSource(source);
-                });
+        AuthenticationManager authenticationManager = http.getSharedObject(
+                AuthenticationManager.class
+        );
 
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
+        http.httpBasic((t) -> {
+            t.realmName("Arachne");
+        });
 
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
+        }
         if (kerberosSettings.isEnableKrbAuth()) {
-            AuthenticationManager authenticationManager
-                    = http.getSharedObject(AuthenticationManager.class);
-
             http
-                    .exceptionHandling(
-                            eh -> eh.authenticationEntryPoint(
-                                    spnegoEntryPoint()
-                            )
-                    )
-                    .authenticationProvider(
-                            kerberosAuthenticationProvider()
-                    )
-                    .authenticationProvider(
-                            kerberosServiceAuthenticationProvider()
-                    )
-                    .addFilterAfter(
-                            spnegoAuthenticationProcessingFilter(authenticationManager),
+                    .addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
                             BasicAuthenticationFilter.class
-                    );
-        } else {
-            logger.info(
-                    "Kerberos is disabled, don't add authentication providers and filters"
-            );
-        }
-    }
-
-    /*@Override
-    protected void ___configure(HttpSecurity http) throws Exception {
-        http
-                .csrf((csrf)
-                        -> csrf.disable())
-                .headers((headers)
-                        -> headers.frameOptions((fro) -> fro.disable()))
-                .httpBasic((configurator)
-                        -> configurator.realmName("Arachne openVPN Administrator")
-                );
-        super.configure(http);
-        setLoginView(http, LoginOrSetupView.class, "/arachne/login");
-
-        if (kerberosSettings.isEnableKrbAuth()) {
-            AuthenticationManager authenticationManager
-                    = http.getSharedObject(AuthenticationManager.class);
-
-            http
+                    )
                     .exceptionHandling(
-                            eh -> eh.authenticationEntryPoint(
-                                    spnegoEntryPoint()
-                            )
-                    )
-                    .authenticationProvider(
-                            kerberosAuthenticationProvider()
-                    )
-                    .authenticationProvider(
-                            kerberosServiceAuthenticationProvider()
-                    )
-                    .addFilterAfter(
-                            spnegoAuthenticationProcessingFilter(authenticationManager),
-                            SessionManagementFilter.class
-                    ) exceptionHandling(
-                            (t) -> {
-
-                                logger.info("Access denied. Forward to login page");
-                                //t.accessDeniedPage("/arachne/login");
-                            })*/ /*.addFilterBefore(
-                            wwwAuthenticateFilter,
-                            UsernamePasswordAuthenticationFilter.class
-                    );;
-
-        } else {
-            logger.info(
-                    "Kerberos is disabled, don't add authentication providers and filters"
-            );
+                            (exceptions) -> exceptions
+                                    .authenticationEntryPoint(
+                                            spnegoEntryPoint()
+                                    )
+                    );
         }
     }
-     */
+
+    @Bean
+    public Filter requestAttributeAuthenticationFilter(
+            AuthenticationManager authenticationManager
+    ) {
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            var filter = switch (preAuthSettings.getPreAuthSource()) {
+                case ENVIRONMENT_VARIABLE -> {
+                    RequestAttributeAuthenticationFilter envFilter = new RequestAttributeAuthenticationFilter();
+                    envFilter.setExceptionIfVariableMissing(false);
+                    envFilter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+                    yield envFilter;
+                }
+                case HTTP_HEADER -> {
+                    RequestHeaderAuthenticationFilter headerFilter = new RequestHeaderAuthenticationFilter();
+                    headerFilter.setExceptionIfHeaderMissing(false);
+                    headerFilter.setPrincipalRequestHeader(preAuthSettings.getHttpHeader());
+                    yield headerFilter;
+                }
+            };
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+                logger.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());
+            });
+            filter.setAuthenticationFailureHandler((request, response, exception) -> {
+                logger.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
+            });
+            filter.setAuthenticationDetailsSource((context) -> {
+                return ldapUserDetailsService;
+            });
+            return filter;
+        } else {
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
+        }
+    }
+
     @Bean
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager
@@ -191,9 +175,25 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 response.setHeader("WWW-Authenticate", "Negotiate");
                 response.sendError(HttpStatus.UNAUTHORIZED.value());
             });
-            filter.setSuccessHandler((request, response, authentication) -> {
-                logger.info("Access to %s granted".formatted(request.getContextPath()));
+            filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
+                private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+
+                private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+
+                @Override
+                public void onAuthenticationSuccess(
+                        final HttpServletRequest request,
+                        final HttpServletResponse response,
+                        final Authentication authentication
+                ) throws IOException, ServletException {
+                    logger.info("Access to %s granted".formatted(request.getContextPath()));
+                    SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+                    context.setAuthentication(authentication);
+                    securityContextHolderStrategy.setContext(context);
+                    securityContextRepository.saveContext(context, request, response);
+                }
             });
+
             return filter;
         } else {
             return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
@@ -205,7 +205,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     @Override
     public void configure(WebSecurity web) throws Exception {
         // Customize your WebSecurity configuration.
-        //web.ignoring().requestMatchers("/unauthorized");
         super.configure(web);
     }
 
@@ -224,8 +223,25 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                     .authenticationProvider(kerberosAuthenticationProvider())
                     .authenticationProvider(kerberosServiceAuthenticationProvider());
         }
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
+        }
+        authManBuilder.userDetailsService(internalUserDetailsService);
+        authManBuilder.eraseCredentials(true);
+        authManBuilder.parentAuthenticationManager(null);
 
         return authManBuilder.build();
+    }
+
+    @Bean
+    public PreAuthenticatedAuthenticationProvider preAuthenticatedAuthenticationProvider() {
+        PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
+        provider.setPreAuthenticatedUserDetailsService((token) -> {
+            logger.info("Get user details from pre auth token for : " + token.getName());
+            return ldapUserDetailsService.loadUserByUsername(token.getName());
+        });
+
+        return provider;
     }
 
     @Bean
@@ -237,7 +253,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
         SunJaasKerberosClient client = new SunJaasKerberosClient();
         provider.setKerberosClient(client);
-        provider.setUserDetailsService(arachneUserDetailsService);
+        provider.setUserDetailsService(ldapUserDetailsService);
         return provider;
     }
 
@@ -249,7 +265,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         }
         KerberosServiceAuthenticationProvider provider = new KerberosServiceAuthenticationProvider();
         provider.setTicketValidator(sunJaasKerberosTicketValidator());
-        provider.setUserDetailsService(arachneUserDetailsService);
+        provider.setUserDetailsService(ldapUserDetailsService);
         return provider;
     }
 

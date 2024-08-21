@@ -217,6 +217,13 @@ public class NetUtils {
         return routes;
     }
 
+    public static List<String> getDefaultSearchDomains() {
+        List<String> domains = new LinkedList<>();
+        domains.add(myDomain());
+
+        return domains;
+    }
+
     public static String defaultBaseDn() {
         List<String> l = Arrays
                 .asList(myDomain().split("\\."));

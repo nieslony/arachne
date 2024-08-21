@@ -9,8 +9,9 @@ import at.nieslony.arachne.firewall.FirewallBasicsSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.EditableListBox;
+import at.nieslony.arachne.utils.components.EditableListBox;
 import at.nieslony.arachne.utils.net.NetMask;
+import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;
 import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
@@ -44,9 +45,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
@@ -57,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "openvpn-user", layout = ViewTemplate.class)
-@PageTitle("OpenVPN User | Arachne")
+@PageTitle("OpenVPN User VPN")
 @RolesAllowed("ADMIN")
 public class OpenVpnUserView extends VerticalLayout {
 
@@ -106,7 +104,9 @@ public class OpenVpnUserView extends VerticalLayout {
 
         add(
                 tabSheet,
-                saveSettings);
+                saveSettings
+        );
+        setPadding(false);
 
         binder.setBean(vpnSettings);
         binder.validate();
@@ -373,85 +373,32 @@ public class OpenVpnUserView extends VerticalLayout {
         NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
         pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
 
-        TextField editDnsServerField = new TextField();
-        editDnsServerField.setValueChangeMode(ValueChangeMode.EAGER);
-        Button addDnsServerButton = new Button(
-                "Add",
-                e -> {
-                    List<String> dnsServers = vpnSettings.getPushDnsServers();
-                    dnsServers.add(editDnsServerField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                });
-        Button updateDnsServerButton = new Button(
-                "Update",
-                e -> {
-                    List<String> dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
-                    dnsServers.remove(pushDnsServersField.getValue());
-                    dnsServers.add(editDnsServerField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                    vpnSettings.setPushDnsServers(dnsServers);
-                });
-        updateDnsServerButton.setEnabled(false);
-        Button removeDnsServerButton = new Button(
-                "Remove",
-                e -> {
-                    var dnsServers = new LinkedList<>(vpnSettings.getPushDnsServers());
-
-                    dnsServers.remove(pushDnsServersField.getValue());
-                    pushDnsServersField.setItems(dnsServers);
-                    vpnSettings.setPushDnsServers(dnsServers);
-                });
-        removeDnsServerButton.setEnabled(false);
-        VerticalLayout pushDnsServersLayout = new VerticalLayout(
-                pushDnsServersLabel,
-                pushDnsServersField,
-                editDnsServerField,
-                new HorizontalLayout(
-                        addDnsServerButton,
-                        updateDnsServerButton,
-                        removeDnsServerButton
-                )
-        );
-        pushDnsServersField.setWidthFull();
-        editDnsServerField.setWidthFull();
-        pushDnsServersLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
-
-        pushDnsServersField.setItems(vpnSettings.getPushDnsServers());
-
-        AtomicReference<String> editDnsServer = new AtomicReference<>("");
-        binder.forField(editDnsServerField)
-                .withValidator(new IpValidator())
-                .bind(
-                        ip -> {
-                            return editDnsServer.get();
-                        },
-                        (ip, v) -> {
-                            editDnsServer.set(v);
-                        }
-                );
-
-        pushDnsServersField.addValueChangeListener((e) -> {
-            if (e.getValue() != null) {
-                editDnsServerField.setValue(e.getValue());
-                updateDnsServerButton.setEnabled(true);
-                removeDnsServerButton.setEnabled(true);
-            } else {
-                editDnsServerField.setValue("");
-                updateDnsServerButton.setEnabled(false);
-                removeDnsServerButton.setEnabled(false);
+        EditableListBox editDnsServerField = new EditableListBox("Push DNS Servers") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new IpValidator();
             }
-        });
+        };
+        editDnsServerField.setDefaultValuesSupplier(
+                "Default DNS Servers",
+                () -> NetUtils.getDnsServers()
+        );
+        binder.bind(
+                editDnsServerField,
+                OpenVpnUserSettings::getPushDnsServers,
+                OpenVpnUserSettings::setPushDnsServers
+        );
 
         EditableListBox searchDomainsField = new EditableListBox("Search Domains") {
             @Override
             protected Validator<String> getValidator() {
                 return new HostnameValidator();
             }
-
         };
+        searchDomainsField.setDefaultValuesSupplier(
+                "Default Search Domains",
+                () -> NetUtils.getDefaultSearchDomains()
+        );
         binder.bind(
                 searchDomainsField,
                 OpenVpnUserSettings::getDnsSearch,
@@ -459,7 +406,7 @@ public class OpenVpnUserView extends VerticalLayout {
         );
 
         layout.add(
-                pushDnsServersLayout,
+                editDnsServerField,
                 searchDomainsField
         );
 
@@ -469,94 +416,23 @@ public class OpenVpnUserView extends VerticalLayout {
     private Component createRoutingPage() {
         VerticalLayout layout = new VerticalLayout();
 
-        ListBox<String> pushRoutesField = new ListBox<>();
-        pushRoutesField.setHeight(30, Unit.EX);
-        pushRoutesField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
-
-        NativeLabel pushRoutesLabel = new NativeLabel("Push Routes");
-        pushRoutesLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-
-        TextField editRoutesField = new TextField();
-        editRoutesField.setValueChangeMode(ValueChangeMode.EAGER);
-        Button addRoutesButton = new Button(
-                "Add",
-                e -> {
-                    List<String> routes = vpnSettings.getPushRoutes();
-                    routes.add(editRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                });
-        Button updateRoutesButton = new Button(
-                "Update",
-                e -> {
-                    List<String> routes = new LinkedList<>(vpnSettings.getPushRoutes());
-                    routes.remove(pushRoutesField.getValue());
-                    routes.add(editRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                    vpnSettings.setPushRoutes(routes);
-                });
-        updateRoutesButton.setEnabled(false);
-        Button removeRoutesButton = new Button(
-                "Remove",
-                e -> {
-                    var routes = new LinkedList<>(vpnSettings.getPushRoutes());
-
-                    routes.remove(pushRoutesField.getValue());
-                    pushRoutesField.setItems(routes);
-                    vpnSettings.setPushRoutes(routes);
-                });
-        removeRoutesButton.setEnabled(false);
-        VerticalLayout pushRoutesLayout = new VerticalLayout(
-                pushRoutesLabel,
-                pushRoutesField,
-                editRoutesField,
-                new HorizontalLayout(
-                        addRoutesButton,
-                        updateRoutesButton,
-                        removeRoutesButton
-                )
-        );
-        pushRoutesLayout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
-        pushRoutesField.setWidthFull();
-        editRoutesField.setWidthFull();
-
-        pushRoutesField.setItems(vpnSettings.getPushRoutes());
-
-        AtomicReference<String> editRoutes = new AtomicReference<>("");
-        binder.forField(editRoutesField)
-                .bind(
-                        ip -> {
-                            return editRoutes.get();
-                        },
-                        (ip, v) -> {
-                            editRoutes.set(v);
-                        }
-                );
-
-        pushRoutesField.addValueChangeListener((e) -> {
-            if (e.getValue() != null) {
-                editRoutesField.setValue(e.getValue());
-                updateRoutesButton.setEnabled(true);
-                removeRoutesButton.setEnabled(true);
-            } else {
-                editRoutesField.setValue("");
-                updateRoutesButton.setEnabled(false);
-                removeRoutesButton.setEnabled(false);
+        EditableListBox pushRoutesField = new EditableListBox("Push Routes") {
+            @Override
+            protected Validator<String> getValidator() {
+                return new SubnetValidator(false);
             }
-        });
+        };
+        pushRoutesField.setDefaultValuesSupplier(
+                "Default Routes",
+                () -> NetUtils.getDefaultPushRoutes()
+        );
 
         Checkbox routeInternetThroughVpn
                 = new Checkbox("Route Internet Traffic through VPN");
         binder.bind(routeInternetThroughVpn, "internetThrouphVpn");
 
         layout.add(
-                pushRoutesLayout,
+                pushRoutesField,
                 routeInternetThroughVpn
         );
 

@@ -16,11 +16,15 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
+import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.HashSet;
@@ -57,12 +61,19 @@ public class FirewallRestController {
     private UserMatcherCollector userMatcherCollector;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private LdapUserSource ldapUserSource;
+
+    @Autowired
     private Settings settings;
 
     @Getter
     @Setter
     @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @ShowApiDetails
     public class RichRule {
 
         private String destinationAddress;
@@ -77,8 +88,16 @@ public class FirewallRestController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        List<RichRule> richRules = new LinkedList<>();
+        UserModel user = userRepository.findByUsername(username);
+        if (user == null) {
+            user = ldapUserSource.findUser(username);
+        }
+        List< RichRule> richRules = new LinkedList<>();
 
+        if (user == null) {
+            logger.warn("User %s doen't exist -> no fire wall rules".formatted(username));
+            return richRules;
+        }
         logger.info("Get firewall rules for " + username);
         for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
             logger.info(rule.toString());
@@ -96,7 +115,7 @@ public class FirewallRestController {
                         who.getUserMatcherClassName(),
                         who.getParameter()
                 );
-                if (matcher.isUserMatching(username)) {
+                if (matcher.isUserMatching(user)) {
                     matches = true;
                     logger.info(
                             "Rule %s matches user %s"
@@ -118,6 +137,7 @@ public class FirewallRestController {
     }
 
     @GetMapping("/everybody_rules")
+    @RolesAllowed(value = {"USER"})
     public FirewallEverybodyRules getEverybodyRules() {
         FirewallEverybodyRules firewallEveryBodyRules = new FirewallEverybodyRules();
         List<RichRule> richRules = new LinkedList<>();

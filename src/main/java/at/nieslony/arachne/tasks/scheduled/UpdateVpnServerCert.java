@@ -21,8 +21,10 @@ import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.openvpnmanagement.OpenVpnManagementException;
 import at.nieslony.arachne.pki.Pki;
+import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.pki.PkiSettings;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
 import at.nieslony.arachne.tasks.Task;
 import at.nieslony.arachne.tasks.TaskDescription;
@@ -37,15 +39,15 @@ import org.springframework.beans.factory.BeanFactory;
  *
  * @author claas
  */
-@TaskDescription(name = "Update Server Certificate")
+@TaskDescription(name = "Update VPN Server Certificate")
 @RecurringTaskDescription(
         defaulnterval = 7,
         timeUnit = ArachneTimeUnit.DAY,
         startAt = "01:00:00"
 )
-public class UpdateServerCert extends Task {
+public class UpdateVpnServerCert extends Task {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpdateServerCert.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpdateVpnServerCert.class);
 
     @Override
     public String run(BeanFactory beanFactory) throws Exception {
@@ -70,10 +72,13 @@ public class UpdateServerCert extends Task {
             OpenVpnManagement openVpnManagement = beanFactory.getBean(OpenVpnManagement.class);
             try {
                 openVpnManagement.restartServer();
+                pki.updateWebServerCertificate();
                 return "Server Certitificate renewed, openVPN server restarted";
             } catch (OpenVpnManagementException ex) {
                 return "Server Certificate renewed but openVPN Server restart failed: "
                         + ex.getMessage();
+            } catch (PkiException | SettingsException ex) {
+                return "Update of Webserver Certificate failed: " + ex.getMessage();
             }
 
         } else {

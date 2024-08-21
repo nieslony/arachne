@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.pki;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
 import java.security.PrivateKey;
@@ -34,6 +35,7 @@ public class PkiRestController {
 
     @Getter
     @Setter
+    @ShowApiDetails
     public class UserCertInfo {
 
         UserCertInfo(CertificateModel model) {
@@ -53,8 +55,8 @@ public class PkiRestController {
 
     @GetMapping("/api/pki/user_certs")
     @RolesAllowed(value = {"ADMIN"})
-    public Map<String, Object> getAllUserCerts() {
-        Map<String, Object> result = new HashMap<>();
+    public Map<String, List<UserCertInfo>> getAllUserCerts() {
+        Map<String, List<UserCertInfo>> result = new HashMap<>();
 
         pki.getRootCertAsBase64();
 

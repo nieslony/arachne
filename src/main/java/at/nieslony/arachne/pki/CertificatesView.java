@@ -39,7 +39,7 @@ import org.springframework.data.domain.Pageable;
  * @author claas
  */
 @Route(value = "certificates", layout = ViewTemplate.class)
-@PageTitle("All Certificates | Arachne")
+@PageTitle("All Certificates")
 @RolesAllowed("ADMIN")
 public class CertificatesView extends VerticalLayout {
 
@@ -102,5 +102,6 @@ public class CertificatesView extends VerticalLayout {
         grid.setDataProvider(dataProvider);
 
         add(grid);
+        setPadding(false);
     }
 }

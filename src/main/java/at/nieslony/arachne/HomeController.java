@@ -20,11 +20,10 @@ import org.springframework.security.core.userdetails.UserDetails;
  */
 @Route(value = "")
 @RolesAllowed({"ADMIN", "USER"})
-//@Controller
 public class HomeController extends VerticalLayout {
 
     public HomeController() {
-        add(new Text("Redirecting..."));
+        add(new Text("Redirecting to home view..."));
     }
 
     @Override

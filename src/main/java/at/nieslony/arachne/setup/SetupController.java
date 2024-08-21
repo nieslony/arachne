@@ -5,6 +5,7 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.Arachne;
+import at.nieslony.arachne.apiindex.ApiMethodDescription;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
@@ -28,7 +29,7 @@ import at.nieslony.arachne.tasks.TaskRepository;
 import at.nieslony.arachne.tasks.TaskScheduler;
 import at.nieslony.arachne.tasks.scheduled.UpdateDhParams;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.FolderFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -130,15 +131,15 @@ public class SetupController {
                 );
         roleRuleRepository.save(adminIsAdmin);
 
-        ArachneUser adminUser
-                = new ArachneUser(
+        UserModel adminUser
+                = new UserModel(
                         setupData.getAdminUsername(),
                         setupData.getAdminPassword(),
                         "Arachne Administrator",
                         setupData.getAdminEmail()
                 );
         adminUser.setRoles(
-                rolesCollector.findRolesForUser(setupData.getAdminUsername())
+                rolesCollector.findRolesForUser(adminUser)
         );
         userRepository.save(adminUser);
 
@@ -162,6 +163,11 @@ public class SetupController {
 
     @PostMapping("/setup")
     @AnonymousAllowed
+    @ApiMethodDescription(
+            """
+            Automized setup. Only possible if setup not already performed.
+            """
+    )
     public String onStupArachne(@RequestBody SetupData setupData)
             throws SettingsException {
         return setupArachne(setupData);
@@ -208,7 +214,7 @@ public class SetupController {
                             );
                         }
                         case "users" -> {
-                            var reader = objectMapper.readerForListOf(ArachneUser.class);
+                            var reader = objectMapper.readerForListOf(UserModel.class);
                             userRepository.saveAll(
                                     reader.readValue(n.getValue())
                             );

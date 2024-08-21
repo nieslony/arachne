@@ -16,6 +16,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.ListItem;
@@ -29,6 +30,7 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
@@ -51,7 +53,7 @@ import org.vaadin.olli.FileDownloadWrapper;
 @Route(value = "user-home")
 @PageTitle("Arachne | User Home")
 @RolesAllowed("USER")
-public class UserHome extends VerticalLayout {
+public class UserHome extends VerticalLayout implements RouterLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(UserHome.class);
 
@@ -99,6 +101,7 @@ public class UserHome extends VerticalLayout {
         add(
                 new H1("Arachne - User Home"),
                 createNavigateToAdminHome(),
+                new H2("Download your Client Configuration"),
                 tabsLayout
         );
     }

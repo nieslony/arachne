@@ -11,7 +11,7 @@ import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author claas
  */
 @Route(value = "roles", layout = ViewTemplate.class)
-@PageTitle("Roles | Arachne")
+@PageTitle("Roles")
 @RolesAllowed("ADMIN")
 public class RolesView extends VerticalLayout {
 
@@ -94,6 +94,7 @@ public class RolesView extends VerticalLayout {
         editRoleBuffered();
 
         add(topButtons, roleRules);
+        setPadding(false);
     }
 
     private void editRoleBuffered() {

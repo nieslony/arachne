@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.roles.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -43,11 +44,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Entity
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
-public class ArachneUser implements Serializable {
+@ShowApiDetails
+public class UserModel implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArachneUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserModel.class);
 
-    public ArachneUser(String username, String password, String displayName, String email) {
+    public UserModel(String username, String password, String displayName, String email) {
         this.username = username;
         setPassword(password);
         this.displayName = displayName;
@@ -55,7 +57,7 @@ public class ArachneUser implements Serializable {
         this.expirationEnforced = false;
     }
 
-    public ArachneUser() {
+    public UserModel() {
         this.expirationEnforced = false;
     }
 
@@ -70,7 +72,8 @@ public class ArachneUser implements Serializable {
     private String displayName;
 
     @Column
-    @Setter(AccessLevel.NONE)
+    @JsonIgnore
+    @ToString.Exclude
     private String password;
 
     @JsonSetter("password")
@@ -104,12 +107,17 @@ public class ArachneUser implements Serializable {
     @PrePersist
     @PreUpdate
     public void onSave() {
+        logger.info("Resetting expiration date");
         lastModified = new Date();
     }
 
     public boolean isExpired(int maxAgeMins) {
         if (expirationEnforced) {
             logger.info("User expiration enforced");
+            return true;
+        }
+        if (lastModified == null) {
+            logger.info("never modified => expired");
             return true;
         }
         Calendar cal = Calendar.getInstance();
@@ -120,11 +128,12 @@ public class ArachneUser implements Serializable {
         return cal.before(now);
     }
 
-    public void update(ArachneUser user) {
+    public void update(UserModel user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
         this.expirationEnforced = false;
         this.lastModified = new Date();
+        this.roles.addAll(user.getRoles());
     }
 
     @JsonIgnore

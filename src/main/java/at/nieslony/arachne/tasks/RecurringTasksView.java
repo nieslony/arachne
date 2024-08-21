@@ -45,7 +45,7 @@ import org.springframework.data.util.CastUtils;
  * @author claas
  */
 @Route(value = "recurring-tasks", layout = ViewTemplate.class)
-@PageTitle("Recurring Tasks | Arachne")
+@PageTitle("Recurring Tasks")
 @RolesAllowed("ADMIN")
 public class RecurringTasksView extends VerticalLayout {
 
@@ -105,6 +105,7 @@ public class RecurringTasksView extends VerticalLayout {
         grid.setItems(recurringTaskRepository.findAll());
 
         add(grid);
+        setPadding(false);
     }
 
     private String getTaskName(Class<? extends Task> c) {

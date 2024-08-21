@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.utils;
+package at.nieslony.arachne.utils.components;
 
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -32,6 +33,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,49 +47,80 @@ public class EditableListBox
     private static final Logger logger = LoggerFactory.getLogger(EditableListBox.class);
 
     private ListBox<String> itemsField;
-    private List<String> items;
     private Binder<String> binder;
     private TextField editField;
+    private Button clearButton;
+    private Button loadDefaultsButton;
+    private Supplier<List<String>> defaultsSupplier = null;
 
     public EditableListBox(String label) {
         super(new LinkedList<>());
         binder = new Binder<>();
-        items = new LinkedList<>();
 
         itemsField = new ListBox<>();
-        itemsField.setHeight(30, Unit.EX);
-        itemsField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
+        itemsField.setHeight(16, Unit.EM);
+        itemsField.getStyle()
+                .setBorder("1px solid var(--lumo-primary-color)")
+                .setBackground("var(--lumo-primary-color-10pct)");
 
         NativeLabel elbLabel = new NativeLabel(label);
-        elbLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
+        elbLabel.addClassNames(
+                LumoUtility.FontSize.SMALL,
+                LumoUtility.FontWeight.BOLD,
+                LumoUtility.TextColor.BODY
+        );
 
         editField = new TextField();
         editField.setValueChangeMode(ValueChangeMode.EAGER);
         Button addButton = new Button(
-                "Add",
+                VaadinIcon.PLUS.create(),
                 e -> {
+                    List<String> items = new LinkedList<>(getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
+        addButton.setTooltipText("Add");
         Button updateButton = new Button(
-                "Update",
+                VaadinIcon.REFRESH.create(),
                 e -> {
+                    List<String> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
+        updateButton.setTooltipText("Update");
         updateButton.setEnabled(false);
         Button removeButton = new Button(
-                "Remove",
+                VaadinIcon.DEL_A.create(),
                 e -> {
+                    List<String> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
                 });
+        removeButton.setTooltipText("Delete");
         removeButton.setEnabled(false);
+        clearButton = new Button(VaadinIcon.TRASH.create(),
+                (t) -> {
+                    List<String> items = new LinkedList<>(getValue());
+                    items.clear();
+                    itemsField.setItems(items);
+                    setModelValue(new LinkedList<>(items), true);
+                }
+        );
+        clearButton.setTooltipText("Delete All");
+        clearButton.setEnabled(false);
+        loadDefaultsButton = new Button(
+                VaadinIcon.DOWNLOAD.create(),
+                (e) -> {
+                    if (defaultsSupplier != null) {
+                        setValue(defaultsSupplier.get());
+                    }
+                }
+        );
+        loadDefaultsButton.setVisible(false);
 
         getContent().add(
                 elbLabel,
@@ -96,7 +129,9 @@ public class EditableListBox
                 new HorizontalLayout(
                         addButton,
                         updateButton,
-                        removeButton
+                        removeButton,
+                        clearButton,
+                        loadDefaultsButton
                 )
         );
         itemsField.setWidthFull();
@@ -129,19 +164,8 @@ public class EditableListBox
                 removeButton.setEnabled(false);
             }
         });
-    }
 
-    @Override
-    public void setValue(List<String> items) {
-        this.items.clear();
-        this.items.addAll(items);
-        itemsField.setItems(this.items);
-    }
-
-    @Override
-    public List<String> getValue() {
-        logger.info(items.toString());
-        return new LinkedList<>(items);
+        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<String> getValidator() {
@@ -150,10 +174,23 @@ public class EditableListBox
 
     @Override
     protected void setPresentationValue(List<String> v) {
-        items.clear();
-        if (v != null) {
-            items.addAll(v);
+        v.removeIf((t) -> t == null || t.isEmpty() || t.isBlank());
+        itemsField.setItems(v);
+        clearButton.setEnabled(!v.isEmpty());
+        getElement().setPropertyList("value", v);
+    }
+
+    public void setDefaultValuesSupplier(Supplier<List<String>> defaultsSupplier) {
+        setDefaultValuesSupplier(null, defaultsSupplier);
+    }
+
+    public void setDefaultValuesSupplier(String toolTipText, Supplier<List<String>> defaultsSupplier) {
+        this.defaultsSupplier = defaultsSupplier;
+        loadDefaultsButton.setVisible(true);
+        if (toolTipText == null || toolTipText.isEmpty()) {
+            loadDefaultsButton.setTooltipText("Load default values");
+        } else {
+            loadDefaultsButton.setTooltipText(toolTipText);
         }
-        itemsField.setItems(items);
     }
 }

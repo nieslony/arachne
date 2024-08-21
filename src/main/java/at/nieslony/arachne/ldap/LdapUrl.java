@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.apiindex.ShowApiType;
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 @Getter
 @Setter
 @EqualsAndHashCode
+@ShowApiType(String.class)
 public class LdapUrl implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LdapUrl.class);

@@ -4,13 +4,8 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.roles.RolesCollector;
 import jakarta.annotation.security.RolesAllowed;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,34 +38,16 @@ public class UserRestController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RolesCollector rolesCollector;
-
     @GetMapping
     @RolesAllowed(value = {"ADMIN"})
-    public Map<String, Object> findAll() {
-        Map<String, Object> root = new HashMap<>();
-
-        List<Map<String, Object>> users = new LinkedList<>();
-        for (ArachneUser arachneUser : userRepository.findAll()) {
-            Map<String, Object> user = new HashMap<>();
-            user.put("details", arachneUser);
-
-            Set<String> roles
-                    = rolesCollector.findRoleDescriptionsForUser(arachneUser.getUsername());
-            user.put("roles", roles);
-
-            users.add(user);
-        }
-
-        root.put("data", users);
-        return root;
+    public List<UserModel> findAll() {
+        return userRepository.findAll();
     }
 
     @GetMapping("/{id}")
     @RolesAllowed(value = {"ADMIN"})
-    public ArachneUser findUser(@PathVariable Long id) {
-        ArachneUser user = userRepository
+    public UserModel findUser(@PathVariable Long id) {
+        UserModel user = userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
@@ -81,7 +58,7 @@ public class UserRestController {
     @PostMapping
     @RolesAllowed(value = {"ADMIN"})
     @ResponseStatus(HttpStatus.CREATED)
-    public ArachneUser create(@RequestBody ArachneUser user) {
+    public UserModel create(@RequestBody UserModel user) {
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -99,8 +76,8 @@ public class UserRestController {
 
     @PutMapping("/{id}")
     @RolesAllowed(value = {"ADMIN"})
-    public ArachneUser update(@RequestBody ArachneUser newUser, @PathVariable Long id) {
-        ArachneUser user = userRepository
+    public UserModel update(@RequestBody UserModel newUser, @PathVariable Long id) {
+        UserModel user = userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,

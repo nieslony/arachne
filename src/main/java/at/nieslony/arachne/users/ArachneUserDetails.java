@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.ldap.LdapUser;
 import java.util.Collection;
 import java.util.Set;
 import lombok.Getter;
@@ -19,7 +18,7 @@ public class ArachneUserDetails extends User {
 
     private String displayName;
 
-    public ArachneUserDetails(ArachneUser arachneUser) {
+    public ArachneUserDetails(UserModel arachneUser) {
         super(
                 arachneUser.getUsername(),
                 arachneUser.getPassword(),
@@ -29,7 +28,7 @@ public class ArachneUserDetails extends User {
         displayName = arachneUser.getDisplayName();
     }
 
-    public ArachneUserDetails(
+    /*    private ArachneUserDetails(
             LdapUser ldapUser,
             Set<String> roles
     ) {
@@ -40,8 +39,7 @@ public class ArachneUserDetails extends User {
         );
 
         displayName = ldapUser.getDisplayName();
-    }
-
+    }*/
     static private Collection<? extends GrantedAuthority>
             rolesToGrantedAuthorities(Set<String> roles) {
         return roles

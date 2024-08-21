@@ -15,8 +15,8 @@ import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -34,7 +34,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -57,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.olli.FileDownloadWrapper;
@@ -66,7 +66,7 @@ import org.vaadin.olli.FileDownloadWrapper;
  * @author claas
  */
 @Route(value = "users", layout = ViewTemplate.class)
-@PageTitle("Users | Arachne")
+@PageTitle("Users")
 @RolesAllowed("ADMIN")
 public class UsersView extends VerticalLayout {
 
@@ -78,19 +78,18 @@ public class UsersView extends VerticalLayout {
     final private Settings settings;
     final private MailSettingsRestController mailSettingsRestController;
 
-    final Grid<ArachneUser> usersGrid;
-    final Grid.Column<ArachneUser> usernameColumn;
-    final Grid.Column<ArachneUser> displayNameColumn;
-    final Grid.Column<ArachneUser> emailColumn;
-    final Grid.Column<ArachneUser> userSourceColumn;
+    final Grid<UserModel> usersGrid;
+    final Grid.Column<UserModel> usernameColumn;
+    final Grid.Column<UserModel> displayNameColumn;
+    final Grid.Column<UserModel> emailColumn;
+    final Grid.Column<UserModel> userSourceColumn;
 
-    DataProvider<ArachneUser, Void> userDataProvider;
+    DataProvider<UserModel, Void> userDataProvider;
     UserSettings userSettings;
 
     public UsersView(
             UserRepository userRepository,
             RoleRuleRepository roleRuleRepository,
-            ArachneUserDetailsService userDetails,
             OpenVpnRestController openVpnRestController,
             Settings settings,
             MailSettingsRestController mailSettingsRestController
@@ -113,16 +112,14 @@ public class UsersView extends VerticalLayout {
                             return page
                                     .stream()
                                     .peek((user) -> {
-                                        userDetails.ensureUpdated(
-                                                user,
-                                                userSettings.getExpirationTimeout()
-                                        );
+                                        // update user !!!
+                                        //return user;
                                     });
                         },
                         query -> (int) userRepository.count()
                 );
 
-        usersGrid = new Grid<>(ArachneUser.class, false);
+        usersGrid = new Grid<>(UserModel.class, false);
         Button addUserButton = new Button("Add User...",
                 event -> addUser()
         );
@@ -138,16 +135,16 @@ public class UsersView extends VerticalLayout {
         );
 
         usernameColumn = usersGrid
-                .addColumn(ArachneUser::getUsername)
+                .addColumn(UserModel::getUsername)
                 .setHeader("Username");
         displayNameColumn = usersGrid
-                .addColumn(ArachneUser::getDisplayName)
+                .addColumn(UserModel::getDisplayName)
                 .setHeader("Displayname");
         emailColumn = usersGrid
-                .addColumn(ArachneUser::getEmail)
+                .addColumn(UserModel::getEmail)
                 .setHeader("E-Mail");
         userSourceColumn = usersGrid
-                .addColumn(new ComponentRenderer<>((ArachneUser user) -> {
+                .addColumn(new ComponentRenderer<>((UserModel user) -> {
                     String source = user.getExternalProvider();
                     if (source == null) {
                         return new Text("Internal");
@@ -168,9 +165,10 @@ public class UsersView extends VerticalLayout {
         usersGrid.setItems(userDataProvider);
 
         add(buttons, usersGrid);
+        setPadding(false);
     }
 
-    private Component getUserEditMenu(ArachneUser user, Editor<ArachneUser> editor) {
+    private Component getUserEditMenu(UserModel user, Editor<UserModel> editor) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String myUsername = authentication.getName();
 
@@ -179,18 +177,20 @@ public class UsersView extends VerticalLayout {
         MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
         SubMenu userMenu = menuItem.getSubMenu();
 
-        if (!user.getUsername().equals(myUsername)) {
-            Button editButton = new Button("Edit");
-            editButton.addClickListener(e -> {
+        if (user.getExternalProvider() == null) {
+            userMenu.addItem("Edit", e -> {
                 if (editor.isOpen()) {
                     editor.cancel();
                 }
                 editor.editItem(user);
             });
 
-            userMenu.addItem("Change Password...", event -> changePassword(user));
-            userMenu.addItem("Delete...", event -> deleteUser(user));
+            if (!user.getUsername().equals(myUsername)) {
+                userMenu.addItem("Change Password...", event -> changePassword(user));
+                userMenu.addItem("Delete...", event -> deleteUser(user));
+            }
         }
+
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);
@@ -225,8 +225,8 @@ public class UsersView extends VerticalLayout {
     }
 
     final void editUsersGridBuffered() {
-        Editor<ArachneUser> editor = usersGrid.getEditor();
-        Binder<ArachneUser> binder = new Binder<>(ArachneUser.class);
+        Editor<UserModel> editor = usersGrid.getEditor();
+        Binder<UserModel> binder = new Binder<>(UserModel.class);
         editor.setBinder(binder);
         editor.setBuffered(true);
 
@@ -234,8 +234,8 @@ public class UsersView extends VerticalLayout {
         UsernameUniqueValidator usernameUniqueValidator
                 = new UsernameUniqueValidator(userRepository);
 
-        Grid.Column<ArachneUser> editColumn = usersGrid
-                .addComponentColumn((ArachneUser user) -> getUserEditMenu(user, editor))
+        Grid.Column<UserModel> editColumn = usersGrid
+                .addComponentColumn((UserModel user) -> getUserEditMenu(user, editor))
                 .setWidth("15em")
                 .setFlexGrow(0);
 
@@ -247,7 +247,7 @@ public class UsersView extends VerticalLayout {
         binder.forField(usernameField)
                 .withValidator(usernameValidator)
                 .withValidator(usernameUniqueValidator)
-                .bind(ArachneUser::getUsername, ArachneUser::setUsername);
+                .bind(UserModel::getUsername, UserModel::setUsername);
         usernameColumn.setEditorComponent(usernameField);
 
         TextField displayNameField = new TextField();
@@ -256,7 +256,7 @@ public class UsersView extends VerticalLayout {
 
         binder.forField(displayNameField)
                 .asRequired("Value required")
-                .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);
+                .bind(UserModel::getDisplayName, UserModel::setDisplayName);
         displayNameColumn.setEditorComponent(displayNameField);
 
         EmailField emailField = new EmailField();
@@ -268,12 +268,12 @@ public class UsersView extends VerticalLayout {
                         "This doesn't look like a valid email address",
                         true)
                 )
-                .bind(ArachneUser::getEmail, ArachneUser::setEmail);
+                .bind(UserModel::getEmail, UserModel::setEmail);
         emailColumn.setEditorComponent(emailField);
 
         editor.addSaveListener(
                 (event) -> {
-                    ArachneUser user = event.getItem();
+                    UserModel user = event.getItem();
                     userRepository.save(user);
                 }
         );
@@ -296,8 +296,7 @@ public class UsersView extends VerticalLayout {
                 cancelButton
         );
 
-        actions.setPadding(
-                false);
+        actions.setPadding(false);
         editColumn.setEditorComponent(actions);
 
         binder.addStatusChangeListener(
@@ -310,7 +309,7 @@ public class UsersView extends VerticalLayout {
     void addUser() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Add User");
-        Binder<ArachneUser> binder = new Binder<>(ArachneUser.class
+        Binder<UserModel> binder = new Binder<>(UserModel.class
         );
 
         TextField usernameField = new TextField("Username");
@@ -333,11 +332,11 @@ public class UsersView extends VerticalLayout {
                 .asRequired()
                 .withValidator(usernameValidartor)
                 .withValidator(usernameUniqueValidator)
-                .bind(ArachneUser::getUsername, ArachneUser::setUsername);
+                .bind(UserModel::getUsername, UserModel::setUsername);
         binder.forField(displayNameField)
-                .bind(ArachneUser::getDisplayName, ArachneUser::setDisplayName);
+                .bind(UserModel::getDisplayName, UserModel::setDisplayName);
         binder.forField(passwordField)
-                .bind(ArachneUser::getPassword, ArachneUser::setPassword);
+                .bind(UserModel::getPassword, UserModel::setPassword);
         AtomicReference<String> retypePasswordStr = new AtomicReference<>("");
         binder.forField(retypePasswordField)
                 .withValidator(
@@ -352,7 +351,7 @@ public class UsersView extends VerticalLayout {
 
         Button okButton = new Button("OK",
                 event -> {
-                    ArachneUser newUser = new ArachneUser();
+                    UserModel newUser = new UserModel();
                     if (binder.writeBeanIfValid(newUser)) {
                         userRepository.save(newUser);
 
@@ -397,7 +396,7 @@ public class UsersView extends VerticalLayout {
         dialog.open();
     }
 
-    void changePassword(ArachneUser user) {
+    void changePassword(UserModel user) {
         ChangePasswordDialog dlg = new ChangePasswordDialog(
                 userRepository,
                 user
@@ -405,7 +404,7 @@ public class UsersView extends VerticalLayout {
         dlg.open();
     }
 
-    void deleteUser(ArachneUser user) {
+    void deleteUser(UserModel user) {
         ConfirmDialog confirm = new ConfirmDialog();
         String username = user.getUsername();
         confirm.setHeader("Delete user \"%s\"".formatted(username));
@@ -459,7 +458,7 @@ public class UsersView extends VerticalLayout {
         dlg.open();
     }
 
-    void sendVpnConfig(ArachneUser user) {
+    void sendVpnConfig(UserModel user) {
         MailSettings mailSettings = settings.getSettings(MailSettings.class);
 
         Dialog dlg = new Dialog();
@@ -485,12 +484,11 @@ public class UsersView extends VerticalLayout {
                         mailAddr,
                         subject
                 );
-                Notification.show("Config sent to " + mailAddr);
-            } catch (IOException | MessagingException | PkiException | SettingsException ex) {
-                String msg = "Error sending e-mail to %s: %s"
-                        .formatted(user.getEmail(), ex.getMessage());
-                logger.error(msg);
-                Notification.show(msg);
+                ShowNotification.info("Config sent to " + mailAddr);
+            } catch (IOException | MailSendException | MessagingException | PkiException | SettingsException ex) {
+                String header = "Error sending e-mail to %s".formatted(user.getEmail());
+                logger.error(header + ": " + ex.getMessage());
+                ShowNotification.error(header, ex.getMessage());
             }
 
             dlg.close();

@@ -4,8 +4,9 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.apiindex.ApiIndexView;
+import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.firewall.FirewallView;
-import at.nieslony.arachne.kerberos.KerberosView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
@@ -20,12 +21,13 @@ import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
-import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
@@ -34,6 +36,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -47,13 +51,13 @@ import org.springframework.security.core.userdetails.UserDetails;
  *
  * @author claas
  */
-@StyleSheet("/frontend/styles/styles.css")
-public class ViewTemplate extends AppLayout {
+public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
+    private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepositoty,
@@ -78,8 +82,8 @@ public class ViewTemplate extends AppLayout {
             userInfo = username;
         }
 
-        H1 logo = new H1("Arachne");
-        logo.getStyle()
+        H1 pageTitle = new H1("Arachne");
+        pageTitle.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
@@ -90,16 +94,23 @@ public class ViewTemplate extends AppLayout {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        userMenu.addItem("Change Password...", click -> changePassword());
-
+        if (userRepository.findByUsername(username) != null) {
+            if (userRepository.findByUsername(username).getExternalProvider() == null) {
+                userMenu.addItem("Change Password...", click -> changePassword());
+            }
+        } else {
+            logger.warn("Cannot find user %s in user repository".formatted(username));
+        }
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
-                logo,
+                pageTitle,
                 menuBar
         );
         header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        header.expand(logo);
+        header.expand(pageTitle);
         header.setWidth("100%");
+        header.setSpacing(false);
+        header.setPadding(false);
         header.addClassNames("py-0", "px-m");
 
         addToNavbar(header);
@@ -132,14 +143,13 @@ public class ViewTemplate extends AppLayout {
 
         SideNav usersNav = new SideNav();
         usersNav.setLabel("Users & Authentication");
-        usersNav.addItem(
-                new SideNavItem("Users", UsersView.class,
-                        VaadinIcon.USERS.create()),
+        usersNav.addItem(new SideNavItem("Users", UsersView.class,
+                VaadinIcon.USERS.create()),
                 new SideNavItem("LDAP User Source", LdapView.class,
                         VaadinIcon.FOLDER.create()),
                 new SideNavItem("Roles", RolesView.class,
                         VaadinIcon.GROUP.create()),
-                new SideNavItem("Kerberos Auth", KerberosView.class,
+                new SideNavItem("External Auth", ExternalAuthView.class,
                         VaadinIcon.AUTOMATION.create())
         );
         usersNav.setWidthFull();
@@ -181,16 +191,21 @@ public class ViewTemplate extends AppLayout {
         );
 
         SideNav servicesNav = new SideNav("Services");
+        SideNavItem apiItem = new SideNavItem("API Index", ApiIndexView.class,
+                VaadinIcon.LIST.create());
+        apiItem.setOpenInNewBrowserTab(true);
         servicesNav.addItem(
                 new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
-                new SideNavItem("Tomcat AJP Connector", TomcatView.class,
+                new SideNavItem("Integrated Tomcat", TomcatView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),
                 new SideNavItem("Recurring Tasks", RecurringTasksView.class,
-                        VaadinIcon.CLOCK.create())
+                        VaadinIcon.CLOCK.create()),
+                apiItem
         );
+
         servicesNav.setWidthFull();
 
         VerticalLayout layout = new VerticalLayout(
@@ -209,5 +224,34 @@ public class ViewTemplate extends AppLayout {
     void changePassword() {
         ChangePasswordDialog dlg = new ChangePasswordDialog(userRepository);
         dlg.open();
+    }
+
+    @Override
+    public void setContent(Component content) {
+        PageTitle title = content.getClass().getAnnotation(PageTitle.class);
+        if (title != null) {
+            pageTitleStr = title.value();
+        } else if (content instanceof HasDynamicTitle hdt) {
+            pageTitleStr = hdt.getPageTitle();
+        }
+
+        if (pageTitleStr != null) {
+            VerticalLayout layout = new VerticalLayout(
+                    new H2(pageTitleStr),
+                    content
+            );
+            super.setContent(layout);
+        } else {
+            super.setContent(content);
+        }
+    }
+
+    @Override
+    public String getPageTitle() {
+        if (pageTitleStr != null) {
+            return pageTitleStr + " | Arachne";
+        } else {
+            return "Arachne";
+        }
     }
 }

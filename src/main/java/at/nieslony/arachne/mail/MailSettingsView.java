@@ -23,8 +23,9 @@ import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;
@@ -37,8 +38,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -81,7 +80,7 @@ import org.vaadin.pekka.WysiwygE;
  * @author claas
  */
 @Route(value = "mail-settings", layout = ViewTemplate.class)
-@PageTitle("E-Mail Settings | Arachne")
+@PageTitle("E-Mail Settings")
 @RolesAllowed("ADMIN")
 public class MailSettingsView extends VerticalLayout {
 
@@ -135,6 +134,7 @@ public class MailSettingsView extends VerticalLayout {
                 new Hr(),
                 buttons
         );
+        setPadding(false);
 
         tabs.setSelectedTab(null);
         tabs.addSelectedChangeListener((t) -> {
@@ -237,7 +237,7 @@ public class MailSettingsView extends VerticalLayout {
         recipiend.setValueChangeMode(ValueChangeMode.EAGER);
         recipiend.setErrorMessage("Not a valid E-Mail Address");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        UserModel you = userRepository.findByUsername(authentication.getName());
         if (you != null && you.getEmail() != null) {
             recipiend.setValue(you.getEmail());
         }
@@ -293,7 +293,7 @@ public class MailSettingsView extends VerticalLayout {
         ));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        UserModel you = userRepository.findByUsername(authentication.getName());
         if (you != null) {
             if (you.getEmail() != null) {
                 recipiend.setValue(you.getEmail());
@@ -306,12 +306,12 @@ public class MailSettingsView extends VerticalLayout {
         Button cancelButton = new Button("Cancel", (be) -> dlg.close());
         Button sendButton = new Button("Send", (be) -> {
             String username = configUser.getValue();
-            ArachneUser forUser = userRepository.findByUsername(username);
+            UserModel forUser = userRepository.findByUsername(username);
             if (!forUser.getRoles().contains(Role.USER.name())) {
                 String msg = "User %s does not have role '%s', cannot sent config"
                         .formatted(username, Role.USER.toString());
                 logger.error(msg);
-                Notification.show(msg);
+                ShowNotification.error("Error", msg);
             } else {
                 sendTestConfig(forUser, recipiend.getValue());
             }
@@ -463,7 +463,7 @@ public class MailSettingsView extends VerticalLayout {
         return layout;
     }
 
-    private void sendTestConfig(ArachneUser forUser, String to) {
+    private void sendTestConfig(UserModel forUser, String to) {
         try {
             mailSettingsRestController.sendConfigMail(
                     mailSettings,
@@ -472,10 +472,9 @@ public class MailSettingsView extends VerticalLayout {
                     "Arachne Test Mail with Configuration"
             );
         } catch (IOException | MessagingException | PkiException | SettingsException ex) {
-            String msg = "Cannot send Test Mail: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = Notification.show(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            String header = "Cannot send Test Mail";
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 
@@ -501,12 +500,11 @@ public class MailSettingsView extends VerticalLayout {
             mailSender.send(message);
             String msg = "Test Mail sent from %s to %s.".formatted(from, to);
             logger.info(msg);
-            Notification.show(msg);
+            ShowNotification.info(msg);
         } catch (MailException ex) {
-            String msg = "Cannot send Test Mail: " + ex.getMessage();
-            logger.error(msg);
-            Notification notification = Notification.show(msg);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            String header = "Cannot send Test Mail";
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 

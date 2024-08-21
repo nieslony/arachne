@@ -18,10 +18,11 @@ package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.SrvRecord;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -97,12 +98,12 @@ public class LdapSettings extends AbstractSettingsGroup {
         }
     }
 
-    private class UserContextMapper extends AbstractContextMapper<ArachneUser> {
+    private class UserContextMapper extends AbstractContextMapper<UserModel> {
 
         @Override
-        protected ArachneUser doMapFromContext(DirContextOperations dco) {
+        protected UserModel doMapFromContext(DirContextOperations dco) {
             logger.info("Found: " + dco.toString());
-            ArachneUser ldapUser = ArachneUser.builder()
+            UserModel ldapUser = UserModel.builder()
                     .externalId("%s,%s".formatted(
                             dco.getDn().toString(),
                             getBaseDn()
@@ -177,6 +178,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         return ldapServers;
     }
 
+    @JsonIgnore
     public LdapTemplate getLdapTemplate() throws Exception {
         logger.info(toString());
         String[] urls = ldapUrls.stream()
@@ -265,7 +267,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         }
     }
 
-    public List<ArachneUser> findUsers(String username, int max) {
+    public List<UserModel> findUsers(String username, int max) {
         LdapTemplate ldap;
         try {
             ldap = getLdapTemplate();
@@ -400,9 +402,10 @@ public class LdapSettings extends AbstractSettingsGroup {
                 .toList();
     }
 
-    public ArachneUser getUser(String username) {
-        List<ArachneUser> users = findUsers(username, 1);
-        if (users.isEmpty()) {
+    @JsonIgnore
+    public UserModel getUser(String username) {
+        List<UserModel> users = findUsers(username, 1);
+        if (users == null || users.isEmpty()) {
             return null;
         }
         return users.get(0);
@@ -440,6 +443,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         return groups;
     }
 
+    @JsonIgnore
     public LdapGroup getGroup(String groupname) {
         List<LdapGroup> groups = findGroups(groupname, 1);
         if (groups.isEmpty()) {

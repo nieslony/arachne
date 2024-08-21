@@ -8,18 +8,20 @@ import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.pki.CertSpecs;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -117,7 +119,9 @@ public class SetupView extends VerticalLayout {
             prev.setEnabled(curTab > 0);
         });
         HorizontalLayout buttons = new HorizontalLayout();
-        next = new Button("Next");
+        next = new Button("Next", new Icon(VaadinIcon.ARROW_RIGHT));
+        next.setIconAfterText(true);
+        next.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         next.addClickListener((t) -> {
             int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
@@ -125,7 +129,7 @@ public class SetupView extends VerticalLayout {
                 tabSheet.setSelectedIndex(curTab + 1);
             }
         });
-        prev = new Button("Prev");
+        prev = new Button("Prev", new Icon(VaadinIcon.ARROW_LEFT));
         prev.addClickListener((t) -> {
             int curTab = tabSheet.getSelectedIndex();
             if (curTab > 0) {
@@ -452,6 +456,7 @@ public class SetupView extends VerticalLayout {
 
         finish = new Button("Finish");
         finish.setDisableOnClick(true);
+        finish.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         finish.addClickListener((var t) -> {
             SetupData setupData = new SetupData();
 
@@ -542,10 +547,8 @@ public class SetupView extends VerticalLayout {
             });
             upload.addFileRejectedListener(event -> {
                 String errorMessage = event.getErrorMessage();
-
-                Notification notification = Notification.show(errorMessage, 5000,
-                        Notification.Position.MIDDLE);
-                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                logger.error(errorMessage);
+                ShowNotification.error("Cannot upload backup", errorMessage);
             });
 
             restoreButton = upload;

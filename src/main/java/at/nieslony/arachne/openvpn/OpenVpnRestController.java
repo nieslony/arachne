@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +137,7 @@ public class OpenVpnRestController {
                             HttpStatus.UNPROCESSABLE_ENTITY,
                             "Cannot get user config");
             };
-        } catch (PkiException ex) {
+        } catch (PkiException | JSONException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -190,6 +191,7 @@ public class OpenVpnRestController {
         logger.info("Writing openvpn user server config to " + fileName);
 
         writeCrl();
+        openVpnManagement.writePasswordFile();
 
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -309,7 +311,7 @@ public class OpenVpnRestController {
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
         String userCertFn = "$HOME/.cert/arachne-%s.crt".formatted(username);
-        String caCertFn = "$HOME/.cert/arachne-%s.crt".formatted(vpnSettings.getRemote());
+        String caCertFn = "$HOME/.cert/arachne-ca-%s.crt".formatted(vpnSettings.getRemote());
         String privateKeyFn = "$HOME/.cert/arachne-%s.key".formatted(username);
         int port = vpnSettings.getListenPort();
 
@@ -341,14 +343,14 @@ public class OpenVpnRestController {
          */
         configWriter.append("vpn_opts=\"\n");
         if (!vpnSettings.getInternetThrouphVpn()) {
-            configWriter.append("    ipv4.never-default yes\"\n");
+            configWriter.append("    ipv4.never-default yes\n");
         }
         configWriter.append(
-                "    ipv4.dns-search %s\"\n"
+                "    ipv4.dns-search %s\n"
                         .formatted(String.join(",", vpnSettings.getDnsSearch()))
         );
         configWriter.append(
-                "    ipv4.dns %s\"\n"
+                "    ipv4.dns %s\n"
                         .formatted(String.join(",", vpnSettings.getPushDnsServers()))
         );
         configWriter.append("\"\n");
@@ -381,7 +383,7 @@ public class OpenVpnRestController {
         return configWriter.toString();
     }
 
-    String openVpnUserConfigJson(String username) throws PkiException, SettingsException {
+    String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String userCert = pki.getUserCertAsBase64(username);
@@ -428,10 +430,13 @@ public class OpenVpnRestController {
     }
 
     private String findPlugin(String pluginName) {
+        logger.info("Searching for plugin in " + pluginPath);
         for (String dir : pluginPath.split(":")) {
             Path fn = Path.of(dir, pluginName);
             if (Files.exists(fn)) {
-                return fn.toString();
+                String absFn = fn.toAbsolutePath().toString();
+                logger.info("Found plugin: " + absFn);
+                return absFn;
             }
         }
 
