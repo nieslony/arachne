@@ -94,8 +94,12 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        if (userRepository.findByUsername(username).getExternalProvider() == null) {
-            userMenu.addItem("Change Password...", click -> changePassword());
+        if (userRepository.findByUsername(username) != null) {
+            if (userRepository.findByUsername(username).getExternalProvider() == null) {
+                userMenu.addItem("Change Password...", click -> changePassword());
+            }
+        } else {
+            logger.warn("Cannot find user %s in user repository".formatted(username));
         }
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),

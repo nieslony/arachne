@@ -73,6 +73,7 @@ public class UserModel implements Serializable {
 
     @Column
     @JsonIgnore
+    @ToString.Exclude
     private String password;
 
     @JsonSetter("password")
@@ -106,12 +107,17 @@ public class UserModel implements Serializable {
     @PrePersist
     @PreUpdate
     public void onSave() {
+        logger.info("Resetting expiration date");
         lastModified = new Date();
     }
 
     public boolean isExpired(int maxAgeMins) {
         if (expirationEnforced) {
             logger.info("User expiration enforced");
+            return true;
+        }
+        if (lastModified == null) {
+            logger.info("never modified => expired");
             return true;
         }
         Calendar cal = Calendar.getInstance();
@@ -127,6 +133,7 @@ public class UserModel implements Serializable {
         this.email = user.getEmail();
         this.expirationEnforced = false;
         this.lastModified = new Date();
+        this.roles.addAll(user.getRoles());
     }
 
     @JsonIgnore

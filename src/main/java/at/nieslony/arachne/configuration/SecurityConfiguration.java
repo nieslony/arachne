@@ -8,7 +8,8 @@ import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUserDetailsService;
+import at.nieslony.arachne.users.InternalUserDetailsService;
+import at.nieslony.arachne.users.LdapUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
@@ -71,7 +72,10 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private Settings settings;
 
     @Autowired
-    private ArachneUserDetailsService arachneUserDetailsService;
+    private InternalUserDetailsService internalUserDetailsService;
+
+    @Autowired
+    private LdapUserDetailsService ldapUserDetailsService;
 
     @Autowired
     private FolderFactory folderFactory;
@@ -93,7 +97,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+        AuthenticationManager authenticationManager = http.getSharedObject(
+                AuthenticationManager.class
+        );
 
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
@@ -145,7 +151,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 logger.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
             });
             filter.setAuthenticationDetailsSource((context) -> {
-                return arachneUserDetailsService;
+                return ldapUserDetailsService;
             });
             return filter;
         } else {
@@ -218,6 +224,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         if (preAuthSettings.isPreAuthtEnabled()) {
             authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
         }
+        authManBuilder.userDetailsService(internalUserDetailsService);
+        authManBuilder.eraseCredentials(true);
+        authManBuilder.parentAuthenticationManager(null);
 
         return authManBuilder.build();
     }
@@ -227,7 +236,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
         provider.setPreAuthenticatedUserDetailsService((token) -> {
             logger.info("Get user details from pre auth token for : " + token.getName());
-            return arachneUserDetailsService.loadUserByUsername(token.getName());
+            return ldapUserDetailsService.loadUserByUsername(token.getName());
         });
 
         return provider;
@@ -242,7 +251,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
         SunJaasKerberosClient client = new SunJaasKerberosClient();
         provider.setKerberosClient(client);
-        provider.setUserDetailsService(arachneUserDetailsService);
+        provider.setUserDetailsService(ldapUserDetailsService);
         return provider;
     }
 
@@ -254,7 +263,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         }
         KerberosServiceAuthenticationProvider provider = new KerberosServiceAuthenticationProvider();
         provider.setTicketValidator(sunJaasKerberosTicketValidator());
-        provider.setUserDetailsService(arachneUserDetailsService);
+        provider.setUserDetailsService(ldapUserDetailsService);
         return provider;
     }
 

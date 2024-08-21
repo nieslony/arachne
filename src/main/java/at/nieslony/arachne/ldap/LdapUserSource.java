@@ -17,14 +17,15 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.ExternalUserSource;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.users.UserSettings;
+import java.security.SecureRandom;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.CommunicationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -49,17 +50,41 @@ public class LdapUserSource implements ExternalUserSource {
     @Override
     public UserModel findUser(String username) {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
-        UserModel user = null;
-        try {
+        UserSettings userSettings = settings.getSettings(UserSettings.class);
+        int ldapCacheMaxMins = userSettings.getExpirationTimeout();
+
+        UserModel user = userRepository.findByUsernameAndExternalProvider(
+                username,
+                getName()
+        );
+        if (user == null) {
+            logger.info("User %s not found in database, getting from LDAP"
+                    .formatted(username)
+            );
             user = ldapSettings.getUser(username);
-        } catch (CommunicationException ex) {
-            logger.error("Cannot connect to LDAP server: " + ex.getMessage());
         }
         if (user == null) {
+            logger.info("User %s neither found in database not LDAP"
+                    .formatted(username)
+            );
             return null;
         }
-        user.setPassword("");
+        user.setExternalProvider(getName());
+        user.setPassword(createRandomPassword());
+        if (user.isExpired(ldapCacheMaxMins)) {
+            update(user);
+        }
+
         return user;
+    }
+
+    private String createRandomPassword() {
+        return new SecureRandom()
+                .ints(32, 127)
+                .filter(i -> Character.isLetterOrDigit(i))
+                .limit(64)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 
     @Override
@@ -69,17 +94,34 @@ public class LdapUserSource implements ExternalUserSource {
 
     @Override
     public void update(UserModel user) {
-        if (user.getExternalProvider().equals(getName())) {
+        String username = user.getUsername();
+        if (!user.getExternalProvider().equals(getName())) {
+            logger.info("I'm  not a %s external provider. I'm %s"
+                    .formatted(user.getExternalProvider(), getName())
+            );
             return;
         }
 
-        UserModel oldUser = userRepository.findByUsername(user.getUsername());
-        if (oldUser.getExternalProvider().equals(getName())) {
-            return;
+        UserModel oldUser = userRepository.findByUsernameAndExternalProvider(
+                username,
+                getName()
+        );
+        if (oldUser == null) {
+            logger.info("Creating new user " + username);
+            userRepository.save(user);
+        } else {
+            UserSettings userSettings = settings.getSettings(UserSettings.class);
+            int ldapCacheMaxMins = userSettings.getExpirationTimeout();
+            if (user.isExpired(ldapCacheMaxMins)) {
+                logger.info("User %s is expired, updating".formatted(user.getUsername()));
+                oldUser.update(user);
+                logger.info("Saving user " + username);
+                userRepository.save(oldUser);
+            } else {
+                logger.info("User %s is not expired, no update"
+                        .formatted(user.getUsername())
+                );
+            }
         }
-
-        oldUser.setDisplayName(user.getDisplayName());
-        oldUser.setEmail(user.getEmail());
-        userRepository.save(oldUser);
     }
 }

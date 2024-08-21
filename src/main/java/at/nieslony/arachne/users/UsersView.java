@@ -90,7 +90,6 @@ public class UsersView extends VerticalLayout {
     public UsersView(
             UserRepository userRepository,
             RoleRuleRepository roleRuleRepository,
-            ArachneUserDetailsService userDetails,
             OpenVpnRestController openVpnRestController,
             Settings settings,
             MailSettingsRestController mailSettingsRestController
@@ -113,10 +112,8 @@ public class UsersView extends VerticalLayout {
                             return page
                                     .stream()
                                     .peek((user) -> {
-                                        userDetails.ensureUpdated(
-                                                user,
-                                                userSettings.getExpirationTimeout()
-                                        );
+                                        // update user !!!
+                                        //return user;
                                     });
                         },
                         query -> (int) userRepository.count()
