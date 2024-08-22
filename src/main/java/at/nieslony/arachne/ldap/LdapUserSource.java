@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ExternalUserSource;
 import at.nieslony.arachne.users.UserModel;
@@ -23,6 +24,7 @@ import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UserSettings;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class LdapUserSource implements ExternalUserSource {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    private RolesCollector rolesCollector;
+
     static public String getName() {
         return "Ldap";
     }
@@ -57,22 +62,28 @@ public class LdapUserSource implements ExternalUserSource {
                 username,
                 getName()
         );
-        if (user == null) {
-            logger.info("User %s not found in database, getting from LDAP"
-                    .formatted(username)
-            );
+        if (user == null || user.isExpired(ldapCacheMaxMins)) {
+            if (user == null) {
+                logger.info("User %s not found in database, getting from LDAP"
+                        .formatted(username)
+                );
+            } else {
+                logger.info("User is expired. Updating from LDAP");
+            }
+
             user = ldapSettings.getUser(username);
+            Set<String> roles = rolesCollector.findRolesForUser(user);
+            user.setRoles(roles);
+            user.setExternalProvider(getName());
+            user.setPassword(createRandomPassword());
+            update(user);
+            return user;
         }
         if (user == null) {
             logger.info("User %s neither found in database not LDAP"
                     .formatted(username)
             );
             return null;
-        }
-        user.setExternalProvider(getName());
-        user.setPassword(createRandomPassword());
-        if (user.isExpired(ldapCacheMaxMins)) {
-            update(user);
         }
 
         return user;

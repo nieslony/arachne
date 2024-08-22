@@ -17,8 +17,6 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapUserSource;
-import at.nieslony.arachne.roles.RolesCollector;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +39,6 @@ public class LdapUserDetailsService implements UserDetailsService {
     @Autowired
     private LdapUserSource ldapUserSource;
 
-    @Autowired
-    private RolesCollector rolesCollector;
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username == null || username.isEmpty()) {
@@ -58,10 +53,6 @@ public class LdapUserDetailsService implements UserDetailsService {
             logger.info(msg);
             throw new UsernameNotFoundException(msg);
         }
-        Set<String> roles = rolesCollector.findRolesForUser(user);
-        user.setRoles(roles);
-        logger.info("Saving user %s".formatted(user.toString()));
-        ldapUserSource.update(user);
 
         return new ArachneUserDetails(user);
     }
