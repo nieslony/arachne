@@ -16,18 +16,23 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -53,12 +58,25 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.cms.CMSAlgorithm;
+import org.bouncycastle.cms.CMSEnvelopedData;
+import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSTypedData;
+import org.bouncycastle.cms.KeyTransRecipientInformation;
+import org.bouncycastle.cms.RecipientInformation;
+import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
+import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
+import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
+import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
 import org.bouncycastle.crypto.generators.DHParametersGenerator;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
@@ -73,10 +91,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- *
- * @author claas
- */
 @Component
 public class Pki {
 
@@ -611,5 +625,78 @@ public class Pki {
                 throw new UpdateWebServerCertificateException(tomcatCertPath, ex);
             }
         }
+    }
+
+    public static byte[] encryptData(
+            byte[] data,
+            X509Certificate encryptionCertificate
+    )
+            throws CertificateEncodingException, CMSException, IOException {
+
+        byte[] encryptedData = null;
+        if (null != data && null != encryptionCertificate) {
+            CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator
+                    = new CMSEnvelopedDataGenerator();
+
+            JceKeyTransRecipientInfoGenerator jceKey
+                    = new JceKeyTransRecipientInfoGenerator(encryptionCertificate);
+            cmsEnvelopedDataGenerator.addRecipientInfoGenerator(jceKey);
+            CMSTypedData msg = new CMSProcessableByteArray(data);
+            OutputEncryptor encryptor
+                    = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES256_CBC)
+                            .setProvider("BC").build();
+            CMSEnvelopedData cmsEnvelopedData = cmsEnvelopedDataGenerator
+                    .generate(msg, encryptor);
+            encryptedData = cmsEnvelopedData.getEncoded();
+        }
+        return encryptedData;
+    }
+
+    public static byte[] decryptData(
+            byte[] encryptedData,
+            PrivateKey decryptionKey)
+            throws CMSException {
+        byte[] decryptedData = null;
+        if (null != encryptedData && null != decryptionKey) {
+            CMSEnvelopedData envelopedData = new CMSEnvelopedData(encryptedData);
+
+            Collection<RecipientInformation> recipients
+                    = envelopedData.getRecipientInfos().getRecipients();
+            KeyTransRecipientInformation recipientInfo
+                    = (KeyTransRecipientInformation) recipients.iterator().next();
+            JceKeyTransRecipient recipient
+                    = new JceKeyTransEnvelopedRecipient(decryptionKey);
+
+            return recipientInfo.getContent(recipient);
+        }
+        return decryptedData;
+    }
+
+    public static byte[] createSignature(
+            byte[] data,
+            PrivateKey privateKey
+    ) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+        if (data == null && privateKey == null) {
+            return null;
+        }
+        Signature sign = java.security.Signature.getInstance(
+                "SHA256with" + privateKey.getAlgorithm()
+        );
+        sign.initSign(privateKey);
+        sign.update(data);
+        return sign.sign();
+    }
+
+    public static boolean verifySignature(
+            byte[] data,
+            byte[] signature,
+            PublicKey publicKey
+    ) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature sign = java.security.Signature.getInstance(
+                "SHA256with" + publicKey.getAlgorithm()
+        );
+        sign.initVerify(publicKey);
+        sign.update(data);
+        return sign.verify(signature);
     }
 }
