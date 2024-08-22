@@ -17,13 +17,23 @@
 package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.pki.Pki;
+import at.nieslony.arachne.pki.PkiException;
+import at.nieslony.arachne.settings.SettingsException;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
+import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.bouncycastle.cms.CMSException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -114,11 +124,62 @@ public class AuthRestController {
         return validUntilCal.getTime();
     }
 
+    public String verifyToken(byte[] token) {
+        ByteBuffer buffer = ByteBuffer.wrap(token);
+
+        int signatureLen = buffer.getInt();
+        byte[] signature = new byte[signatureLen];
+        buffer.get(signature);
+
+        int dataLen = buffer.getInt();
+        byte[] data = new byte[dataLen];
+        buffer.get(data);
+
+        try {
+            boolean ok = Pki.verifySignature(
+                    data,
+                    signature,
+                    pki.getServerCert().getPublicKey()
+            );
+            if (!ok) {
+                logger.error("Token signature invalid");
+                return null;
+            }
+            String jsonStr = new String(Pki.decryptData(
+                    data,
+                    pki.getServerKey()
+            ));
+            JSONObject json = new JSONObject(jsonStr);
+            String username = json.getString("authenticatedUser");
+            long validUntil = json.getLong("validUntil");
+
+            Date now = new Date();
+            Date validUntilDate = new Date(validUntil * 1000);
+            if (validUntilDate.before(now)) {
+                logger.error("Token for user %s is expired since %s"
+                        .formatted(username, validUntilDate.toString())
+                );
+                return null;
+            }
+            return username;
+        } catch (InvalidKeyException
+                | NoSuchAlgorithmException
+                | PkiException
+                | SettingsException
+                | SignatureException
+                | CMSException
+                | JSONException ex) {
+            logger.error("Cannot verify token: " + ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/api/auth")
     @RolesAllowed(value = {"USER"})
     public AuthResult auth(
             @RequestParam(required = false) String validTime,
-            Principal principal) {
+            Principal principal
+    ) {
         Date validUntil = createValidUntilDate(validTime);
 
         JSONObject json = new JSONObject();
@@ -130,11 +191,40 @@ public class AuthRestController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         String jsonStr = json.toString();
+        String tokenAsBase64;
+        try {
+            byte[] encToken = Pki.encryptData(
+                    jsonStr.getBytes(),
+                    pki.getServerCert()
+            );
+            byte[] signature = Pki.createSignature(encToken, pki.getServerKey());
+            ByteBuffer byteBuffer = ByteBuffer.allocate(
+                    4 + signature.length + 4 + encToken.length
+            );
+            byteBuffer.putInt(signature.length);
+            byteBuffer.put(signature);
+            byteBuffer.putInt(encToken.length);
+            byteBuffer.put(encToken);
+            tokenAsBase64 = Base64.getEncoder().encodeToString(byteBuffer.array());
+
+            String ret = verifyToken(Base64.getDecoder().decode(tokenAsBase64));
+            logger.info("Got token user: " + ret);
+        } catch (CMSException
+                | CertificateEncodingException
+                | IOException
+                | InvalidKeyException
+                | NoSuchAlgorithmException
+                | SignatureException
+                | PkiException
+                | SettingsException ex) {
+            logger.error("Cannot encrypt token: " + ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         AuthResult authResult = new AuthResult(
                 "Authenticated",
                 validUntil.toString(),
-                jsonStr
+                tokenAsBase64
         );
         return authResult;
     }
