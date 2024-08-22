@@ -89,7 +89,7 @@ public class LdapUserSource implements ExternalUserSource {
         return user;
     }
 
-    private String createRandomPassword() {
+    public static String createRandomPassword() {
         return new SecureRandom()
                 .ints(32, 127)
                 .filter(i -> Character.isLetterOrDigit(i))
