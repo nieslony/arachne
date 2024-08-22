@@ -21,7 +21,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 
 /**
  *
@@ -74,7 +73,7 @@ public class LoginOrSetupView
         login.setForgotPasswordButtonVisible(false);
         if (kerberosSettings.isEnableKrbAuth()) {
             Button toSSoButton = new Button(
-                    "Login with SSO",
+                    "Login with Kerberos",
                     e -> {
                         login.setOpened(false);
                         var vaadinSession = VaadinSession.getCurrent();
