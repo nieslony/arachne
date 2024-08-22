@@ -61,7 +61,8 @@ public class TomcatService {
             config.write(" secret=" + tomcatSettings.getAjpSecret());
         }
         config.write("\n");
-        if (preAuthSettings.isWriteApachePreAuthConfig()) {
+        if (preAuthSettings.isPreAuthtEnabled()
+                && preAuthSettings.isWriteApachePreAuthConfig()) {
             config.write("""
                      <Location %1$s>
                          AuthType            GSSAPI
