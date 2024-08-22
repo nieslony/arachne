@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.kerberos.KeytabException;
@@ -294,7 +295,7 @@ public class ExternalAuthView extends VerticalLayout {
             if (preAuthSettings.isWriteApachePreAuthConfig()) {
                 tomcatService.saveApacheConfig();
             }
-            //Arachne.restart();
+            Arachne.restart();
         } catch (SettingsException ex) {
             logger.error(ex.getMessage());
         }

@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.tomcat;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -271,6 +272,7 @@ public class TomcatView extends VerticalLayout {
                                 restart apache.
                                 """.formatted(tomcatService.getApacheConfigFileName())
             );
+            Arachne.restart();
         } catch (UpdateWebServerCertificateException ex) {
             logger.error(ex.getMessage());
             ShowNotification.error("Cannot write %s", ex.getRoorMessage());
