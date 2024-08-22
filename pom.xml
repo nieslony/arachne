@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.4.8</vaadin.version>
+        <vaadin.version>24.4.10</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
@@ -147,7 +147,7 @@
         <dependency>
             <groupId>org.vaadin.olli</groupId>
             <artifactId>file-download-wrapper</artifactId>
-            <version>7.0.0</version>
+            <version>7.1.0</version>
         </dependency>
 
         <dependency>
