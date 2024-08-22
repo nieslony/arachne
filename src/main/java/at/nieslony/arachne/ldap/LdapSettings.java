@@ -277,7 +277,9 @@ public class LdapSettings extends AbstractSettingsGroup {
         String filter = getUsersFilter(username);
         logger.info("LDAP filter: " + filter);
         SearchControls sc = new SearchControls();
-        sc.setCountLimit(max);
+        if (max != -1) {
+            sc.setCountLimit(max);
+        }
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         sc.setReturningAttributes(
                 new String[]{
