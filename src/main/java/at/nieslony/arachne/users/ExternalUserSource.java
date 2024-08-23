@@ -31,6 +31,4 @@ public interface ExternalUserSource {
     public UserModel findUser(String username);
 
     public List<UserModel> findMatchingUsers(String userPattern);
-
-    public void update(UserModel user);
 }

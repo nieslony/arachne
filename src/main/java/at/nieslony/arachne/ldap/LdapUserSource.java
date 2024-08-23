@@ -62,28 +62,40 @@ public class LdapUserSource implements ExternalUserSource {
                 username,
                 getName()
         );
-        if (user == null || user.isExpired(ldapCacheMaxMins)) {
+        if (user == null) {
+            logger.info("User %s not found in database, getting from LDAP"
+                    .formatted(username)
+            );
+            user = ldapSettings.getUser(username);
             if (user == null) {
-                logger.info("User %s not found in database, getting from LDAP"
+                logger.info("User %s neither found in database nor in LDAP"
                         .formatted(username)
                 );
-            } else {
-                logger.info("User is expired. Updating from LDAP");
+                return null;
             }
-
-            user = ldapSettings.getUser(username);
             Set<String> roles = rolesCollector.findRolesForUser(user);
             user.setRoles(roles);
             user.setExternalProvider(getName());
             user.setPassword(createRandomPassword());
-            update(user);
-            return user;
-        }
-        if (user == null) {
-            logger.info("User %s neither found in database not LDAP"
-                    .formatted(username)
-            );
-            return null;
+            userRepository.save(user);
+        } else if (user.isExpired(ldapCacheMaxMins)) {
+            logger.info("User is expired. Updating from LDAP");
+
+            UserModel ldapUser = ldapSettings.getUser(username);
+            if (ldapUser != null) {
+                user.update(ldapUser);
+                Set<String> roles = rolesCollector.findRolesForUser(user);
+                user.setRoles(roles);
+                user.setExternalProvider(getName());
+                user.setPassword(createRandomPassword());
+                userRepository.save(user);
+            } else {
+                logger.info(
+                        "User %s does no longer exist in LDAP. Removing user"
+                                .formatted(username)
+                );
+                userRepository.delete(user);
+            }
         }
 
         return user;
@@ -101,38 +113,5 @@ public class LdapUserSource implements ExternalUserSource {
     @Override
     public List<UserModel> findMatchingUsers(String userPattern) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public void update(UserModel user) {
-        String username = user.getUsername();
-        if (!user.getExternalProvider().equals(getName())) {
-            logger.info("I'm  not a %s external provider. I'm %s"
-                    .formatted(user.getExternalProvider(), getName())
-            );
-            return;
-        }
-
-        UserModel oldUser = userRepository.findByUsernameAndExternalProvider(
-                username,
-                getName()
-        );
-        if (oldUser == null) {
-            logger.info("Creating new user " + username);
-            userRepository.save(user);
-        } else {
-            UserSettings userSettings = settings.getSettings(UserSettings.class);
-            int ldapCacheMaxMins = userSettings.getExpirationTimeout();
-            if (user.isExpired(ldapCacheMaxMins)) {
-                logger.info("User %s is expired, updating".formatted(user.getUsername()));
-                oldUser.update(user);
-                logger.info("Saving user " + username);
-                userRepository.save(oldUser);
-            } else {
-                logger.info("User %s is not expired, no update"
-                        .formatted(user.getUsername())
-                );
-            }
-        }
     }
 }
