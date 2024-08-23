@@ -24,9 +24,6 @@ import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.Entity;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -53,6 +50,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ApiIndexView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
+    private static final String DEFAULT_VALUE
+            = "\n\t\t\n\t\t\n\ue000\ue001\ue002\n\t\t\t\t\n";
 
     enum JsonMode {
         READ, WRITE
@@ -158,31 +157,24 @@ public class ApiIndexView extends VerticalLayout {
 
                 String type = param.getType().getSimpleName();
 
-                String defaultValue = "";
-                if (!isRequired) {
-                    try {
-                        ByteArrayInputStream bais = new ByteArrayInputStream(
-                                requestParam
-                                        .defaultValue()
-                                        .getBytes()
-                        );
-                        ObjectInputStream ois = new ObjectInputStream(bais);
-                        Object obj = ois.readObject();
-                        defaultValue = (String) obj;
-                    } catch (IOException | ClassNotFoundException ex) {
-                        logger.error("Cannot get defaultValue: " + ex.getMessage());
-                    }
-                }
-
                 Div div = new Div(
                         new Text("name: " + name),
                         new HtmlComponent("br"),
                         new Text("type: " + type),
                         new HtmlComponent("br"),
-                        new Text("is required: " + (isRequired ? "yes" : "no")),
-                        new HtmlComponent("br"),
-                        new Text("default value: " + defaultValue)
+                        new Text("is required: " + (isRequired ? "yes" : "no"))
                 );
+                if (!isRequired) {
+                    String defValue = requestParam.defaultValue();
+                    if (defValue.equals(DEFAULT_VALUE)) {
+                        defValue = "";
+                    }
+                    div.add(
+                            new HtmlComponent("br"),
+                            new Text("default value: " + defValue)
+                    );
+                }
+
                 requestParams.add(div);
                 continue;
             }
