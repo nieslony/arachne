@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.User;
 @Setter
 public class ArachneUserDetails extends User {
 
-    private String displayName;
+    private UserModel user;
 
     public ArachneUserDetails(UserModel arachneUser) {
         super(
@@ -25,21 +25,13 @@ public class ArachneUserDetails extends User {
                 rolesToGrantedAuthorities(arachneUser.getRoles())
         );
 
-        displayName = arachneUser.getDisplayName();
+        this.user = arachneUser;
     }
 
-    /*    private ArachneUserDetails(
-            LdapUser ldapUser,
-            Set<String> roles
-    ) {
-        super(
-                ldapUser.getUsername(),
-                "",
-                rolesToGrantedAuthorities(roles)
-        );
+    public String getDisplayName() {
+        return user.getDisplayName();
+    }
 
-        displayName = ldapUser.getDisplayName();
-    }*/
     static private Collection<? extends GrantedAuthority>
             rolesToGrantedAuthorities(Set<String> roles) {
         return roles

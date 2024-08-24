@@ -19,6 +19,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -144,5 +145,15 @@ public class UserModel implements Serializable {
         });
 
         return roleNames;
+    }
+
+    public void createRandomPassword() {
+        setPassword(new SecureRandom()
+                .ints(32, 127)
+                .filter(i -> Character.isLetterOrDigit(i))
+                .limit(64)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString()
+        );
     }
 }

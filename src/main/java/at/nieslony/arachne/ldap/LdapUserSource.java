@@ -22,7 +22,6 @@ import at.nieslony.arachne.users.ExternalUserSource;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UserSettings;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -76,7 +75,7 @@ public class LdapUserSource implements ExternalUserSource {
             Set<String> roles = rolesCollector.findRolesForUser(user);
             user.setRoles(roles);
             user.setExternalProvider(getName());
-            user.setPassword(createRandomPassword());
+            user.createRandomPassword();
             userRepository.save(user);
         } else if (user.isExpired(ldapCacheMaxMins)) {
             logger.info("User is expired. Updating from LDAP");
@@ -87,7 +86,7 @@ public class LdapUserSource implements ExternalUserSource {
                 Set<String> roles = rolesCollector.findRolesForUser(user);
                 user.setRoles(roles);
                 user.setExternalProvider(getName());
-                user.setPassword(createRandomPassword());
+                user.createRandomPassword();
                 userRepository.save(user);
             } else {
                 logger.info(
@@ -99,15 +98,6 @@ public class LdapUserSource implements ExternalUserSource {
         }
 
         return user;
-    }
-
-    public static String createRandomPassword() {
-        return new SecureRandom()
-                .ints(32, 127)
-                .filter(i -> Character.isLetterOrDigit(i))
-                .limit(64)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
     }
 
     @Override

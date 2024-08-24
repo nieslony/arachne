@@ -5,7 +5,6 @@
 package at.nieslony.arachne.tasks.scheduled;
 
 import at.nieslony.arachne.ldap.LdapSettings;
-import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
@@ -54,7 +53,7 @@ public class RefreshLdapUsers extends Task {
                     if (!roles.isEmpty()) {
                         noUsersAdded++;
                         ldapUser.setRoles(roles);
-                        ldapUser.setPassword(LdapUserSource.createRandomPassword());
+                        ldapUser.createRandomPassword();
                         userRepository.save(ldapUser);
                     } else {
                         noUsersSkipped++;

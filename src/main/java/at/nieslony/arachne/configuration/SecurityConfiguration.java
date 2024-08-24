@@ -6,6 +6,8 @@ package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
+import at.nieslony.arachne.auth.token.BearerAuthenticationProvider;
+import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.InternalUserDetailsService;
@@ -78,6 +80,12 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private LdapUserDetailsService ldapUserDetailsService;
 
     @Autowired
+    BearerAuthenticationProvider bearerAuthenticationProvider;
+
+    @Autowired
+    BearerTokenAuthFilter bearerTokenAuthFilter;
+
+    @Autowired
     private FolderFactory folderFactory;
 
     private KerberosSettings kerberosSettings;
@@ -91,7 +99,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Bean
     public SpnegoEntryPoint spnegoEntryPoint() {
-        //SpnegoEntryPoint sep = new SpnegoEntryPoint("/unauthorized");
         SpnegoEntryPoint sep = new SpnegoEntryPoint("/login");
         return sep;
     }
@@ -104,9 +111,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
-        http.httpBasic((t) -> {
-            t.realmName("Arachne");
-        });
+        http
+                .httpBasic((t) -> {
+                    t.realmName("Arachne");
+                }).addFilterBefore(
+                bearerTokenAuthFilter,
+                BasicAuthenticationFilter.class
+        );
 
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
@@ -226,6 +237,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         if (preAuthSettings.isPreAuthtEnabled()) {
             authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
         }
+        authManBuilder.authenticationProvider(bearerAuthenticationProvider);
         authManBuilder.userDetailsService(internalUserDetailsService);
         authManBuilder.eraseCredentials(true);
         authManBuilder.parentAuthenticationManager(null);
