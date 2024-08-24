@@ -8,7 +8,7 @@ import at.nieslony.arachne.ldap.LdapGroup;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,14 +30,14 @@ public class LdapGroupUserMatcher extends UserMatcher {
     }
 
     @Override
-    public boolean isUserMatching(ArachneUser user) {
+    public boolean isUserMatching(UserModel user) {
         logger.info("Try to match " + user.getUsername());
         Settings settings = Settings.getInstance();
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         String userSourceName = user.getExternalProvider();
         if (userSourceName == null || !userSourceName.equals(LdapUserSource.getName())) {
             logger.info(
-                    "User %s is not a LDAP user -> user doesn_t match"
+                    "User %s is not a LDAP user -> user doesn't match"
                             .formatted(user.getUsername()));
             return false;
         }

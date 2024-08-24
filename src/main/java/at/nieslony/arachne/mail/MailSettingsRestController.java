@@ -23,7 +23,7 @@ import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -76,7 +76,7 @@ public class MailSettingsRestController {
 
     public void sendConfigMail(
             MailSettings mailSettings,
-            ArachneUser forUser,
+            UserModel forUser,
             String to,
             String subject
     ) throws IOException, MessagingException, PkiException, SettingsException {

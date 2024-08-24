@@ -44,7 +44,7 @@ public class ChangePasswordDialog extends Dialog {
     private static final Logger logger = LoggerFactory.getLogger(ChangePasswordDialog.class);
 
     private UserRepository userRepository;
-    private ArachneUser forUser = null;
+    private UserModel forUser = null;
 
     @Getter
     @Setter
@@ -55,7 +55,7 @@ public class ChangePasswordDialog extends Dialog {
         private String retypeNewPassword;
     }
 
-    public ChangePasswordDialog(UserRepository userRepository, ArachneUser forUser) {
+    public ChangePasswordDialog(UserRepository userRepository, UserModel forUser) {
         this.forUser = forUser;
         this.userRepository = userRepository;
 
@@ -72,7 +72,7 @@ public class ChangePasswordDialog extends Dialog {
         Binder<PasswordChanger> binder = new Binder<>(PasswordChanger.class);
 
         PasswordField currentPasswordField = null;
-        ArachneUser user;
+        UserModel user;
         if (forUser == null) {
             setHeaderTitle("Change your Password");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

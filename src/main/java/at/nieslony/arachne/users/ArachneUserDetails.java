@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.ldap.LdapUser;
 import java.util.Collection;
 import java.util.Set;
 import lombok.Getter;
@@ -17,29 +16,20 @@ import org.springframework.security.core.userdetails.User;
 @Setter
 public class ArachneUserDetails extends User {
 
-    private String displayName;
+    private UserModel user;
 
-    public ArachneUserDetails(ArachneUser arachneUser) {
+    public ArachneUserDetails(UserModel arachneUser) {
         super(
                 arachneUser.getUsername(),
                 arachneUser.getPassword(),
                 rolesToGrantedAuthorities(arachneUser.getRoles())
         );
 
-        displayName = arachneUser.getDisplayName();
+        this.user = arachneUser;
     }
 
-    public ArachneUserDetails(
-            LdapUser ldapUser,
-            Set<String> roles
-    ) {
-        super(
-                ldapUser.getUsername(),
-                "",
-                rolesToGrantedAuthorities(roles)
-        );
-
-        displayName = ldapUser.getDisplayName();
+    public String getDisplayName() {
+        return user.getDisplayName();
     }
 
     static private Collection<? extends GrantedAuthority>

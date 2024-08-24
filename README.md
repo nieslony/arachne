@@ -96,7 +96,11 @@ internal users.
 
 #### Kerberos
 
-The internal Kerberos authentication is currently not recommended.
+Arachne supports Kerberos authentication. Requirements:
+
+- keytab file with a service principal _HTTP/full.qualified.domain_
+
+-  LDAP user source is configured
 
 #### Pre Authentication
 
