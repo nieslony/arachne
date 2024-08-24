@@ -23,7 +23,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.security.RolesAllowed;
@@ -88,7 +88,7 @@ public class FirewallRestController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        ArachneUser user = userRepository.findByUsername(username);
+        UserModel user = userRepository.findByUsername(username);
         if (user == null) {
             user = ldapUserSource.findUser(username);
         }

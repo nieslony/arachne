@@ -19,6 +19,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -45,11 +46,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 @ShowApiDetails
-public class ArachneUser implements Serializable {
+public class UserModel implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArachneUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserModel.class);
 
-    public ArachneUser(String username, String password, String displayName, String email) {
+    public UserModel(String username, String password, String displayName, String email) {
         this.username = username;
         setPassword(password);
         this.displayName = displayName;
@@ -57,7 +58,7 @@ public class ArachneUser implements Serializable {
         this.expirationEnforced = false;
     }
 
-    public ArachneUser() {
+    public UserModel() {
         this.expirationEnforced = false;
     }
 
@@ -73,6 +74,7 @@ public class ArachneUser implements Serializable {
 
     @Column
     @JsonIgnore
+    @ToString.Exclude
     private String password;
 
     @JsonSetter("password")
@@ -106,12 +108,17 @@ public class ArachneUser implements Serializable {
     @PrePersist
     @PreUpdate
     public void onSave() {
+        logger.info("Resetting expiration date");
         lastModified = new Date();
     }
 
     public boolean isExpired(int maxAgeMins) {
         if (expirationEnforced) {
             logger.info("User expiration enforced");
+            return true;
+        }
+        if (lastModified == null) {
+            logger.info("never modified => expired");
             return true;
         }
         Calendar cal = Calendar.getInstance();
@@ -122,11 +129,12 @@ public class ArachneUser implements Serializable {
         return cal.before(now);
     }
 
-    public void update(ArachneUser user) {
+    public void update(UserModel user) {
         this.displayName = user.getDisplayName();
         this.email = user.getEmail();
         this.expirationEnforced = false;
         this.lastModified = new Date();
+        this.roles.addAll(user.getRoles());
     }
 
     @JsonIgnore
@@ -137,5 +145,15 @@ public class ArachneUser implements Serializable {
         });
 
         return roleNames;
+    }
+
+    public void createRandomPassword() {
+        setPassword(new SecureRandom()
+                .ints(32, 127)
+                .filter(i -> Character.isLetterOrDigit(i))
+                .limit(64)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString()
+        );
     }
 }

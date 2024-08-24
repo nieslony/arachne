@@ -34,7 +34,7 @@ public class UsernameUniqueValidator implements Validator<String> {
 
     @Override
     public ValidationResult apply(String username, ValueContext vc) {
-        ArachneUser user = userRepository.findByUsername(username);
+        UserModel user = userRepository.findByUsername(username);
         if (user != null) {
             return ValidationResult.error("User already exists");
         } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 claas
+ * Copyright (C) 2024 claas
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,21 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.users;
+package at.nieslony.arachne.auth.token;
 
-import java.util.List;
+import at.nieslony.arachne.users.UserModel;
+import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
  * @author claas
  */
-public interface ExternalUserSource {
+@Getter
+@Setter
+@AllArgsConstructor
+public class AuthTokenContent {
 
-    public static String getName() {
-        return "invalid";
+    public AuthTokenContent() {
     }
+    private Date validUntil;
+    private UserModel user;
 
-    public UserModel findUser(String username);
-
-    public List<UserModel> findMatchingUsers(String userPattern);
 }

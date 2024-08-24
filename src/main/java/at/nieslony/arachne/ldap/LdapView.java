@@ -477,6 +477,7 @@ public class LdapView extends VerticalLayout {
         ldapUrlsField.setHeight(24, Unit.EX);
         ldapUrlsField.getStyle().setBorder("1px solid black");
         ldapUrlsField.setWidthFull();
+        ldapUrlsField.setItems(ldapSettings.getLdapUrls());
 
         Select<LdapProtocol> protocolField = new Select<>();
         protocolField.setLabel("Protocol");

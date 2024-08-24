@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.usermatcher;
 
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import org.springframework.data.util.CastUtils;
 
 /**
@@ -19,7 +19,7 @@ public abstract class UserMatcher {
         this.parameter = parameter;
     }
 
-    public abstract boolean isUserMatching(ArachneUser user);
+    public abstract boolean isUserMatching(UserModel user);
 
     public static String getMatcherDetails(String className, String parameter) {
         Class c;

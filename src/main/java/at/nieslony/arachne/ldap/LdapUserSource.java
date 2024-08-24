@@ -16,15 +16,17 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUser;
 import at.nieslony.arachne.users.ExternalUserSource;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.users.UserSettings;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.CommunicationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,44 +44,64 @@ public class LdapUserSource implements ExternalUserSource {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    private RolesCollector rolesCollector;
+
     static public String getName() {
         return "Ldap";
     }
 
     @Override
-    public ArachneUser findUser(String username) {
+    public UserModel findUser(String username) {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
-        ArachneUser user = null;
-        try {
-            user = ldapSettings.getUser(username);
-        } catch (CommunicationException ex) {
-            logger.error("Cannot connect to LDAP server: " + ex.getMessage());
-        }
+        UserSettings userSettings = settings.getSettings(UserSettings.class);
+        int ldapCacheMaxMins = userSettings.getExpirationTimeout();
+
+        UserModel user = userRepository.findByUsernameAndExternalProvider(
+                username,
+                getName()
+        );
         if (user == null) {
-            return null;
+            logger.info("User %s not found in database, getting from LDAP"
+                    .formatted(username)
+            );
+            user = ldapSettings.getUser(username);
+            if (user == null) {
+                logger.info("User %s neither found in database nor in LDAP"
+                        .formatted(username)
+                );
+                return null;
+            }
+            Set<String> roles = rolesCollector.findRolesForUser(user);
+            user.setRoles(roles);
+            user.setExternalProvider(getName());
+            user.createRandomPassword();
+            userRepository.save(user);
+        } else if (user.isExpired(ldapCacheMaxMins)) {
+            logger.info("User is expired. Updating from LDAP");
+
+            UserModel ldapUser = ldapSettings.getUser(username);
+            if (ldapUser != null) {
+                user.update(ldapUser);
+                Set<String> roles = rolesCollector.findRolesForUser(user);
+                user.setRoles(roles);
+                user.setExternalProvider(getName());
+                user.createRandomPassword();
+                userRepository.save(user);
+            } else {
+                logger.info(
+                        "User %s does no longer exist in LDAP. Removing user"
+                                .formatted(username)
+                );
+                userRepository.delete(user);
+            }
         }
-        user.setPassword("");
+
         return user;
     }
 
     @Override
-    public List<ArachneUser> findMatchingUsers(String userPattern) {
+    public List<UserModel> findMatchingUsers(String userPattern) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public void update(ArachneUser user) {
-        if (user.getExternalProvider().equals(getName())) {
-            return;
-        }
-
-        ArachneUser oldUser = userRepository.findByUsername(user.getUsername());
-        if (oldUser.getExternalProvider().equals(getName())) {
-            return;
-        }
-
-        oldUser.setDisplayName(user.getDisplayName());
-        oldUser.setEmail(user.getEmail());
-        userRepository.save(oldUser);
     }
 }

@@ -18,7 +18,7 @@ package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.SrvRecord;
@@ -98,12 +98,12 @@ public class LdapSettings extends AbstractSettingsGroup {
         }
     }
 
-    private class UserContextMapper extends AbstractContextMapper<ArachneUser> {
+    private class UserContextMapper extends AbstractContextMapper<UserModel> {
 
         @Override
-        protected ArachneUser doMapFromContext(DirContextOperations dco) {
+        protected UserModel doMapFromContext(DirContextOperations dco) {
             logger.info("Found: " + dco.toString());
-            ArachneUser ldapUser = ArachneUser.builder()
+            UserModel ldapUser = UserModel.builder()
                     .externalId("%s,%s".formatted(
                             dco.getDn().toString(),
                             getBaseDn()
@@ -268,7 +268,7 @@ public class LdapSettings extends AbstractSettingsGroup {
         }
     }
 
-    public List<ArachneUser> findUsers(String username, int max) {
+    public List<UserModel> findUsers(String username, int max) {
         LdapTemplate ldap;
         try {
             ldap = getLdapTemplate();
@@ -278,7 +278,9 @@ public class LdapSettings extends AbstractSettingsGroup {
         String filter = getUsersFilter(username);
         logger.info("LDAP filter: " + filter);
         SearchControls sc = new SearchControls();
-        sc.setCountLimit(max);
+        if (max != -1) {
+            sc.setCountLimit(max);
+        }
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         sc.setReturningAttributes(
                 new String[]{
@@ -404,8 +406,8 @@ public class LdapSettings extends AbstractSettingsGroup {
     }
 
     @JsonIgnore
-    public ArachneUser getUser(String username) {
-        List<ArachneUser> users = findUsers(username, 1);
+    public UserModel getUser(String username) {
+        List<UserModel> users = findUsers(username, 1);
         if (users == null || users.isEmpty()) {
             return null;
         }
