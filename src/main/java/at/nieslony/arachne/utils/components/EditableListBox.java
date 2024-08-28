@@ -198,7 +198,6 @@ public class EditableListBox
     @Override
     protected void setPresentationValue(List<String> v) {
         if (v != null) {
-            logger.info(v.toString());
             itemsField.setItems(v);
             clearButton.setEnabled(!v.isEmpty());
             getElement().setPropertyList("value", v);
