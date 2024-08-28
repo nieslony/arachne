@@ -227,6 +227,9 @@ public class OpenVpnRestController {
             writeConfigHeader(writer);
             writer.println("auth_url = \"%s/api/auth\"".formatted(
                     openVpnSettings.getAuthHttpUrl()));
+            writer.println("enable_routing = \"%s\"".formatted(
+                    firewallBasicsSettings.getEnableRoutingMode().name()
+            ));
             writer.println("enable_firewall = %b".formatted(
                     firewallBasicsSettings.isEnableFirewall()
             ));
@@ -234,13 +237,13 @@ public class OpenVpnRestController {
                 writer.println("firewall_zone = \"%s\"".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
-                writer.println("firewall_url = \"%s/api/firewall/user_rules\""
+                writer.println("firewall_url_user = \"%s/api/firewall/user_rules\""
+                        .formatted(openVpnSettings.getAuthHttpUrl())
+                );
+                writer.println("firewall_url_everybody = \"%s/api/firewall/everybody_rules\""
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
-            writer.println("enable_routing = \"%s\"".formatted(
-                    firewallBasicsSettings.getEnableRoutingMode().name()
-            ));
         } catch (IOException ex) {
             logger.error(
                     "Cannot write to %s: %s"
