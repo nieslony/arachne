@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.utils.components;
 
+import at.nieslony.arachne.utils.validators.HostnameValidator;
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.Text;
@@ -19,6 +20,7 @@ import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,6 +67,18 @@ public class UrlField
         hostname = new TextField("Hostname");
         hostname.setWidthFull();
         hostname.setValue("example.com");
+        hostname.setValueChangeMode(ValueChangeMode.EAGER);
+        AtomicReference<String> s = new AtomicReference<>();
+        binder.forField(hostname)
+                .withValidator(new HostnameValidator())
+                .bind(
+                        ip -> {
+                            return s.get();
+                        },
+                        (ip, v) -> {
+                            s.set(v);
+                        }
+                );
 
         port = new IntegerField("Port");
         port.setMin(1);
