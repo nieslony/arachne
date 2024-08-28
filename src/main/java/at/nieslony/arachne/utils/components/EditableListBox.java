@@ -17,6 +17,9 @@
 package at.nieslony.arachne.utils.components;
 
 import com.vaadin.flow.component.AbstractCompositeField;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasSize;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -28,6 +31,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.LinkedList;
@@ -48,13 +52,28 @@ public class EditableListBox
 
     private ListBox<String> itemsField;
     private Binder<String> binder;
-    private TextField editField;
+    //private TextField editField;
     private Button clearButton;
     private Button loadDefaultsButton;
     private Supplier<List<String>> defaultsSupplier = null;
 
+    public <T extends Component & HasValue<?, String>> EditableListBox(
+            String label,
+            T editField
+    ) {
+        super(new LinkedList<>());
+        init(label, editField);
+    }
+
     public EditableListBox(String label) {
         super(new LinkedList<>());
+        init(label, new TextField());
+    }
+
+    private <T extends Component & HasValue<?, String>> void init(
+            String label,
+            T editField
+    ) {
         binder = new Binder<>();
 
         itemsField = new ListBox<>();
@@ -70,8 +89,10 @@ public class EditableListBox
                 LumoUtility.TextColor.BODY
         );
 
-        editField = new TextField();
-        editField.setValueChangeMode(ValueChangeMode.EAGER);
+        if (editField instanceof HasValueChangeMode hvm) {
+            hvm.setValueChangeMode(ValueChangeMode.EAGER);
+        }
+
         Button addButton = new Button(
                 VaadinIcon.PLUS.create(),
                 e -> {
@@ -135,7 +156,9 @@ public class EditableListBox
                 )
         );
         itemsField.setWidthFull();
-        editField.setWidthFull();
+        if (editField instanceof HasSize hs) {
+            hs.setWidthFull();
+        }
         addClassNames(
                 LumoUtility.Border.ALL,
                 LumoUtility.BorderRadius.MEDIUM
@@ -174,10 +197,12 @@ public class EditableListBox
 
     @Override
     protected void setPresentationValue(List<String> v) {
-        v.removeIf((t) -> t == null || t.isEmpty() || t.isBlank());
-        itemsField.setItems(v);
-        clearButton.setEnabled(!v.isEmpty());
-        getElement().setPropertyList("value", v);
+        if (v != null) {
+            logger.info(v.toString());
+            itemsField.setItems(v);
+            clearButton.setEnabled(!v.isEmpty());
+            getElement().setPropertyList("value", v);
+        }
     }
 
     public void setDefaultValuesSupplier(Supplier<List<String>> defaultsSupplier) {
