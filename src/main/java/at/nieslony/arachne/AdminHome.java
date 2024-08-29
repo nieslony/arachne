@@ -64,6 +64,9 @@ public class AdminHome
             ui.access(() -> {
                 var clients = status.getConnectedClients();
                 grid.setItems(clients);
+                msgConnectedUsers.setText(createMsgConnectedUsers(
+                        status.getConnectedClients().size()
+                ));
                 ui.push();
             });
         }
@@ -165,11 +168,15 @@ public class AdminHome
         });
     }
 
+    private static String createMsgConnectedUsers(int count) {
+        return "%d users connected".formatted(count);
+    }
+
     private void onRefreshConnectedUsers() {
         try {
             var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
             updateConnectedUserListener.accept(status);
-            msgConnectedUsers.setText("%d users connected".formatted(status.getConnectedClients().size()));
+            msgConnectedUsers.setText(createMsgConnectedUsers(status.getConnectedClients().size()));
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("Error getting connected users: " + ex.getMessage());
             msgConnectedUsers.setText("DBusError: " + ex.getMessage());
