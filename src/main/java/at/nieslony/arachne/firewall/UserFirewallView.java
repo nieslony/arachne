@@ -22,6 +22,7 @@ import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -36,6 +37,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +86,37 @@ public class UserFirewallView extends VerticalLayout {
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         ));
+
+        if (firewallRuleRepository.countByVpnTypeAndRuleDirection(
+                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.RuleDirection.INCOMING
+        ) == 0) {
+            FirewallRuleModel rule = new FirewallRuleModel(
+                    FirewallRuleModel.VpnType.USER,
+                    FirewallRuleModel.RuleDirection.INCOMING
+            );
+            rule.setDescription("Allow DNS access for everybody");
+
+            FirewallWho who = new FirewallWho();
+            who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+            rule.setWho(new LinkedList<>());
+            rule.getWho().add(who);
+
+            FirewallWhere to = new FirewallWhere();
+            to.setType(FirewallWhere.Type.PushedDnsServers);
+            rule.setTo(new LinkedList<>());
+            rule.getTo().add(to);
+
+            FirewallWhat what = new FirewallWhat();
+            what.setType(FirewallWhat.Type.Service);
+            what.setService("dns");
+            rule.setWhat(new LinkedList<>());
+            rule.getWhat().add(what);
+
+            rule.setEnabled(true);
+
+            firewallRuleRepository.save(rule);
+        }
 
         add(tabs);
         setPadding(false);
