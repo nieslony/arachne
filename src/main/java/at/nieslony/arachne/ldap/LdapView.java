@@ -330,7 +330,6 @@ public class LdapView extends VerticalLayout {
                     } catch (NamingException ex) {
                         logger.error("DNS lookup failed: " + ex.getMessage());
                     }
-                    logger.info(ret.toString());
                     return ret;
                 }
         );
