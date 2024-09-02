@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10
+Version:        1.3.11
 
 Release:        1
 License:        GPLv3
@@ -83,6 +83,74 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon Sep 02 2024 Claas Nieslony <github@nieslony.at> 1.3.11-1
+- Bump dependency versions (github@nieslony.at)
+- Remove log message (github@nieslony.at)
+- Remove log (github@nieslony.at)
+- Validate hostname (github@nieslony.at)
+- Replace ldap urls edit with EditableListBox (github@nieslony.at)
+- Add UrlField.java (github@nieslony.at)
+- Make EditableListBox more fexible (github@nieslony.at)
+- Copy API URL to clipboard (github@nieslony.at)
+- Docu update (github@nieslony.at)
+- Fix: read LDAP servers from ldapSettings (github@nieslony.at)
+- Add token based auth (github@nieslony.at)
+- Fix default value (github@nieslony.at)
+- Fix: findUser (github@nieslony.at)
+- Add task RefreshLdapUsers (github@nieslony.at)
+- Make createRandomPassword static (github@nieslony.at)
+- Enable no limit on findUsers (github@nieslony.at)
+- Fix: update LDAP cache (github@nieslony.at)
+- Label Kerberos logon more clearly (github@nieslony.at)
+- Dont't write location if preAuth is disabled (github@nieslony.at)
+- Create authentication token on /api/auth (github@nieslony.at)
+- Add methods encryptData, decryptData, createSignature, verifySignature
+  (github@nieslony.at)
+- Begin implementing auth token (github@nieslony.at)
+- Bump depenency versions (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- No persisten sessions (github@nieslony.at)
+- Split ArachneUserDetailsService into InternalUserDetailsService and
+  LdapUserDetailsService (github@nieslony.at)
+- Rename class ArachneUser → UserModel (github@nieslony.at)
+- typo (github@nieslony.at)
+- Fix: handle null value (github@nieslony.at)
+- Issues fixed with new spring-security-kerberos, cleanup (github@nieslony.at)
+- Add reqrite option UnsafeAllow3F (github@nieslony.at)
+- Fix: ldapSettings==null (github@nieslony.at)
+- Create package at.nieslony.arachne.utils.components (github@nieslony.at)
+- Add src/main/frontend (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Rename class (github@nieslony.at)
+- - switch from CentOS stream9 to AlmaLinux 9 - optimize custom provisioners
+  (github@nieslony.at)
+- Update and rename README.txt -> README. (github@nieslony.at)
+- Update and rename README.txt -> README.md (github@nieslony.at)
+- Bump spring-security-kerberos, spring-boot-starter-parent
+  (github@nieslony.at)
+- Ignore src/main/bundles (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Open API docs in new tab (github@nieslony.at)
+- Bump vaadin vertsion to 24.4 (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- . (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Fix: update value (github@nieslony.at)
+- Bump vaadin and spring versions (github@nieslony.at)
+- Replace attachment name (github@nieslony.at)
+- Handle MailSendException (github@nieslony.at)
+- Bump version of bouncycastle (github@nieslony.at)
+- Add icons, set button as primary (github@nieslony.at)
+- Add form flag (github@nieslony.at)
+- Add form flag (github@nieslony.at)
+- Don't remove attribute from invalid session (github@nieslony.at)
+- Remove Unauthenticated.java (github@nieslony.at)
+- Add filter to handle status 401 if no negotiation header supplied
+  (github@nieslony.at)
+- Create SSO view with redirect (github@nieslony.at)
+- Change redirext text (github@nieslony.at)
+- Test and try :-( (claas@nieslony.at)
+
 * Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.10-1
 - Document Tomcat Settings (github@nieslony.at)
 - Enable PreAuth with HTTP header (github@nieslony.at)
