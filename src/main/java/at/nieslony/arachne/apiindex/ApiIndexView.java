@@ -157,6 +157,7 @@ public class ApiIndexView extends VerticalLayout {
                             new Text(txt + " "),
                             toToc
                     );
+                    methodHeader.setId(href);
                     add(
                             methodHeader,
                             copyUrl,
