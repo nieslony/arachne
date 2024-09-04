@@ -295,9 +295,11 @@ public class OpenVpnRestController {
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
-            writer.println("auth-user-pass");
+            writer.println("""
+                           <auth-user-pass>
+                           %s
+                           </auth-user-pass>""".formatted(username));
         }
-        writer.println();
         writer.println("<ca>\n%s\n</ca>".formatted(caCert));
         writer.println("<cert>\n%s\n</cert>".formatted(userCert));
         writer.println("<key>\n%s</key>".formatted(privateKey));
