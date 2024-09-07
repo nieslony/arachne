@@ -101,6 +101,14 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         } else {
             logger.warn("Cannot find user %s in user repository".formatted(username));
         }
+        if (!userMenu.getItems().isEmpty()) {
+            userMenu.addSeparator();
+        }
+        userMenu.addItem("About", click -> {
+            AboutDialog dialog = new AboutDialog();
+            dialog.open();
+        });
+
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
                 pageTitle,
