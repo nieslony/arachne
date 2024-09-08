@@ -4,6 +4,7 @@
 package at.nieslony.arachne;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.server.AppShellSettings;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -39,5 +40,10 @@ public class Arachne implements AppShellConfigurator {
 
         thread.setDaemon(false);
         thread.start();
+    }
+
+    @Override
+    public void configurePage(AppShellSettings settings) {
+        settings.addFavIcon("icon", "icons/arachne.png", "64x64");
     }
 }
