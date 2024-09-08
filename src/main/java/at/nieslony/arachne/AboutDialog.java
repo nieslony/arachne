@@ -19,29 +19,61 @@ package at.nieslony.arachne;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.server.StreamResource;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class AboutDialog extends Dialog {
 
     public AboutDialog() {
         super("About Arachne");
 
+        String iconPath = "icons/arachne.svg";
+        Image arachneImage = new Image(new StreamResource(
+                "arachne.svg",
+                () -> {
+                    try {
+                        return new ClassPathResource(iconPath).getInputStream();
+                    } catch (IOException ex) {
+                        log.error(
+                                "Cannot load resource %s: %s"
+                                        .formatted(iconPath, ex.getMessage())
+                        );
+                        return null;
+                    }
+                }),
+                "arachne"
+        );
+
         add(
-                new Paragraph("Arachne version %s"
-                        .formatted(ArachneVersion.ARACHNE_VERSION)
-                ),
-                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony")
+                new HorizontalLayout(
+                        arachneImage,
+                        new Div(
+                                new Paragraph("Arachne version %s"
+                                        .formatted(ArachneVersion.ARACHNE_VERSION)
+                                ),
+                                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony")
+                        )
+                )
         );
 
         Button closeButton = new Button("Close", click -> {
             close();
         });
+
         closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        getFooter().add(closeButton);
+        getFooter()
+                .add(closeButton);
     }
 }
