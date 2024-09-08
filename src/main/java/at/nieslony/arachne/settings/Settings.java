@@ -137,14 +137,29 @@ public class Settings {
         if (value.isEmpty()) {
             return null;
         }
-        if (c.isAssignableFrom(String.class)) {
+        if (c.equals(String.class)) {
             return CastUtils.cast(value.get().getContent());
+        }
+        if (c.isPrimitive()) {
+            if (c.equals(boolean.class)) {
+                return CastUtils.cast(Boolean.valueOf(value.get().getContent()));
+            }
+            if (c.equals(int.class)) {
+                return CastUtils.cast(Integer.valueOf(value.get().getContent()));
+            }
+            if (c.equals(long.class)) {
+                return CastUtils.cast(Long.valueOf(value.get().getContent()));
+            }
         }
         try {
             Method valueOf = c.getMethod("valueOf", String.class);
             Object obj = valueOf.invoke(null, value.get().getContent());
             return CastUtils.cast(obj);
         } catch (NoSuchMethodException ex) {
+            logger.info(
+                    "Class %s does not have method valueOf(String), try deserialize"
+                            .formatted(c.getName())
+            );
             return fromBase64(value.get().getContent());
         } catch (IllegalAccessException
                 | IllegalArgumentException
