@@ -27,7 +27,7 @@ import lombok.experimental.Accessors;
 @Table(name = "arachne_settings")
 public class SettingsModel implements Serializable {
 
-    public SettingsModel(String setting, byte[] content) {
+    public SettingsModel(String setting, String content) {
         this.setting = setting;
         this.content = content;
     }
@@ -42,7 +42,7 @@ public class SettingsModel implements Serializable {
     @Column(nullable = false, unique = true)
     private String setting;
 
-    @Column(columnDefinition = "BLOB")
+    @Column
     @Lob
-    private byte[] content;
+    private String content;
 }

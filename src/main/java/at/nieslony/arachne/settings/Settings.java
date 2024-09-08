@@ -23,6 +23,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Base64;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,25 +98,34 @@ public class Settings {
         return obj;
     }
 
-    private static <T> byte[] makeBytes(T value) throws SettingsException {
+    private static <T> String makeBase64(T value) throws SettingsException {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(value);
-            return baos.toByteArray();
+            byte[] bytes = baos.toByteArray();
+            return Base64.getEncoder().encodeToString(bytes);
         } catch (IOException ex) {
             throw new SettingsException("Cannot serialize value:" + ex.getMessage());
         }
     }
 
-    private static <T extends Serializable> T fromBytes(byte[] s) throws SettingsException {
+    private static <T extends Serializable> T fromBase64(String s) throws SettingsException {
         try {
-            ByteArrayInputStream bais = new ByteArrayInputStream(s);
+            byte[] bytes = Base64.getDecoder().decode(s);
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
             ObjectInputStream ois = new ObjectInputStream(bais);
             Object obj = ois.readObject();
             return CastUtils.cast(obj);
-        } catch (IOException | ClassNotFoundException ex) {
-            throw new SettingsException("Cannot deserialize value", ex);
+        } catch (IOException ex) {
+            throw new SettingsException(
+                    "Cannot deserialize value (%s): %s"
+                            .formatted(s, ex.getMessage()),
+                    ex);
+        } catch (ClassNotFoundException ex) {
+            throw new SettingsException(
+                    "Cannot convert value to object: " + ex.getMessage(),
+                    ex);
         }
     }
 
@@ -126,17 +137,45 @@ public class Settings {
         if (value.isEmpty()) {
             return null;
         }
-        return fromBytes(value.get().getContent());
+        if (c.isAssignableFrom(String.class)) {
+            return CastUtils.cast(value.get().getContent());
+        }
+        try {
+            Method valueOf = c.getMethod("valueOf", String.class);
+            Object obj = valueOf.invoke(null, value.get().getContent());
+            return CastUtils.cast(obj);
+        } catch (NoSuchMethodException ex) {
+            return fromBase64(value.get().getContent());
+        } catch (IllegalAccessException
+                | IllegalArgumentException
+                | InvocationTargetException ex) {
+            throw new SettingsException("Cannot invoke valueOf", ex);
+        }
     }
 
-    public <T> void put(String setting, T value) throws SettingsException {
-        byte[] bytes = makeBytes(value);
+    public <T extends Object> void put(String setting, T value) throws SettingsException {
+        String retValue;
+        if (value == null) {
+            retValue = null;
+        } else if (value instanceof Enum enumValue) {
+            retValue = enumValue.name();
+        } else if (value instanceof String strValue) {
+            retValue = strValue;
+        } else {
+            try {
+                value.getClass().getMethod("valueOf", String.class);
+                retValue = value.toString();
+            } catch (NoSuchMethodException | SecurityException ex) {
+                retValue = makeBase64(value);
+            }
+        }
+
         Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
 
         if (settingsModel.isPresent()) {
-            settingsRepository.save(settingsModel.get().setContent(bytes));
+            settingsRepository.save(settingsModel.get().setContent(retValue));
         } else {
-            settingsRepository.save(new SettingsModel(setting, bytes));
+            settingsRepository.save(new SettingsModel(setting, retValue));
         }
     }
 
