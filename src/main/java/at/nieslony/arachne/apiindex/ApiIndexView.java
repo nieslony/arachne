@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -157,6 +158,7 @@ public class ApiIndexView extends VerticalLayout {
                             new Text(txt + " "),
                             toToc
                     );
+                    methodHeader.setId(href);
                     add(
                             methodHeader,
                             copyUrl,
@@ -250,6 +252,13 @@ public class ApiIndexView extends VerticalLayout {
                                 JsonMode.WRITE
                         )
                 );
+                continue;
+            }
+
+            AuthenticationPrincipal authenticationPrincipal = param.getDeclaredAnnotation(
+                    AuthenticationPrincipal.class
+            );
+            if (authenticationPrincipal != null) {
                 continue;
             }
 

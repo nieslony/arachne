@@ -59,13 +59,16 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
+    private final ArachneVersion arachneVersion;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepositoty,
-            AuthenticationContext authContext) {
+            AuthenticationContext authContext,
+            ArachneVersion arachneVersion) {
         this.authContext = authContext;
         this.userRepository = userRepositoty;
+        this.arachneVersion = arachneVersion;
 
         createHeader();
         createDrawer();
@@ -103,6 +106,14 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         } else {
             logger.warn("Cannot find user %s in user repository".formatted(username));
         }
+        if (!userMenu.getItems().isEmpty()) {
+            userMenu.addSeparator();
+        }
+        userMenu.addItem("About", click -> {
+            AboutDialog dialog = new AboutDialog(arachneVersion);
+            dialog.open();
+        });
+
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
                 pageTitle,
