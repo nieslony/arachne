@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -35,7 +36,7 @@ import org.springframework.core.io.ClassPathResource;
 @Slf4j
 public class AboutDialog extends Dialog {
 
-    public AboutDialog() {
+    public AboutDialog(ArachneVersion arachneVersion) {
         super("About Arachne");
 
         String iconPath = "icons/arachne.svg";
@@ -54,16 +55,22 @@ public class AboutDialog extends Dialog {
                 }),
                 "arachne"
         );
+        arachneImage.setWidth(5, Unit.EM);
+        arachneImage.setHeight(5, Unit.EM);
+
+        Div arachneInfo = new Div(
+                new Paragraph("Arachne version %s"
+                        .formatted(arachneVersion.getPrettyVersion())
+                ),
+                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony"),
+                new Paragraph("Commit time " + arachneVersion.getGitCommitTime()),
+                new Paragraph("Source URL " + arachneVersion.getGitRemoteOriginUrl())
+        );
 
         add(
                 new HorizontalLayout(
                         arachneImage,
-                        new Div(
-                                new Paragraph("Arachne version %s"
-                                        .formatted(ArachneVersion.ARACHNE_VERSION)
-                                ),
-                                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony")
-                        )
+                        arachneInfo
                 )
         );
 

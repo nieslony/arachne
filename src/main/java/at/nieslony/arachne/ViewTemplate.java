@@ -57,13 +57,16 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
+    private final ArachneVersion arachneVersion;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepositoty,
-            AuthenticationContext authContext) {
+            AuthenticationContext authContext,
+            ArachneVersion arachneVersion) {
         this.authContext = authContext;
         this.userRepository = userRepositoty;
+        this.arachneVersion = arachneVersion;
 
         createHeader();
         createDrawer();
@@ -105,7 +108,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             userMenu.addSeparator();
         }
         userMenu.addItem("About", click -> {
-            AboutDialog dialog = new AboutDialog();
+            AboutDialog dialog = new AboutDialog(arachneVersion);
             dialog.open();
         });
 
