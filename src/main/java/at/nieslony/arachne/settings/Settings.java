@@ -110,22 +110,55 @@ public class Settings {
         }
     }
 
-    private static <T extends Serializable> T fromBase64(String s) throws SettingsException {
+    private static <T extends Serializable> T fromBase64(String s)
+            throws ClassNotFoundException, IOException {
+        byte[] bytes = Base64.getDecoder().decode(s);
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        Object obj = ois.readObject();
+        return CastUtils.cast(obj);
+    }
+
+    public <T extends Object> T fromString(
+            String value,
+            Class<? extends Object> c
+    ) throws SettingsException {
+        if (c.equals(String.class)) {
+            return CastUtils.cast(value);
+        }
+        if (c.isPrimitive()) {
+            if (c.equals(boolean.class)) {
+                return CastUtils.cast(Boolean.valueOf(value));
+            }
+            if (c.equals(byte.class)) {
+                return CastUtils.cast(Byte.valueOf(value));
+            }
+            if (c.equals(short.class)) {
+                return CastUtils.cast(Short.valueOf(value));
+            }
+            if (c.equals(int.class)) {
+                return CastUtils.cast(Integer.valueOf(value));
+            }
+            if (c.equals(long.class)) {
+                return CastUtils.cast(Long.valueOf(value));
+            }
+            if (c.equals(float.class)) {
+                return CastUtils.cast(Float.valueOf(value));
+            }
+            if (c.equals(double.class)) {
+                return CastUtils.cast(Double.valueOf(value));
+            }
+        }
         try {
-            byte[] bytes = Base64.getDecoder().decode(s);
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            Object obj = ois.readObject();
+            Method valueOf = c.getMethod("valueOf", String.class);
+            Object obj = valueOf.invoke(null, value);
             return CastUtils.cast(obj);
-        } catch (IOException ex) {
-            throw new SettingsException(
-                    "Cannot deserialize value (%s): %s"
-                            .formatted(s, ex.getMessage()),
-                    ex);
-        } catch (ClassNotFoundException ex) {
-            throw new SettingsException(
-                    "Cannot convert value to object: " + ex.getMessage(),
-                    ex);
+
+        } catch (IllegalAccessException
+                | IllegalArgumentException
+                | InvocationTargetException
+                | NoSuchMethodException ex) {
+            throw new SettingsException("Cannot invoke valueOf", ex);
         }
     }
 
@@ -137,34 +170,17 @@ public class Settings {
         if (value.isEmpty()) {
             return null;
         }
-        if (c.equals(String.class)) {
-            return CastUtils.cast(value.get().getContent());
+        String ValueStr = value.get().getContent();
+        if (ValueStr == null) {
+            return null;
         }
-        if (c.isPrimitive()) {
-            if (c.equals(boolean.class)) {
-                return CastUtils.cast(Boolean.valueOf(value.get().getContent()));
-            }
-            if (c.equals(int.class)) {
-                return CastUtils.cast(Integer.valueOf(value.get().getContent()));
-            }
-            if (c.equals(long.class)) {
-                return CastUtils.cast(Long.valueOf(value.get().getContent()));
-            }
-        }
+
+        logger.info("Parsing value: " + ValueStr);
         try {
-            Method valueOf = c.getMethod("valueOf", String.class);
-            Object obj = valueOf.invoke(null, value.get().getContent());
-            return CastUtils.cast(obj);
-        } catch (NoSuchMethodException ex) {
-            logger.info(
-                    "Class %s does not have method valueOf(String), try deserialize"
-                            .formatted(c.getName())
-            );
-            return fromBase64(value.get().getContent());
-        } catch (IllegalAccessException
-                | IllegalArgumentException
-                | InvocationTargetException ex) {
-            throw new SettingsException("Cannot invoke valueOf", ex);
+            return fromBase64(ValueStr);
+        } catch (ClassNotFoundException | IOException | IllegalArgumentException ex) {
+            logger.info("Cannot deserialize (%s), try as string".formatted(ex.getMessage()));
+            return fromString(value.get().getContent(), c);
         }
     }
 
