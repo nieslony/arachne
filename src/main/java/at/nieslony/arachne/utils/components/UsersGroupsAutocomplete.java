@@ -71,7 +71,7 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         if (pattern == null || pattern.isEmpty()) {
             return new LinkedList<>();
         }
-        List<String> options = ldapSettings != null
+        List<String> options = ldapSettings != null && ldapSettings.isValid()
                 ? switch (completeMode) {
             case GROUPS ->
                 ldapSettings.findGroupsPretty("*" + pattern + "*", maxValues);

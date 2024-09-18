@@ -23,6 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,14 +108,60 @@ public class Settings {
         }
     }
 
-    private static <T extends Serializable> T fromBytes(byte[] s) throws SettingsException {
+    private static <T extends Serializable> T fromBytes(byte[] value)
+            throws SettingsException {
         try {
-            ByteArrayInputStream bais = new ByteArrayInputStream(s);
+            ByteArrayInputStream bais = new ByteArrayInputStream(value);
             ObjectInputStream ois = new ObjectInputStream(bais);
             Object obj = ois.readObject();
             return CastUtils.cast(obj);
         } catch (IOException | ClassNotFoundException ex) {
-            throw new SettingsException("Cannot deserialize value", ex);
+            throw new SettingsException(
+                    "Cannot convert bytes value to object: " + ex.getMessage()
+            );
+        }
+    }
+
+    public <T extends Object> T fromString(
+            String value,
+            Class<? extends Object> c
+    ) throws SettingsException {
+        if (c.equals(String.class)) {
+            return CastUtils.cast(value);
+        }
+        if (c.isPrimitive()) {
+            if (c.equals(boolean.class)) {
+                return CastUtils.cast(Boolean.valueOf(value));
+            }
+            if (c.equals(byte.class)) {
+                return CastUtils.cast(Byte.valueOf(value));
+            }
+            if (c.equals(short.class)) {
+                return CastUtils.cast(Short.valueOf(value));
+            }
+            if (c.equals(int.class)) {
+                return CastUtils.cast(Integer.valueOf(value));
+            }
+            if (c.equals(long.class)) {
+                return CastUtils.cast(Long.valueOf(value));
+            }
+            if (c.equals(float.class)) {
+                return CastUtils.cast(Float.valueOf(value));
+            }
+            if (c.equals(double.class)) {
+                return CastUtils.cast(Double.valueOf(value));
+            }
+        }
+        try {
+            Method valueOf = c.getMethod("valueOf", String.class);
+            Object obj = valueOf.invoke(null, value);
+            return CastUtils.cast(obj);
+
+        } catch (IllegalAccessException
+                | IllegalArgumentException
+                | InvocationTargetException
+                | NoSuchMethodException ex) {
+            throw new SettingsException("Cannot invoke valueOf", ex);
         }
     }
 
@@ -126,17 +173,48 @@ public class Settings {
         if (value.isEmpty()) {
             return null;
         }
-        return fromBytes(value.get().getContent());
+        byte[] content = value.get().getContent();
+        if (content != null) {
+            return fromBytes(content);
+        }
+        String stringContent = value.get().getStringContent();
+        if (stringContent != null) {
+            return fromString(stringContent, c);
+        }
+        return null;
     }
 
-    public <T> void put(String setting, T value) throws SettingsException {
-        byte[] bytes = makeBytes(value);
-        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
+    public <T extends Object> void put(String setting, T value) throws SettingsException {
+        String stringValue = null;
+        byte[] bytesValue = null;
+        if (value instanceof Enum enumValue) {
+            stringValue = enumValue.name();
+        } else if (value instanceof String strValue) {
+            stringValue = strValue;
+        } else if (value != null) {
+            try {
+                value.getClass().getMethod("valueOf", String.class);
+                stringValue = value.toString();
+            } catch (NoSuchMethodException | SecurityException ex) {
+                bytesValue = makeBytes(value);
+            }
+        }
 
+        Optional<SettingsModel> settingsModel = settingsRepository.findBySetting(setting);
         if (settingsModel.isPresent()) {
-            settingsRepository.save(settingsModel.get().setContent(bytes));
+            settingsRepository.save(
+                    settingsModel.get()
+                            .withContent(bytesValue)
+                            .withStringContent(stringValue)
+            );
         } else {
-            settingsRepository.save(new SettingsModel(setting, bytes));
+            settingsRepository.save(
+                    new SettingsModel(
+                            setting,
+                            bytesValue,
+                            stringValue
+                    )
+            );
         }
     }
 

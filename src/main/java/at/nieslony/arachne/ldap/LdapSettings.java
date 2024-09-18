@@ -247,6 +247,8 @@ public class LdapSettings extends AbstractSettingsGroup {
     public String getUsersFilter() {
         if (usersEnableCustomFilter) {
             return usersCustomFilter;
+        } else if (usersObjectClass == null) {
+            return null;
         } else {
             return "(&(objectclass=%s)(%s={username}))"
                     .formatted(usersObjectClass, usersAttrUsername);
@@ -261,6 +263,8 @@ public class LdapSettings extends AbstractSettingsGroup {
     public String getGroupsFilter() {
         if (groupsEnableCustomFilter) {
             return groupsCustomFilter;
+        } else if (groupsObjectClass == null) {
+            return null;
         } else {
             return "(&(objectclass=%s)(%s={groupname}))"
                     .formatted(groupsObjectClass, groupsAttrName);
@@ -452,5 +456,13 @@ public class LdapSettings extends AbstractSettingsGroup {
             return null;
         }
         return groups.get(0);
+    }
+
+    @JsonIgnore
+    public boolean isValid() {
+        return ldapUrls != null
+                && !ldapUrls.isEmpty()
+                && getUsersFilter() != null
+                && getGroupsFilter() != null;
     }
 }
