@@ -180,7 +180,7 @@ public class Pki {
         try {
             caCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
         } catch (SettingsException ex) {
-            logger.error("cannoit load caCertSpecs: " + ex.getMessage());
+            logger.error("cannot load caCertSpecs: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         String rootCertSubject = caCertSpecs.getSubject();
