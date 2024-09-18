@@ -27,9 +27,22 @@ import lombok.experimental.Accessors;
 @Table(name = "arachne_settings")
 public class SettingsModel implements Serializable {
 
-    public SettingsModel(String setting, String content) {
+    public SettingsModel(String setting, byte[] content, String stringContent) {
         this.setting = setting;
         this.content = content;
+        this.stringContent = stringContent;
+    }
+
+    public SettingsModel(String setting, byte[] content) {
+        this.setting = setting;
+        this.content = content;
+        this.stringContent = null;
+    }
+
+    public SettingsModel(String setting, String stringContent) {
+        this.setting = setting;
+        this.content = null;
+        this.stringContent = stringContent;
     }
 
     public SettingsModel() {
@@ -42,7 +55,21 @@ public class SettingsModel implements Serializable {
     @Column(nullable = false, unique = true)
     private String setting;
 
+    @Column(columnDefinition = "BLOB")
+    @Lob
+    private byte[] content;
+
     @Column
     @Lob
-    private String content;
+    private String stringContent;
+
+    public SettingsModel withContent(byte[] content) {
+        this.content = content;
+        return this;
+    }
+
+    public SettingsModel withStringContent(String stringContent) {
+        this.stringContent = stringContent;
+        return this;
+    }
 }
