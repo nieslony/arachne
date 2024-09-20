@@ -265,9 +265,9 @@ public class ApiIndexView extends VerticalLayout {
             otherParams.add(param.toString() + " " + Arrays.toString(param.getDeclaredAnnotations()));
         }
 
-        if (method.isAnnotationPresent(ApiMethodDescription.class)) {
+        if (method.isAnnotationPresent(ApiDescription.class)) {
             String doc = method
-                    .getAnnotation(ApiMethodDescription.class)
+                    .getAnnotation(ApiDescription.class)
                     .value();
             methodDetails.put(
                     new DescriptionList.Term("Description"),

@@ -5,7 +5,6 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.Arachne;
-import at.nieslony.arachne.apiindex.ApiMethodDescription;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
@@ -45,6 +44,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import at.nieslony.arachne.apiindex.ApiDescription;
 
 /**
  *
@@ -163,7 +163,7 @@ public class SetupController {
 
     @PostMapping("/setup")
     @AnonymousAllowed
-    @ApiMethodDescription(
+    @ApiDescription(
             """
             Automized setup. Only possible if setup not already performed.
             """
