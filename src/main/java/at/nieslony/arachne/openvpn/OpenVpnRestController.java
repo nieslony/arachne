@@ -365,7 +365,7 @@ public class OpenVpnRestController {
                     cert-pass-flags = 4,
                     connection-type = password-tls,
                     key = %s,
-                    password-flags = 2,
+                    password-flags = %d,
                     port = %s,
                     remote = %s,
                     username = %s
@@ -376,6 +376,7 @@ public class OpenVpnRestController {
                                 caCertFn,
                                 userCertFn,
                                 privateKeyFn,
+                                vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
                                 port,
                                 vpnSettings.getRemote(),
                                 username,
@@ -408,7 +409,10 @@ public class OpenVpnRestController {
         data.put("username", username);
         data.put("cert-pass-flags", "4");
         data.put("connection-type", "password-tls");
-        data.put("password-flags", "2");
+        data.put(
+                "password-flags",
+                vpnSettings.getNetworkManagerRememberPassword().getCfgValue()
+        );
         data.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             data.put("proto-tcp", "yes");

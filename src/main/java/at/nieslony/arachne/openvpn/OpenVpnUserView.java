@@ -24,7 +24,6 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -113,7 +112,8 @@ public class OpenVpnUserView extends VerticalLayout {
     }
 
     private Component createAuthPage() {
-        ComboBox<OpenVpnUserSettings.AuthType> authTypeField = new ComboBox<>("Authentication Type");
+        Select<OpenVpnUserSettings.AuthType> authTypeField = new Select<>();
+        authTypeField.setLabel("Authentication Type");
         authTypeField.setItems(OpenVpnUserSettings.AuthType.values());
         authTypeField.setWidthFull();
 
@@ -155,8 +155,19 @@ public class OpenVpnUserView extends VerticalLayout {
         passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         passwordVerificationTypeField.setWidthFull();
 
+        Select<OpenVpnUserSettings.NetworkManagerRememberPassword> nmRememberPassword
+                = new Select<>();
+        nmRememberPassword.setLabel("NetworkManager: Remember Password");
+        nmRememberPassword.setItems(
+                OpenVpnUserSettings.NetworkManagerRememberPassword.values()
+        );
+        nmRememberPassword.setWidthFull();
+
         authTypeField.addValueChangeListener((e) -> {
             passwordVerificationTypeField.setEnabled(
+                    e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
+            );
+            nmRememberPassword.setEnabled(
                     e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
             );
         });
@@ -183,10 +194,16 @@ public class OpenVpnUserView extends VerticalLayout {
                 .bind(OpenVpnUserSettings::getAuthPamService, OpenVpnUserSettings::setAuthPamService);
         binder.forField(authHttpUrlField)
                 .bind(OpenVpnUserSettings::getAuthHttpUrl, OpenVpnUserSettings::setAuthHttpUrl);
+        binder.forField(nmRememberPassword)
+                .bind(
+                        OpenVpnUserSettings::getNetworkManagerRememberPassword,
+                        OpenVpnUserSettings::setNetworkManagerRememberPassword
+                );
 
         VerticalLayout layout = new VerticalLayout(
                 authTypeField,
-                passwordVerificationTypeField
+                passwordVerificationTypeField,
+                nmRememberPassword
         );
         layout.setMinWidth(50, Unit.EM);
         return layout;
