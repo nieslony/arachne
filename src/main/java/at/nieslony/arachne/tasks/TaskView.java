@@ -25,9 +25,8 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
@@ -56,9 +55,8 @@ public class TaskView extends VerticalLayout {
     public TaskView(TaskRepository taskRepository, TaskScheduler taskScheduler) {
         Grid<TaskModel> grid = new Grid<>();
         MenuBar createTaskMenu = new MenuBar();
-        MenuItem taskTypeItem
-                = createTaskMenu.addItem("Create Task");
-        taskTypeItem.add(new Icon(VaadinIcon.CHEVRON_DOWN));
+        createTaskMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+        MenuItem taskTypeItem = createTaskMenu.addItem("Create Task");
         SubMenu taskTypeMenu = taskTypeItem.getSubMenu();
         for (var task : taskScheduler.getTaskTypes()) {
             taskTypeMenu.addItem(getTaskName(task), (e) -> {
