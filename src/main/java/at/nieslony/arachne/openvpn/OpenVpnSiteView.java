@@ -38,9 +38,9 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -460,10 +460,8 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setWidthFull();
 
         siteConfigMenu = new MenuBar();
-        MenuItem siteConfigItem = siteConfigMenu.addItem(new HorizontalLayout(
-                new Text("Site Config"),
-                new Icon(VaadinIcon.CHEVRON_DOWN)
-        ));
+        siteConfigMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+        MenuItem siteConfigItem = siteConfigMenu.addItem("Site Config");
         SubMenu subMenu = siteConfigItem.getSubMenu();
 
         DynamicFileDownloader downloadComponent = new DynamicFileDownloader(
