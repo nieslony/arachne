@@ -40,6 +40,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -247,6 +248,7 @@ public class LdapView extends VerticalLayout {
         groupsLayout.getStyle().setBorder("1px solid black");
 
         MenuBar loadDefaultsMenu = new MenuBar();
+        loadDefaultsMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");
         SubMenu subMenu = menuItem.getSubMenu();
         subMenu.addItem("FreeIPA", e -> {
