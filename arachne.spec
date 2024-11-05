@@ -12,7 +12,11 @@ Summary:        Administration server for openVPN
 BuildArch:      noarch
 Url:            https://github.com/nieslony/arachne
 
+%if 0%{?fedora} >= 40
+BuildRequires:  maven-openjdk21
+%else
 BuildRequires:  maven-openjdk17
+%endif
 BuildRequires:  java-17-openjdk-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
@@ -218,13 +222,13 @@ fi
 - removver logging (github@nieslony.at)
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at> 1.3.3-1
-- 
+-
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at>
--  
+-
 
 * Sun Jan 21 2024 Claas Nieslony <github@nieslony.at> 1.3.2-1
-- 
+-
 
 * Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
 - Bump arachne version to 1.3.1 (claas@nieslony.at)
