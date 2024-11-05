@@ -7,6 +7,7 @@ package at.nieslony.arachne.apiindex;
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -167,6 +168,15 @@ public class ApiIndexView extends VerticalLayout {
                 });
     }
 
+    private Component formatApiDescription(ApiDescription desc) {
+        if (desc.isHtml()) {
+            Html html = new Html("<div>%s</div>".formatted(desc.value()));
+            return html;
+        } else {
+            return new Text(desc.value());
+        }
+    }
+
     private Map<DescriptionList.Term, DescriptionList.Description>
             createMethodDetails(Method method) {
         Map<DescriptionList.Term, DescriptionList.Description> methodDetails = new LinkedHashMap<>();
@@ -179,6 +189,8 @@ public class ApiIndexView extends VerticalLayout {
             if (param.isAnnotationPresent(JsonIgnore.class)) {
                 continue;
             }
+
+            ApiDescription apiDescription = param.getDeclaredAnnotation(ApiDescription.class);
 
             RequestParam requestParam = param.getDeclaredAnnotation(RequestParam.class);
             if (requestParam != null) {
@@ -211,6 +223,13 @@ public class ApiIndexView extends VerticalLayout {
                             new Text("default value: " + defValue)
                     );
                 }
+                if (apiDescription != null) {
+                    div.add(
+                            new HtmlComponent("br"),
+                            new Text("description:"),
+                            formatApiDescription(apiDescription)
+                    );
+                }
 
                 requestParams.add(div);
                 continue;
@@ -237,6 +256,13 @@ public class ApiIndexView extends VerticalLayout {
                         new HtmlComponent("br"),
                         new Text("is required: " + (isRequired ? "yes" : "no"))
                 );
+                if (apiDescription != null) {
+                    div.add(
+                            new HtmlComponent("br"),
+                            new Text("description:"),
+                            formatApiDescription(apiDescription)
+                    );
+                }
                 pathParams.add(div);
                 continue;
             }

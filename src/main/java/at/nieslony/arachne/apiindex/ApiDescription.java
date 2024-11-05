@@ -14,8 +14,10 @@ import java.lang.annotation.Target;
  * @author claas
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.PARAMETER})
 public @interface ApiDescription {
+
+    public boolean isHtml() default false;
 
     public String value();
 }
