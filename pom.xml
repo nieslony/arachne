@@ -10,6 +10,7 @@
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
         <vaadin.version>24.5.3</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
+        <generateGitPropertiesFile>true</generateGitPropertiesFile>
     </properties>
 
     <parent>
@@ -231,8 +232,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <skip>yes</skip>
+                    <generateGitPropertiesFile>${generateGitPropertiesFile}</generateGitPropertiesFile>
                 </configuration>
             </plugin>
         </plugins>
