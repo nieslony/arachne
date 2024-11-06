@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.12
+Version:        1.3.13
 
 Release:        1
 License:        GPLv3
@@ -87,6 +87,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.13-1
+- Fix: skip generation of git props (github@nieslony.at)
+- Don't create git.properties only in development env (github@nieslony.at)
+
 * Tue Nov 05 2024 Claas Nieslony <github@nieslony.at> 1.3.12-1
 - Depend on maven-openjdk21 on newer fedoras (github@nieslony.at)
 - Bump dependency versions (github@nieslony.at)
