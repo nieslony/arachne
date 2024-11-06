@@ -62,10 +62,15 @@ public class AboutDialog extends Dialog {
                 new Paragraph("Arachne version %s"
                         .formatted(arachneVersion.getPrettyVersion())
                 ),
-                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony"),
-                new Paragraph("Commit time " + arachneVersion.getGitCommitTime()),
-                new Paragraph("Source URL " + arachneVersion.getGitRemoteOriginUrl())
+                new Paragraph("Copyright ⓒ 2024 by Claas Nieslony")
         );
+
+        if (!arachneVersion.getGitCommitTime().isEmpty()) {
+            arachneInfo.add(new Paragraph("Commit time " + arachneVersion.getGitCommitTime()));
+        }
+        if (!arachneVersion.getGitRemoteOriginUrl().isEmpty()) {
+            arachneInfo.add(new Paragraph("Source URL " + arachneVersion.getGitRemoteOriginUrl()));
+        }
 
         add(
                 new HorizontalLayout(
