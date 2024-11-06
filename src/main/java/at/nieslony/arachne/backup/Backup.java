@@ -20,7 +20,7 @@ import at.nieslony.arachne.tasks.RecurringTaskModel;
 import at.nieslony.arachne.tasks.RecurringTasksRepository;
 import at.nieslony.arachne.tasks.TaskModel;
 import at.nieslony.arachne.tasks.TaskRepository;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
@@ -96,7 +96,7 @@ public class Backup {
         return taskRepository.findAll();
     }
 
-    public List<ArachneUser> getUsers() {
+    public List<UserModel> getUsers() {
         return userRepository.findAll();
     }
 

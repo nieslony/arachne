@@ -23,7 +23,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.security.RolesAllowed;
@@ -88,7 +88,7 @@ public class FirewallRestController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        ArachneUser user = userRepository.findByUsername(username);
+        UserModel user = userRepository.findByUsername(username);
         if (user == null) {
             user = ldapUserSource.findUser(username);
         }
@@ -99,7 +99,10 @@ public class FirewallRestController {
             return richRules;
         }
         logger.info("Get firewall rules for " + username);
-        for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
+        for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
+                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.RuleDirection.INCOMING
+        )) {
             logger.info(rule.toString());
             if (!rule.isEnabled()) {
                 logger.info("Ignoring disabled rule");
@@ -138,11 +141,14 @@ public class FirewallRestController {
 
     @GetMapping("/everybody_rules")
     @RolesAllowed(value = {"USER"})
-    public FirewallEverybodyRules getEverybodyRules() {
-        FirewallEverybodyRules firewallEveryBodyRules = new FirewallEverybodyRules();
+    public UserFirewallEverybodyRules getEverybodyRules() {
+        UserFirewallEverybodyRules firewallEveryBodyRules = new UserFirewallEverybodyRules();
         List<RichRule> richRules = new LinkedList<>();
 
-        for (FirewallRuleModel rule : firewallRuleRepository.findAll()) {
+        for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
+                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.RuleDirection.INCOMING
+        )) {
             if (rule.isEnabled()) {
                 for (FirewallWho who : rule.getWho()) {
                     if (who.getUserMatcherClassName().equals(EverybodyMatcher.class.getName())) {
@@ -152,7 +158,7 @@ public class FirewallRestController {
             }
         }
         firewallEveryBodyRules.setRichRules(richRules);
-        FirewallBasicsSettings firewallBasicsSettings = settings.getSettings(FirewallBasicsSettings.class);
+        UserFirewallBasicsSettings firewallBasicsSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         firewallEveryBodyRules.setIcmpRules(firewallBasicsSettings.getIcmpRules());
 
         return firewallEveryBodyRules;
@@ -163,7 +169,7 @@ public class FirewallRestController {
         OpenVpnUserSettings openvpnSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         Set<String> addresses = new HashSet<>();
-        for (FirewallWhere where : rule.getWhere()) {
+        for (FirewallWhere where : rule.getTo()) {
             addresses.addAll(where.resolve(openvpnSettings));
         }
 

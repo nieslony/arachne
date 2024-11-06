@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.firewall.FirewallBasicsSettings;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -200,7 +200,7 @@ public class OpenVpnRestController {
     public void writeOpenVpnPluginSiteConfig() {
         OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
-        FirewallBasicsSettings firewallBasicSettings = settings.getSettings(FirewallBasicsSettings.class);
+        UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -217,7 +217,7 @@ public class OpenVpnRestController {
 
     public void writeOpenVpnPluginUserConfig(
             OpenVpnUserSettings openVpnSettings,
-            FirewallBasicsSettings firewallBasicsSettings
+            UserFirewallBasicsSettings firewallBasicsSettings
     ) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_USER_CONF);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
@@ -225,18 +225,25 @@ public class OpenVpnRestController {
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("auth-url = %s/api/auth".formatted(openVpnSettings.getAuthHttpUrl()));
-            writer.println("enable-firewall = " + firewallBasicsSettings.isEnableFirewall());
+            writer.println("auth_url = \"%s/api/auth\"".formatted(
+                    openVpnSettings.getAuthHttpUrl()));
+            writer.println("enable_routing = \"%s\"".formatted(
+                    firewallBasicsSettings.getEnableRoutingMode().name()
+            ));
+            writer.println("enable_firewall = %b".formatted(
+                    firewallBasicsSettings.isEnableFirewall()
+            ));
             if (firewallBasicsSettings.isEnableFirewall()) {
-                writer.println("firewall-zone = " + firewallBasicsSettings.getFirewallZone());
-                writer.println(
-                        "firewall-url = %s/api/firewall"
-                                .formatted(openVpnSettings.getAuthHttpUrl())
+                writer.println("firewall_zone = \"%s\"".formatted(
+                        firewallBasicsSettings.getFirewallZone()
+                ));
+                writer.println("firewall_url_user = \"%s/api/firewall/user_rules\""
+                        .formatted(openVpnSettings.getAuthHttpUrl())
+                );
+                writer.println("firewall_url_everybody = \"%s/api/firewall/everybody_rules\""
+                        .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
-            writer.println("enable-routing = "
-                    + firewallBasicsSettings.getEnableRoutingMode().name()
-            );
         } catch (IOException ex) {
             logger.error(
                     "Cannot write to %s: %s"
@@ -356,9 +363,11 @@ public class OpenVpnRestController {
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
-            writer.println("auth-user-pass");
+            writer.println("""
+                           <auth-user-pass>
+                           %s
+                           </auth-user-pass>""".formatted(username));
         }
-        writer.println();
         writer.println("<ca>\n%s\n</ca>".formatted(caCert));
         writer.println("<cert>\n%s\n</cert>".formatted(userCert));
         writer.println("<key>\n%s</key>".formatted(privateKey));
@@ -424,7 +433,7 @@ public class OpenVpnRestController {
                     cert-pass-flags = 4,
                     connection-type = password-tls,
                     key = %s,
-                    password-flags = 2,
+                    password-flags = %d,
                     port = %s,
                     remote = %s,
                     username = %s
@@ -435,6 +444,7 @@ public class OpenVpnRestController {
                                 caCertFn,
                                 userCertFn,
                                 privateKeyFn,
+                                vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
                                 port,
                                 vpnSettings.getRemote(),
                                 username,
@@ -467,7 +477,10 @@ public class OpenVpnRestController {
         data.put("username", username);
         data.put("cert-pass-flags", "4");
         data.put("connection-type", "password-tls");
-        data.put("password-flags", "2");
+        data.put(
+                "password-flags",
+                vpnSettings.getNetworkManagerRememberPassword().getCfgValue()
+        );
         data.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             data.put("proto-tcp", "yes");

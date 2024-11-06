@@ -6,7 +6,8 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
-import at.nieslony.arachne.firewall.FirewallView;
+import at.nieslony.arachne.firewall.SiteFirefallView;
+import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
@@ -58,13 +59,16 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
+    private final ArachneVersion arachneVersion;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepositoty,
-            AuthenticationContext authContext) {
+            AuthenticationContext authContext,
+            ArachneVersion arachneVersion) {
         this.authContext = authContext;
         this.userRepository = userRepositoty;
+        this.arachneVersion = arachneVersion;
 
         createHeader();
         createDrawer();
@@ -95,9 +99,21 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        if (userRepository.findByUsername(username).getExternalProvider() == null) {
-            userMenu.addItem("Change Password...", click -> changePassword());
+        if (userRepository.findByUsername(username) != null) {
+            if (userRepository.findByUsername(username).getExternalProvider() == null) {
+                userMenu.addItem("Change Password...", click -> changePassword());
+            }
+        } else {
+            logger.warn("Cannot find user %s in user repository".formatted(username));
         }
+        if (!userMenu.getItems().isEmpty()) {
+            userMenu.addSeparator();
+        }
+        userMenu.addItem("About", click -> {
+            AboutDialog dialog = new AboutDialog(arachneVersion);
+            dialog.open();
+        });
+
         HorizontalLayout header = new HorizontalLayout(
                 new DrawerToggle(),
                 pageTitle,
@@ -152,16 +168,21 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         usersNav.setWidthFull();
 
         SideNav networkNav = new SideNav();
-        networkNav.setLabel("VPN");
-        networkNav.addItem(
-                new SideNavItem("OpenVPN User", OpenVpnUserView.class,
-                        VaadinIcon.CONTROLLER.create()),
-                new SideNavItem("OpenVPN Site 2 Site", OpenVpnSiteView.class,
-                        VaadinIcon.SERVER.create()),
-                new SideNavItem("Firewall", FirewallView.class,
-                        VaadinIcon.FIRE.create())
+
+        networkNav.setLabel("OpenVPN");
+        SideNavItem openVpnUserMenu = new SideNavItem("User VPN");
+        openVpnUserMenu.setPrefixComponent(VaadinIcon.USERS.create());
+        openVpnUserMenu.addItem(new SideNavItem("Settings", OpenVpnUserView.class),
+                new SideNavItem("Firewall", UserFirewallView.class)
+        );
+        SideNavItem openVpnSite2Site = new SideNavItem("Site 2 Site VPN");
+        openVpnSite2Site.setPrefixComponent(VaadinIcon.SERVER.create());
+        openVpnSite2Site.addItem(
+                new SideNavItem("Settings", OpenVpnSiteView.class),
+                new SideNavItem("Firewall", SiteFirefallView.class)
         );
         networkNav.setWidthFull();
+        networkNav.addItem(openVpnUserMenu, openVpnSite2Site);
 
         SideNav certificatesNav = new SideNav("Certificates");
         certificatesNav.addItem(

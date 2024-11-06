@@ -28,9 +28,7 @@ public interface ExternalUserSource {
         return "invalid";
     }
 
-    public ArachneUser findUser(String username);
+    public UserModel findUser(String username);
 
-    public List<ArachneUser> findMatchingUsers(String userPattern);
-
-    public void update(ArachneUser user);
+    public List<UserModel> findMatchingUsers(String userPattern);
 }

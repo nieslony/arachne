@@ -48,8 +48,8 @@ public class FirewallWho {
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
-    private String userMatcherClassName;
-    private String parameter;
+    private String userMatcherClassName = "";
+    private String parameter = "";
 
     @Override
     public String toString() {

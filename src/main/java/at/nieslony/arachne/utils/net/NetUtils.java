@@ -86,7 +86,7 @@ public class NetUtils {
 
             mxRecords.add(
                     new MxRecord(
-                            Integer.valueOf(splitAttr[1]),
+                            Integer.parseInt(splitAttr[1]),
                             splitAttr[2]
                     )
             );

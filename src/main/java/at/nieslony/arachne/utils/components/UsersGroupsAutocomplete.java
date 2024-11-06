@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.utils;
+package at.nieslony.arachne.utils.components;
 
 import at.nieslony.arachne.ldap.LdapSettings;
 import com.vaadin.componentfactory.Autocomplete;
@@ -59,7 +59,11 @@ public class UsersGroupsAutocomplete extends Autocomplete {
     }
 
     private String cleanValue(String value) {
-        return value.replaceAll("\\s*\\(.*\\)", "");
+        if (value != null) {
+            return value.replaceAll("\\s*\\(.*\\)", "");
+        } else {
+            return value;
+        }
     }
 
     private List<String> complete(String pattern) {
@@ -67,14 +71,15 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         if (pattern == null || pattern.isEmpty()) {
             return new LinkedList<>();
         }
-        List<String> options = switch (completeMode) {
+        List<String> options = ldapSettings != null && ldapSettings.isValid()
+                ? switch (completeMode) {
             case GROUPS ->
                 ldapSettings.findGroupsPretty("*" + pattern + "*", maxValues);
             case USERS ->
                 ldapSettings.findUsersPretty("*" + pattern + "*", maxValues);
             case NULL ->
                 new LinkedList<>();
-        };
+        } : new LinkedList<>();
         logger.info("Found: " + options.toString());
         return options;
     }

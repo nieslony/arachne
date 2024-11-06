@@ -68,10 +68,10 @@ public class FirewallWhat {
 
     private Type type = Type.OnePort;
     private int port = 1;
-    private TransportProtocol portProtocol;
+    private TransportProtocol portProtocol = TransportProtocol.TCP;
     private int portFrom = 1;
     private int portTo = 65535;
-    private TransportProtocol portRangeProtocol;
+    private TransportProtocol portRangeProtocol = TransportProtocol.TCP;
     private String service = "";
 
     @Override

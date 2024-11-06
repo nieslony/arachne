@@ -6,9 +6,12 @@ package at.nieslony.arachne.utils.validators;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
+import com.vaadin.flow.component.HasLabel;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -16,6 +19,8 @@ import com.vaadin.flow.data.binder.ValueContext;
  * @param <Value>
  */
 public class IgnoringInvisibleOrDisabledValidator<Value> implements Validator<Value> {
+
+    private static final Logger logger = LoggerFactory.getLogger(IgnoringInvisibleOrDisabledValidator.class);
 
     private final Validator<Value> validator;
 
@@ -30,16 +35,31 @@ public class IgnoringInvisibleOrDisabledValidator<Value> implements Validator<Va
             return ValidationResult.error("Null Component");
         }
 
-        if (comp instanceof HasEnabled) {
-            if (!((HasEnabled) comp).isEnabled()) {
+        String labelStr;
+        if (comp instanceof HasLabel hasLabel) {
+            labelStr = hasLabel.getLabel();
+        } else {
+            labelStr = "unknown";
+        }
+
+        if (comp instanceof HasEnabled hasEnabled) {
+            if (!hasEnabled.isEnabled()) {
+                logger.debug(labelStr + " is disabled => OK");
                 return ValidationResult.ok();
             }
         }
 
         if (!comp.isVisible()) {
+            logger.debug(labelStr + " is not visible  => OK");
             return ValidationResult.ok();
         } else {
-            return validator.apply(t, vc);
+            var ret = validator.apply(t, vc);
+            if (ret.isError()) {
+                logger.debug(labelStr + " is invalid" + ret.getErrorMessage());
+            } else {
+                logger.debug(labelStr + " is valid");
+            }
+            return ret;
         }
     }
 }

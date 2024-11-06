@@ -5,13 +5,13 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.firewall.FirewallBasicsSettings;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.EditableListBox;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author claas
  */
-@Route(value = "openvpn-user", layout = ViewTemplate.class)
+@Route(value = "userVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN User VPN")
 @RolesAllowed("ADMIN")
 public class OpenVpnUserView extends VerticalLayout {
@@ -88,8 +88,8 @@ public class OpenVpnUserView extends VerticalLayout {
         });
         saveSettings.addClickListener((t) -> {
             if (binder.writeBeanIfValid(vpnSettings)) {
-                FirewallBasicsSettings firewallBasicsSettings
-                        = settings.getSettings(FirewallBasicsSettings.class);
+                UserFirewallBasicsSettings firewallBasicsSettings
+                        = settings.getSettings(UserFirewallBasicsSettings.class);
                 try {
                     vpnSettings.save(settings);
                     openvpnRestController.writeOpenVpnPluginUserConfig(
@@ -126,7 +126,8 @@ public class OpenVpnUserView extends VerticalLayout {
     }
 
     private Component createAuthPage() {
-        ComboBox<OpenVpnUserSettings.AuthType> authTypeField = new ComboBox<>("Authentication Type");
+        Select<OpenVpnUserSettings.AuthType> authTypeField = new Select<>();
+        authTypeField.setLabel("Authentication Type");
         authTypeField.setItems(OpenVpnUserSettings.AuthType.values());
         authTypeField.setWidthFull();
 
@@ -168,8 +169,19 @@ public class OpenVpnUserView extends VerticalLayout {
         passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         passwordVerificationTypeField.setWidthFull();
 
+        Select<OpenVpnUserSettings.NetworkManagerRememberPassword> nmRememberPassword
+                = new Select<>();
+        nmRememberPassword.setLabel("NetworkManager: Remember Password");
+        nmRememberPassword.setItems(
+                OpenVpnUserSettings.NetworkManagerRememberPassword.values()
+        );
+        nmRememberPassword.setWidthFull();
+
         authTypeField.addValueChangeListener((e) -> {
             passwordVerificationTypeField.setEnabled(
+                    e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
+            );
+            nmRememberPassword.setEnabled(
                     e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
             );
         });
@@ -196,10 +208,16 @@ public class OpenVpnUserView extends VerticalLayout {
                 .bind(OpenVpnUserSettings::getAuthPamService, OpenVpnUserSettings::setAuthPamService);
         binder.forField(authHttpUrlField)
                 .bind(OpenVpnUserSettings::getAuthHttpUrl, OpenVpnUserSettings::setAuthHttpUrl);
+        binder.forField(nmRememberPassword)
+                .bind(
+                        OpenVpnUserSettings::getNetworkManagerRememberPassword,
+                        OpenVpnUserSettings::setNetworkManagerRememberPassword
+                );
 
         VerticalLayout layout = new VerticalLayout(
                 authTypeField,
-                passwordVerificationTypeField
+                passwordVerificationTypeField,
+                nmRememberPassword
         );
         layout.setMinWidth(50, Unit.EM);
         return layout;

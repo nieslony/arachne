@@ -23,9 +23,9 @@ import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;
@@ -237,7 +237,7 @@ public class MailSettingsView extends VerticalLayout {
         recipiend.setValueChangeMode(ValueChangeMode.EAGER);
         recipiend.setErrorMessage("Not a valid E-Mail Address");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        UserModel you = userRepository.findByUsername(authentication.getName());
         if (you != null && you.getEmail() != null) {
             recipiend.setValue(you.getEmail());
         }
@@ -293,7 +293,7 @@ public class MailSettingsView extends VerticalLayout {
         ));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ArachneUser you = userRepository.findByUsername(authentication.getName());
+        UserModel you = userRepository.findByUsername(authentication.getName());
         if (you != null) {
             if (you.getEmail() != null) {
                 recipiend.setValue(you.getEmail());
@@ -306,7 +306,7 @@ public class MailSettingsView extends VerticalLayout {
         Button cancelButton = new Button("Cancel", (be) -> dlg.close());
         Button sendButton = new Button("Send", (be) -> {
             String username = configUser.getValue();
-            ArachneUser forUser = userRepository.findByUsername(username);
+            UserModel forUser = userRepository.findByUsername(username);
             if (!forUser.getRoles().contains(Role.USER.name())) {
                 String msg = "User %s does not have role '%s', cannot sent config"
                         .formatted(username, Role.USER.toString());
@@ -463,7 +463,7 @@ public class MailSettingsView extends VerticalLayout {
         return layout;
     }
 
-    private void sendTestConfig(ArachneUser forUser, String to) {
+    private void sendTestConfig(UserModel forUser, String to) {
         try {
             mailSettingsRestController.sendConfigMail(
                     mailSettings,

@@ -62,6 +62,29 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
         }
     }
 
+    public enum NetworkManagerRememberPassword {
+        REMEMBER_EVERYBODY(0, "Remember for everybody (unencrypted)"),
+        REMEMBER_USER(1, "Remember for user (encrypted)"),
+        ALWAYS_ASK(2, "Always ask");
+
+        private NetworkManagerRememberPassword(int cfgValue, String label) {
+            this.cfgValue = cfgValue;
+            this.label = label;
+        }
+
+        private final String label;
+        private final int cfgValue;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+
+        public int getCfgValue() {
+            return cfgValue;
+        }
+    }
+
     public OpenVpnUserSettings() {
     }
 
@@ -73,8 +96,8 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     private Boolean mtuTest = true;
     private String remote = NetUtils.myHostname();
     private String deviceType = "tun";
-    private String deviceName = "arachne";
-    private String clientNetwork = "192.168.100.0";
+    private String deviceName = "arachne-user";
+    private String clientNetwork = "192.168.102.0";
     private int clientMask = 24;
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
@@ -89,6 +112,7 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     private String authHttpUrl = defaultAuthUrl(
             Settings.getInstance().getServerProperties()
     );
+    private NetworkManagerRememberPassword networkManagerRememberPassword = NetworkManagerRememberPassword.ALWAYS_ASK;
 
     public void setPushDnsServers(List<String> pushDnsServers) {
         logger.info(pushDnsServers.toString());

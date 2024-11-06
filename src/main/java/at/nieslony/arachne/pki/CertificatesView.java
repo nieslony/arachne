@@ -21,8 +21,6 @@ import at.nieslony.arachne.openvpn.OpenVpnRestController;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -73,8 +71,8 @@ public class CertificatesView extends VerticalLayout {
         grid
                 .addComponentColumn((source) -> {
                     MenuBar menuBar = new MenuBar();
-                    menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-                    MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                    menuBar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+                    MenuItem menuItem = menuBar.addItem("Actions");
                     SubMenu actionsMenu = menuItem.getSubMenu();
                     actionsMenu.addItem("Revoke", (e) -> {
                         if (source.getRevocationDate() == null) {

@@ -24,11 +24,12 @@ import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.ShowNotification;
-import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.ShowNotification;
+import at.nieslony.arachne.utils.components.UrlField;
+import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -38,18 +39,15 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.NativeLabel;
-import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.TabSheet;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -61,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -250,6 +248,7 @@ public class LdapView extends VerticalLayout {
         groupsLayout.getStyle().setBorder("1px solid black");
 
         MenuBar loadDefaultsMenu = new MenuBar();
+        loadDefaultsMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");
         SubMenu subMenu = menuItem.getSubMenu();
         subMenu.addItem("FreeIPA", e -> {
@@ -311,7 +310,43 @@ public class LdapView extends VerticalLayout {
     }
 
     final Component createBasicsPage() {
-        var ldapUrlsEditor = createUrlsEditor(ldapSettings);
+        EditableListBox ldapUrlsEditor = new EditableListBox(
+                "LDAP Sources",
+                new UrlField(UrlField.SCHEMATA_LDAP)
+        );
+        ldapUrlsEditor.setDefaultValuesSupplier(
+                "Guess from DNS",
+                () -> {
+                    List<String> ret = new LinkedList<>();
+                    try {
+                        var recs = NetUtils.srvLookup("ldap");
+                        if (recs != null) {
+                            ret.addAll(recs.stream()
+                                    .map((r) -> "ldap://%s:%d".formatted(
+                                    r.getHostname(),
+                                    r.getPort())
+                                    )
+                                    .toList()
+                            );
+                        }
+                    } catch (NamingException ex) {
+                        logger.error("DNS lookup failed: " + ex.getMessage());
+                    }
+                    return ret;
+                }
+        );
+        binder.forField(ldapUrlsEditor)
+                .bind(
+                        (source) -> source.getLdapUrls()
+                                .stream()
+                                .map((url) -> url.toString())
+                                .toList(),
+                        (bean, value) -> bean.setLdapUrls(
+                                value.stream()
+                                        .map((u) -> new LdapUrl(u))
+                                        .toList()
+                        )
+                );
 
         TextField baseDnField = new TextField("Base DN");
         baseDnField.setWidthFull();
@@ -466,138 +501,6 @@ public class LdapView extends VerticalLayout {
             logger.error(ex.getMessage());
             ShowNotification.error("Connection failed", ex.getMessage());
         }
-    }
-
-    VerticalLayout createUrlsEditor(LdapSettings ldapSettings) {
-        Binder<?> cueBinder = new Binder();
-
-        Button guessFromDns = new Button("Guess URLs from DNS");
-
-        ListBox<LdapUrl> ldapUrlsField = new ListBox<>();
-        ldapUrlsField.setHeight(24, Unit.EX);
-        ldapUrlsField.getStyle().setBorder("1px solid black");
-        ldapUrlsField.setWidthFull();
-
-        Select<LdapProtocol> protocolField = new Select<>();
-        protocolField.setLabel("Protocol");
-        protocolField.setItems(LdapProtocol.values());
-        protocolField.setWidth(6, Unit.EM);
-        protocolField.setValue(LdapProtocol.LDAP);
-
-        TextField hostnameField = new TextField("LDAP Host");
-        hostnameField.setMinWidth(24, Unit.EX);
-        hostnameField.setPattern(
-                "[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*"
-        );
-        hostnameField.setClearButtonVisible(true);
-        AtomicReference<String> hostname = new AtomicReference<>("");
-        cueBinder.forField(hostnameField)
-                .withValidator(new HostnameValidator())
-                .bind(
-                        s -> hostname.get(),
-                        (s, v) -> {
-                            hostname.set(v);
-                        }
-                );
-        hostnameField.setValueChangeMode(ValueChangeMode.EAGER);
-
-        IntegerField portField = new IntegerField("Port");
-        portField.setMin(1);
-        portField.setMax(65534);
-        portField.setStepButtonsVisible(true);
-        portField.setWidth(8, Unit.EM);
-        portField.setValue(389);
-
-        HorizontalLayout urlsLayout = new HorizontalLayout(
-                protocolField,
-                hostnameField,
-                portField);
-        urlsLayout.setFlexGrow(1, hostnameField);
-        urlsLayout.setWidthFull();
-
-        Button addUrlButton = new Button(
-                "Add",
-                e -> {
-                    List<LdapUrl> ldapUrls = new LinkedList<>(ldapSettings.getLdapUrls());
-                    logger.info(ldapUrls.toString());
-                    ldapUrls.add(
-                            new LdapUrl(
-                                    protocolField.getValue(),
-                                    hostnameField.getValue(),
-                                    portField.getValue()
-                            )
-                    );
-                    logger.info(ldapUrls.toString());
-                    ldapUrlsField.setItems(ldapUrls);
-                    ldapSettings.setLdapUrls(ldapUrls);
-                });
-        Button updateUrlButton = new Button(
-                "Update",
-                e -> {
-                    List<LdapUrl> ldapUrls = new LinkedList<>(ldapSettings.getLdapUrls());
-                    ldapUrls.remove(ldapUrlsField.getValue());
-                    ldapUrls.add(
-                            new LdapUrl(
-                                    protocolField.getValue(),
-                                    hostnameField.getValue(),
-                                    portField.getValue()
-                            )
-                    );
-                    ldapUrlsField.setItems(ldapUrls);
-                    ldapSettings.setLdapUrls(ldapUrls);
-                });
-        Button removeUrlButton = new Button(
-                "Remove", e -> {
-                    List<LdapUrl> ldapUrls = new LinkedList<>(ldapSettings.getLdapUrls());
-                    ldapUrls.remove(ldapUrlsField.getValue());
-                    ldapUrlsField.setItems(ldapUrls);
-                    ldapSettings.setLdapUrls(ldapUrls);
-                });
-        HorizontalLayout buttonsLayout = new HorizontalLayout(
-                addUrlButton,
-                updateUrlButton,
-                removeUrlButton
-        );
-
-        guessFromDns.addClickListener((t) -> {
-            ldapSettings.guessDefaultsFromDns(settings);
-            ldapUrlsField.setItems(ldapSettings.getLdapUrls());
-        });
-
-        ldapUrlsField.addValueChangeListener(e -> {
-            LdapUrl url = ldapUrlsField.getValue();
-            if (url != null) {
-                protocolField.setValue(url.getProtocol());
-                hostnameField.setValue(url.getHost());
-                portField.setValue(url.getPort());
-            }
-        });
-
-        hostnameField.addValueChangeListener(e -> {
-            if (e.getValue().isEmpty()) {
-                addUrlButton.setEnabled(false);
-                updateUrlButton.setEnabled(false);
-            } else {
-                addUrlButton.setEnabled(true);
-                updateUrlButton.setEnabled(true);
-            }
-        });
-
-        NativeLabel tryLdapUrlsLabel = new NativeLabel("Try LDAP URLs");
-        tryLdapUrlsLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-        VerticalLayout layout = new VerticalLayout(
-                tryLdapUrlsLabel,
-                guessFromDns,
-                ldapUrlsField,
-                urlsLayout,
-                buttonsLayout
-        );
-        layout.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
-
-        return layout;
     }
 
     void testFindGroup(String groupname) {

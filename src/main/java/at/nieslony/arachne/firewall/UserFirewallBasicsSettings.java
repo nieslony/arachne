@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class FirewallBasicsSettings extends AbstractSettingsGroup {
+public class UserFirewallBasicsSettings extends AbstractSettingsGroup {
 
     public enum EnableRoutingMode {
         OFF("Don't change"),
@@ -65,7 +65,7 @@ public class FirewallBasicsSettings extends AbstractSettingsGroup {
     }
 
     private boolean enableFirewall = false;
-    private String firewallZone = "arachne";
+    private String firewallZone = "arachne-user";
     private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
     private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }

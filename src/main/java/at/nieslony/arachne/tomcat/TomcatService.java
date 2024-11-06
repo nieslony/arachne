@@ -61,7 +61,8 @@ public class TomcatService {
             config.write(" secret=" + tomcatSettings.getAjpSecret());
         }
         config.write("\n");
-        if (preAuthSettings.isWriteApachePreAuthConfig()) {
+        if (preAuthSettings.isPreAuthtEnabled()
+                && preAuthSettings.isWriteApachePreAuthConfig()) {
             config.write("""
                      <Location %1$s>
                          AuthType            GSSAPI
@@ -74,7 +75,7 @@ public class TomcatService {
                          Require             valid-user
 
                          RewriteEngine       on
-                         RewriteRule         ^(.*) $1 [E=AJP_%3$s:%%{%3$s}]
+                         RewriteRule         ^(.*) $1 [E=AJP_%3$s:%%{%3$s},UnsafeAllow3F]
                          RewriteCond         %%{ENV:%3$s} !^$
                      </Location>
                      """

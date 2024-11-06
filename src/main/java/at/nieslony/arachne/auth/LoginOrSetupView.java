@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.auth;
 
-import at.nieslony.arachne.AdminHome;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.setup.SetupController;
@@ -19,6 +18,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class LoginOrSetupView
     private final Settings settings;
 
     private String title;
-    private final LoginOverlay login = new LoginOverlay();
+    private LoginOverlay login = null;
 
     public LoginOrSetupView(
             SetupController setupController,
@@ -57,36 +57,47 @@ public class LoginOrSetupView
         return title;
     }
 
+    private void createLogin() {
+        logger.info("Create login page");
+        login = new LoginOverlay();
+        removeAll();
+        KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
+
+        addClassName("login-view");
+        setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
+        login.setAction("login");
+        login.setTitle("Arachne");
+        login.setDescription("Administer your openVPN");
+        login.setForgotPasswordButtonVisible(false);
+        if (kerberosSettings.isEnableKrbAuth()) {
+            Button toSSoButton = new Button(
+                    "Login with Kerberos",
+                    e -> {
+                        login.setOpened(false);
+                        var vaadinSession = VaadinSession.getCurrent();
+                        if (vaadinSession != null) try {
+                            logger.info("Invalidating vaadon session");
+                            vaadinSession.close();
+                        } catch (IllegalStateException ex) {
+                            logger.info("Vaadin session already invalidated");
+                        }
+                        UI.getCurrent().getPage().setLocation("/arachne");
+                    }
+            );
+            toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            toSSoButton.setWidthFull();
+            login.getFooter().add(toSSoButton);
+        }
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         if (setupController.setupAlreadyDone()) {
-            //var resp = VaadinResponse.getCurrent();
-            //resp.setStatus(HttpStatus.UNAUTHORIZED.value());
-
-            logger.info("Create login page");
             title = "Login | Arachne";
-            removeAll();
-            KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
-
-            addClassName("login-view");
-            setSizeFull();
-            setAlignItems(Alignment.CENTER);
-            setJustifyContentMode(JustifyContentMode.CENTER);
-            login.setAction("login");
-            login.setTitle("Arachne");
-            login.setDescription("Administer your openVPN");
-            login.setForgotPasswordButtonVisible(false);
-            if (kerberosSettings.isEnableKrbAuth()) {
-                Button toSSoButton = new Button(
-                        "Login with SSO",
-                        e -> {
-                            login.setOpened(false);
-                            UI.getCurrent().navigate(AdminHome.class);
-                        }
-                );
-                toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-                toSSoButton.setWidthFull();
-                login.getFooter().add(toSSoButton);
+            if (login == null) {
+                createLogin();
             }
             login.setOpened(true);
 
@@ -102,6 +113,5 @@ public class LoginOrSetupView
             title = "Setup | Arachne";
             add(new SetupView(setupController, folderFactory));
         }
-
     }
 }

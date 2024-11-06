@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.usermatcher;
 
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 
 /**
  *
@@ -18,7 +18,7 @@ public class EverybodyMatcher extends UserMatcher {
     }
 
     @Override
-    public boolean isUserMatching(ArachneUser user) {
+    public boolean isUserMatching(UserModel user) {
         return true;
     }
 }

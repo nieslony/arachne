@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.DescriptionList;
 import com.vaadin.flow.component.html.Div;
@@ -18,15 +19,15 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteConfiguration;
+import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.Entity;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -40,9 +41,11 @@ import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.vaadin.olli.ClipboardHelper;
 
 /**
  *
@@ -53,6 +56,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ApiIndexView extends VerticalLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
+    private static final String DEFAULT_VALUE
+            = "\n\t\t\n\t\t\n\ue000\ue001\ue002\n\t\t\t\t\n";
 
     enum JsonMode {
         READ, WRITE
@@ -75,6 +80,20 @@ public class ApiIndexView extends VerticalLayout {
         H2 apiCallsHeader = new H2("API Calls");
         apiCallsHeader.addClassName(LumoUtility.TextColor.PRIMARY);
         add(apiCallsHeader);
+
+        var request = VaadinServletRequest.getCurrent();
+        String urlPrefix = "%s://%s:%d%s".formatted(
+                request.getScheme(),
+                request.getLocalName(),
+                request.getLocalPort(),
+                request.getRequestURI().
+                        endsWith("/")
+                ? request.getRequestURI().substring(
+                        0,
+                        request.getRequestURI().length() - 1
+                )
+                : request.getRequestURI()
+        );
 
         apiIndexBean.getMappings()
                 .entrySet()
@@ -119,6 +138,22 @@ public class ApiIndexView extends VerticalLayout {
                             urlPath + "#toc",
                             "TOC"
                     );
+
+                    String url = urlPrefix + pattern;
+                    Text copyText = new Text("Full URL: " + url);
+                    ClipboardHelper clipboardHelper = new ClipboardHelper(
+                            url,
+                            new Button(
+                                    "Copy to clipboard",
+                                    VaadinIcon.COPY.create()
+                            )
+                    );
+                    HorizontalLayout copyUrl = new HorizontalLayout(
+                            clipboardHelper,
+                            copyText
+                    );
+                    copyUrl.setAlignItems(Alignment.BASELINE);
+
                     H3 methodHeader = new H3(
                             new Text(txt + " "),
                             toToc
@@ -126,6 +161,7 @@ public class ApiIndexView extends VerticalLayout {
                     methodHeader.setId(href);
                     add(
                             methodHeader,
+                            copyUrl,
                             new DescriptionList(createMethodDetails(method))
                     );
                 });
@@ -158,31 +194,24 @@ public class ApiIndexView extends VerticalLayout {
 
                 String type = param.getType().getSimpleName();
 
-                String defaultValue = "";
-                if (!isRequired) {
-                    try {
-                        ByteArrayInputStream bais = new ByteArrayInputStream(
-                                requestParam
-                                        .defaultValue()
-                                        .getBytes()
-                        );
-                        ObjectInputStream ois = new ObjectInputStream(bais);
-                        Object obj = ois.readObject();
-                        defaultValue = (String) obj;
-                    } catch (IOException | ClassNotFoundException ex) {
-                        logger.error("Cannot get defaultValue: " + ex.getMessage());
-                    }
-                }
-
                 Div div = new Div(
                         new Text("name: " + name),
                         new HtmlComponent("br"),
                         new Text("type: " + type),
                         new HtmlComponent("br"),
-                        new Text("is required: " + (isRequired ? "yes" : "no")),
-                        new HtmlComponent("br"),
-                        new Text("default value: " + defaultValue)
+                        new Text("is required: " + (isRequired ? "yes" : "no"))
                 );
+                if (!isRequired) {
+                    String defValue = requestParam.defaultValue();
+                    if (defValue.equals(DEFAULT_VALUE)) {
+                        defValue = "";
+                    }
+                    div.add(
+                            new HtmlComponent("br"),
+                            new Text("default value: " + defValue)
+                    );
+                }
+
                 requestParams.add(div);
                 continue;
             }
@@ -223,6 +252,13 @@ public class ApiIndexView extends VerticalLayout {
                                 JsonMode.WRITE
                         )
                 );
+                continue;
+            }
+
+            AuthenticationPrincipal authenticationPrincipal = param.getDeclaredAnnotation(
+                    AuthenticationPrincipal.class
+            );
+            if (authenticationPrincipal != null) {
                 continue;
             }
 

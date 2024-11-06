@@ -10,7 +10,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author claas
  */
-public interface UserRepository extends JpaRepository<ArachneUser, Long> {
+public interface UserRepository extends JpaRepository<UserModel, Long> {
 
-    ArachneUser findByUsername(String username);
+    UserModel findByUsername(String username);
+
+    UserModel findByUsernameAndExternalProvider(
+            String username,
+            String externalProvider
+    );
 }

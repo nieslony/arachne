@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.10.git_2407291427_8628f1c
+Version:        1.3.14
 
 Release:        1
 License:        GPLv3
@@ -12,7 +12,12 @@ Summary:        Administration server for openVPN
 BuildArch:      noarch
 Url:            https://github.com/nieslony/arachne
 
+%if 0%{?fedora} >= 40
+BuildRequires:  maven-openjdk21
+BuildRequires:  java-21-openjdk-devel
+%else
 BuildRequires:  maven-openjdk17
+%endif
 BuildRequires:  java-17-openjdk-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
@@ -34,7 +39,7 @@ Administration server for openVPN
 #-n % source_dir
 
 %build
-mvn --no-transfer-progress package
+mvn --no-transfer-progress -DskipGenerateGitProperties=true package
 make -f /usr/share/selinux/devel/Makefile arachne.pp
 
 %install
@@ -87,185 +92,104 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
-* Mon Jul 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2407291427_8628f1c-1
-- Bump version of in.virit (github@nieslony.at)
-- Fix: download site VPN config (github@nieslony.at)
-- Add status of site VPN (github@nieslony.at)
-- Fix: initialization order (github@nieslony.at)
-- Fix: file name (github@nieslony.at)
-- Make ArachneDbus ready for site vpn (github@nieslony.at)
+* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.14-1
+- Add dependency (github@nieslony.at)
+
+* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.13-1
+- Fix: skip generation of git props (github@nieslony.at)
+- Don't create git.properties only in development env (github@nieslony.at)
+
+* Tue Nov 05 2024 Claas Nieslony <github@nieslony.at> 1.3.12-1
+- Depend on maven-openjdk21 on newer fedoras (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Add drop down indicators (github@nieslony.at)
+- Bump versions of vaadin and spring boot (github@nieslony.at)
+- Make Kerberos first external auth (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Configure remember password for NetworkManager (github@nieslony.at)
+- Introduce field stringContent (github@nieslony.at)
+- Fix: typo (github@nieslony.at)
+- Try deserializing first, then valueOf(String) (github@nieslony.at)
+- Add version info from git (github@nieslony.at)
+- Add favicon (github@nieslony.at)
+- Add icon to AboutDialog (github@nieslony.at)
+- Fix: read string and primitives (github@nieslony.at)
+- Ignore if LdapSettings are not valid (github@nieslony.at)
+- Check if LdapSettings are valid (github@nieslony.at)
+- Write settings content as string id possible (github@nieslony.at)
+- Add TastRestController.java (github@nieslony.at)
+- Add About dialog (github@nieslony.at)
+- Ignore params annotated with AuthenticationPrincipal (github@nieslony.at)
+- Fix: add id of method (github@nieslony.at)
+- Include username in client config (github@nieslony.at)
+
+* Mon Sep 02 2024 Claas Nieslony <github@nieslony.at> 1.3.11-1
+- Bump dependency versions (github@nieslony.at)
+- Remove log message (github@nieslony.at)
+- Remove log (github@nieslony.at)
+- Validate hostname (github@nieslony.at)
+- Replace ldap urls edit with EditableListBox (github@nieslony.at)
+- Add UrlField.java (github@nieslony.at)
+- Make EditableListBox more fexible (github@nieslony.at)
+- Copy API URL to clipboard (github@nieslony.at)
+- Docu update (github@nieslony.at)
+- Fix: read LDAP servers from ldapSettings (github@nieslony.at)
+- Add token based auth (github@nieslony.at)
+- Fix default value (github@nieslony.at)
+- Fix: findUser (github@nieslony.at)
+- Add task RefreshLdapUsers (github@nieslony.at)
+- Make createRandomPassword static (github@nieslony.at)
+- Enable no limit on findUsers (github@nieslony.at)
+- Fix: update LDAP cache (github@nieslony.at)
+- Label Kerberos logon more clearly (github@nieslony.at)
+- Dont't write location if preAuth is disabled (github@nieslony.at)
+- Create authentication token on /api/auth (github@nieslony.at)
+- Add methods encryptData, decryptData, createSignature, verifySignature
+  (github@nieslony.at)
+- Begin implementing auth token (github@nieslony.at)
+- Bump depenency versions (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- No persisten sessions (github@nieslony.at)
+- Split ArachneUserDetailsService into InternalUserDetailsService and
+  LdapUserDetailsService (github@nieslony.at)
+- Rename class ArachneUser → UserModel (github@nieslony.at)
+- typo (github@nieslony.at)
+- Fix: handle null value (github@nieslony.at)
+- Issues fixed with new spring-security-kerberos, cleanup (github@nieslony.at)
+- Add reqrite option UnsafeAllow3F (github@nieslony.at)
+- Fix: ldapSettings==null (github@nieslony.at)
+- Create package at.nieslony.arachne.utils.components (github@nieslony.at)
+- Add src/main/frontend (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Rename class (github@nieslony.at)
 - - switch from CentOS stream9 to AlmaLinux 9 - optimize custom provisioners
   (github@nieslony.at)
 - Update and rename README.txt -> README. (github@nieslony.at)
 - Update and rename README.txt -> README.md (github@nieslony.at)
-
-* Mon Jul 22 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2407221316_a37f326-1
 - Bump spring-security-kerberos, spring-boot-starter-parent
   (github@nieslony.at)
 - Ignore src/main/bundles (github@nieslony.at)
-- Get SSL cert from IPA server, openfirewall for 8443 (github@nieslony.at)
 - Bump vaadin version (github@nieslony.at)
 - Open API docs in new tab (github@nieslony.at)
 - Bump vaadin vertsion to 24.4 (github@nieslony.at)
-
-* Fri Jun 14 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2406141752_1e6049b-1
-- Enable HTTPS by default (github@nieslony.at)
-- Bump dependencies (github@nieslony.at)
 - Bump dependency versions (github@nieslony.at)
-
-* Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405292333_b74de79-1
-- - Fix: connect to host - make upload progress dialog prettier
-  (github@nieslony.at)
-
-* Wed May 29 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405291215_b7819cd-1
-- Make clear which 'remote host' is meant (github@nieslony.at)
-
-* Thu May 23 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405232055_d18c4d1-1
-- Move classes for site upload to own package (github@nieslony.at)
-- Move .ovpn upload to OvpnConfigUploadThread (github@nieslony.at)
-- Add NetworkManager connection for site VPN, implement ConfigUploadThread
-  (github@nieslony.at)
-- Add /site and /site/{id} (github@nieslony.at)
-- Removed unused attributes, add NM con uuid (github@nieslony.at)
+- . (github@nieslony.at)
 - Bump vaadin version (github@nieslony.at)
-- Add upload type NetworkManager (github@nieslony.at)
 - Fix: update value (github@nieslony.at)
 - Bump vaadin and spring versions (github@nieslony.at)
-- Make API simpler (github@nieslony.at)
 - Replace attachment name (github@nieslony.at)
 - Handle MailSendException (github@nieslony.at)
-- Bump version of dependency (github@nieslony.at)
-- Change permissions of remote config (github@nieslony.at)
 - Bump version of bouncycastle (github@nieslony.at)
 - Add icons, set button as primary (github@nieslony.at)
-
-* Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052121_b2c0998-1
-- Add symlink for site vpn (github@nieslony.at)
-- Give more hints on ENV variables (github@nieslony.at)
-- Write CRL when saving site VPN basics (github@nieslony.at)
-
-* Sun May 05 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405052034_fe3f0ad-1
-- 
-
-* Wed May 01 2024 Claas Nieslony <github@nieslony.at> 1.3.10.git_2405012121_8ebfbf8-1
-- Fix: empty SSH key (github@nieslony.at)
-- Prepare site-client-conf.d before saving site config (github@nieslony.at)
-- Save only if site is valid (github@nieslony.at)
-- Select correct site after saving (github@nieslony.at)
-- Split site vpn settings and vpn sites, create table vpn-sites
+- Add form flag (github@nieslony.at)
+- Add form flag (github@nieslony.at)
+- Don't remove attribute from invalid session (github@nieslony.at)
+- Remove Unauthenticated.java (github@nieslony.at)
+- Add filter to handle status 401 if no negotiation header supplied
   (github@nieslony.at)
-- Update sites when switching tab (github@nieslony.at)
-- Add update-version.sh (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.6.git_2404022217_5886f45-1]. (github@nieslony.at)
-- Fix: typo (github@nieslony.at)
-- Fix: config folder, notification message, no color output
-  (github@nieslony.at)
-- Ad empty text instead of null (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2403211021_85d8b28-1]. (github@nieslony.at)
-- Show HTML messager (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.5.git_2403211001_016b011-1]. (github@nieslony.at)
-- Bump dependencies (github@nieslony.at)
-- Bump dependencies (github@nieslony.at)
-- Fix: config file name (github@nieslony.at)
-- add extra_vars (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2403011547_2b59921-1]. (github@nieslony.at)
-- Specify destination host on upload (github@nieslony.at)
-- Remove some debugging code (github@nieslony.at)
-- - enable IPs allowed\n- enable DNS check (github@nieslony.at)
-- Replace constructor by with... (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2402212143_ad0faa6-1]. (github@nieslony.at)
-- Add dependency (github@nieslony.at)
-- Automatic commit of package [arachne] release [0.1.3_testing-1].
-  (github@nieslony.at)
-- Support copr (github@nieslony.at)
-- Add supported files (github@nieslony.at)
-- Fix: enable whitelist on non default page (github@nieslony.at)
-- use EditableListBox's default button (github@nieslony.at)
-- use EditableListBox's default button (github@nieslony.at)
-- Fix:page title (github@nieslony.at)
-- Write plugin site configuration (github@nieslony.at)
-- Remove debug message (github@nieslony.at)
-- Fix: disable/enable cpomponents (github@nieslony.at)
-- Handle empty sskKeys (github@nieslony.at)
-- Handle null value (github@nieslony.at)
-- Write plugin config for site VPN, renme method (github@nieslony.at)
-- Remove useless import (github@nieslony.at)
-- Add createInfo(String headerText) (github@nieslony.at)
-- Replace FileDownloadWrapper by DynamicFileDownloader (github@nieslony.at)
-- standard fole name (github@nieslony.at)
-- Add getOpenVpnSiteRemoiteConfigName (github@nieslony.at)
-- Add Detach listener (github@nieslony.at)
-- Add @PreDestroy (github@nieslony.at)
-- Enable polling (github@nieslony.at)
-- Configure status update interval (claas@nieslony.at)
-- Implement listener for signal handler (claas@nieslony.at)
-- Make member final (claas@nieslony.at)
-- Enable push (claas@nieslony.at)
-- Add signal handler (claas@nieslony.at)
-- Remove old openvpn management (claas@nieslony.at)
-- Replace OpenVpnManagement by ArachneDbus (claas@nieslony.at)
-- Replace OpenVpnManagement by ArachneDbus (claas@nieslony.at)
-- Add method ServerStatus (claas@nieslony.at)
-- Restart via new dbus interface (claas@nieslony.at)
-- - don't restart after writing server config\n- add openvpn status and pid
-  file (claas@nieslony.at)
-- Add openvpn run dir (claas@nieslony.at)
-- Add dbus-java (claas@nieslony.at)
-- Add ArachneDbus (claas@nieslony.at)
-- Enable multiline strings (claas@nieslony.at)
-- set value after adding listener (claas@nieslony.at)
-- - enable SSH key auth - show notifications on config upload/failure
-  (claas@nieslony.at)
-- Add SSHkey to backup (claas@nieslony.at)
-- Fix: Configuration upload (claas@nieslony.at)
-- SSH key moved to SshKeyRepository (claas@nieslony.at)
-- Improve GUI (claas@nieslony.at)
-- Add and delete SSH keys (claas@nieslony.at)
-- Add package at.nieslony.arachne.ssh (claas@nieslony.at)
-- Handle enabled/disabled on (non-)default site (claas@nieslony.at)
-- Change client -> site (claas@nieslony.at)
-- Remove useless code (claas@nieslony.at)
-- Create site with builder (claas@nieslony.at)
-- . (claas@nieslony.at)
-- Mark some methods as @Transactional (claas@nieslony.at)
-- Rearrange imports (claas@nieslony.at)
-- Add clear button (claas@nieslony.at)
-- Make use of ticket cache (claas@nieslony.at)
-- Add getDefaultSearchDomains() (claas@nieslony.at)
-- Copy config to remote host (claas@nieslony.at)
-- Fixes (github@nieslony.at)
-- Save status (github@nieslony.at)
-- Add SiteConfigUploader.java (github@nieslony.at)
-- Introduce enum SshAuthType (github@nieslony.at)
-- Add jsch (github@nieslony.at)
-- Add validators (github@nieslony.at)
-- Get netmask from value if no Supplier provided (github@nieslony.at)
-- Simplify handling of disabling components (github@nieslony.at)
-- Download remote config (github@nieslony.at)
-- Show create and remote config (github@nieslony.at)
-- Site saved ⇒ not modified (github@nieslony.at)
-- Some ignore some fields for default site (github@nieslony.at)
-- Make VpnSite outer class (github@nieslony.at)
-- Fix: save site when saving vpn; update list after renaming site
-  (github@nieslony.at)
-- Add properties (github@nieslony.at)
-- Save site settings (github@nieslony.at)
-- Make valueChangeListeneer work (github@nieslony.at)
-- Write server config (github@nieslony.at)
-- Change default for keepalive (github@nieslony.at)
-- Edit push DNS servers and routes (github@nieslony.at)
-- Save OpenVpnSite (github@nieslony.at)
-- Remove site (github@nieslony.at)
-- Switch to settings API, add new site (github@nieslony.at)
-- Change site name (github@nieslony.at)
-- Add more settings (github@nieslony.at)
-- Add OpenVpnSiteSettings.java (github@nieslony.at)
-- Add empty OpenVpnSiteView.java (github@nieslony.at)
+- Create SSO view with redirect (github@nieslony.at)
+- Change redirext text (github@nieslony.at)
+- Test and try :-( (claas@nieslony.at)
 
 * Thu Mar 21 2024 Claas Nieslony <github@nieslony.at> 1.3.5.git_2403211001_016b011-1
 - Bump dependencies (github@nieslony.at)

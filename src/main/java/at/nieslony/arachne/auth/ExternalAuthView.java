@@ -23,9 +23,9 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tomcat.TomcatService;
-import at.nieslony.arachne.utils.ShowNotification;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
-import at.nieslony.arachne.utils.validators.SerivePrincipalValidator;
+import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -92,8 +92,8 @@ public class ExternalAuthView extends VerticalLayout {
         saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();
-        tabs.add("Pre Authentication", createPreAuthView(settings));
         tabs.add("Kerberos", createKerberosView(settings));
+        tabs.add("Pre Authentication", createPreAuthView(settings));
         tabs.setWidthFull();
 
         add(tabs, saveButton);
@@ -123,7 +123,7 @@ public class ExternalAuthView extends VerticalLayout {
         servicePrincipalField.setItems("");
         kerberosBinder.forField(servicePrincipalField)
                 .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
-                        new SerivePrincipalValidator()
+                        new ServicePrincipalValidator()
                 ))
                 .bind(KerberosSettings::getServicePrincipal, KerberosSettings::setServicePrincipal);
 

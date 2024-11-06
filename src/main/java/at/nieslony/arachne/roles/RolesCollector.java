@@ -7,7 +7,7 @@ package at.nieslony.arachne.roles;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherDescription;
-import at.nieslony.arachne.users.ArachneUser;
+import at.nieslony.arachne.users.UserModel;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class RolesCollector {
     @Autowired
     UserMatcherCollector userMatcherCollector;
 
-    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(ArachneUser user, boolean isInternal) {
+    public Set<SimpleGrantedAuthority> findAuthoritiesForUser(UserModel user, boolean isInternal) {
         Set<SimpleGrantedAuthority> auths = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -48,7 +48,7 @@ public class RolesCollector {
         return auths;
     }
 
-    public Set<String> findRolesForUser(ArachneUser user) {
+    public Set<String> findRolesForUser(UserModel user) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {
@@ -63,7 +63,7 @@ public class RolesCollector {
         return roles;
     }
 
-    public Set<String> findRoleDescriptionsForUser(ArachneUser user) {
+    public Set<String> findRoleDescriptionsForUser(UserModel user) {
         Set<String> roles = new HashSet<>();
 
         for (RoleRuleModel rrm : roleRuleRepository.findAll()) {

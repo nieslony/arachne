@@ -40,14 +40,14 @@ public class UserRestController {
 
     @GetMapping
     @RolesAllowed(value = {"ADMIN"})
-    public List<ArachneUser> findAll() {
+    public List<UserModel> findAll() {
         return userRepository.findAll();
     }
 
     @GetMapping("/{id}")
     @RolesAllowed(value = {"ADMIN"})
-    public ArachneUser findUser(@PathVariable Long id) {
-        ArachneUser user = userRepository
+    public UserModel findUser(@PathVariable Long id) {
+        UserModel user = userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
@@ -58,7 +58,7 @@ public class UserRestController {
     @PostMapping
     @RolesAllowed(value = {"ADMIN"})
     @ResponseStatus(HttpStatus.CREATED)
-    public ArachneUser create(@RequestBody ArachneUser user) {
+    public UserModel create(@RequestBody UserModel user) {
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -76,8 +76,8 @@ public class UserRestController {
 
     @PutMapping("/{id}")
     @RolesAllowed(value = {"ADMIN"})
-    public ArachneUser update(@RequestBody ArachneUser newUser, @PathVariable Long id) {
-        ArachneUser user = userRepository
+    public UserModel update(@RequestBody UserModel newUser, @PathVariable Long id) {
+        UserModel user = userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
