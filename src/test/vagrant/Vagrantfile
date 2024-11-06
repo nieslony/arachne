@@ -19,7 +19,7 @@ if File.exist?("provision.d/extra_vars.yml")
 else
     extra_vars = {}
 end
-extra_vars["vhosts"] = [hostname]
+extra_vars["webserver_vhosts"] = [hostname]
 
 Vagrant.configure("2") do |config|
     config.vagrant.plugins = [ "vagrant-libvirt", "vagrant-timezone" ]
