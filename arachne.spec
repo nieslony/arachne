@@ -37,7 +37,7 @@ Administration server for openVPN
 #-n % source_dir
 
 %build
-mvn --no-transfer-progress -DgenerateGitPropertiesFile=false package
+mvn --no-transfer-progress -DskipGenerateGitProperties=true package
 make -f /usr/share/selinux/devel/Makefile arachne.pp
 
 %install

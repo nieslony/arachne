@@ -11,6 +11,7 @@
         <vaadin.version>24.5.3</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
+        <skipGenerateGitProperties>false</skipGenerateGitProperties>
     </properties>
 
     <parent>
@@ -233,6 +234,7 @@
                 </executions>
                 <configuration>
                     <generateGitPropertiesFile>${generateGitPropertiesFile}</generateGitPropertiesFile>
+                    <skip>${skipGenerateGitProperties}</skip>
                 </configuration>
             </plugin>
         </plugins>
