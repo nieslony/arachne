@@ -14,6 +14,7 @@ Url:            https://github.com/nieslony/arachne
 
 %if 0%{?fedora} >= 40
 BuildRequires:  maven-openjdk21
+BuildRequires:  java-21-openjdk-devel
 %else
 BuildRequires:  maven-openjdk17
 %endif
