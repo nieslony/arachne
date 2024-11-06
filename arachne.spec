@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.11
+Version:        1.3.14
 
 Release:        1
 License:        GPLv3
@@ -12,7 +12,12 @@ Summary:        Administration server for openVPN
 BuildArch:      noarch
 Url:            https://github.com/nieslony/arachne
 
+%if 0%{?fedora} >= 40
+BuildRequires:  maven-openjdk21
+BuildRequires:  java-21-openjdk-devel
+%else
 BuildRequires:  maven-openjdk17
+%endif
 BuildRequires:  java-17-openjdk-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
@@ -33,7 +38,7 @@ Administration server for openVPN
 #-n % source_dir
 
 %build
-mvn --no-transfer-progress package
+mvn --no-transfer-progress -DskipGenerateGitProperties=true package
 make -f /usr/share/selinux/devel/Makefile arachne.pp
 
 %install
@@ -83,6 +88,37 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.14-1
+- Add dependency (github@nieslony.at)
+
+* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.13-1
+- Fix: skip generation of git props (github@nieslony.at)
+- Don't create git.properties only in development env (github@nieslony.at)
+
+* Tue Nov 05 2024 Claas Nieslony <github@nieslony.at> 1.3.12-1
+- Depend on maven-openjdk21 on newer fedoras (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Add drop down indicators (github@nieslony.at)
+- Bump versions of vaadin and spring boot (github@nieslony.at)
+- Make Kerberos first external auth (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Configure remember password for NetworkManager (github@nieslony.at)
+- Introduce field stringContent (github@nieslony.at)
+- Fix: typo (github@nieslony.at)
+- Try deserializing first, then valueOf(String) (github@nieslony.at)
+- Add version info from git (github@nieslony.at)
+- Add favicon (github@nieslony.at)
+- Add icon to AboutDialog (github@nieslony.at)
+- Fix: read string and primitives (github@nieslony.at)
+- Ignore if LdapSettings are not valid (github@nieslony.at)
+- Check if LdapSettings are valid (github@nieslony.at)
+- Write settings content as string id possible (github@nieslony.at)
+- Add TastRestController.java (github@nieslony.at)
+- Add About dialog (github@nieslony.at)
+- Ignore params annotated with AuthenticationPrincipal (github@nieslony.at)
+- Fix: add id of method (github@nieslony.at)
+- Include username in client config (github@nieslony.at)
+
 * Mon Sep 02 2024 Claas Nieslony <github@nieslony.at> 1.3.11-1
 - Bump dependency versions (github@nieslony.at)
 - Remove log message (github@nieslony.at)
@@ -218,13 +254,13 @@ fi
 - removver logging (github@nieslony.at)
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at> 1.3.3-1
-- 
+-
 
 * Thu Jan 25 2024 Claas Nieslony <github@nieslony.at>
--  
+-
 
 * Sun Jan 21 2024 Claas Nieslony <github@nieslony.at> 1.3.2-1
-- 
+-
 
 * Wed Jan 17 2024 Claas Nieslony <claas@nieslony.at> 1.3.1-1
 - Bump arachne version to 1.3.1 (claas@nieslony.at)

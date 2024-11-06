@@ -6,73 +6,77 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Component
-@PropertySource("classpath:git.properties")
+@PropertySource(value = "classpath:git.properties", ignoreResourceNotFound = true)
 @Getter
-public class ArachneVersion {
+public class ArachneVersion extends ArachneVersionBase {
 
-    @Value("${git.tags}")
+    @Value("${git.tags:}")
     private String gitTag;
 
-    @Value("${git.closest.tag.commit.count}")
+    @Value("${git.closest.tag.commit.count:}")
     private String gitClosestTagCommit;
 
-    @Value("${git.build.version}")
+    @Value("${git.build.version:}")
     private String gitBuildVersion;
 
-    @Value("${git.commit.user.name}")
+    @Value("${git.commit.user.name:}")
     private String gitCommitUserName;
 
-    @Value("${git.commit.id.abbrev}")
+    @Value("${git.commit.id.abbrev:}")
     private String gitCommitIdAbbrev;
 
-    @Value("${git.branch}")
+    @Value("${git.branch:}")
     private String gitBranch;
 
-    @Value("${git.build.host}")
+    @Value("${git.build.host:}")
     private String gitBuildHost;
 
-    @Value("git.commit.id.describe-short}")
+    @Value("git.commit.id.describe-short:}")
     private String gitCommitIdDescribeShort;
 
-    @Value("${git.commit.id.describe}")
+    @Value("${git.commit.id.describe:}")
     private String gitCommitIdDescribe;
 
-    @Value("${git.build.user.email}")
+    @Value("${git.build.user.email:}")
     private String gitBuildUserEmail;
 
-    @Value("${git.commit.id}")
+    @Value("${git.commit.id:}")
     private String gitCommitId;
 
-    @Value("${git.commit.message.short}")
+    @Value("${git.commit.message.short:}")
     private String gitCommitMessageShort;
 
-    @Value("${git.commit.user.email}")
+    @Value("${git.commit.user.email:}")
     private String gitCommitUserEmail;
 
-    @Value("${git.closest.tag.name}")
+    @Value("${git.closest.tag.name:}")
     private String gitClosestTagName;
 
-    @Value("${git.commit.time}")
+    @Value("${git.commit.time:}")
     private String gitCommitTime;
 
-    @Value("${git.build.time}")
+    @Value("${git.build.time:}")
     private String gitBuildTime;
 
-    @Value("${git.build.user.name}")
+    @Value("${git.build.user.name:}")
     private String gitBuildUserName;
 
-    @Value("${git.dirty}")
+    @Value("${git.dirty:}")
     private String gitDirty;
 
-    @Value("${git.commit.message.full}")
+    @Value("${git.commit.message.full:}")
     private String gitCommitMessageFull;
 
-    @Value("${git.remote.origin.url}")
+    @Value("${git.remote.origin.url:}")
     private String gitRemoteOriginUrl;
 
     public String getPrettyVersion() {
         if (gitTag != null && !gitTag.isEmpty()) {
             return gitTag;
+        }
+
+        if (gitBranch == null || gitBranch.isEmpty()) {
+            return ARACHNE_VERSION;
         }
 
         // "1.3.1-7-master+gitXXX"
@@ -83,6 +87,4 @@ public class ArachneVersion {
                 gitBranch
         );
     }
-
-    public static final String ARACHNE_VERSION = "1.3.11";
 }
