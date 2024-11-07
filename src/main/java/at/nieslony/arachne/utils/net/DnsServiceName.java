@@ -1,14 +1,13 @@
 package at.nieslony.arachne.utils.net;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -28,18 +27,17 @@ public record DnsServiceName(String name, String description) {
         if (knownServices == null) {
             knownServices = new HashMap<>();
             try {
-                Path path = Paths
-                        .get(ClassLoader
-                                .getSystemResource("KnownDnsSrvTypes/known-dns-srv-types.csv").toURI()
-                        );
-                Files.lines(path).forEach((String line) -> {
+                var resource = new ClassPathResource("KnownDnsSrvTypes/known-dns-srv-types.csv");
+                var reader = new BufferedReader(new InputStreamReader(resource.getInputStream()));
+
+                reader.lines().forEach((String line) -> {
                     String[] splitLine = line.split("\t");
                     knownServices.put(
                             splitLine[0],
                             new DnsServiceName(splitLine[0], splitLine[1])
                     );
                 });
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException ex) {
                 logger.error("Cannot read SRV names from resource: " + ex.getMessage());
             }
         }
