@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.backup;
 
-import at.nieslony.arachne.apiindex.ApiMethodDescription;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.KeyRepository;
@@ -18,6 +17,7 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import at.nieslony.arachne.apiindex.ApiDescription;
 
 /**
  *
@@ -47,7 +47,7 @@ public class BackupRestController {
 
     @GetMapping("/api/backup")
     @RolesAllowed(value = {"ADMIN", "BACKUP"})
-    @ApiMethodDescription(
+    @ApiDescription(
             """
             Creates backup of all settings. Can be restored with
             setup wizard after disaster.

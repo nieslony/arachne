@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.apiindex.ApiDescription;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
@@ -160,7 +161,14 @@ public class OpenVpnRestController {
     @GetMapping("/user_config")
     @RolesAllowed(value = {"USER"})
     public String getUserVpnConfig(
-            @RequestParam(required = false, name = "format") String format
+            @RequestParam(required = false, name = "format")
+            @ApiDescription(
+                    isHtml = true,
+                    value = """
+                    <strong>shell</strong>: shell script to add connection to NetworkManager,<br>
+                    <strong>json</strong>: internally used by ArchneConfigDownloader
+                    """
+            ) String format
     ) throws SettingsException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
