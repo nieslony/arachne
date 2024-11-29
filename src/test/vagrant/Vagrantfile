@@ -103,7 +103,7 @@ Vagrant.configure("2") do |config|
                     echo -n "$i: "
                     firewall-cmd --add-service $i --permanent
                 done
-                for i in 8080/tcp ; do
+                for i in 8080/tcp 8443/tcp ; do
                     echo -n "$i :"
                     firewall-cmd --add-port $i --permanent
                 done
@@ -115,6 +115,13 @@ Vagrant.configure("2") do |config|
                         /etc/httpd/krb5.keytab \
                         /var/lib/arachne/arachneconfig/krb5.keytab
                     chown -v arachne /var/lib/arachne/arachneconfig/krb5.keytab
+                    kinit -k
+                    ipa-getcert request \
+                        --certfile=/var/lib/arachne/arachneconfig/server.crt \
+                        --keyfile=/var/lib/arachne/arachneconfig/server.key \
+                        --key-owner=arachne \
+                        --cert-owner=arachne
+                    kdestroy
                 fi
 
                 my_ip=$( ifconfig eth0 | awk '/inet/ { print $2; }' )
