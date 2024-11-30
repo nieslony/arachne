@@ -13,6 +13,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.InternalUserDetailsService;
 import at.nieslony.arachne.users.LdapUserDetailsService;
 import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.utils.LazyCreate;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
@@ -91,6 +92,13 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
 
+    LazyCreate<KerberosAuthenticationProvider> kerberosAuthenticationProvider
+            = new LazyCreate<>(() -> createKerberosAuthenticationProvider());
+    LazyCreate<KerberosServiceAuthenticationProvider> kerberosServiceAuthenticationProvider
+            = new LazyCreate<>(() -> createKerberosServiceAuthenticationProvider());
+    LazyCreate<PreAuthenticatedAuthenticationProvider> preAuthenticatedAuthenticationProvider
+            = new LazyCreate<>(() -> createPreAuthenticatedAuthenticationProvider());
+
     @PostConstruct
     public void init() {
         kerberosSettings = settings.getSettings(KerberosSettings.class);
@@ -105,6 +113,8 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        logger.info("Configuring securiry");
+
         AuthenticationManager authenticationManager = http.getSharedObject(
                 AuthenticationManager.class
         );
@@ -112,19 +122,20 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
         http
-                .httpBasic((t) -> {
-                    t.realmName("Arachne");
-                }).addFilterBefore(
-                bearerTokenAuthFilter,
-                BasicAuthenticationFilter.class
-        );
+                .httpBasic((h) -> h.realmName("Arachne"))
+                .addFilterBefore(
+                        bearerTokenAuthFilter,
+                        BasicAuthenticationFilter.class
+                )
+                .userDetailsService(internalUserDetailsService);
 
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
         }
         if (kerberosSettings.isEnableKrbAuth()) {
             http
-                    .addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
+                    .addFilterBefore(
+                            spnegoAuthenticationProcessingFilter(authenticationManager),
                             BasicAuthenticationFilter.class
                     )
                     .exceptionHandling(
@@ -231,11 +242,17 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         var authManBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         if (kerberosSettings.isEnableKrbAuth()) {
             authManBuilder
-                    .authenticationProvider(kerberosAuthenticationProvider())
-                    .authenticationProvider(kerberosServiceAuthenticationProvider());
+                    .authenticationProvider(
+                            kerberosAuthenticationProvider.get()
+                    )
+                    .authenticationProvider(
+                            kerberosServiceAuthenticationProvider.get()
+                    );
         }
         if (preAuthSettings.isPreAuthtEnabled()) {
-            authManBuilder.authenticationProvider(preAuthenticatedAuthenticationProvider());
+            authManBuilder.authenticationProvider(
+                    preAuthenticatedAuthenticationProvider.get()
+            );
         }
         authManBuilder.authenticationProvider(bearerAuthenticationProvider);
         authManBuilder.userDetailsService(internalUserDetailsService);
@@ -245,8 +262,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return authManBuilder.build();
     }
 
-    @Bean
-    public PreAuthenticatedAuthenticationProvider preAuthenticatedAuthenticationProvider() {
+    public PreAuthenticatedAuthenticationProvider createPreAuthenticatedAuthenticationProvider() {
         PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
         provider.setPreAuthenticatedUserDetailsService((token) -> {
             logger.info("Get user details from pre auth token for : " + token.getName());
@@ -256,8 +272,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return provider;
     }
 
-    @Bean
-    public KerberosAuthenticationProvider kerberosAuthenticationProvider() {
+    public KerberosAuthenticationProvider createKerberosAuthenticationProvider() {
         logger.info("Creating kerberosAuthenticationProvider");
         if (!kerberosSettings.isEnableKrbAuth()) {
             return null;
@@ -269,8 +284,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return provider;
     }
 
-    @Bean
-    public KerberosServiceAuthenticationProvider kerberosServiceAuthenticationProvider() {
+    public KerberosServiceAuthenticationProvider createKerberosServiceAuthenticationProvider() {
         logger.info("Creating kerberosServiceAuthenticationProvider");
         if (!kerberosSettings.isEnableKrbAuth()) {
             return null;
