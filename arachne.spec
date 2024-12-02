@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.14
+Version:        1.3.15
 
 Release:        1
 License:        GPLv3
@@ -88,6 +88,18 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon Dec 02 2024 Claas Nieslony <github@nieslony.at> 1.3.15-1
+- Bump vaadin version (github@nieslony.at)
+- change border style (github@nieslony.at)
+- Fix: add user details service (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Open port 8443, create SSL cert from ipa (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: creation of authentication providers (github@nieslony.at)
+- Fix: extra_vars (github@nieslony.at)
+- Improve generation of API docs (github@nieslony.at)
+- Rename ApiMethodDescription → ApiDescription (github@nieslony.at)
+
 * Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.14-1
 - Add dependency (github@nieslony.at)
 
