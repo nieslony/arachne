@@ -1,0 +1,107 @@
+- name: "Install arachne"
+  hosts: all
+  become: true
+
+  vars:
+    http_keytab: /etc/httpd/krb5.keytab
+    arachne_cfg_dir: /var/lib/arachne/arachneconfig
+
+    cert_file: "/etc/pki/tls/certs/{{ ansible_fqdn }}_arachne.crt"
+    key_file: "/etc/pki/tls/private/{{ ansible_fqdn }}_arachne.key"
+
+  tasks:
+  - name: "Enable arachne repository {{ archne_repo | default('n/a') }}"
+    yum_repository:
+      name: "Arachne"
+      baseurl: "{{ arachne_repo is defined and arachne_repo == '' }}"
+    when: arachne_repo
+
+  - name: "Enable arachne copr repo"
+    community.general.copr:
+      name: "{{ arachne_copr | default('@nieslony/arachne') }}"
+      chroot: epel-9-x86_64
+    when: arachne_repo is not defined or arachne_repo == ''
+
+  - name: "Install arachne"
+    dnf:
+      name: arachne
+      state: latest
+
+  - name: "Symlink arachne.conf"
+    file:
+      src: /var/lib/arachne/arachneconfig/arachne.conf
+      dest: "/etc/httpd/conf.d/{{ ansible_fqdn }}.conf.inc"
+      state: link
+      force: yes
+
+  - name: "Set seboolean"
+    seboolean:
+      name: "{{ item }}"
+      state: true
+      persistent: true
+    with_items:
+      - httpd_can_network_connect
+      - httpd_can_network_connect
+
+  - name: "Find {{ http_keytab }}"
+    stat:
+      path: "{{ http_keytab }}"
+    register: stat_krb5_keytab
+
+  - name: "Copy {{ http_keytab }} to {{ arachne_cfg_dir }}"
+    copy:
+      src: "{{ http_keytab }}"
+      dest: "{{ arachne_cfg_dir }}"
+      remote_src: true
+      owner: arachne
+      group: arachne
+    when: stat_krb5_keytab.stat.exists
+
+  - name: "Find /etc/ipa/ca.crt"
+    stat:
+      path: /etc/ipa/ca.crt
+    register: stat_ipa_ca_crt
+
+  - block:
+    - name: "Get certificate"
+      command:
+        cmd: >
+          ipa-getcert request
+            --certfile=/etc/pki/tls/certs/{{ ansible_fqdn }}_arachne.crt
+            --keyfile=/etc/pki/tls/private/{{ ansible_fqdn }}_arachne.key
+            --key-owner=arachne
+            --cert-owner=arachne
+        creates: "/etc/pki/tls/private/{{ ansible_fqdn }}_arachne.key"
+      environment:
+        KRB5_CLIENT_KTNAME: /etc/krb5.keytab
+        KRB5CCNAME: "KEYRING:session:%{uid}"
+        https_proxy: ""
+        http_proxy: ""
+
+    - name: "Symlink certitficate and key to {{ arachne_cfg_dir }}"
+      file:
+        dest: "{{ arachne_cfg_dir }}/{{ item.key }}"
+        src: "{{ item.value }}"
+        state: link
+      with_dict:
+        server.crt: "{{ cert_file }}"
+        server.key: "{{ key_file }}"
+    when: stat_ipa_ca_crt.stat.exists
+
+  - name: "Start arachne"
+    service:
+      name: arachne
+      enabled: yes
+      state: started
+
+  - name: "Open ports in firewall"
+    firewalld:
+      port: "{{ (item is integer) | ternary(item | string + '/tcp', omit) }}"
+      service: "{{ (item is string) | ternary(item, omit) }}"
+      permanent: yes
+      state: enabled
+      immediate: yes
+    with_items:
+      - 8080
+      - 8443
+      - openvpn

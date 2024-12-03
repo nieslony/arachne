@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.14.git_2411062113_c33b79d
+Version:        1.3.16
 
 Release:        1
 License:        GPLv3
@@ -92,8 +92,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
-* Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.14.git_2411062113_c33b79d-1
-- Fix: extra_vars (github@nieslony.at)
+* Tue Dec 03 2024 Claas Nieslony <github@nieslony.at> 1.3.16-1
+- Add arachne.yml (github@nieslony.at)
+- Add error messages (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: use ClassPathResource (github@nieslony.at)
 - Add drop down indicator (github@nieslony.at)
 - Bump depedency version (github@nieslony.at)
 - Fix: typo (github@nieslony.at)
@@ -129,30 +132,18 @@ fi
 - Prepare firewall for site VPN (github@nieslony.at)
 - Reorganize VPN menu (github@nieslony.at)
 - Display DBus errors (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2407291427_8628f1c-1]. (github@nieslony.at)
 - Bump version of in.virit (github@nieslony.at)
 - Fix: download site VPN config (github@nieslony.at)
 - Add status of site VPN (github@nieslony.at)
 - Fix: initialization order (github@nieslony.at)
 - Fix: file name (github@nieslony.at)
 - Make ArachneDbus ready for site vpn (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2407221316_a37f326-1]. (github@nieslony.at)
 - Get SSL cert from IPA server, openfirewall for 8443 (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2406141752_1e6049b-1]. (github@nieslony.at)
 - Enable HTTPS by default (github@nieslony.at)
 - Bump dependencies (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405292333_b74de79-1]. (github@nieslony.at)
 - - Fix: connect to host - make upload progress dialog prettier
   (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405291215_b7819cd-1]. (github@nieslony.at)
 - Make clear which 'remote host' is meant (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405232055_d18c4d1-1]. (github@nieslony.at)
 - Move classes for site upload to own package (github@nieslony.at)
 - Move .ovpn upload to OvpnConfigUploadThread (github@nieslony.at)
 - Add NetworkManager connection for site VPN, implement ConfigUploadThread
@@ -163,15 +154,9 @@ fi
 - Make API simpler (github@nieslony.at)
 - Bump version of dependency (github@nieslony.at)
 - Change permissions of remote config (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405052121_b2c0998-1]. (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405052034_fe3f0ad-1]. (github@nieslony.at)
 - Add symlink for site vpn (github@nieslony.at)
 - Give more hints on ENV variables (github@nieslony.at)
 - Write CRL when saving site VPN basics (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.10.git_2405012121_8ebfbf8-1]. (github@nieslony.at)
 - Fix: empty SSH key (github@nieslony.at)
 - Prepare site-client-conf.d before saving site config (github@nieslony.at)
 - Save only if site is valid (github@nieslony.at)
@@ -179,15 +164,10 @@ fi
 - Split site vpn settings and vpn sites, create table vpn-sites
   (github@nieslony.at)
 - Update sites when switching tab (github@nieslony.at)
-- Add update-version.sh (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.6.git_2404022217_5886f45-1]. (github@nieslony.at)
 - Fix: typo (github@nieslony.at)
 - Fix: config folder, notification message, no color output
   (github@nieslony.at)
 - Ad empty text instead of null (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2403211021_85d8b28-1]. (github@nieslony.at)
 - Show HTML messager (github@nieslony.at)
 - Automatic commit of package [arachne] release
   [1.3.5.git_2403211001_016b011-1]. (github@nieslony.at)
@@ -195,17 +175,10 @@ fi
 - Bump dependencies (github@nieslony.at)
 - Fix: config file name (github@nieslony.at)
 - add extra_vars (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2403011547_2b59921-1]. (github@nieslony.at)
 - Specify destination host on upload (github@nieslony.at)
 - Remove some debugging code (github@nieslony.at)
 - - enable IPs allowed\n- enable DNS check (github@nieslony.at)
 - Replace constructor by with... (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [0.1.3.git_2402212143_ad0faa6-1]. (github@nieslony.at)
-- Add dependency (github@nieslony.at)
-- Automatic commit of package [arachne] release [0.1.3_testing-1].
-  (github@nieslony.at)
 - Support copr (github@nieslony.at)
 - Add supported files (github@nieslony.at)
 - Fix: enable whitelist on non default page (github@nieslony.at)
@@ -290,6 +263,18 @@ fi
 - Add more settings (github@nieslony.at)
 - Add OpenVpnSiteSettings.java (github@nieslony.at)
 - Add empty OpenVpnSiteView.java (github@nieslony.at)
+
+* Mon Dec 02 2024 Claas Nieslony <github@nieslony.at> 1.3.15-1
+- Bump vaadin version (github@nieslony.at)
+- change border style (github@nieslony.at)
+- Fix: add user details service (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Open port 8443, create SSL cert from ipa (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: creation of authentication providers (github@nieslony.at)
+- Fix: extra_vars (github@nieslony.at)
+- Improve generation of API docs (github@nieslony.at)
+- Rename ApiMethodDescription → ApiDescription (github@nieslony.at)
 
 * Wed Nov 06 2024 Claas Nieslony <github@nieslony.at> 1.3.14-1
 - Add dependency (github@nieslony.at)
