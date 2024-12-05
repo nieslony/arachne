@@ -122,19 +122,20 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
         http
-                .httpBasic((t) -> {
-                    t.realmName("Arachne");
-                }).addFilterBefore(
-                bearerTokenAuthFilter,
-                BasicAuthenticationFilter.class
-        );
+                .httpBasic((h) -> h.realmName("Arachne"))
+                .addFilterBefore(
+                        bearerTokenAuthFilter,
+                        BasicAuthenticationFilter.class
+                )
+                .userDetailsService(internalUserDetailsService);
 
         if (preAuthSettings.isPreAuthtEnabled()) {
             http.addFilter(requestAttributeAuthenticationFilter(authenticationManager));
         }
         if (kerberosSettings.isEnableKrbAuth()) {
             http
-                    .addFilterBefore(spnegoAuthenticationProcessingFilter(authenticationManager),
+                    .addFilterBefore(
+                            spnegoAuthenticationProcessingFilter(authenticationManager),
                             BasicAuthenticationFilter.class
                     )
                     .exceptionHandling(

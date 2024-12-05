@@ -185,7 +185,7 @@ public class LdapView extends VerticalLayout {
                 usersFormLabel,
                 usersFormLayout
         );
-        usersLayout.getStyle().setBorder("1px solid black");
+        usersLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         TextField groupsOu = new TextField("Groups OU");
         binder.forField(groupsOu)
@@ -245,7 +245,7 @@ public class LdapView extends VerticalLayout {
                 groupsLabel,
                 groupsFormLayout
         );
-        groupsLayout.getStyle().setBorder("1px solid black");
+        groupsLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         MenuBar loadDefaultsMenu = new MenuBar();
         loadDefaultsMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);

@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.apiindex.ApiDescription;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
+import at.nieslony.arachne.apiindex.ApiDescription;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.pki.CertificateRepository;
