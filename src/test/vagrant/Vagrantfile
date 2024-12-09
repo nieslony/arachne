@@ -1,13 +1,19 @@
 require 'yaml'
 
-hostname = ENV['ARACHNE_HOSTNAME'] || "arachne.test.lab"
 def_copr_repo = "nieslony/arachne"
+
+if not ENV.key?('ARACHNE_HOSTNAME')
+    hostname = "arachne.test.lab"
+    puts "Warning: ARACHNE_HOSTNAME not set, falling back to 'arachne.test.lab'"
+else
+    hostname = ENV['ARACHNE_HOSTNAME']
+end
 
 if not ENV.key?("ARACHNE_REPO")
     arachne_repo = ""
     if not ENV.key?("ARACHNE_COPR")
         arachne_copr = def_copr_repo
-        puts "Warning neither ARACHNE_REPO nor ARACHNE_COPR set. Falling back to copr repo " + "nieslony/arachne"
+        puts "Warning neither ARACHNE_REPO nor ARACHNE_COPR set. Falling back to copr repo 'nieslony/arachne'"
     else
         arachne_copr = ENV['ARACHNE_COPR']
         puts "Warning: ARACHNE_REPO noit set falling back to given ARACHNE_COPR " + arachne_copr
