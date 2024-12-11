@@ -22,9 +22,15 @@
       chroot: epel-9-x86_64
     when: arachne_repo is not defined or arachne_repo == ''
 
+  - name: "Enable EPEL"
+    dnf:
+      name: epel-release
+
   - name: "Install arachne"
     dnf:
-      name: arachne
+      name:
+        - arachne
+        - firewalld
       state: latest
 
   - name: "Symlink arachne.conf"
@@ -33,6 +39,7 @@
       dest: "/etc/httpd/conf.d/{{ ansible_fqdn }}.conf.inc"
       state: link
       force: yes
+      follow: no
 
   - name: "Set seboolean"
     seboolean:
@@ -88,11 +95,15 @@
         server.key: "{{ key_file }}"
     when: stat_ipa_ca_crt.stat.exists
 
-  - name: "Start arachne"
+  - name: "Start services"
     service:
-      name: arachne
+      name: "{{ item }}"
       enabled: yes
       state: started
+    with_items:
+      - arachne
+      - arachne-dbus
+      - firewalld
 
   - name: "Open ports in firewall"
     firewalld:

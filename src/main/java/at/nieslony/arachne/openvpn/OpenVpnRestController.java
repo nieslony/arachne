@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.apiindex.ApiDescription;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -206,7 +206,6 @@ public class OpenVpnRestController {
     }
 
     public void writeOpenVpnPluginSiteConfig() {
-        OpenVpnSiteSettings siteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
         UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
@@ -233,22 +232,22 @@ public class OpenVpnRestController {
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("auth_url = \"%s/api/auth\"".formatted(
+            writer.println("auth-url = \"%s/api/auth\"".formatted(
                     openVpnSettings.getAuthHttpUrl()));
-            writer.println("enable_routing = \"%s\"".formatted(
+            writer.println("enable-routing = \"%s\"".formatted(
                     firewallBasicsSettings.getEnableRoutingMode().name()
             ));
-            writer.println("enable_firewall = %b".formatted(
+            writer.println("enable-firewall = %b".formatted(
                     firewallBasicsSettings.isEnableFirewall()
             ));
             if (firewallBasicsSettings.isEnableFirewall()) {
-                writer.println("firewall_zone = \"%s\"".formatted(
+                writer.println("firewall-zone = \"%s\"".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
-                writer.println("firewall_url_user = \"%s/api/firewall/user_rules\""
+                writer.println("firewall-url_user = \"%s/api/firewall/user_rules\""
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
-                writer.println("firewall_url_everybody = \"%s/api/firewall/everybody_rules\""
+                writer.println("firewall-url_everybody = \"%s/api/firewall/everybody_rules\""
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
@@ -553,8 +552,7 @@ public class OpenVpnRestController {
             }
             String fileName = getSitePluginConf(site.getSiteHostname());
             logger.info("Creating plugin site config " + fileName);
-            try (FileOutputStream fos = new FileOutputStream(fileName)) {
-                PrintWriter pw = new PrintWriter(fos);
+            try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 pw.println("site-verification = " + site.getSiteVerification().name());
                 if (site.getSiteVerification() == VpnSite.SiteVerification.WHITELIST) {
@@ -582,8 +580,7 @@ public class OpenVpnRestController {
                     );
             site.updateInheritedValues(defaultSite);
             logger.info("Creating site configuration " + fileName);
-            try (FileOutputStream fos = new FileOutputStream(fileName)) {
-                PrintWriter pw = new PrintWriter(fos);
+            try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 for (String dnsServer : site.getPushDnsServers()) {
                     pw.println(
@@ -640,8 +637,7 @@ public class OpenVpnRestController {
             return;
         }
 
-        try (FileOutputStream fos = new FileOutputStream(fileName)) {
-            PrintWriter pw = new PrintWriter(fos);
+        try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
             writeConfigHeader(pw);
             pw.println(
                     "server %s %s"

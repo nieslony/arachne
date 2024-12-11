@@ -189,7 +189,7 @@ public class AdminHome
             updateConnectedSitesListener.accept(status);
             msgConnectedSites.setText("%d/%d sites connected"
                     .formatted(status.getConnectedClients().size(),
-                            vpnSiteRepository.count()
+                            vpnSiteRepository.count() - 1
                     ));
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("DBus Error: " + ex.getMessage());
