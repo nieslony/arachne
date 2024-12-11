@@ -52,7 +52,6 @@ public class EditableListBox
 
     private ListBox<String> itemsField;
     private Binder<String> binder;
-    //private TextField editField;
     private Button clearButton;
     private Button loadDefaultsButton;
     private Supplier<List<String>> defaultsSupplier = null;
@@ -102,6 +101,7 @@ public class EditableListBox
                     setModelValue(new LinkedList<>(items), true);
                 });
         addButton.setTooltipText("Add");
+        addButton.setEnabled(false);
         Button updateButton = new Button(
                 VaadinIcon.REFRESH.create(),
                 e -> {
@@ -114,7 +114,7 @@ public class EditableListBox
         updateButton.setTooltipText("Update");
         updateButton.setEnabled(false);
         Button removeButton = new Button(
-                VaadinIcon.DEL_A.create(),
+                VaadinIcon.MINUS.create(),
                 e -> {
                     List<String> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
@@ -167,6 +167,7 @@ public class EditableListBox
         AtomicReference<String> edit = new AtomicReference<>("");
         binder.forField(editField)
                 .withValidator(getValidator())
+                .asRequired()
                 .bind(
                         ip -> {
                             return edit.get();
@@ -188,11 +189,24 @@ public class EditableListBox
             }
         });
 
+        binder.addStatusChangeListener((sce) -> {
+            addButton.setEnabled(!sce.hasValidationErrors());
+            updateButton.setEnabled(
+                    !sce.hasValidationErrors() && itemsField.getValue() != null
+            );
+        });
+
         getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<String> getValidator() {
-        return (t, vc) -> ValidationResult.ok();
+        return (t, vc) -> {
+            if (t.isEmpty()) {
+                return ValidationResult.error("Empty value not allowed");
+            } else {
+                return ValidationResult.ok();
+            }
+        };
     }
 
     @Override
