@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412032055_73112dd
+Version:        1.3.16.git_2412111254_4e5a99d
 
 Release:        1
 License:        GPLv3
@@ -92,6 +92,14 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Dec 11 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412111254_4e5a99d-1
+- Don't add/update invalid input (github@nieslony.at)
+- Fix: keys in plugun config (github@nieslony.at)
+-  Fix: don't count the default site (github@nieslony.at)
+- Add services (github@nieslony.at)
+- Document extra provision hints (github@nieslony.at)
+- Warn, if hostname not set (github@nieslony.at)
+
 * Tue Dec 03 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412032055_73112dd-1
 - Automatic commit of package [arachne] release
   [1.3.14.git_2411062113_c33b79d-1]. (github@nieslony.at)
