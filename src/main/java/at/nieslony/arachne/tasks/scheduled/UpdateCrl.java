@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.tasks.scheduled;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
 import at.nieslony.arachne.tasks.Task;
 import at.nieslony.arachne.tasks.TaskDescription;
@@ -33,8 +33,8 @@ public class UpdateCrl extends Task {
 
     @Override
     public String run(BeanFactory beanFactory) {
-        OpenVpnRestController openVpnRestController
-                = beanFactory.getBean(OpenVpnRestController.class);
+        OpenVpnController openVpnRestController
+                = beanFactory.getBean(OpenVpnController.class);
         openVpnRestController.writeCrl();
         return null;
     }

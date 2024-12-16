@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.VpnSite;
 import com.jcraft.jsch.JSchException;
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class OvpnConfigUploadThread extends ConfigUploadThread {
     }
 
     private CommandReturn uploadConfiguration() throws JSchException, IOException, CommandException {
-        OpenVpnRestController openVpnRestController = beanFactory.getBean(OpenVpnRestController.class);
+        OpenVpnController openVpnRestController = beanFactory.getBean(OpenVpnController.class);
         String configFN = "%s/%s".formatted(
                 uploadSettings.getDestinationFolder(),
                 openVpnRestController.getOpenVpnSiteRemoteConfigName(openVpnSiteSettings, vpnSite)

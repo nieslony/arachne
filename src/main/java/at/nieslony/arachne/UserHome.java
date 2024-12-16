@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
@@ -57,14 +57,14 @@ public class UserHome extends VerticalLayout implements RouterLayout {
 
     private static final Logger logger = LoggerFactory.getLogger(UserHome.class);
 
-    private final OpenVpnRestController openVpnRestController;
+    private final OpenVpnController openVpnRestController;
     private final Settings settings;
     private final OpenVpnUserSettings openVpnUserSettings;
     private final int ICON_SIZE_SMALL = 32;
     private final int ICON_SIZE_LARGE = 96;
 
     public UserHome(
-            OpenVpnRestController openVpnRestController,
+            OpenVpnController openVpnRestController,
             Settings settings
     ) {
         this.settings = settings;

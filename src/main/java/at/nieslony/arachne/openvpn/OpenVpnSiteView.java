@@ -137,7 +137,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final Binder<VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
-    private final OpenVpnRestController openVpnRestController;
+    private final OpenVpnController openVpnRestController;
     private final SshKeyRepository sshKeyRepository;
     private final AddSshKeyDialog addSshKeyDialog;
 
@@ -171,7 +171,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     public OpenVpnSiteView(
             Settings settings,
-            OpenVpnRestController openVpnRestController,
+            OpenVpnController openVpnRestController,
             SiteConfigUploader siteConfigUploader,
             SshKeyRepository sshKeyRepository,
             ArachneDbus arachneDbus,

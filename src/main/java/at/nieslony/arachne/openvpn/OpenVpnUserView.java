@@ -72,7 +72,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
     public OpenVpnUserView(
             Settings settings,
-            OpenVpnRestController openvpnRestController,
+            OpenVpnController openvpnRestController,
             ArachneDbus arachneDbus,
             Pki pki
     ) {

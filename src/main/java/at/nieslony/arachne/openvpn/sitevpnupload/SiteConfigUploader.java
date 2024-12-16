@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.settings.Settings;
@@ -100,7 +100,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
     private BeanFactory beanFactory;
 
     @Autowired
-    OpenVpnRestController openVPnRestController;
+    OpenVpnController openVPnRestController;
 
     @Autowired
     SshKeyRepository sshKeyRepository;

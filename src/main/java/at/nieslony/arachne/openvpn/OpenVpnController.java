@@ -59,9 +59,9 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/openvpn")
 @PropertySource("classpath:arachne.properties")
-public class OpenVpnRestController {
+public class OpenVpnController {
 
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenVpnController.class);
 
     @Autowired
     private Settings settings;
