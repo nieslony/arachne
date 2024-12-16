@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.apiindex.ApiDescription;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
 import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
@@ -17,7 +16,6 @@ import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -31,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,24 +37,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.stereotype.Controller;
 
 /**
  *
  * @author claas
  */
-@RestController
-@RequestMapping("/api/openvpn")
+@Controller
 @PropertySource("classpath:arachne.properties")
 public class OpenVpnController {
 
@@ -78,17 +64,8 @@ public class OpenVpnController {
     @Autowired
     private VpnSiteController vpnSiteController;
 
-    @Autowired
-    private VpnSiteRepository vpnSiteRepository;
-
     @Value("${plugin_path}")
     String pluginPath;
-
-    @GetMapping("/user_settings")
-    @RolesAllowed(value = {"ADMIN"})
-    public OpenVpnUserSettings getUserSettings() {
-        return settings.getSettings(OpenVpnUserSettings.class);
-    }
 
     static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
     static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
@@ -116,79 +93,6 @@ public class OpenVpnController {
                 logger.error("Cannot write %s: %s".formatted(fn, ex.getMessage()));
             }
         }
-    }
-
-    @PostMapping("/user_settings")
-    @RolesAllowed(value = {"ADMIN"})
-    public OpenVpnUserSettings postUserSettings(
-            @RequestBody OpenVpnUserSettings vpnSettings
-    ) throws SettingsException {
-        logger.info("Set new openVPN user server config: " + settings.toString());
-        vpnSettings.save(settings);
-        writeOpenVpnUserServerConfig(vpnSettings);
-        return vpnSettings;
-    }
-
-    @GetMapping("/user_config/{username}")
-    @RolesAllowed(value = {"ADMIN"})
-    public String getUserVpnConfig(
-            @PathVariable String username,
-            @RequestParam(required = false, name = "format") String format
-    ) throws SettingsException {
-        try {
-            if (format == null) {
-                return openVpnUserConfig(username);
-            }
-            logger.info("Return format: " + format);
-            return switch (format) {
-                case "json" ->
-                    openVpnUserConfigJson(username);
-                case "shell" ->
-                    openVpnUserConfigShell(username);
-                default ->
-                    throw new ResponseStatusException(
-                            HttpStatus.UNPROCESSABLE_ENTITY,
-                            "Cannot get user config");
-            };
-        } catch (PkiException | JSONException ex) {
-            logger.error("Cannot create user config: " + ex.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Cannot get user config");
-        }
-    }
-
-    @GetMapping("/user_config")
-    @RolesAllowed(value = {"USER"})
-    public String getUserVpnConfig(
-            @RequestParam(required = false, name = "format")
-            @ApiDescription(
-                    isHtml = true,
-                    value = """
-                    <strong>shell</strong>: shell script to add connection to NetworkManager,<br>
-                    <strong>json</strong>: internally used by ArchneConfigDownloader
-                    """
-            ) String format
-    ) throws SettingsException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        return getUserVpnConfig(username, format);
-    }
-
-    @GetMapping("/site")
-    @RolesAllowed(value = {"ADMIN"})
-    public List<VpnSite> getSiteVpnSite() {
-        return vpnSiteRepository.findAll();
-    }
-
-    @GetMapping("/site/{id}")
-    @RolesAllowed(value = {"ADMIN"})
-    public VpnSite getSiteVpnSite(@PathVariable Long id) {
-        return vpnSiteRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "VPN Site %d not found".formatted(id)));
     }
 
     private void writeConfigHeader(PrintWriter pw) {
