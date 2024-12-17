@@ -69,7 +69,7 @@ public class RoleRuleModel implements Serializable {
         }
     }
 
-    @Column(nullable = false)
+    @Column
     private String parameter;
 
     @Column(nullable = false)
