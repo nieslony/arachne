@@ -9,6 +9,7 @@ import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
+import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -16,7 +17,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -122,7 +122,13 @@ public class AdminHome
                     statusList.add(new SiteStatus(site, client));
                 }
             }
-            grid.setItems(statusList);
+            ui.access(() -> {
+                grid.setItems(statusList);
+                msgConnectedSites.setText("%d/%d sites connected"
+                        .formatted(status.getConnectedClients().size(),
+                                vpnSiteRepository.count() - 1
+                        ));
+            });
         }
     }
 
@@ -176,7 +182,6 @@ public class AdminHome
         try {
             var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
             updateConnectedUserListener.accept(status);
-            msgConnectedUsers.setText(createMsgConnectedUsers(status.getConnectedClients().size()));
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("Error getting connected users: " + ex.getMessage());
             msgConnectedUsers.setText("DBusError: " + ex.getMessage());
@@ -187,10 +192,6 @@ public class AdminHome
         try {
             var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE);
             updateConnectedSitesListener.accept(status);
-            msgConnectedSites.setText("%d/%d sites connected"
-                    .formatted(status.getConnectedClients().size(),
-                            vpnSiteRepository.count() - 1
-                    ));
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("DBus Error: " + ex.getMessage());
             msgConnectedSites.setText("DBusError: " + ex.getMessage());
@@ -253,15 +254,15 @@ public class AdminHome
         connectedSitesGrid = new Grid<>();
         connectedSitesGrid.addColumn(site -> site.getVpnSite().getName())
                 .setHeader("Site Name");
-        connectedSitesGrid.addColumn(
-                new ComponentRenderer<>(site -> {
-                    if (site.isConnected()) {
-                        return VaadinIcon.CHECK.create();
-                    } else {
-                        return VaadinIcon.CLOSE_SMALL.create();
-                    }
+        connectedSitesGrid.addColumn(new ComponentRenderer<>(
+                (var site) -> {
+                    YesNoIcon icon = new YesNoIcon();
+                    icon.setValue(site.isConnected());
+                    return icon;
                 }))
-                .setHeader("Connected");
+                .setHeader("Connected")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
                 ? site.getConnectedClient().getBytesReceived()

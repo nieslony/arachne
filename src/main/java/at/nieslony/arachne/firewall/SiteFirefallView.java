@@ -13,6 +13,7 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.LinkedList;
 
 /**
  *
@@ -26,7 +27,7 @@ public class SiteFirefallView extends VerticalLayout {
     private FirewallRulesEditor incomingRulesEditor;
 
     public SiteFirefallView(
-            FirewallRuleRepository fireRuleRepository,
+            FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             Settings settings
     ) {
@@ -36,7 +37,7 @@ public class SiteFirefallView extends VerticalLayout {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
 
         incomingRulesEditor = new FirewallRulesEditor(
-                fireRuleRepository,
+                firewallRuleRepository,
                 userMatcherCollector,
                 ldapSettings,
                 FirewallRuleModel.VpnType.SITE,
@@ -46,6 +47,37 @@ public class SiteFirefallView extends VerticalLayout {
                 "Incoming",
                 incomingRulesEditor
         );
+
+        if (firewallRuleRepository.countByVpnTypeAndRuleDirection(
+                FirewallRuleModel.VpnType.SITE,
+                FirewallRuleModel.RuleDirection.INCOMING
+        ) == 0) {
+            FirewallRuleModel rule = new FirewallRuleModel(
+                    FirewallRuleModel.VpnType.SITE,
+                    FirewallRuleModel.RuleDirection.INCOMING
+            );
+            rule.setDescription("Allow DNS access from all sites");
+
+            FirewallWhere from = new FirewallWhere();
+            from.setType(FirewallWhere.Type.Everywhere);
+            rule.setFrom(new LinkedList<>());
+            rule.getFrom().add(from);
+
+            FirewallWhere to = new FirewallWhere();
+            to.setType(FirewallWhere.Type.PushedDnsServers);
+            rule.setTo(new LinkedList<>());
+            rule.getTo().add(to);
+
+            FirewallWhat what = new FirewallWhat();
+            what.setType(FirewallWhat.Type.Service);
+            what.setService("dns");
+            rule.setWhat(new LinkedList<>());
+            rule.getWhat().add(what);
+
+            rule.setEnabled(true);
+
+            firewallRuleRepository.save(rule);
+        }
 
         add(tabs);
         setPadding(false);
