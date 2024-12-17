@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412172231_d3f1047
+Version:        1.3.16.git_2412180057_3ee925e
 
 Release:        1
 License:        GPLv3
@@ -92,6 +92,13 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412180057_3ee925e-1
+- Show connection status wirh YesNoIcon (github@nieslony.at)
+- Add FirewallWhere type everywhere (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: parameter might be null (github@nieslony.at)
+- Bump versions of vaadin and spring boot (github@nieslony.at)
+
 * Tue Dec 17 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412172231_d3f1047-1
 - Save site upload settings (github@nieslony.at)
 - Code cleanup (github@nieslony.at)
