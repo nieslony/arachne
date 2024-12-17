@@ -4,12 +4,17 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.ssh.SshAuthType;
+import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
+import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.utils.net.NetUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -19,6 +24,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.util.ObjectUtils;
 
 /**
  *
@@ -43,6 +49,22 @@ public class VpnSite {
         }
 
         private final String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    public enum UploadConfigType {
+        OvpnConfig(".ovpn file"),
+        NMCL("NetworkManger");
+
+        private UploadConfigType(String label) {
+            this.label = label;
+        }
+
+        private String label;
 
         @Override
         public String toString() {
@@ -86,7 +108,49 @@ public class VpnSite {
     private boolean routeInternetThroughVpn = false;
     private String networkManagerConnectionUuid;
 
+    @Builder.Default
+    private String uploadToHost = null;
+
+    @Builder.Default
+    private String username = "";
+    @Builder.Default
+    private boolean sudoRequired = false;
+    @Builder.Default
+    private boolean restartOpenVpn = false;
+    @Builder.Default
+    private boolean enableOpenVpn = false;
+
+    @Builder.Default
+    private UploadConfigType uploadConfigType = UploadConfigType.NMCL;
+
+    @Builder.Default
+    private String connectionName = "OpenVPN_" + NetUtils.myHostname();
+    @Builder.Default
+    private String certitifaceFolder = "/etc/pki/arachne";
+    @Builder.Default
+    private boolean enableConnection = false;
+    @Builder.Default
+    private boolean autostartConnection = false;
+
+    @Builder.Default
+    private String destinationFolder = "/etc/openvpn/client";
+
+    @Builder.Default
+    private SshAuthType sshAuthType = USERNAME_PASSWORD;
+
+    @ManyToOne
+    @JoinColumn(name = "ssh-key_id")
+    private SshKeyEntity sshKey;
+
     public VpnSite() {
+    }
+
+    public String getUploadToHost() {
+        return ObjectUtils.isEmpty(uploadToHost) ? siteHostname : uploadToHost;
+    }
+
+    public void setUploadToHost(String uploadToHost) {
+        this.uploadToHost = uploadToHost;
     }
 
     public void updateInheritedValues(VpnSite copyFrom) {
@@ -107,6 +171,6 @@ public class VpnSite {
     }
 
     public String label() {
-        return description == null || description.isEmpty() ? name : name + " - " + description;
+        return ObjectUtils.isEmpty(description) ? name : name + " - " + description;
     }
 }

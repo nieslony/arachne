@@ -4,16 +4,13 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
-import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
-import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import com.vaadin.flow.component.Unit;
@@ -33,8 +30,6 @@ import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -54,66 +49,16 @@ public class SiteConfigUploader implements BeanFactoryAware {
 
     private static final Logger logger = LoggerFactory.getLogger(SiteConfigUploader.class);
 
-    enum UploadConfigType {
-        OvpnConfig(".ovpn file"),
-        NMCL("NetworkManger");
-
-        private UploadConfigType(String label) {
-            this.label = label;
-        }
-
-        private String label;
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    @Getter
-    @Setter
-    public class SiteUploadSettings {
-
-        private String uploadToHost;
-        private String username = "";
-        private String password = "";
-        private boolean sudoRequired = false;
-        private boolean restartOpenVpn = false;
-        private boolean enableOpenVpn = false;
-
-        private UploadConfigType uploadConfigType = UploadConfigType.NMCL;
-
-        private String connectionName = "OpenVPN_" + NetUtils.myHostname();
-        private String certitifaceFolder = "/etc/pki/arachne";
-        private boolean enableConnection;
-        private boolean autostartConnection;
-
-        private String destinationFolder = "/etc/openvpn/client";
-        private SshAuthType sshAuthType = USERNAME_PASSWORD;
-        private SshKeyEntity sshKey;
-    }
-
     private Dialog dlg;
     private Binder<SiteUploadSettings> binder;
-    private VpnSite vpnSite;
-    private final SiteUploadSettings uploadSettings;
+    private SiteUploadSettings uploadSettings;
     private BeanFactory beanFactory;
-
-    @Autowired
-    OpenVpnController openVPnRestController;
 
     @Autowired
     SshKeyRepository sshKeyRepository;
 
     @Autowired
-    private Settings settings;
-
-    @Autowired
-    private VpnSiteRepository vpnSiteRepository;
-
-    public SiteConfigUploader() {
-        uploadSettings = new SiteUploadSettings();
-    }
+    VpnSiteRepository vpnSiteRepository;
 
     @PostConstruct
     public void init() {
@@ -122,10 +67,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
 
     public void openDialog(VpnSite site) {
         dlg.setHeaderTitle("Upload Configuration to " + site.getSiteHostname());
-        this.vpnSite = site;
-        if (uploadSettings.uploadToHost == null || uploadSettings.getUploadToHost().isEmpty()) {
-            uploadSettings.setUploadToHost(site.getSiteHostname());
-        }
+        uploadSettings = new SiteUploadSettings(site);
         binder.setBean(uploadSettings);
         binder.validate();
         dlg.open();
@@ -143,7 +85,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new StringLengthValidator("Value required", 1, 65535)
                 ))
-                .bind(SiteUploadSettings::getDestinationFolder, SiteUploadSettings::setDestinationFolder);
+                .bind(
+                        (src) -> src.getVpnSite().getDestinationFolder(),
+                        (dst, v) -> dst.getVpnSite().setDestinationFolder(v)
+                );
 
         TextField remoteHostNameField = new TextField("Remote Host Name/IP");
         remoteHostNameField.setClearButtonVisible(true);
@@ -156,7 +101,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
                                 .withIpAllowed(true)
                                 .withResolvableRequired(true)
                 )
-                .bind(SiteUploadSettings::getUploadToHost, SiteUploadSettings::setUploadToHost);
+                .bind(
+                        (src) -> src.getVpnSite().getUploadToHost(),
+                        (dst, v) -> dst.getVpnSite().setUploadToHost(v)
+                );
 
         TextField usernameField = new TextField("Username");
         usernameField.setClearButtonVisible(true);
@@ -164,7 +112,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
         usernameField.setValueChangeMode(ValueChangeMode.EAGER);
         binder.forField(usernameField)
                 .asRequired()
-                .bind(SiteUploadSettings::getUsername, SiteUploadSettings::setUsername);
+                .bind(
+                        (src) -> src.getVpnSite().getUsername(),
+                        (dst, v) -> dst.getVpnSite().setUsername(v)
+                );
 
         PasswordField passwordField = new PasswordField("Password");
         passwordField.setWidthFull();
@@ -178,19 +129,28 @@ public class SiteConfigUploader implements BeanFactoryAware {
         sshKeys.setWidthFull();
         sshKeys.setItemLabelGenerator((item) -> item.getLabel());
         binder.forField(sshKeys)
-                .bind(SiteUploadSettings::getSshKey, SiteUploadSettings::setSshKey);
+                .bind(
+                        (src) -> src.getVpnSite().getSshKey(),
+                        (dst, v) -> dst.getVpnSite().setSshKey(v)
+                );
 
         Checkbox requireSudoField = new Checkbox("Sudo Access Required");
         requireSudoField.setWidthFull();
         binder.forField(requireSudoField)
-                .bind(SiteUploadSettings::isSudoRequired, SiteUploadSettings::setSudoRequired);
+                .bind(
+                        (src) -> src.getVpnSite().isSudoRequired(),
+                        (dst, v) -> dst.getVpnSite().setSudoRequired(v)
+                );
 
-        RadioButtonGroup<UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
+        RadioButtonGroup<VpnSite.UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
                 "Upload Type",
-                UploadConfigType.values()
+                VpnSite.UploadConfigType.values()
         );
         binder.forField(uploadConfigTypeField)
-                .bind(SiteUploadSettings::getUploadConfigType, SiteUploadSettings::setUploadConfigType);
+                .bind(
+                        (src) -> src.getVpnSite().getUploadConfigType(),
+                        (dst, v) -> dst.getVpnSite().setUploadConfigType(v)
+                );
 
         TextField connectionNameField = new TextField("Connection Name");
         connectionNameField.setWidthFull();
@@ -200,7 +160,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new StringLengthValidator("Value required", 1, 65535)
                 ))
-                .bind(SiteUploadSettings::getConnectionName, SiteUploadSettings::setConnectionName);
+                .bind(
+                        (src) -> src.getVpnSite().getConnectionName(),
+                        (dst, v) -> dst.getVpnSite().setConnectionName(v)
+                );
 
         TextField certificateFolderField = new TextField("Certificate Folder");
         certificateFolderField.setClearButtonVisible(true);
@@ -210,32 +173,50 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 .asRequired(new IgnoringInvisibleOrDisabledValidator<>(
                         new StringLengthValidator("Value required", 1, 65535)
                 ))
-                .bind(SiteUploadSettings::getCertitifaceFolder, SiteUploadSettings::setCertitifaceFolder);
+                .bind(
+                        (src) -> src.getVpnSite().getCertitifaceFolder(),
+                        (dst, v) -> dst.getVpnSite().setCertitifaceFolder(v)
+                );
 
         Checkbox enableConnectionField = new Checkbox("Enable Connection");
         binder.forField(enableConnectionField)
-                .bind(SiteUploadSettings::isEnableConnection, SiteUploadSettings::setEnableConnection);
+                .bind(
+                        (src) -> src.getVpnSite().isEnableConnection(),
+                        (dst, v) -> dst.getVpnSite().setEnableConnection(v)
+                );
 
         Checkbox autostartConnectionField = new Checkbox("Autostart Connection on Boot");
         binder.forField(autostartConnectionField)
-                .bind(SiteUploadSettings::isAutostartConnection, SiteUploadSettings::setAutostartConnection);
+                .bind(
+                        (src) -> src.getVpnSite().isAutostartConnection(),
+                        (dst, v) -> dst.getVpnSite().setAutostartConnection(v)
+                );
 
         Checkbox restartOpenVpnField = new Checkbox("Restart openVPN Service");
         restartOpenVpnField.setWidthFull();
         binder.forField(restartOpenVpnField)
-                .bind(SiteUploadSettings::isRestartOpenVpn, SiteUploadSettings::setRestartOpenVpn);
+                .bind(
+                        (src) -> src.getVpnSite().isRestartOpenVpn(),
+                        (dst, v) -> dst.getVpnSite().setRestartOpenVpn(v)
+                );
 
         Checkbox enableOpenVpnField = new Checkbox("Enable openVPN service");
         enableOpenVpnField.setWidthFull();
         binder.forField(enableOpenVpnField)
-                .bind(SiteUploadSettings::isEnableOpenVpn, SiteUploadSettings::setEnableOpenVpn);
+                .bind(
+                        (src) -> src.getVpnSite().isEnableOpenVpn(),
+                        (dst, v) -> dst.getVpnSite().setEnableOpenVpn(v)
+                );
 
         Select<SshAuthType> authTypeSelect = new Select<>();
         authTypeSelect.setLabel("AuthenticationType");
         authTypeSelect.setItems(SshAuthType.values());
         authTypeSelect.setWidthFull();
         binder.forField(authTypeSelect)
-                .bind(SiteUploadSettings::getSshAuthType, SiteUploadSettings::setSshAuthType);
+                .bind(
+                        (src) -> src.getVpnSite().getSshAuthType(),
+                        (dst, v) -> dst.getVpnSite().setSshAuthType(v)
+                );
 
         VerticalLayout authLayout = new VerticalLayout(
                 remoteHostNameField,
@@ -272,12 +253,13 @@ public class SiteConfigUploader implements BeanFactoryAware {
             dlg.close();
             try {
                 binder.writeBean(uploadSettings);
-                Thread thread = switch (uploadSettings.getUploadConfigType()) {
+                Thread thread = switch (uploadSettings.getVpnSite().getUploadConfigType()) {
                     case NMCL ->
-                        new NMConfigUploadThread(uploadSettings, vpnSite, beanFactory);
+                        new NMConfigUploadThread(uploadSettings, beanFactory);
                     case OvpnConfig ->
-                        new OvpnConfigUploadThread(uploadSettings, vpnSite, beanFactory);
+                        new OvpnConfigUploadThread(uploadSettings, beanFactory);
                 };
+                vpnSiteRepository.save(uploadSettings.getVpnSite());
                 thread.start();
             } catch (ValidationException ex) {
                 logger.error("Input validation Error: " + ex.getMessage());
