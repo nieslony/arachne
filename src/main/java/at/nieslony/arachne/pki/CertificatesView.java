@@ -17,7 +17,7 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
@@ -43,7 +43,7 @@ public class CertificatesView extends VerticalLayout {
 
     public CertificatesView(
             CertificateRepository certificateReposttory,
-            OpenVpnRestController openVpnRestController
+            OpenVpnController openVpnRestController
     ) {
         Grid<CertificateModel> grid = new Grid<>();
         grid

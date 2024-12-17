@@ -7,7 +7,7 @@ package at.nieslony.arachne.users;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
@@ -74,7 +74,7 @@ public class UsersView extends VerticalLayout {
 
     final private UserRepository userRepository;
     final private RoleRuleRepository roleRuleRepository;
-    final private OpenVpnRestController openVpnRestController;
+    final private OpenVpnController openVpnRestController;
     final private Settings settings;
     final private MailSettingsRestController mailSettingsRestController;
 
@@ -90,7 +90,7 @@ public class UsersView extends VerticalLayout {
     public UsersView(
             UserRepository userRepository,
             RoleRuleRepository roleRuleRepository,
-            OpenVpnRestController openVpnRestController,
+            OpenVpnController openVpnRestController,
             Settings settings,
             MailSettingsRestController mailSettingsRestController
     ) {

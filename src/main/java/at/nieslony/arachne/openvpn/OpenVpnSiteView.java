@@ -7,12 +7,14 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.ssh.AddSshKeyDialog;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.NicInfo;
@@ -68,6 +70,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.firitin.components.DynamicFileDownloader;
@@ -133,7 +137,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private final Binder<VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
     private final Settings settings;
-    private final OpenVpnRestController openVpnRestController;
+    private final OpenVpnController openVpnRestController;
     private final SshKeyRepository sshKeyRepository;
     private final AddSshKeyDialog addSshKeyDialog;
 
@@ -163,12 +167,14 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private final SiteConfigUploader siteConfigUploader;
     private final VpnSiteController vpnSiteController;
+    private final ArachneDbus arachneDbus;
 
     public OpenVpnSiteView(
             Settings settings,
-            OpenVpnRestController openVpnRestController,
+            OpenVpnController openVpnRestController,
             SiteConfigUploader siteConfigUploader,
             SshKeyRepository sshKeyRepository,
+            ArachneDbus arachneDbus,
             VpnSiteController vpnSiteController
     ) {
         this.settings = settings;
@@ -181,6 +187,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             sshKeys.setValue(keyEntity);
         });
         this.vpnSiteController = vpnSiteController;
+        this.arachneDbus = arachneDbus;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
@@ -857,8 +864,14 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnRestController.writeOpenVpnSiteServerConfig();
             openVpnRestController.writeOpenVpnPluginSiteConfig();
             openVpnRestController.writeCrl();
+            arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
+            ShowNotification.info("OpenVpn restarted with new configuration");
         } catch (SettingsException ex) {
             logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+        } catch (DBusException | DBusExecutionException ex) {
+            String header = "Cannot restart openVpn";
+            logger.error(header + ": " + ex.getMessage());
+            ShowNotification.error(header, ex.getMessage());
         }
     }
 
