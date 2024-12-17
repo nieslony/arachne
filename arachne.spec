@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412111254_4e5a99d
+Version:        1.3.16.git_2412172231_d3f1047
 
 Release:        1
 License:        GPLv3
@@ -92,6 +92,14 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue Dec 17 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412172231_d3f1047-1
+- Save site upload settings (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Add class OpenVpnRestController.java (github@nieslony.at)
+- Refactor: rename class OpenVpnRestController → OpenVpnController
+  (github@nieslony.at)
+- Show norification after saving settings (github@nieslony.at)
+
 * Wed Dec 11 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412111254_4e5a99d-1
 - Don't add/update invalid input (github@nieslony.at)
 - Fix: keys in plugun config (github@nieslony.at)
