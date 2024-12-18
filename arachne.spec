@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16
+Version:        1.3.16.git_2412181743_5fd6fea
 
 Release:        1
 License:        GPLv3
@@ -92,6 +92,71 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412181743_5fd6fea-1
+- Add lost files again (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412181736_de00a49-1]. (github@nieslony.at)
+- Create dummy openvpn config if empty (github@nieslony.at)
+- Allow openvpn from everywhere (github@nieslony.at)
+- Build in production mode, create empty config (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412180057_3ee925e-1]. (github@nieslony.at)
+- Show connection status wirh YesNoIcon (github@nieslony.at)
+- Add FirewallWhere type everywhere (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: parameter might be null (github@nieslony.at)
+- Bump versions of vaadin and spring boot (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412172231_d3f1047-1]. (github@nieslony.at)
+- Save site upload settings (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Add class OpenVpnRestController.java (github@nieslony.at)
+- Refactor: rename class OpenVpnRestController → OpenVpnController
+  (github@nieslony.at)
+- Show norification after saving settings (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412111254_4e5a99d-1]. (github@nieslony.at)
+- Don't add/update invalid input (github@nieslony.at)
+- Fix: keys in plugun config (github@nieslony.at)
+-  Fix: don't count the default site (github@nieslony.at)
+- Add services (github@nieslony.at)
+- Document extra provision hints (github@nieslony.at)
+- Warn, if hostname not set (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412032055_73112dd-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.14.git_2411062113_c33b79d-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2407291427_8628f1c-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2407221316_a37f326-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2406141752_1e6049b-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405292333_b74de79-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405291215_b7819cd-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405232055_d18c4d1-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405052121_b2c0998-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405052034_fe3f0ad-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405012121_8ebfbf8-1]. (github@nieslony.at)
+- Add update-version.sh (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.6.git_2404022217_5886f45-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2403211021_85d8b28-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2403011547_2b59921-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2402212143_ad0faa6-1]. (github@nieslony.at)
+- Add dependency (github@nieslony.at)
+- Automatic commit of package [arachne] release [0.1.3_testing-1].
+  (github@nieslony.at)
+
 * Tue Dec 03 2024 Claas Nieslony <github@nieslony.at> 1.3.16-1
 - Add arachne.yml (github@nieslony.at)
 - Add error messages (github@nieslony.at)
