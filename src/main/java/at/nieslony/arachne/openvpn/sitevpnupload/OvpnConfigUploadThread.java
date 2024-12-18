@@ -4,8 +4,7 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
-import at.nieslony.arachne.openvpn.VpnSite;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import com.jcraft.jsch.JSchException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -18,26 +17,31 @@ import org.springframework.beans.factory.BeanFactory;
 public class OvpnConfigUploadThread extends ConfigUploadThread {
 
     public OvpnConfigUploadThread(
-            SiteConfigUploader.SiteUploadSettings uploadSettings,
-            VpnSite vpnSite,
+            SiteUploadSettings uploadSettings,
             BeanFactory beanFactory
     ) {
-        super(uploadSettings, vpnSite, beanFactory);
+        super(uploadSettings, beanFactory);
     }
 
     private CommandReturn createConfigFolder() throws JSchException, IOException, CommandException {
-        String command = "mkdir -pv " + uploadSettings.getDestinationFolder();
+        String command = "mkdir -pv " + uploadSettings.getVpnSite().getDestinationFolder();
         return execCommand(command);
     }
 
     private CommandReturn uploadConfiguration() throws JSchException, IOException, CommandException {
-        OpenVpnRestController openVpnRestController = beanFactory.getBean(OpenVpnRestController.class);
+        OpenVpnController openVpnRestController = beanFactory.getBean(OpenVpnController.class);
         String configFN = "%s/%s".formatted(
-                uploadSettings.getDestinationFolder(),
-                openVpnRestController.getOpenVpnSiteRemoteConfigName(openVpnSiteSettings, vpnSite)
+                uploadSettings.getVpnSite().getDestinationFolder(),
+                openVpnRestController.getOpenVpnSiteRemoteConfigName(
+                        openVpnSiteSettings,
+                        uploadSettings.getVpnSite()
+                )
         );
         StringWriter configWriter = new StringWriter();
-        openVpnRestController.writeOpenVpnSiteRemoteConfig(vpnSite.getId(), configWriter);
+        openVpnRestController.writeOpenVpnSiteRemoteConfig(
+                uploadSettings.getVpnSite().getId(),
+                configWriter
+        );
 
         String command
                 = """
@@ -53,12 +57,12 @@ public class OvpnConfigUploadThread extends ConfigUploadThread {
     }
 
     private CommandReturn restartOpenVpn() throws JSchException, IOException, CommandException {
-        String command = "systemctl restart openvpn-client@" + vpnSite.getName();
+        String command = "systemctl restart openvpn-client@" + uploadSettings.getVpnSite().getName();
         return execCommand(command);
     }
 
     private CommandReturn enableOpenVpn() throws JSchException, IOException, CommandException {
-        String command = "systemctl enable openvpn-client@" + vpnSite.getName();
+        String command = "systemctl enable openvpn-client@" + uploadSettings.getVpnSite().getName();
         return execCommand(command);
     }
 
@@ -72,13 +76,13 @@ public class OvpnConfigUploadThread extends ConfigUploadThread {
                 "Upload configuration",
                 () -> uploadConfiguration()
         ));
-        if (uploadSettings.isRestartOpenVpn()) {
+        if (uploadSettings.getVpnSite().isRestartOpenVpn()) {
             comdLineDescriptors.add(new CommandDescriptor(
                     "Restart OpenVPN",
                     () -> restartOpenVpn()
             ));
         }
-        if (uploadSettings.isEnableOpenVpn()) {
+        if (uploadSettings.getVpnSite().isEnableOpenVpn()) {
             comdLineDescriptors.add(new CommandDescriptor(
                     "EnableOpenVPN",
                     () -> enableOpenVpn()

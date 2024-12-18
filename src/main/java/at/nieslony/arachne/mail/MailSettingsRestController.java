@@ -18,7 +18,7 @@ package at.nieslony.arachne.mail;
 
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
@@ -49,13 +49,13 @@ import org.springframework.web.util.HtmlUtils;
 @RequestMapping("/api/mail")
 public class MailSettingsRestController {
 
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenVpnController.class);
 
     @Autowired
     Settings settings;
 
     @Autowired
-    OpenVpnRestController openVpnRestController;
+    OpenVpnController openVpnRestController;
 
     public MailSettingsRestController() {
     }

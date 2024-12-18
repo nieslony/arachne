@@ -39,7 +39,7 @@ Administration server for openVPN
 #-n % source_dir
 
 %build
-mvn --no-transfer-progress -DskipGenerateGitProperties=true package
+mvn --no-transfer-progress -Pproduction -DskipGenerateGitProperties=true package
 make -f /usr/share/selinux/devel/Makefile arachne.pp
 
 %install
@@ -69,6 +69,7 @@ getent passwd arachne || \
         arachne
 mkdir -pv /var/lib/arachne/{arachneconfig,vpnconfig}
 chown -v arachne.arachne /var/lib/arachne/{arachneconfig,vpnconfig}
+touch /var/lib/arachne/vpnconfig/openvpn-{user,site}-server.conf
 ln -fsv \
     /var/lib/arachne/vpnconfig/openvpn-user-server.conf \
     /etc/openvpn/server/arachne-user.conf

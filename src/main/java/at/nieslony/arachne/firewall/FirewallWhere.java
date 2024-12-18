@@ -61,7 +61,8 @@ public class FirewallWhere {
         Subnet("Subnet"),
         ServiceRecord("Service Record"),
         MxRecord("MX (mail exchange) Record"),
-        PushedDnsServers("Pushed DNS Servers");
+        PushedDnsServers("Pushed DNS Servers"),
+        Everywhere("Everywhere");
 
         private final String label;
 
@@ -101,6 +102,8 @@ public class FirewallWhere {
     @Override
     public String toString() {
         return switch (type) {
+            case Everywhere ->
+                Type.Everywhere.label;
             case Hostname ->
                 hostname;
             case Subnet ->

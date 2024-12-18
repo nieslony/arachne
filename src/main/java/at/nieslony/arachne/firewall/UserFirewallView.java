@@ -18,7 +18,7 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapSettings;
-import at.nieslony.arachne.openvpn.OpenVpnRestController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -54,7 +54,7 @@ public class UserFirewallView extends VerticalLayout {
 
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
-    private final OpenVpnRestController openVpnRestController;
+    private final OpenVpnController openVpnRestController;
     private final Settings settings;
 
     private final Binder<UserFirewallBasicsSettings> binder;
@@ -64,7 +64,7 @@ public class UserFirewallView extends VerticalLayout {
     public UserFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            OpenVpnRestController openVpnRestController,
+            OpenVpnController openVpnRestController,
             Settings settings
     ) {
         this.firewallRuleRepository = firewallRuleRepository;

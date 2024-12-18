@@ -4,7 +4,6 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -27,19 +26,18 @@ public class NMConfigUploadThread extends ConfigUploadThread {
     private final VpnSiteRepository vpnSiteRepository;
 
     public NMConfigUploadThread(
-            SiteConfigUploader.SiteUploadSettings uploadSettings,
-            VpnSite vpnSite,
+            SiteUploadSettings uploadSettings,
             BeanFactory beanFactory
     ) {
-        super(uploadSettings, vpnSite, beanFactory);
+        super(uploadSettings, beanFactory);
         this.vpnSiteRepository = beanFactory.getBean(VpnSiteRepository.class);
     }
 
     private CommandReturn createConnection() throws JSchException, IOException, CommandException {
-        String conUuid = vpnSite.getNetworkManagerConnectionUuid() != null
-                ? vpnSite.getNetworkManagerConnectionUuid()
+        String conUuid = uploadSettings.getVpnSite().getNetworkManagerConnectionUuid() != null
+                ? uploadSettings.getVpnSite().getNetworkManagerConnectionUuid()
                 : "";
-        String conName = ShellQuote.shellQuote(uploadSettings.getConnectionName());
+        String conName = ShellQuote.shellQuote(uploadSettings.getVpnSite().getConnectionName());
 
         CommandReturn ret;
         String cmdCreateConnection
@@ -81,8 +79,8 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         ret = execCommand(cmdCreateConnection);
         if (ret.exitStatus() == 0 && !ret.stdout().isEmpty()) {
             conUuid = ret.stdout().strip();
-            vpnSite.setNetworkManagerConnectionUuid(conUuid);
-            vpnSiteRepository.save(vpnSite);
+            uploadSettings.getVpnSite().setNetworkManagerConnectionUuid(conUuid);
+            vpnSiteRepository.save(uploadSettings.getVpnSite());
         }
 
         return ret;
@@ -105,10 +103,10 @@ public class NMConfigUploadThread extends ConfigUploadThread {
                 EOF
                 chmod 600 ${KEY_FN}
                 """
-                            .replace("${CERT_FOLDER}", uploadSettings.getCertitifaceFolder())
+                            .replace("${CERT_FOLDER}", uploadSettings.getVpnSite().getCertitifaceFolder())
                             .replace("${CA_CERT}", pki.getRootCertAsBase64())
-                            .replace("${CERT}", pki.getUserCertAsBase64(vpnSite.getSiteHostname()))
-                            .replace("${KEY}", pki.getUserKeyAsBase64(vpnSite.getSiteHostname()))
+                            .replace("${CERT}", pki.getUserCertAsBase64(uploadSettings.getVpnSite().getSiteHostname()))
+                            .replace("${KEY}", pki.getUserKeyAsBase64(uploadSettings.getVpnSite().getSiteHostname()))
                             .replace("${CA_CERT_FN}", getCaCertFileName())
                             .replace("${CERT_FN}", getCertFileName())
                             .replace("${KEY_FN}", getKeyFileName());
@@ -138,12 +136,12 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         };
         StringBuilder strBuilder = new StringBuilder();
         strBuilder
-                .append("nmcli connection modify ").append(vpnSite.getNetworkManagerConnectionUuid())
-                .append(" connection.id ").append(uploadSettings.getConnectionName())
-                .append(" connection.autoconnect ").append(uploadSettings.isEnableConnection() ? "yes" : "no")
+                .append("nmcli connection modify ").append(uploadSettings.getVpnSite().getNetworkManagerConnectionUuid())
+                .append(" connection.id ").append(uploadSettings.getVpnSite().getConnectionName())
+                .append(" connection.autoconnect ").append(uploadSettings.getVpnSite().isEnableConnection() ? "yes" : "no")
                 .append(" ipv4.dns-priority -1")
-                .append(" ipv4.dns-search ").append(String.join(",", vpnSite.getPushSearchDomains()))
-                .append(" ipv4.dns ").append(String.join(",", vpnSite.getPushDnsServers()))
+                .append(" ipv4.dns-search ").append(String.join(",", uploadSettings.getVpnSite().getPushSearchDomains()))
+                .append(" ipv4.dns ").append(String.join(",", uploadSettings.getVpnSite().getPushDnsServers()))
                 .append(" vpn.data \"").append(String.join(",", vpnData)).append("\"");
 
         //  ipv4.dns 192.168.120.20 vpn.data "ca = /etc/openvpn/client/ca.pem, cert = /etc/openvpn/client/cert.pem, cert-pass-flags = 4, connection-type = tls, dev-type = tun, float = no, key = /etc/openvpn/client/key.pem, mssfix = no, proto-tcp = yes, remote = 192.168.100.83, remote-random = no, tun-ipv6 = no"
@@ -156,7 +154,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
                 = """
                 nmcli connection down ${CON_UUID}
                 nmcli connection up ${CON_UUID}
-                """.replace("${CON_UUID}", vpnSite.getNetworkManagerConnectionUuid());
+                """.replace("${CON_UUID}", uploadSettings.getVpnSite().getNetworkManagerConnectionUuid());
 
         return execCommand(command);
     }
@@ -166,7 +164,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
         comdLineDescriptors.add(new CommandDescriptor("Create connection", () -> createConnection()));
         comdLineDescriptors.add(new CommandDescriptor("Upload certificate", () -> uploadCertificate()));
         comdLineDescriptors.add(new CommandDescriptor("Configure connection", () -> configureConnection()));
-        if (uploadSettings.isEnableConnection()) {
+        if (uploadSettings.getVpnSite().isEnableConnection()) {
             comdLineDescriptors.add(new CommandDescriptor("Restart connection", () -> restartConnection()));
         }
     }
@@ -174,7 +172,7 @@ public class NMConfigUploadThread extends ConfigUploadThread {
     private String getCaCertFileName() {
         return "%s/arachne_ca_%s.crt"
                 .formatted(
-                        uploadSettings.getCertitifaceFolder(),
+                        uploadSettings.getVpnSite().getCertitifaceFolder(),
                         openVpnSiteSettings.getConnectToHost()
                 );
     }
@@ -182,16 +180,16 @@ public class NMConfigUploadThread extends ConfigUploadThread {
     private String getCertFileName() {
         return "%s/%s.crt"
                 .formatted(
-                        uploadSettings.getCertitifaceFolder(),
-                        vpnSite.getSiteHostname()
+                        uploadSettings.getVpnSite().getCertitifaceFolder(),
+                        uploadSettings.getVpnSite().getSiteHostname()
                 );
     }
 
     private String getKeyFileName() {
         return "%s/%s.key"
                 .formatted(
-                        uploadSettings.getCertitifaceFolder(),
-                        vpnSite.getSiteHostname()
+                        uploadSettings.getVpnSite().getCertitifaceFolder(),
+                        uploadSettings.getVpnSite().getSiteHostname()
                 );
     }
 }

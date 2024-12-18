@@ -5,7 +5,6 @@
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
 import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
-import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.settings.Settings;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
@@ -74,9 +73,8 @@ public abstract class ConfigUploadThread extends Thread {
     private final Button cancelButton;
     private final Button closeButton;
 
-    protected final SiteConfigUploader.SiteUploadSettings uploadSettings;
+    protected final SiteUploadSettings uploadSettings;
     protected final OpenVpnSiteSettings openVpnSiteSettings;
-    protected final VpnSite vpnSite;
     protected Session session = null;
     protected final List<CommandDescriptor> comdLineDescriptors;
     protected final BeanFactory beanFactory;
@@ -98,21 +96,19 @@ public abstract class ConfigUploadThread extends Thread {
     }
 
     public ConfigUploadThread(
-            SiteConfigUploader.SiteUploadSettings uploadSettings,
-            VpnSite vpnSite,
+            SiteUploadSettings uploadSettings,
             BeanFactory beanFactory
     ) {
         super("Upload Site Configuration");
         this.ui = UI.getCurrent();
         this.uploadSettings = uploadSettings;
-        this.vpnSite = vpnSite;
         this.comdLineDescriptors = new LinkedList<>();
         this.beanFactory = beanFactory;
         Settings settings = beanFactory.getBean(Settings.class);
         this.openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         uploadingDlg = new Dialog("Uploading configuration to %s..."
-                .formatted(vpnSite.getSiteHostname())
+                .formatted(uploadSettings.getVpnSite().getSiteHostname())
         );
 
         commandsItems = new VerticalLayout();
@@ -160,7 +156,7 @@ public abstract class ConfigUploadThread extends Thread {
         OutputStream stdin = execChannel.getOutputStream();
         InputStream stderr = execChannel.getErrStream();
         InputStream stdout = execChannel.getInputStream();
-        if (uploadSettings.isSudoRequired()) {
+        if (uploadSettings.getVpnSite().isSudoRequired()) {
             String cmdWithSudo = """
                          sudo -s -- <<EOF_sudo
                          %s
@@ -219,18 +215,18 @@ public abstract class ConfigUploadThread extends Thread {
 
         try {
             comdLineDescriptors.add(new CommandDescriptor(
-                    "Connect to " + uploadSettings.getUploadToHost(),
+                    "Connect to " + uploadSettings.getVpnSite().getUploadToHost(),
                     () -> {
                         try {
                             session = ssh.getSession(
-                                    uploadSettings.getUsername(),
-                                    uploadSettings.getUploadToHost()
+                                    uploadSettings.getVpnSite().getUsername(),
+                                    uploadSettings.getVpnSite().getUploadToHost()
                             );
-                            switch (uploadSettings.getSshAuthType()) {
+                            switch (uploadSettings.getVpnSite().getSshAuthType()) {
                                 case USERNAME_PASSWORD ->
                                     session.setPassword(uploadSettings.getPassword());
                                 case PUBLIC_KEY -> {
-                                    SshKeyEntity sshKey = uploadSettings.getSshKey();
+                                    SshKeyEntity sshKey = uploadSettings.getVpnSite().getSshKey();
                                     ssh.addIdentity(
                                             sshKey.getComment(),
                                             sshKey.getPrivateKey().getBytes(),
@@ -239,11 +235,12 @@ public abstract class ConfigUploadThread extends Thread {
                                 }
                             }
                             session.setConfig("StrictHostKeyChecking", "no");
+                            session.setConfig("PreferredAuthentications", "publickey,password");
                             session.connect();
                             logger.info("Connected.");
                         } catch (JSchException ex) {
                             throw new CommandException(
-                                    "Cannot connect to " + uploadSettings.getUploadToHost(),
+                                    "Cannot connect to " + uploadSettings.getVpnSite().getUploadToHost(),
                                     ex.getMessage()
                             );
                         }
