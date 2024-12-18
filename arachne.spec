@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412032055_73112dd
+Version:        1.3.16.git_2412181736_de00a49
 
 Release:        1
 License:        GPLv3
@@ -93,6 +93,28 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412181736_de00a49-1
+- Create dummy openvpn config if empty (github@nieslony.at)
+- Allow openvpn from everywhere (github@nieslony.at)
+- Build in production mode, create empty config (github@nieslony.at)
+- Show connection status wirh YesNoIcon (github@nieslony.at)
+- Add FirewallWhere type everywhere (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Fix: parameter might be null (github@nieslony.at)
+- Bump versions of vaadin and spring boot (github@nieslony.at)
+- Save site upload settings (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Add class OpenVpnRestController.java (github@nieslony.at)
+- Refactor: rename class OpenVpnRestController → OpenVpnController
+  (github@nieslony.at)
+- Show norification after saving settings (github@nieslony.at)
+- Don't add/update invalid input (github@nieslony.at)
+- Fix: keys in plugun config (github@nieslony.at)
+-  Fix: don't count the default site (github@nieslony.at)
+- Add services (github@nieslony.at)
+- Document extra provision hints (github@nieslony.at)
+- Warn, if hostname not set (github@nieslony.at)
+
 * Tue Dec 03 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412032055_73112dd-1
 - Automatic commit of package [arachne] release
   [1.3.14.git_2411062113_c33b79d-1]. (github@nieslony.at)

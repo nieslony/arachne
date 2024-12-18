@@ -2,5 +2,5 @@ package at.nieslony.arachne;
 
 public class ArachneVersionBase {
 
-    public static final String ARACHNE_VERSION = "1.3.16.git_2412032055_73112dd";
+    public static final String ARACHNE_VERSION = "1.3.16.git_2412181736_de00a49";
 }
