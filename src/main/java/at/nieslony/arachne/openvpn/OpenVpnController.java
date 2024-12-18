@@ -5,8 +5,6 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
-import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.HTTP_URL;
-import static at.nieslony.arachne.openvpn.OpenVpnUserSettings.PasswordVerificationType.PAM;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -77,6 +75,24 @@ public class OpenVpnController {
     @PostConstruct
     public void init() {
         writeCrl();
+        writeDummySiteConfig(FN_OPENVPN_USER_SERVER_CONF, 1);
+        writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, 2);
+    }
+
+    public void writeDummySiteConfig(String fn, int lasrOctett) {
+        String fileName = folderFactory.getVpnConfigDir(fn);
+        File f = new File(fileName);
+        if (!f.exists() || f.length() == 0) {
+            logger.info("Creating dummy configuration " + fileName);
+            try (PrintWriter pw = new PrintWriter(f)) {
+                pw.println("dev tun");
+                pw.println("local 127.11.94.%d".formatted(lasrOctett));
+            } catch (IOException ex) {
+                logger.error("Cannot create dummy confoigirattion %s: %s"
+                        .formatted(fileName, ex.getMessage())
+                );
+            }
+        }
     }
 
     public void writeCrl() {
