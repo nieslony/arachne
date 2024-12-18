@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412181743_5fd6fea
+Version:        1.3.16.git_2412182155_af50d32
 
 Release:        1
 License:        GPLv3
@@ -93,6 +93,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412182155_af50d32-1
+- start openvpn when starting arachne (github@nieslony.at)
+- Require arachne-dbus (github@nieslony.at)
+- Wait until cert is created (github@nieslony.at)
+
 * Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412181743_5fd6fea-1
 - Add lost files again (github@nieslony.at)
 - Automatic commit of package [arachne] release
