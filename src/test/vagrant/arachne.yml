@@ -78,6 +78,7 @@
             --keyfile=/etc/pki/tls/private/{{ ansible_fqdn }}_arachne.key
             --key-owner=arachne
             --cert-owner=arachne
+            --wait
         creates: "/etc/pki/tls/private/{{ ansible_fqdn }}_arachne.key"
       environment:
         KRB5_CLIENT_KTNAME: /etc/krb5.keytab
