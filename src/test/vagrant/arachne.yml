@@ -115,4 +115,13 @@
     with_items:
       - 8080
       - 8443
-      - openvpn
+
+  - name: "Allow openVPN from everywhere"
+    firewalld:
+      rich_rule: "rule family=ipv4 port protocol={{ item }} port=1194 accept"
+      permanent: yes
+      state: enabled
+      immediate: yes
+    with_items:
+      - tcp
+      - udp
