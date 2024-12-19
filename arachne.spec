@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412190858_2670d38
+Version:        1.3.16.git_2412191423_bd1e051
 
 Release:        1
 License:        GPLv3
@@ -98,6 +98,13 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Dec 19 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412191423_bd1e051-1
+- Use macros for systemd unit (github@nieslony.at)
+- Add PID file (github@nieslony.at)
+- Fix: set default NW according to test-environment (github@nieslony.at)
+- Fix: reload systemd services (github@nieslony.at)
+- Fix: unit name (github@nieslony.at)
+
 * Thu Dec 19 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412190858_2670d38-1
 - Fix: chown (github@nieslony.at)
 
