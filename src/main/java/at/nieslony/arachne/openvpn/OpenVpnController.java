@@ -75,11 +75,11 @@ public class OpenVpnController {
     @PostConstruct
     public void init() {
         writeCrl();
-        writeDummySiteConfig(FN_OPENVPN_USER_SERVER_CONF, 1);
-        writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, 2);
+        writeDummySiteConfig(FN_OPENVPN_USER_SERVER_CONF, "user", 1);
+        writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, "site", 2);
     }
 
-    public void writeDummySiteConfig(String fn, int lasrOctett) {
+    public void writeDummySiteConfig(String fn, String serverType, int lasrOctett) {
         String fileName = folderFactory.getVpnConfigDir(fn);
         File f = new File(fileName);
         if (!f.exists() || f.length() == 0) {
@@ -87,6 +87,9 @@ public class OpenVpnController {
             try (PrintWriter pw = new PrintWriter(f)) {
                 pw.println("dev tun");
                 pw.println("local 127.11.94.%d".formatted(lasrOctett));
+                pw.println(
+                        "writepid " + folderFactory.getOpenVpnPidPath(serverType)
+                );
             } catch (IOException ex) {
                 logger.error("Cannot create dummy confoigirattion %s: %s"
                         .formatted(fileName, ex.getMessage())

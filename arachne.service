@@ -1,8 +1,8 @@
 [Unit]
 Description=Administration server for openVPN
 After=syslog.target
-Wants=openvpn-server@arachne-user
-Wants=openvpn-server@arachne-site
+Wants=openvpn-server@arachne-user.service
+Wants=openvpn-server@arachne-site.service
 Requires=arachne-dbus.service
 
 [Service]

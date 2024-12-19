@@ -54,6 +54,9 @@ install -m 0644 arachne.pp %{buildroot}%{_datadir}/selinux/packages
 %pre
 %selinux_relabel_pre -s %{selinuxtype}
 
+%preun
+%systemd_preun %{name}.service
+
 %post
 %selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/arachne.pp
 semanage boolean --modify --on httpd_can_network_connect_db
@@ -76,11 +79,13 @@ ln -fsv \
 ln -fsv \
     /var/lib/arachne/vpnconfig/openvpn-site-server.conf \
     /etc/openvpn/server/arachne-site.conf
+%systemd_post %{name}.service
 
 %postun
 if [ $1 -eq 0 ]; then
     %selinux_modules_uninstall -s %{selinuxtype} arachne || :
 fi
+%systemd_postun_with_restart %{name}.service
 
 %posttrans
 %selinux_relabel_post -s %{selinuxtype} || :
