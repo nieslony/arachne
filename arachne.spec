@@ -68,8 +68,8 @@ getent passwd arachne || \
         --shell /bin/false \
         arachne
 mkdir -pv /var/lib/arachne/{arachneconfig,vpnconfig}
-chown -v arachne.arachne /var/lib/arachne/{arachneconfig,vpnconfig}
 touch /var/lib/arachne/vpnconfig/openvpn-{user,site}-server.conf
+chown -vR arachne.arachne /var/lib/arachne/{arachneconfig,vpnconfig}
 ln -fsv \
     /var/lib/arachne/vpnconfig/openvpn-user-server.conf \
     /etc/openvpn/server/arachne-user.conf
