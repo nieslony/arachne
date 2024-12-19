@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.kerberos.KeytabException;
@@ -32,6 +33,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -80,7 +82,10 @@ public class ExternalAuthView extends VerticalLayout {
 
     private Binder<PreAuthSettings> preAuthBinder;
 
-    public ExternalAuthView(Settings settings, TomcatService tomcatService) {
+    public ExternalAuthView(
+            Settings settings,
+            TomcatService tomcatService
+    ) {
         this.settings = settings;
         this.tomcatService = tomcatService;
 
@@ -294,7 +299,8 @@ public class ExternalAuthView extends VerticalLayout {
             if (preAuthSettings.isWriteApachePreAuthConfig()) {
                 tomcatService.saveApacheConfig();
             }
-            //Arachne.restart();
+            Notification.show("Restarting Arachne");
+            Arachne.restart();
         } catch (SettingsException ex) {
             logger.error(ex.getMessage());
         }
