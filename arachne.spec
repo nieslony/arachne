@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412182155_af50d32
+Version:        1.3.16.git_2412190828_a510240
 
 Release:        1
 License:        GPLv3
@@ -93,6 +93,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Dec 19 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412190828_a510240-1
+- arachne requires arachne-dbus (github@nieslony.at)
+
 * Wed Dec 18 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412182155_af50d32-1
 - start openvpn when starting arachne (github@nieslony.at)
 - Require arachne-dbus (github@nieslony.at)
