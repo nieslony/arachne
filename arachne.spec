@@ -76,6 +76,7 @@ ln -fsv \
 ln -fsv \
     /var/lib/arachne/vpnconfig/openvpn-site-server.conf \
     /etc/openvpn/server/arachne-site.conf
+systemctl daemon-reload
 
 %postun
 if [ $1 -eq 0 ]; then
