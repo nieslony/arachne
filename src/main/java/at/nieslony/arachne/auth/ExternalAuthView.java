@@ -16,10 +16,12 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.kerberos.KeytabException;
 import at.nieslony.arachne.kerberos.KeytabFile;
+import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.tomcat.TomcatService;
@@ -27,11 +29,17 @@ import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -41,6 +49,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
 import java.io.IOException;
@@ -80,9 +89,40 @@ public class ExternalAuthView extends VerticalLayout {
 
     private Binder<PreAuthSettings> preAuthBinder;
 
-    public ExternalAuthView(Settings settings, TomcatService tomcatService) {
+    public ExternalAuthView(
+            Settings settings,
+            TomcatService tomcatService
+    ) {
         this.settings = settings;
         this.tomcatService = tomcatService;
+
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+        if (!ldapSettings.isEnableLdapUserSource()) {
+
+            Div warning = new Div();
+            warning.addClassNames(
+                    LumoUtility.Background.WARNING_10,
+                    LumoUtility.TextColor.WARNING,
+                    LumoUtility.Padding.MEDIUM,
+                    LumoUtility.BorderColor.WARNING,
+                    LumoUtility.Border.ALL
+            );
+            Icon icon = VaadinIcon.WARNING.create();
+            Span warningLbl = new Span("Warning:");
+            warningLbl.addClassNames(
+                    LumoUtility.FontWeight.BOLD,
+                    LumoUtility.Padding.SMALL
+            );
+            Text warningTxt = new Text(
+                    """
+                    LDAP user source not enabled.
+                    External authentification will fail!
+                    """
+            );
+            warning.add(icon, warningLbl, warningTxt);
+            warning.addClassNames(LumoUtility.TextColor.WARNING);
+            add(warning);
+        }
 
         saveButton = new Button(
                 "Save and Restart Arachne",
@@ -294,7 +334,8 @@ public class ExternalAuthView extends VerticalLayout {
             if (preAuthSettings.isWriteApachePreAuthConfig()) {
                 tomcatService.saveApacheConfig();
             }
-            //Arachne.restart();
+            Notification.show("Restarting Arachne");
+            Arachne.restart();
         } catch (SettingsException ex) {
             logger.error(ex.getMessage());
         }

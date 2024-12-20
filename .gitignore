@@ -8,4 +8,5 @@
 /work
 /nb-configuration.xml
 /src/main/bundles
-src/main/frontend
+src/main/frontend/*
+!src/main/frontend/themes
