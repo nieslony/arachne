@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412191423_bd1e051
+Version:        1.3.16.git_2412202013_4ccc7e3
 
 Release:        1
 License:        GPLv3
@@ -98,6 +98,15 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Dec 20 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412202013_4ccc7e3-1
+- Enable vaadin lumo classes (github@nieslony.at)
+- Show warning if LDAP user source not yet configured (github@nieslony.at)
+- Fix: Dont't request WWW-Authenticate on negotiating failure
+  (github@nieslony.at)
+- Restart arachne on save. (github@nieslony.at)
+- Enable server restart. Only works in production profile (github@nieslony.at)
+- Add profile 'production' (github@nieslony.at)
+
 * Thu Dec 19 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412191423_bd1e051-1
 - Use macros for systemd unit (github@nieslony.at)
 - Add PID file (github@nieslony.at)
