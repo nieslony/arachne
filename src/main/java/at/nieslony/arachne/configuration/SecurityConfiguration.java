@@ -194,7 +194,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
             filter.setAuthenticationManager(authenticationManager);
             filter.setFailureHandler((request, response, exception) -> {
                 logger.error("Cannot authenticate with Kerberos: " + exception.getMessage());
-                response.setHeader("WWW-Authenticate", "Negotiate");
                 response.sendError(HttpStatus.UNAUTHORIZED.value());
             });
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {

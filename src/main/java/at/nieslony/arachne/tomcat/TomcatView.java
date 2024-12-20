@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.tomcat;
 
+import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -31,7 +32,11 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -39,6 +44,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -92,9 +98,10 @@ public class TomcatView extends VerticalLayout {
     public void init() {
         tomcatSettings = settings.getSettings(TomcatSettings.class);
         Button saveAndRestartButton = new Button(
-                "Save",
+                "Save and Restart Arachne",
                 e -> onSave()
         );
+        saveAndRestartButton.setDisableOnClick(true);
         saveAndRestartButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         add(
@@ -138,6 +145,7 @@ public class TomcatView extends VerticalLayout {
                 ajpSecretField,
                 createSecret
         );
+
         ajpSecretLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         ajpSecretLayout.setFlexGrow(1, ajpSecretField);
         ajpSecretLayout.setWidthFull();
@@ -181,13 +189,48 @@ public class TomcatView extends VerticalLayout {
                         enableAjpField,
                         ajpPortField,
                         ajpLocationField,
-                        ajpSecretLayout
+                        ajpSecretLayout,
+                        createApacheHint()
                 )
         );
         ajpDetails.setOpened(true);
         ajpDetails.setMinWidth(50, Unit.EM);
 
         return ajpDetails;
+    }
+
+    private Component createApacheHint() {
+        if (tomcatSettings.isEnableAjpConnector()) {
+            Div msg = new Div();
+
+            Span apacheConfigFN = new Span(tomcatService.getApacheConfigFileName());
+            apacheConfigFN.getStyle().setFontWeight(Style.FontWeight.BOLD);
+
+            Span apacheCfgFolder = new Span("/etc/httpd/conf.d");
+            apacheCfgFolder.getStyle().setFontWeight(Style.FontWeight.BOLD);
+            msg.add(
+                    new Paragraph(
+                            new Text("""
+                                    You can also find a configuration for Apache
+                                     HTTP Server at
+                                    """
+                            ),
+                            apacheConfigFN,
+                            new Text(".")
+                    ),
+                    new Paragraph(
+                            new Text("""
+                                  Please copy or symlink it to your apache
+                                  configuration folder e.g.
+                                     """),
+                            apacheCfgFolder,
+                            new Text(" and restart apache.")
+                    )
+            );
+            return msg;
+        } else {
+            return new Text("");
+        }
     }
 
     private Component createHttpsDetails() {
@@ -260,17 +303,8 @@ public class TomcatView extends VerticalLayout {
             pki.updateWebServerCertificate();
             tomcatSettings.save(settings);
             tomcatService.saveApacheConfig();
-            ShowNotification.info(
-                    "Tomcat Configuration Saved",
-                    """
-                                You can also find a configuration for Apache
-                                HTTP Server at %s.
-
-                                Please copy or symlink it to your apache
-                                configuration folder e.g. /etc/httpt/conf.d and
-                                restart apache.
-                                """.formatted(tomcatService.getApacheConfigFileName())
-            );
+            Notification.show("Restarting Arachne...").open();
+            Arachne.restart();
         } catch (UpdateWebServerCertificateException ex) {
             logger.error(ex.getMessage());
             ShowNotification.error("Cannot write %s", ex.getRoorMessage());
