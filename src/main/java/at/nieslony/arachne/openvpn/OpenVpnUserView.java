@@ -30,12 +30,15 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -227,6 +230,23 @@ public class OpenVpnUserView extends VerticalLayout {
         TextField name = new TextField("Network Manager configuration name");
         name.setWidthFull();
         name.setValueChangeMode(ValueChangeMode.EAGER);
+        Tooltip nameHints = name.getTooltip()
+                .withManual(true)
+                .withPosition(Tooltip.TooltipPosition.END)
+                .withText("""
+                          Placeholders
+                          %h - remote hostname
+                          %u - username
+                          """);
+        Button showTooltip = new Button(
+                new Icon(VaadinIcon.INFO_CIRCLE),
+                (e) -> nameHints.setOpened(!nameHints.isOpened())
+        );
+        showTooltip.addThemeVariants(
+                ButtonVariant.LUMO_TERTIARY_INLINE,
+                ButtonVariant.LUMO_ICON
+        );
+        name.setSuffixComponent(showTooltip);
 
         TextField clientConfigName = new TextField("Client Config Filename");
         clientConfigName.setWidthFull();
