@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412202013_4ccc7e3
+Version:        1.3.16.git_2412211511_a23ea4c
 
 Release:        1
 License:        GPLv3
@@ -98,6 +98,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sat Dec 21 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412211511_a23ea4c-1
+- Show message if user/site VPN is not yet configured (github@nieslony.at)
+- Set status file like default FN (github@nieslony.at)
+
 * Fri Dec 20 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412202013_4ccc7e3-1
 - Enable vaadin lumo classes (github@nieslony.at)
 - Show warning if LDAP user source not yet configured (github@nieslony.at)
