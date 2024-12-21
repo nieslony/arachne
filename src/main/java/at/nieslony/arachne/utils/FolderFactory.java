@@ -133,7 +133,7 @@ public class FolderFactory {
 
     public String getOpenVpnStatusPath(String server) {
         return Path
-                .of("%s/arachne-%s-server.log".formatted(getOpenVpnRunDir(), server))
+                .of("%s/status-arachne-%s.log".formatted(getOpenVpnRunDir(), server))
                 .toAbsolutePath()
                 .toString();
     }
