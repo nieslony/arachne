@@ -410,6 +410,10 @@ public class MailSettingsView extends VerticalLayout {
                 "<span><i>%s</i> Network Manager Configuration Name"
                         .formatted(mailSettings.getVarNmConnection())
         )));
+        helper.add(new ListItem(new Html(
+                "<span><i>%s</i> Attachment Name"
+                        .formatted(mailSettings.getVarAttachnement())
+        )));
 
         VerticalLayout helperLayout = new VerticalLayout(
                 new Text("Add the following place holders"),
@@ -526,6 +530,9 @@ public class MailSettingsView extends VerticalLayout {
                             )
                             .filter((t)
                                     -> !t.equals(mailSettings.getVarLinuxInstructions())
+                            )
+                            .filter((t)
+                                    -> !t.equals(mailSettings.getVarAttachnement())
                             )
                             .collect(Collectors.toList());
 
