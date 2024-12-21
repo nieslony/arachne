@@ -6,6 +6,7 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.util.Arrays;
@@ -88,6 +89,8 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     public OpenVpnUserSettings() {
     }
 
+    private boolean alreadyConfigured = false;
+
     private String vpnName = "Arachne OpenVPN - %u@%h";
     private String clientConfigName = "arachne-openVPN-client.conf";
     private String listenIp = "0.0.0.0";
@@ -128,5 +131,11 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
         return getVpnName()
                 .replaceAll("%h", getRemote())
                 .replaceAll("%u", username);
+    }
+
+    @Override
+    public void save(Settings settings) throws SettingsException {
+        alreadyConfigured = true;
+        super.save(settings);
     }
 }
