@@ -5,6 +5,8 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
+import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.util.LinkedList;
@@ -26,6 +28,8 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteSettings.class);
 
+    private boolean alreadyConfigured = false;
+
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
     private TransportProtocol listenProtocol = TransportProtocol.UDP;
@@ -39,4 +43,9 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private Integer keepaliveInterval = 10;
     private List<Integer> vpnSiteIds = new LinkedList<>();
 
+    @Override
+    public void save(Settings settings) throws SettingsException {
+        alreadyConfigured = true;
+        super.save(settings);
+    }
 }

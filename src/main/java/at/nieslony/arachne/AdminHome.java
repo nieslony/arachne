@@ -4,11 +4,14 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -134,6 +137,8 @@ public class AdminHome
 
     private final VpnSiteRepository vpnSiteRepository;
     private final ArachneDbus arachneDbus;
+    private final OpenVpnUserSettings openVpnUserSettings;
+    private final OpenVpnSiteSettings openVpnSiteSettings;
     private Grid<IFaceConnectedClient> connectedUsersGrid;
     private Grid<SiteStatus> connectedSitesGrid;
     private Span msgConnectedUsers;
@@ -141,9 +146,15 @@ public class AdminHome
     private final Consumer<IFaceOpenVpnStatus> updateConnectedUserListener;
     private final Consumer<IFaceOpenVpnStatus> updateConnectedSitesListener;
 
-    public AdminHome(ArachneDbus arachneDbus, VpnSiteRepository vpnSiteRepository) {
+    public AdminHome(
+            ArachneDbus arachneDbus,
+            VpnSiteRepository vpnSiteRepository,
+            Settings settings
+    ) {
         this.arachneDbus = arachneDbus;
         this.vpnSiteRepository = vpnSiteRepository;
+        this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+        this.openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
         Accordion content = new Accordion();
         content.add("Connected Users", createConnectedUsersView());
@@ -163,14 +174,18 @@ public class AdminHome
     public void init() {
         addDetachListener((t) -> {
             logger.info("Detach");
-            arachneDbus.removeServerStatusChangedListener(
-                    ArachneDbus.ServerType.USER,
-                    updateConnectedUserListener
-            );
-            arachneDbus.removeServerStatusChangedListener(
-                    ArachneDbus.ServerType.SITE,
-                    updateConnectedUserListener
-            );
+            if (openVpnUserSettings.isAlreadyConfigured()) {
+                arachneDbus.removeServerStatusChangedListener(
+                        ArachneDbus.ServerType.USER,
+                        updateConnectedUserListener
+                );
+            }
+            if (openVpnSiteSettings.isAlreadyConfigured()) {
+                arachneDbus.removeServerStatusChangedListener(
+                        ArachneDbus.ServerType.SITE,
+                        updateConnectedUserListener
+                );
+            }
         });
     }
 
@@ -180,8 +195,12 @@ public class AdminHome
 
     private void onRefreshConnectedUsers() {
         try {
-            var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
-            updateConnectedUserListener.accept(status);
+            if (openVpnUserSettings.isAlreadyConfigured()) {
+                var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
+                updateConnectedUserListener.accept(status);
+            } else {
+                msgConnectedUsers.setText("User VPN not yet configured");
+            }
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("Error getting connected users: " + ex.getMessage());
             msgConnectedUsers.setText("DBusError: " + ex.getMessage());
@@ -190,8 +209,12 @@ public class AdminHome
 
     private void onRefreshConnectedSites() {
         try {
-            var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE);
-            updateConnectedSitesListener.accept(status);
+            if (openVpnSiteSettings.isAlreadyConfigured()) {
+                var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE);
+                updateConnectedSitesListener.accept(status);
+            } else {
+                msgConnectedSites.setText("Site VPN not yet configured");
+            }
         } catch (DBusException | DBusExecutionException ex) {
             logger.error("DBus Error: " + ex.getMessage());
             msgConnectedSites.setText("DBusError: " + ex.getMessage());
@@ -300,25 +323,33 @@ public class AdminHome
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
-        arachneDbus.removeServerStatusChangedListener(
-                ArachneDbus.ServerType.USER,
-                updateConnectedUserListener
-        );
-        arachneDbus.removeServerStatusChangedListener(
-                ArachneDbus.ServerType.SITE,
-                updateConnectedSitesListener
-        );
+        if (openVpnUserSettings.isAlreadyConfigured()) {
+            arachneDbus.removeServerStatusChangedListener(
+                    ArachneDbus.ServerType.USER,
+                    updateConnectedUserListener
+            );
+        }
+        if (openVpnSiteSettings.isAlreadyConfigured()) {
+            arachneDbus.removeServerStatusChangedListener(
+                    ArachneDbus.ServerType.SITE,
+                    updateConnectedSitesListener
+            );
+        }
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
-        arachneDbus.addServerStatusChangedListener(
-                ArachneDbus.ServerType.USER,
-                updateConnectedUserListener
-        );
-        arachneDbus.addServerStatusChangedListener(
-                ArachneDbus.ServerType.SITE,
-                updateConnectedSitesListener
-        );
+        if (openVpnUserSettings.isAlreadyConfigured()) {
+            arachneDbus.addServerStatusChangedListener(
+                    ArachneDbus.ServerType.USER,
+                    updateConnectedUserListener
+            );
+        }
+        if (openVpnSiteSettings.isAlreadyConfigured()) {
+            arachneDbus.addServerStatusChangedListener(
+                    ArachneDbus.ServerType.SITE,
+                    updateConnectedSitesListener
+            );
+        }
     }
 }
