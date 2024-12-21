@@ -1,1 +1,4 @@
 @import url('./main-layout.css');
+.tooltip-inner {
+    white-space: pre-wrap;
+}
