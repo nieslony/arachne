@@ -368,7 +368,10 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OpenVpnSiteSettings::setMtuTest
         );
 
-        Button saveBasicsButton = new Button("Save Basics", (e) -> onSaveBasics());
+        Button saveBasicsButton = new Button("Save Basics and Restart Site VPN",
+                (e) -> onSaveBasics()
+        );
+        saveBasicsButton.setTooltipText("All sites will reconnect after openVPN restart");
         binder.addStatusChangeListener((sce) -> {
             saveBasicsButton.setEnabled(sce.getBinder().isValid());
         });

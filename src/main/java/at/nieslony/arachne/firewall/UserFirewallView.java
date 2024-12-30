@@ -20,10 +20,12 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -38,6 +40,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,16 +64,19 @@ public class UserFirewallView extends VerticalLayout {
     private final Binder<UserFirewallBasicsSettings> binder;
     private final UserFirewallBasicsSettings firewallBasicSettings;
     private final LdapSettings ldapSettings;
+    private final ArachneDbus arachneDbus;
 
     public UserFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             OpenVpnController openVpnRestController,
+            ArachneDbus arachneDbus,
             Settings settings
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
         this.openVpnRestController = openVpnRestController;
+        this.arachneDbus = arachneDbus;
         this.settings = settings;
 
         binder = new Binder<>();
@@ -150,7 +157,7 @@ public class UserFirewallView extends VerticalLayout {
                 UserFirewallBasicsSettings::setIcmpRules
         );
 
-        Button saveButton = new Button("Save", (e) -> {
+        Button saveButton = new Button("Save and Restart VPN", (e) -> {
             OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
             logger.info("Saving firewall settings");
@@ -160,8 +167,14 @@ public class UserFirewallView extends VerticalLayout {
                         openVpnUserSettings,
                         firewallBasicSettings
                 );
+                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+                ShowNotification.info("OpenVpn restarted with new configuration");
+
             } catch (SettingsException ex) {
                 logger.error("Cannot save firewall settings: " + ex.getMessage());
+            } catch (DBusException | DBusExecutionException ex) {
+                logger.error("Cannot restart openVPN: " + ex.getMessage());
+                ShowNotification.error("Cannot restart openVPN", ex.getMessage());
             }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

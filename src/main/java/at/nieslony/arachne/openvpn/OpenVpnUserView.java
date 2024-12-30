@@ -84,7 +84,8 @@ public class OpenVpnUserView extends VerticalLayout {
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         binder = new Binder<>(OpenVpnUserSettings.class);
 
-        Button saveSettings = new Button("Save Settings");
+        Button saveSettings = new Button("Save wand Restart VPN");
+        saveSettings.setTooltipText("All active conections will reconnect after restart");
         saveSettings.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
