@@ -65,12 +65,6 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         init(label, editField);
     }
 
-    /*
-    public EditableListBox(String label) {
-        super(new LinkedList<>());
-        init(label, new TextField());
-    }
-     */
     private void init(
             String label,
             TE editField
