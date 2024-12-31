@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
+import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.ssh.SshAuthType;
@@ -142,9 +143,9 @@ public class SiteConfigUploader implements BeanFactoryAware {
                         (dst, v) -> dst.getVpnSite().setSudoRequired(v)
                 );
 
-        RadioButtonGroup<VpnSite.UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
+        RadioButtonGroup<UploadConfigType> uploadConfigTypeField = new RadioButtonGroup<>(
                 "Upload Type",
-                VpnSite.UploadConfigType.values()
+                UploadConfigType.values()
         );
         binder.forField(uploadConfigTypeField)
                 .bind(

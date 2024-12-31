@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
@@ -478,7 +479,7 @@ public class OpenVpnController {
             try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 pw.println("site-verification = " + site.getSiteVerification().name());
-                if (site.getSiteVerification() == VpnSite.SiteVerification.WHITELIST) {
+                if (site.getSiteVerification() == SiteVerification.WHITELIST) {
                     pw.println("ip-wihtelist = " + String.join(", ", site.getIpWhiteList()));
                 }
                 pw.close();

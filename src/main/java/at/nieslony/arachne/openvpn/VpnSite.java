@@ -4,12 +4,18 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
+import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.utils.net.NetUtils;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,39 +44,6 @@ import org.springframework.util.ObjectUtils;
 @Entity
 @Table(name = "vpn-sites")
 public class VpnSite {
-
-    public enum SiteVerification {
-        NONE("No Verification"),
-        DNS("Hostname matches DNS A-record"),
-        WHITELIST("IP in Whitelist");
-
-        private SiteVerification(String label) {
-            this.label = label;
-        }
-
-        private final String label;
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    public enum UploadConfigType {
-        OvpnConfig(".ovpn file"),
-        NMCL("NetworkManger");
-
-        private UploadConfigType(String label) {
-            this.label = label;
-        }
-
-        private String label;
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -141,6 +114,11 @@ public class VpnSite {
     @ManyToOne
     @JoinColumn(name = "ssh-key_id")
     private SshKeyEntity sshKey;
+
+    @Builder.Default
+    @ElementCollection(targetClass = RemoteNetwork.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "books", joinColumns = @JoinColumn(name = "vpn-sites_id"))
+    List<RemoteNetwork> remoteNetworks = new LinkedList<>();
 
     public VpnSite() {
     }

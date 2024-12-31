@@ -7,6 +7,7 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -745,9 +746,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 );
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 
-        Select<VpnSite.SiteVerification> siteVerificationField = new Select<>();
+        Select<SiteVerification> siteVerificationField = new Select<>();
         siteVerificationField.setLabel("Site Verification");
-        siteVerificationField.setItems(VpnSite.SiteVerification.values());
+        siteVerificationField.setItems(SiteVerification.values());
         siteVerificationField.setWidthFull();
         siteBinder.forField(siteVerificationField)
                 .bind(VpnSite::getSiteVerification, VpnSite::setSiteVerification);
@@ -770,7 +771,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OnDefSiteEnabled.DefSiteDisabled,
                 ()
                 -> siteVerificationField.getValue() != null
-                && siteVerificationField.getValue().equals(VpnSite.SiteVerification.WHITELIST),
+                && siteVerificationField.getValue().equals(SiteVerification.WHITELIST),
                 siteIpWhiteList
         ));
 
@@ -784,7 +785,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteVerificationField.addValueChangeListener((e) -> {
             siteIpWhiteList.setEnabled(
                     e.getValue() != null
-                    && e.getValue().equals(VpnSite.SiteVerification.WHITELIST)
+                    && e.getValue().equals(SiteVerification.WHITELIST)
             );
         });
 
