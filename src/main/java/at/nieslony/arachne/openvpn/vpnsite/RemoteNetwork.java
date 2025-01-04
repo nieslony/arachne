@@ -31,8 +31,8 @@ public class RemoteNetwork {
     private Long id;
 
     @Column(nullable = false)
-    private String address = "1.2.3.0";
-    private int mask = 24;
+    private String address = "";
+    private int mask = 1;
     private String name = "";
 
     @Override
