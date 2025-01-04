@@ -57,7 +57,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
     private Button clearButton;
     private Button loadDefaultsButton;
     private Supplier<List<T>> defaultsSupplier = null;
-    private TE editField;
+    private final TE editField;
 
     public GenericEditableListBox(
             String label,
@@ -91,7 +91,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         Button addButton = new Button(
                 VaadinIcon.PLUS.create(),
                 e -> {
-                    List<T> items = new LinkedList<T>(getValue());
+                    List<T> items = new LinkedList<>(getValue());
                     items.add(editField.getValue());
                     itemsField.setItems(items);
                     setModelValue(new LinkedList<>(items), true);
@@ -186,7 +186,6 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         });
 
         binder.addStatusChangeListener((sce) -> {
-            logger.info("Validation status: " + !sce.hasValidationErrors());
             addButton.setEnabled(!sce.hasValidationErrors());
             updateButton.setEnabled(
                     !sce.hasValidationErrors() && itemsField.getValue() != null
@@ -200,8 +199,8 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         if (editField instanceof HasValidation ef) {
             logger.info("editField of class " + ef.getClass().getName() + " implements HasValidation and isValod: " + ef.isInvalid());
             return (t, vc) -> ef.isInvalid()
-                    ? ValidationResult.ok()
-                    : ValidationResult.error(ef.getErrorMessage());
+                    ? ValidationResult.error(ef.getErrorMessage())
+                    : ValidationResult.ok();
         } else {
             logger.info("editField of class " + editField.getClass().getName() + " does not implement HasValidation");
             return (t, vc) -> ObjectUtils.isEmpty(t)

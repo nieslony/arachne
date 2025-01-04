@@ -88,7 +88,6 @@ public class EditRemoteNetwork extends AbstractCompositeField<FormLayout, EditRe
 
         binder.addStatusChangeListener((sce) -> {
             var event = new ValidationStatusChangeEvent<>(this, binder.isValid());
-            logger.info("New validation status: " + event.getNewStatus() + " binder: " + binder.isValid());
             validationStatusListeners.forEach(
                     listener -> {
                         listener.validationStatusChanged(event);
