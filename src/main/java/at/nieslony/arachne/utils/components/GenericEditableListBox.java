@@ -197,12 +197,10 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
 
     protected Validator<T> getValidator() {
         if (editField instanceof HasValidation ef) {
-            logger.info("editField of class " + ef.getClass().getName() + " implements HasValidation and isValod: " + ef.isInvalid());
             return (t, vc) -> ef.isInvalid()
                     ? ValidationResult.error(ef.getErrorMessage())
                     : ValidationResult.ok();
         } else {
-            logger.info("editField of class " + editField.getClass().getName() + " does not implement HasValidation");
             return (t, vc) -> ObjectUtils.isEmpty(t)
                     ? ValidationResult.error("Empty value not allowed")
                     : ValidationResult.ok();
