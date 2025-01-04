@@ -7,6 +7,8 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
+import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
+import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
@@ -15,6 +17,7 @@ import at.nieslony.arachne.ssh.AddSshKeyDialog;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -706,13 +709,24 @@ public class OpenVpnSiteView extends VerticalLayout {
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritRouteInternet));
         nonDefaultComponents.add(new ComponentEnabler(inheritRouteInternet, routeInternet));
 
+        GenericEditableListBox<RemoteNetwork, EditRemoteNetwork> remoteetworks
+                = new GenericEditableListBox<>(
+                        "Remote Networks",
+                        new EditRemoteNetwork()
+                );
+        siteBinder.bind(remoteetworks,
+                VpnSite::getRemoteNetworks,
+                VpnSite::setRemoteNetworks
+        );
+
         VerticalLayout layout = new VerticalLayout(
                 inheritPushRoutes,
                 pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
-                )
+                ),
+                remoteetworks
         );
         layout.setMaxWidth(30, Unit.EM);
 

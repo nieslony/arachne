@@ -19,6 +19,7 @@ package at.nieslony.arachne.utils.components;
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
+import com.vaadin.flow.component.HasValidation;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -56,19 +57,18 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
     private Button clearButton;
     private Button loadDefaultsButton;
     private Supplier<List<T>> defaultsSupplier = null;
+    private TE editField;
 
     public GenericEditableListBox(
             String label,
             TE editField
     ) {
         super(new LinkedList<>());
-        init(label, editField);
+        this.editField = editField;
+        init(label);
     }
 
-    private void init(
-            String label,
-            TE editField
-    ) {
+    private void init(String label) {
         binder = new Binder<>();
 
         itemsField = new ListBox<>();
@@ -186,6 +186,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         });
 
         binder.addStatusChangeListener((sce) -> {
+            logger.info("Validation status: " + !sce.hasValidationErrors());
             addButton.setEnabled(!sce.hasValidationErrors());
             updateButton.setEnabled(
                     !sce.hasValidationErrors() && itemsField.getValue() != null
@@ -196,13 +197,17 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
     }
 
     protected Validator<T> getValidator() {
-        return (t, vc) -> {
-            if (ObjectUtils.isEmpty(t)) {
-                return ValidationResult.error("Empty value not allowed");
-            } else {
-                return ValidationResult.ok();
-            }
-        };
+        if (editField instanceof HasValidation ef) {
+            logger.info("editField of class " + ef.getClass().getName() + " implements HasValidation and isValod: " + ef.isInvalid());
+            return (t, vc) -> ef.isInvalid()
+                    ? ValidationResult.ok()
+                    : ValidationResult.error(ef.getErrorMessage());
+        } else {
+            logger.info("editField of class " + editField.getClass().getName() + " does not implement HasValidation");
+            return (t, vc) -> ObjectUtils.isEmpty(t)
+                    ? ValidationResult.error("Empty value not allowed")
+                    : ValidationResult.ok();
+        }
     }
 
     @Override
