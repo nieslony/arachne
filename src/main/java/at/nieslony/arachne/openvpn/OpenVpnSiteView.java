@@ -709,26 +709,40 @@ public class OpenVpnSiteView extends VerticalLayout {
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritRouteInternet));
         nonDefaultComponents.add(new ComponentEnabler(inheritRouteInternet, routeInternet));
 
-        GenericEditableListBox<RemoteNetwork, EditRemoteNetwork> remoteetworks
+        GenericEditableListBox<RemoteNetwork, EditRemoteNetwork> remoteNetworks
                 = new GenericEditableListBox<>(
                         "Remote Networks",
                         new EditRemoteNetwork()
                 );
-        siteBinder.bind(remoteetworks,
+        remoteNetworks.setMaxWidth(30, Unit.EM);
+        siteBinder.bind(remoteNetworks,
                 VpnSite::getRemoteNetworks,
                 VpnSite::setRemoteNetworks
         );
+        nonDefaultComponents.add(
+                new ComponentEnabler(
+                        OnDefSiteEnabled.DefSiteDisabled,
+                        remoteNetworks
+                )
+        );
 
-        VerticalLayout layout = new VerticalLayout(
+        VerticalLayout routesLayout = new VerticalLayout(
                 inheritPushRoutes,
                 pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
                 ),
-                remoteetworks
+                remoteNetworks
         );
-        layout.setMaxWidth(30, Unit.EM);
+        routesLayout.setMaxWidth(30, Unit.EM);
+        routesLayout.setMargin(false);
+
+        var layout = new HorizontalLayout(
+                routesLayout,
+                remoteNetworks
+        );
+        layout.setWrap(true);
 
         return layout;
     }
