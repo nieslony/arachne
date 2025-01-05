@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -481,6 +481,23 @@ public class OpenVpnController {
                 pw.println("site-verification = " + site.getSiteVerification().name());
                 if (site.getSiteVerification() == SiteVerification.WHITELIST) {
                     pw.println("ip-wihtelist = " + String.join(", ", site.getIpWhiteList()));
+                }
+                pw.println("no-remote-networks = " + site.getRemoteNetworks().size());
+                for (int i = 0; i < site.getRemoteNetworks().size(); i++) {
+                    pw.println(
+                            "remote-network%d-address = %s".formatted(
+                                    i,
+                                    site.getRemoteNetworks().get(i).getAddress()
+                            )
+                    );
+                    pw.println(
+                            "remote-network%d-mask = %s".formatted(
+                                    i,
+                                    NetUtils.maskLen2Mask(
+                                            site.getRemoteNetworks().get(i).getMask()
+                                    )
+                            )
+                    );
                 }
                 pw.close();
                 fos.close();

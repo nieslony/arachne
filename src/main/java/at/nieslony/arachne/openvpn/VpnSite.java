@@ -11,9 +11,8 @@ import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.utils.net.NetUtils;
-import jakarta.persistence.CollectionTable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -116,8 +116,7 @@ public class VpnSite {
     private SshKeyEntity sshKey;
 
     @Builder.Default
-    @ElementCollection(targetClass = RemoteNetwork.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "books", joinColumns = @JoinColumn(name = "vpn-sites_id"))
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     List<RemoteNetwork> remoteNetworks = new LinkedList<>();
 
     public VpnSite() {

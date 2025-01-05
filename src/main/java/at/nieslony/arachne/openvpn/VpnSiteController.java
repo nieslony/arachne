@@ -126,6 +126,6 @@ public class VpnSiteController {
                 }
             }
         }
-        return vpnSiteRepository.save(site);
+        return vpnSiteRepository.saveAndFlush(site);
     }
 }
