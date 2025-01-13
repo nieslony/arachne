@@ -49,7 +49,7 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
             return null;
         }
         String token = header.substring(HEADER_PREFIX.length());
-        log.info("Got token >>%s<<".formatted(token));
+        log.debug("Got token >>%s<<".formatted(token));
         return token;
     }
 
