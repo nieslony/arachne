@@ -17,8 +17,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapUserSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,11 +29,8 @@ import org.springframework.stereotype.Service;
  * @author claas
  */
 @Service
+@Slf4j
 public class LdapUserDetailsService implements UserDetailsService {
-
-    private static final Logger logger = LoggerFactory.getLogger(
-            LdapUserDetailsService.class
-    );
 
     @Autowired
     private LdapUserSource ldapUserSource;
@@ -43,17 +39,18 @@ public class LdapUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username == null || username.isEmpty()) {
             String msg = "No username supplied";
-            logger.error(msg);
+            log.error(msg);
             throw new UsernameNotFoundException(msg);
         }
-        logger.info("Try to find LDAP user \"%s\"".formatted(username));
+        log.info("Try to find LDAP user \"%s\"".formatted(username));
         UserModel user = ldapUserSource.findUser(username);
         if (user == null) {
             String msg = "LDAP user %s not found".formatted(username);
-            logger.info(msg);
+            log.info(msg);
             throw new UsernameNotFoundException(msg);
         }
 
+        log.info("Found user " + user.toString());
         return new ArachneUserDetails(user);
     }
 }

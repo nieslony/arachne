@@ -57,7 +57,13 @@ public class OpenVpnRestController {
     @Autowired
     private VpnSiteRepository vpnSiteRepository;
 
-    @GetMapping(value = "/user_settings")
+    @GetMapping("auth")
+    @RolesAllowed(value = {"USER"})
+    public String auth() {
+        return "Authenticated";
+    }
+
+    @GetMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings getUserSettings(OpenVpnController openVpnController) {
         return settings.getSettings(OpenVpnUserSettings.class);
