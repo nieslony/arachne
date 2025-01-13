@@ -13,7 +13,11 @@ import at.nieslony.arachne.users.InternalUserDetailsService;
 import at.nieslony.arachne.users.LdapUserDetailsService;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -40,6 +44,9 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosT
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -88,6 +95,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     public void configure(HttpSecurity http) throws Exception {
         log.info("Configure");
 
+        AuthenticationManager authenticationManager = authManager(http);
         http
                 .exceptionHandling((t) -> {
                     t.accessDeniedPage("/");
@@ -98,59 +106,63 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                         bearerTokenAuthFilter,
                         BasicAuthenticationFilter.class
                 )
-                .httpBasic((b) -> {
-                    b.realmName("IMAP Admin");
-
-                });
-
-        AuthenticationManager authenticationManager = authManager(http);
-        if (kerberosSettings.isEnableKrbAuth()) {
-            http
-                    .addFilterAfter(
-                            spnegoAuthenticationProcessingFilter(authenticationManager),
-                            BasicAuthenticationFilter.class)
-                    .exceptionHandling(
-                            (exceptions) -> exceptions
-                                    .authenticationEntryPoint(
-                                            spnegoEntryPoint()
-                                    )
-                    );
-        }
+                .httpBasic((b) -> b.realmName("IMAP Admin"))
+                .addFilterAfter(
+                        spnegoAuthenticationProcessingFilter(authenticationManager),
+                        BasicAuthenticationFilter.class)
+                .addFilterAfter(
+                        requestAttributeAuthenticationFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .exceptionHandling(
+                        (exceptions) -> {
+                            if (kerberosSettings.isEnableKrbAuth()) {
+                                exceptions.authenticationEntryPoint(
+                                        spnegoEntryPoint()
+                                );
+                            }
+                        }
+                );
 
         super.configure(http);
         setLoginView(http, LoginOrSetupView.class, "/arachne/login");
     }
 
     @Bean
-    public SpnegoAuthenticationProcessingFilter spnegoAuthenticationProcessingFilter(
+    public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager) {
-        SpnegoAuthenticationProcessingFilter filter = new SpnegoAuthenticationProcessingFilter();
-        filter.setAuthenticationManager(authenticationManager);
-        filter.setFailureHandler((request, response, exception) -> {
-            log.error("Access to %s failed: %s"
-                    .formatted(request.getPathInfo(), exception.getMessage())
-            );
-        });
-        filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
-            private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+        if (kerberosSettings.isEnableKrbAuth()) {
+            SpnegoAuthenticationProcessingFilter filter = new SpnegoAuthenticationProcessingFilter();
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setFailureHandler((request, response, exception) -> {
+                log.error("Access to %s failed: %s"
+                        .formatted(request.getPathInfo(), exception.getMessage())
+                );
+            });
+            filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
+                private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
 
-            private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+                private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
-            @Override
-            public void onAuthenticationSuccess(
-                    final HttpServletRequest request,
-                    final HttpServletResponse response,
-                    final Authentication authentication
-            ) throws IOException, ServletException {
-                logger.info("Access to %s granted".formatted(request.getContextPath()));
-                SecurityContext context = securityContextHolderStrategy.createEmptyContext();
-                context.setAuthentication(authentication);
-                securityContextHolderStrategy.setContext(context);
-                securityContextRepository.saveContext(context, request, response);
-            }
-        });
-
-        return filter;
+                @Override
+                public void onAuthenticationSuccess(
+                        final HttpServletRequest request,
+                        final HttpServletResponse response,
+                        final Authentication authentication
+                ) throws IOException, ServletException {
+                    logger.info("Access to %s granted".formatted(request.getContextPath()));
+                    SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+                    context.setAuthentication(authentication);
+                    securityContextHolderStrategy.setContext(context);
+                    securityContextRepository.saveContext(context, request, response);
+                }
+            });
+            return filter;
+        } else {
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
+        }
     }
 
     @Bean
@@ -204,4 +216,51 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public PreAuthenticatedAuthenticationProvider createPreAuthenticatedAuthenticationProvider() {
+        PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
+        provider.setPreAuthenticatedUserDetailsService((token) -> {
+            log.info("Get user details from pre auth token for : " + token.getName());
+            return ldapUserDetailsService.loadUserByUsername(token.getName());
+        });
+
+        return provider;
+    }
+
+    @Bean
+    public Filter requestAttributeAuthenticationFilter(
+            AuthenticationManager authenticationManager
+    ) {
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            var filter = switch (preAuthSettings.getPreAuthSource()) {
+                case ENVIRONMENT_VARIABLE -> {
+                    RequestAttributeAuthenticationFilter envFilter = new RequestAttributeAuthenticationFilter();
+                    envFilter.setExceptionIfVariableMissing(false);
+                    envFilter.setPrincipalEnvironmentVariable(preAuthSettings.getEnvironmentVariable());
+                    yield envFilter;
+                }
+                case HTTP_HEADER -> {
+                    RequestHeaderAuthenticationFilter headerFilter = new RequestHeaderAuthenticationFilter();
+                    headerFilter.setExceptionIfHeaderMissing(false);
+                    headerFilter.setPrincipalRequestHeader(preAuthSettings.getHttpHeader());
+                    yield headerFilter;
+                }
+            };
+            filter.setAuthenticationManager(authenticationManager);
+            filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+                log.info("Authenticated with REMOTE_USER as " + authentication.getPrincipal().toString());
+            });
+            filter.setAuthenticationFailureHandler((request, response, exception) -> {
+                log.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
+            });
+            filter.setAuthenticationDetailsSource((context) -> {
+                return ldapUserDetailsService;
+            });
+            return filter;
+        } else {
+            return (ServletRequest sr, ServletResponse sr1, FilterChain fc) -> {
+                fc.doFilter(sr, sr1);
+            };
+        }
+    }
 }
