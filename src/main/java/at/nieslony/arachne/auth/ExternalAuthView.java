@@ -57,6 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 /**
  *
@@ -143,6 +144,9 @@ public class ExternalAuthView extends VerticalLayout {
     private Component createKerberosView(Settings settings) {
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         kerberosBinder = new Binder<>();
+        if (ObjectUtils.isEmpty(kerberosSettings.getKeytabPath())) {
+            kerberosSettings.setDefaultKeytabPath();
+        }
         kerberosBinder.setBean(kerberosSettings);
 
         enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
