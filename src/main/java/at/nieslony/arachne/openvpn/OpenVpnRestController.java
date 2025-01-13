@@ -76,6 +76,12 @@ public class OpenVpnRestController {
     @Value("${plugin_path}")
     String pluginPath;
 
+    @GetMapping("auth")
+    @RolesAllowed(value = {"USER"})
+    public String auth() {
+        return "Authenticated";
+    }
+
     @GetMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
     public OpenVpnUserSettings getUserSettings() {
