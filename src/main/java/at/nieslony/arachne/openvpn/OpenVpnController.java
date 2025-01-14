@@ -156,7 +156,9 @@ public class OpenVpnController {
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("auth-url = %s/api/auth".formatted(
+            writer.println("url-login = %s/api/login".formatted(
+                    openVpnSettings.getAuthHttpUrl()));
+            writer.println("url-auth = %s/api/openvpn/auth".formatted(
                     openVpnSettings.getAuthHttpUrl()));
             writer.println("enable-routing = %s".formatted(
                     firewallBasicsSettings.getEnableRoutingMode().name()
@@ -168,10 +170,10 @@ public class OpenVpnController {
                 writer.println("firewall-zone = %s".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
-                writer.println("firewall-url_user = %s/api/firewall/user_rules"
+                writer.println("url-firewall-user = %s/api/firewall/user_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
-                writer.println("firewall-url_everybody = %s/api/firewall/everybody_rules"
+                writer.println("url-firewall-everybody = %s/api/firewall/everybody_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
