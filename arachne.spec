@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2412212041_c549378
+Version:        1.3.16.git_2501151105_230ee52
 
 Release:        1
 License:        GPLv3
@@ -98,6 +98,35 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Jan 15 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2501151105_230ee52-1
+- Bump vaadin version (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Fix: URLs (github@nieslony.at)
+- Fix: typo (github@nieslony.at)
+- New login API (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Add preauthentication (github@nieslony.at)
+- Fix: default value (github@nieslony.at)
+- Fix: authentication (github@nieslony.at)
+- Show log message when user found (github@nieslony.at)
+- Change log level (github@nieslony.at)
+- Add error pages (github@nieslony.at)
+- Write remoteNetworks (github@nieslony.at)
+- GUI improvements (github@nieslony.at)
+- Remove some debug logging (github@nieslony.at)
+- Fix: validation (github@nieslony.at)
+- Change default settings (github@nieslony.at)
+- Improve validation (github@nieslony.at)
+- Fix: possible null reference (github@nieslony.at)
+- Change default values (github@nieslony.at)
+- Remove useless code (github@nieslony.at)
+- Make EditableListBox more generic (github@nieslony.at)
+- - create package at.nieslony.arachne.openvpn.vpnsite - add remoteSites to
+  VpnSite (github@nieslony.at)
+- Restart VPN if neccessary (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Default protocol TCP (github@nieslony.at)
+
 * Sat Dec 21 2024 Claas Nieslony <github@nieslony.at> 1.3.16.git_2412212041_c549378-1
 - Bump spring boot version (github@nieslony.at)
 - Fix: placeholder {attachment} is allowed (github@nieslony.at)
