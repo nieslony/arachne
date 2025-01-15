@@ -7,6 +7,9 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
+import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
+import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -14,6 +17,7 @@ import at.nieslony.arachne.ssh.AddSshKeyDialog;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
 import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -368,7 +372,10 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OpenVpnSiteSettings::setMtuTest
         );
 
-        Button saveBasicsButton = new Button("Save Basics", (e) -> onSaveBasics());
+        Button saveBasicsButton = new Button("Save Basics and Restart Site VPN",
+                (e) -> onSaveBasics()
+        );
+        saveBasicsButton.setTooltipText("All sites will reconnect after openVPN restart");
         binder.addStatusChangeListener((sce) -> {
             saveBasicsButton.setEnabled(sce.getBinder().isValid());
         });
@@ -702,15 +709,40 @@ public class OpenVpnSiteView extends VerticalLayout {
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, inheritRouteInternet));
         nonDefaultComponents.add(new ComponentEnabler(inheritRouteInternet, routeInternet));
 
-        VerticalLayout layout = new VerticalLayout(
+        GenericEditableListBox<RemoteNetwork, EditRemoteNetwork> remoteNetworks
+                = new GenericEditableListBox<>(
+                        "Remote Networks",
+                        new EditRemoteNetwork()
+                );
+        remoteNetworks.setMaxWidth(30, Unit.EM);
+        siteBinder.bind(remoteNetworks,
+                VpnSite::getRemoteNetworks,
+                VpnSite::setRemoteNetworks
+        );
+        nonDefaultComponents.add(
+                new ComponentEnabler(
+                        OnDefSiteEnabled.DefSiteDisabled,
+                        remoteNetworks
+                )
+        );
+
+        VerticalLayout routesLayout = new VerticalLayout(
                 inheritPushRoutes,
                 pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
-                )
+                ),
+                remoteNetworks
         );
-        layout.setMaxWidth(30, Unit.EM);
+        routesLayout.setMaxWidth(30, Unit.EM);
+        routesLayout.setMargin(false);
+
+        var layout = new HorizontalLayout(
+                routesLayout,
+                remoteNetworks
+        );
+        layout.setWrap(true);
 
         return layout;
     }
@@ -742,9 +774,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 );
         nonDefaultComponents.add(new ComponentEnabler(OnDefSiteEnabled.DefSiteDisabled, remoteHostField));
 
-        Select<VpnSite.SiteVerification> siteVerificationField = new Select<>();
+        Select<SiteVerification> siteVerificationField = new Select<>();
         siteVerificationField.setLabel("Site Verification");
-        siteVerificationField.setItems(VpnSite.SiteVerification.values());
+        siteVerificationField.setItems(SiteVerification.values());
         siteVerificationField.setWidthFull();
         siteBinder.forField(siteVerificationField)
                 .bind(VpnSite::getSiteVerification, VpnSite::setSiteVerification);
@@ -767,7 +799,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OnDefSiteEnabled.DefSiteDisabled,
                 ()
                 -> siteVerificationField.getValue() != null
-                && siteVerificationField.getValue().equals(VpnSite.SiteVerification.WHITELIST),
+                && siteVerificationField.getValue().equals(SiteVerification.WHITELIST),
                 siteIpWhiteList
         ));
 
@@ -781,7 +813,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteVerificationField.addValueChangeListener((e) -> {
             siteIpWhiteList.setEnabled(
                     e.getValue() != null
-                    && e.getValue().equals(VpnSite.SiteVerification.WHITELIST)
+                    && e.getValue().equals(SiteVerification.WHITELIST)
             );
         });
 

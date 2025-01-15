@@ -5,6 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -155,7 +156,9 @@ public class OpenVpnController {
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("auth-url = %s/api/auth".formatted(
+            writer.println("url-login = %s/api/login".formatted(
+                    openVpnSettings.getAuthHttpUrl()));
+            writer.println("url-auth = %s/api/openvpn/auth".formatted(
                     openVpnSettings.getAuthHttpUrl()));
             writer.println("enable-routing = %s".formatted(
                     firewallBasicsSettings.getEnableRoutingMode().name()
@@ -167,10 +170,10 @@ public class OpenVpnController {
                 writer.println("firewall-zone = %s".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
-                writer.println("firewall-url_user = %s/api/firewall/user_rules"
+                writer.println("url-firewall-user = %s/api/firewall/user_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
-                writer.println("firewall-url_everybody = %s/api/firewall/everybody_rules"
+                writer.println("url-firewall-everybody = %s/api/firewall/everybody_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }
@@ -478,8 +481,25 @@ public class OpenVpnController {
             try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 pw.println("site-verification = " + site.getSiteVerification().name());
-                if (site.getSiteVerification() == VpnSite.SiteVerification.WHITELIST) {
+                if (site.getSiteVerification() == SiteVerification.WHITELIST) {
                     pw.println("ip-wihtelist = " + String.join(", ", site.getIpWhiteList()));
+                }
+                pw.println("no-remote-networks = " + site.getRemoteNetworks().size());
+                for (int i = 0; i < site.getRemoteNetworks().size(); i++) {
+                    pw.println(
+                            "remote-network%d-address = %s".formatted(
+                                    i,
+                                    site.getRemoteNetworks().get(i).getAddress()
+                            )
+                    );
+                    pw.println(
+                            "remote-network%d-mask = %s".formatted(
+                                    i,
+                                    NetUtils.maskLen2Mask(
+                                            site.getRemoteNetworks().get(i).getMask()
+                                    )
+                            )
+                    );
                 }
                 pw.close();
                 fos.close();

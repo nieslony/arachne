@@ -10,6 +10,7 @@ import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class SubnetValidator implements Validator<String> {
 
         int prefix;
         if (getPrefix != null) {
-            prefix = getPrefix.get();
+            prefix = Objects.requireNonNullElse(getPrefix.get(), -1);
         } else {
             String[] strs = value.split("/");
             if (strs.length != 2) {

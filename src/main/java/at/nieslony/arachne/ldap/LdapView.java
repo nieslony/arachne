@@ -24,7 +24,7 @@ import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.UrlField;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -310,7 +310,7 @@ public class LdapView extends VerticalLayout {
     }
 
     final Component createBasicsPage() {
-        EditableListBox ldapUrlsEditor = new EditableListBox(
+        GenericEditableListBox<String, UrlField> ldapUrlsEditor = new GenericEditableListBox<>(
                 "LDAP Sources",
                 new UrlField(UrlField.SCHEMATA_LDAP)
         );

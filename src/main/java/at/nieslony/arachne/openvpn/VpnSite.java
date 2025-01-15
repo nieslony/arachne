@@ -4,17 +4,23 @@
  */
 package at.nieslony.arachne.openvpn;
 
+import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
+import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.utils.net.NetUtils;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -38,39 +44,6 @@ import org.springframework.util.ObjectUtils;
 @Entity
 @Table(name = "vpn-sites")
 public class VpnSite {
-
-    public enum SiteVerification {
-        NONE("No Verification"),
-        DNS("Hostname matches DNS A-record"),
-        WHITELIST("IP in Whitelist");
-
-        private SiteVerification(String label) {
-            this.label = label;
-        }
-
-        private final String label;
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    public enum UploadConfigType {
-        OvpnConfig(".ovpn file"),
-        NMCL("NetworkManger");
-
-        private UploadConfigType(String label) {
-            this.label = label;
-        }
-
-        private String label;
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -141,6 +114,10 @@ public class VpnSite {
     @ManyToOne
     @JoinColumn(name = "ssh-key_id")
     private SshKeyEntity sshKey;
+
+    @Builder.Default
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    List<RemoteNetwork> remoteNetworks = new LinkedList<>();
 
     public VpnSite() {
     }

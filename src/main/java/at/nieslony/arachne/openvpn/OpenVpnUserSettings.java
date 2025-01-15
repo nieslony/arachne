@@ -95,7 +95,7 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     private String clientConfigName = "arachne-openVPN-client.conf";
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
-    private TransportProtocol listenProtocol = TransportProtocol.UDP;
+    private TransportProtocol listenProtocol = TransportProtocol.TCP;
     private Boolean mtuTest = true;
     private String remote = NetUtils.myHostname();
     private String deviceType = "tun";

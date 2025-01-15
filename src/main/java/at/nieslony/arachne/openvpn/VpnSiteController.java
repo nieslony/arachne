@@ -47,7 +47,6 @@ public class VpnSiteController {
     }
 
     private VpnSite createDefaultSite() {
-        logger.info("Creating default site");
         VpnSite defaultSite = VpnSite.builder()
                 .defaultSite(true)
                 .name("Default")
@@ -58,7 +57,6 @@ public class VpnSiteController {
 
     public List<VpnSite> getAll() {
         List<VpnSite> sites = vpnSiteRepository.findAll();
-        logger.info("All sites: " + sites.toString());
         return sites;
     }
 
@@ -79,8 +77,6 @@ public class VpnSiteController {
                 .filter((site) -> site.isDefaultSite())
                 .findFirst()
                 .get();
-
-        logger.info("Get default site");
         return retSite;
     }
 
@@ -130,6 +126,6 @@ public class VpnSiteController {
                 }
             }
         }
-        return vpnSiteRepository.save(site);
+        return vpnSiteRepository.saveAndFlush(site);
     }
 }
