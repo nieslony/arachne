@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2503061906_ee232c4
+Version:        1.3.16.git_2503061929_5a84a37
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Mar 06 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2503061929_5a84a37-1
+- Fix: jdk version (github@nieslony.at)
+
 * Thu Mar 06 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2503061906_ee232c4-1
 - Fix: make constructor params autowired (github@nieslony.at)
 - Bump dependency versions (github@nieslony.at)
