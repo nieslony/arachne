@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailSendException;
@@ -88,11 +89,11 @@ public class UsersView extends VerticalLayout {
     UserSettings userSettings;
 
     public UsersView(
-            UserRepository userRepository,
-            RoleRuleRepository roleRuleRepository,
-            OpenVpnController openVpnRestController,
-            Settings settings,
-            MailSettingsRestController mailSettingsRestController
+            @Autowired UserRepository userRepository,
+            @Autowired RoleRuleRepository roleRuleRepository,
+            @Autowired OpenVpnController openVpnRestController,
+            @Autowired Settings settings,
+            @Autowired MailSettingsRestController mailSettingsRestController
     ) {
         this.userRepository = userRepository;
         this.roleRuleRepository = roleRuleRepository;
