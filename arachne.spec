@@ -12,7 +12,7 @@ Summary:        Administration server for openVPN
 BuildArch:      noarch
 Url:            https://github.com/nieslony/arachne
 
-%if 0%{?fedora} >= 40
+%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
 BuildRequires:  maven-openjdk21
 BuildRequires:  java-21-openjdk-devel
 %else

@@ -30,6 +30,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -53,9 +54,9 @@ public class RolesView extends VerticalLayout {
     Grid.Column<RoleRuleModel> descriptionColumn;
 
     public RolesView(
-            RoleRuleRepository roleRuleRepository,
-            UserMatcherCollector userMatcherCollector,
-            Settings settings
+            @Autowired RoleRuleRepository roleRuleRepository,
+            @Autowired UserMatcherCollector userMatcherCollector,
+            @Autowired Settings settings
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
