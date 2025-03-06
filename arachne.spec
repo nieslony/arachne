@@ -2,6 +2,12 @@
 %global moduletype contrib
 %global modulename arachne
 
+%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
+%global jdk_version 21
+%else
+%global jdk_version 17
+%endif
+
 Name:           arachne
 Version:        1.3.16
 
@@ -12,19 +18,14 @@ Summary:        Administration server for openVPN
 BuildArch:      noarch
 Url:            https://github.com/nieslony/arachne
 
-%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
-BuildRequires:  maven-openjdk21
-BuildRequires:  java-21-openjdk-devel
-%else
-BuildRequires:  maven-openjdk17
-%endif
-BuildRequires:  java-17-openjdk-devel
+BuildRequires:  maven-openjdk%{jdk_version}
+BuildRequires:  java-%{jdk_version}-openjdk-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  pkgconfig(systemd)
 %{?selinux_requires}
 
-Requires:       java-17-openjdk-headless
+Requires:       java-%{jdk_version}-openjdk-headless
 Requires:       openvpn
 Requires:       openvpn-plugin-arachne
 Requires:       arachne-dbus
