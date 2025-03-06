@@ -3,7 +3,7 @@
 %global modulename arachne
 
 Name:           arachne
-Version:        1.3.16.git_2501151105_230ee52
+Version:        1.3.16.git_2503061906_ee232c4
 
 Release:        1
 License:        GPLv3
@@ -98,6 +98,16 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Mar 06 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2503061906_ee232c4-1
+- Fix: make constructor params autowired (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Fix: java version (github@nieslony.at)
+- Fix: indent (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+
 * Wed Jan 15 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2501151105_230ee52-1
 - Bump vaadin version (github@nieslony.at)
 - Bump dependency version (github@nieslony.at)
