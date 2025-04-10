@@ -8,6 +8,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.setup.SetupData;
 import at.nieslony.arachne.tomcat.TomcatSettings;
+import jakarta.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -112,14 +113,26 @@ public class Pki {
     private static final Logger logger = LoggerFactory.getLogger(Pki.class);
 
     private KeyPairGenerator keyPairGenerator;
+    private SecureRandom secureRandom;
 
     public Pki() {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    @PostConstruct
+    public void init() {
+        try {
+            secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
+        } catch (NoSuchAlgorithmException ex) {
+            logger.warn("NativePRNGNonBlocking not available, falling back to default.");
+            secureRandom = new SecureRandom();
+        }
+        secureRandom.setSeed(System.currentTimeMillis());
+    }
+
     private PrivateKey rootKey = null;
     private X509Certificate rootCert = null;
-    private X509CRL crl = null;
+    private final X509CRL crl = null;
 
     public void fromSetupData(SetupData setupData) throws CertSpecsValidationException {
         logger.info("Verify and save PKI settings");
@@ -243,7 +256,7 @@ public class Pki {
             Date endDate = cal.getTime();
 
             KeyPair keyPair = keyPairGenerator.genKeyPair();
-            BigInteger rootSerial = new BigInteger(Long.toString(new SecureRandom().nextLong()));
+            BigInteger rootSerial = new BigInteger(Long.toString(secureRandom.nextLong()));
 
             X500Name rootCertIssuer = new X500Name(caSubject);
             X500Name rootCertSubject = new X500Name(caSubject);
@@ -428,7 +441,7 @@ public class Pki {
             CertSpecs rootCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
             X500Name rootSubject = new X500Name(rootCertSpecs.getSubject());
             X500Name subject = new X500Name(subjectStr);
-            long serialLong = new SecureRandom().nextLong();
+            long serialLong = secureRandom.nextLong();
             BigInteger serial = new BigInteger(Long.toString(serialLong));
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(keyAlgo);
             keyPairGenerator.initialize(keySize);
@@ -527,12 +540,7 @@ public class Pki {
     public void generateDhParams(int bits) {
         logger.info("Generating DH params (%d bits)".formatted(bits));
         DHParametersGenerator dhGen = new DHParametersGenerator();
-        try {
-            dhGen.init(bits, 80, SecureRandom.getInstance("NativePRNG"));
-        } catch (NoSuchAlgorithmException ex) {
-            logger.error("Cannot create securerandom: " + ex.getMessage());
-            return;
-        }
+        dhGen.init(bits, 80, secureRandom);
         DHParameters params = dhGen.generateParameters();
         DHParameters realParams = new DHParameters(params.getP(), BigInteger.valueOf(2));
         ASN1EncodableVector sequence = new ASN1EncodableVector();
@@ -544,9 +552,9 @@ public class Pki {
             derEncoded = new DERSequence(sequence).getEncoded();
             PemObject pemObject = new PemObject("DH PARAMETERS", derEncoded);
             StringWriter sw = new StringWriter();
-            PemWriter pw = new PemWriter(sw);
-            pw.writeObject(pemObject);
-            pw.close();
+            try (PemWriter pw = new PemWriter(sw)) {
+                pw.writeObject(pemObject);
+            }
             PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
             pkiSettings.setDhParams(sw.toString());
             pkiSettings.save(settings);

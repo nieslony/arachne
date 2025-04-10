@@ -55,6 +55,7 @@ Vagrant.configure("2") do |config|
         libvirt.video_type = "qxl"
         libvirt.input :type => "mouse",
             :bus => "usb"
+        libvirt.random :model => 'random'
     end
 
     config.vm.define "arachne" do |arachne|
