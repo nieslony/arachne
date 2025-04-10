@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2503061929_5a84a37
+Version:        1.3.16.git_2504101514_32e8dab
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,13 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Apr 10 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504101514_32e8dab-1
+- Add random device (github@nieslony.at)
+- Reuse sSecureRandom (github@nieslony.at)
+- Bump deoendency versions (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- README.txt is replaced by README.md (github@nieslony.at)
+
 * Thu Mar 06 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2503061929_5a84a37-1
 - Fix: jdk version (github@nieslony.at)
 
