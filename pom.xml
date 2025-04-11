@@ -275,6 +275,14 @@
                 </plugins>
             </build>
         </profile>
-
+        <profile>
+            <id>lombok-fixing</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <lombok.version>1.18.38</lombok.version>
+            </properties>
+        </profile>
     </profiles>
 </project>
