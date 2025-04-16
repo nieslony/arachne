@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.7.1</vaadin.version>
+        <vaadin.version>24.7.2</vaadin.version>
         <maven.compiler.release>17</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
         <skipGenerateGitProperties>false</skipGenerateGitProperties>
@@ -294,6 +294,14 @@
                 </plugins>
             </build>
         </profile>
-
+        <profile>
+            <id>lombok-fixing</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <lombok.version>1.18.38</lombok.version>
+            </properties>
+        </profile>
     </profiles>
 </project>
