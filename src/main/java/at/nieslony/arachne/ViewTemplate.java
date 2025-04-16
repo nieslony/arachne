@@ -260,6 +260,8 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                     new H2(pageTitleStr),
                     content
             );
+            layout.setHeightFull();
+            layout.setFlexGrow(1, content);
             super.setContent(layout);
         } else {
             super.setContent(content);
