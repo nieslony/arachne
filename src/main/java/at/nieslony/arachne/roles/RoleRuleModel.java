@@ -18,7 +18,6 @@ import jakarta.persistence.Table;
 import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.util.CastUtils;
 
 /**
@@ -29,7 +28,6 @@ import org.springframework.data.util.CastUtils;
 @Table(name = "roleRules")
 @Getter
 @Setter
-@ToString
 public class RoleRuleModel implements Serializable {
 
     public RoleRuleModel(
@@ -83,4 +81,13 @@ public class RoleRuleModel implements Serializable {
 
     @Column
     private String description;
+
+    @Override
+    public String toString() {
+        return "%s %s → %s".formatted(
+                getRoleRuleDescription(),
+                !getParameter().isEmpty() ? "\"" + getParameter() + "\"" : "",
+                getRoleReadable()
+        );
+    }
 }

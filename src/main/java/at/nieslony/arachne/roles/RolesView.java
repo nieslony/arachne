@@ -13,13 +13,23 @@ import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.utils.components.LdapAutoComplete;
+import com.vaadin.flow.component.HasText;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -27,6 +37,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import org.slf4j.Logger;
@@ -109,14 +120,45 @@ public class RolesView extends VerticalLayout {
 
         Grid.Column<RoleRuleModel> editColumn = roleRules
                 .addComponentColumn(roleRule -> {
-                    Button editButton = new Button("Edit");
-                    editButton.addClickListener(e -> {
+                    MenuBar menuBar = new MenuBar();
+                    menuBar.addThemeVariants(
+                            MenuBarVariant.LUMO_SMALL,
+                            MenuBarVariant.LUMO_ICON
+                    );
+
+                    menuBar.addItem("Edit", e -> {
                         if (editor.isOpen()) {
                             editor.cancel();
                         }
                         editor.editItem(roleRule);
                     });
-                    return editButton;
+
+                    MenuItem moreItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                    SubMenu moreMenu = moreItem.getSubMenu();
+                    moreMenu.addItem("Delete...", e -> {
+                        Div ruleTxt = new Div(roleRule.toString());
+                        ruleTxt.addClassName(LumoUtility.FontWeight.BOLD);
+                        ruleTxt.setWhiteSpace(HasText.WhiteSpace.NOWRAP);
+                        Div msg = new Div(
+                                new Text("Really remove role rule "),
+                                ruleTxt,
+                                new Text("now? This can't be undone.")
+                        );
+                        ConfirmDialog confirm = new ConfirmDialog();
+                        confirm.setHeader("Remove rule");
+                        confirm.setText(msg);
+                        confirm.setConfirmButton("Delete",
+                                ce -> {
+                                    roleRuleRepository.delete(roleRule);
+                                    roleRules.setItems(roleRuleRepository.findAll());
+                                }
+                        );
+                        confirm.setCancelable(true);
+                        confirm.setWidth(32, Unit.EM);
+                        confirm.open();
+                    });
+
+                    return menuBar;
                 })
                 .setWidth("10em")
                 .setFlexGrow(0);
