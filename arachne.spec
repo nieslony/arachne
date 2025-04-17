@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504170844_620eb6a
+Version:        1.3.16.git_2504180034_7a696a8
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,14 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Apr 18 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504180034_7a696a8-1
+- Allow removing of role rule (github@nieslony.at)
+- Remove old autocomplete (github@nieslony.at)
+- Replace old UsersGroupsAutocomplete.java by new LdapAutoComplete.java
+  (github@nieslony.at)
+- find...Pretty returns PrettyResult (github@nieslony.at)
+- Introduce LdapController (github@nieslony.at)
+
 * Thu Apr 17 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504170844_620eb6a-1
 - Fix: stop task on leave (github@nieslony.at)
 
