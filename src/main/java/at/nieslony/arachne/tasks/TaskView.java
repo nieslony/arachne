@@ -33,6 +33,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -58,7 +62,9 @@ import org.springframework.data.util.CastUtils;
 @PageTitle("All Tasks")
 @RolesAllowed("ADMIN")
 @Log4j2
-public class TaskView extends VerticalLayout {
+public class TaskView
+        extends VerticalLayout
+        implements BeforeEnterObserver, BeforeLeaveObserver {
 
     Grid<TaskModel> tasksGrid;
     ComboBox<Integer> refreshInterval;
@@ -312,6 +318,23 @@ public class TaskView extends VerticalLayout {
                     delay,
                     interval
             );
+        }
+    }
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent ble) {
+        try {
+            if (timer != null) {
+                timer.cancel();
+            }
+        } catch (IllegalStateException ex) {
+        }
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        if (timer != null) {
+            scheduleRefresh();
         }
     }
 }
