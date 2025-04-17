@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504162232_b46b8b5
+Version:        1.3.16.git_2504170844_620eb6a
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu Apr 17 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504170844_620eb6a-1
+- Fix: stop task on leave (github@nieslony.at)
+
 * Wed Apr 16 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504162232_b46b8b5-1
 - Bump dependency versions (github@nieslony.at)
 - Autorefresh task list (github@nieslony.at)
