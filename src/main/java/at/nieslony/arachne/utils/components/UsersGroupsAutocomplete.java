@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.utils.components;
 
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapSettings;
 import com.vaadin.componentfactory.Autocomplete;
 import java.util.LinkedList;
@@ -71,15 +72,17 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         if (pattern == null || pattern.isEmpty()) {
             return new LinkedList<>();
         }
-        List<String> options = ldapSettings != null && ldapSettings.isValid()
+        List<String> options
+                = ldapSettings != null && ldapSettings.isValid()
                 ? switch (completeMode) {
             case GROUPS ->
-                ldapSettings.findGroupsPretty("*" + pattern + "*", maxValues);
+                LdapController.getInstance().findGroupsPretty(ldapSettings, "*" + pattern + "*", maxValues);
             case USERS ->
-                ldapSettings.findUsersPretty("*" + pattern + "*", maxValues);
+                LdapController.getInstance().findUsersPretty(ldapSettings, "*" + pattern + "*", maxValues);
             case NULL ->
                 new LinkedList<>();
-        } : new LinkedList<>();
+        }
+                : new LinkedList<>();
         logger.info("Found: " + options.toString());
         return options;
     }
