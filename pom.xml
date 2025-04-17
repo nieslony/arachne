@@ -159,12 +159,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.vaadin.componentfactory</groupId>
-            <artifactId>autocomplete</artifactId>
-            <version>24.1.7</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.vaadin.olli</groupId>
             <artifactId>clipboardhelper</artifactId>
             <version>2.0.0</version>
