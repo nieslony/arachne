@@ -72,7 +72,7 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         if (pattern == null || pattern.isEmpty()) {
             return new LinkedList<>();
         }
-        List<String> options
+        List<LdapController.PrettyResult> options
                 = ldapSettings != null && ldapSettings.isValid()
                 ? switch (completeMode) {
             case GROUPS ->
@@ -84,6 +84,9 @@ public class UsersGroupsAutocomplete extends Autocomplete {
         }
                 : new LinkedList<>();
         logger.info("Found: " + options.toString());
-        return options;
+        return options
+                .stream()
+                .map((v) -> v.toString())
+                .toList();
     }
 }

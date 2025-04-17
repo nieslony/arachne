@@ -39,6 +39,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
 import org.springframework.security.kerberos.client.ldap.KerberosLdapContextSource;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.ObjectUtils;
 
 /**
  *
@@ -113,6 +114,17 @@ public class LdapController {
             );
             log.info("Found: " + ldapGroup);
             return ldapGroup;
+        }
+    }
+
+    public record PrettyResult(String name, String description) {
+
+        @Override
+        public String toString() {
+            if (ObjectUtils.isEmpty(description)) {
+                return name;
+            }
+            return "%s (%s)".formatted(name, description);
         }
     }
 
@@ -231,7 +243,7 @@ public class LdapController {
         return result;
     }
 
-    public List<String> findUsersPretty(LdapSettings ldapSettings, String pattern, int max) {
+    public List<PrettyResult> findUsersPretty(LdapSettings ldapSettings, String pattern, int max) {
         LdapTemplate ldap;
         try {
             ldap = getLdapTemplate(ldapSettings);
@@ -268,19 +280,13 @@ public class LdapController {
                         new UserContextMapper(ldapSettings)
                 )
                 .stream()
-                .map((user) -> {
-                    String displayName = user.getDisplayName();
-                    if (displayName != null && !displayName.isEmpty()) {
-                        return "%s (%s)"
-                                .formatted(
-                                        user.getUsername(),
-                                        displayName
-                                );
-                    } else {
-                        return user.getUsername();
-                    }
-                })
-                .sorted()
+                .map(
+                        (user) -> new PrettyResult(
+                                user.getUsername(),
+                                user.getDisplayName()
+                        )
+                )
+                .sorted((u1, u2) -> u1.name.compareTo(u2.name))
                 .toList();
     }
 
@@ -324,7 +330,7 @@ public class LdapController {
         return groups;
     }
 
-    public List<String> findGroupsPretty(LdapSettings ldapSettings, String pattern, int max) {
+    public List<PrettyResult> findGroupsPretty(LdapSettings ldapSettings, String pattern, int max) {
         LdapTemplate ldap;
         try {
             ldap = getLdapTemplate(ldapSettings);
@@ -360,19 +366,13 @@ public class LdapController {
                         new GroupContextMapper(ldapSettings)
                 )
                 .stream()
-                .map((group) -> {
-                    String description = group.getDescription();
-                    if (description != null && !description.isEmpty()) {
-                        return "%s (%s)"
-                                .formatted(
-                                        group.getName(),
-                                        description
-                                );
-                    } else {
-                        return group.getName();
-                    }
-                })
-                .sorted()
+                .map(
+                        (group) -> new PrettyResult(
+                                group.getName(),
+                                group.getDescription()
+                        )
+                )
+                .sorted((g1, g2) -> g1.name.compareTo(g2.name))
                 .toList();
     }
 
