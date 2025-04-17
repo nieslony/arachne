@@ -82,11 +82,13 @@ public class LdapView extends VerticalLayout {
 
     private final Settings settings;
     private final LdapSettings ldapSettings;
+    private final LdapController ldapController;
     private Binder<LdapSettings> binder;
     Button saveButton;
 
-    public LdapView(Settings settings) {
+    public LdapView(Settings settings, LdapController ldapController) {
         this.settings = settings;
+        this.ldapController = ldapController;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
 
@@ -484,7 +486,7 @@ public class LdapView extends VerticalLayout {
 
     void testLdapConnection(LdapSettings ldapSettings) {
         try {
-            LdapTemplate templ = ldapSettings.getLdapTemplate();
+            LdapTemplate templ = ldapController.getLdapTemplate(ldapSettings);
             templ.lookup(ldapSettings.getBaseDn());
             ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
@@ -505,7 +507,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindGroup(String groupname) {
         try {
-            LdapTemplate ldap = ldapSettings.getLdapTemplate();
+            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
 
             String filter = ldapSettings.getGroupsFilter(groupname);
             var result = ldap.search(
@@ -562,7 +564,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindUser(String username) {
         try {
-            LdapTemplate ldap = ldapSettings.getLdapTemplate();
+            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
             String filter = ldapSettings.getUsersFilter(username);
             var result = ldap.search(
                     ldapSettings.getUsersOu(),
