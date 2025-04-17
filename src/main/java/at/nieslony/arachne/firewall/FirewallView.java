@@ -27,7 +27,7 @@ import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.LdapAutoComplete;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
@@ -595,8 +595,7 @@ public class FirewallView extends VerticalLayout {
                         }
                 );
 
-        UsersGroupsAutocomplete parameterField
-                = new UsersGroupsAutocomplete(ldapSettings, 5);
+        TextField parameterField = new TextField();
         whoBinder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -608,10 +607,15 @@ public class FirewallView extends VerticalLayout {
                         },
                         "Value required")
                 .bind(FirewallWho::getParameter, FirewallWho::setParameter);
+        LdapAutoComplete parameterFieldComplete = new LdapAutoComplete(
+                parameterField,
+                ldapSettings
+        );
 
         dlg.add(new VerticalLayout(
                 userMatchersSelect,
-                parameterField
+                parameterField,
+                parameterFieldComplete
         ));
 
         Button saveButton = new Button("Save", (t) -> {
@@ -644,16 +648,16 @@ public class FirewallView extends VerticalLayout {
             }
             String className = e.getValue().getClassName();
             if (className.equals(UsernameMatcher.class.getName())) {
-                parameterField.setCompleteMode(
-                        UsersGroupsAutocomplete.CompleteMode.USERS
+                parameterFieldComplete.setCompleteMode(
+                        LdapAutoComplete.CompleteMode.USERS
                 );
             } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
-                parameterField.setCompleteMode(
-                        UsersGroupsAutocomplete.CompleteMode.GROUPS
+                parameterFieldComplete.setCompleteMode(
+                        LdapAutoComplete.CompleteMode.GROUPS
                 );
             } else {
-                parameterField.setCompleteMode(
-                        UsersGroupsAutocomplete.CompleteMode.NULL
+                parameterFieldComplete.setCompleteMode(
+                        LdapAutoComplete.CompleteMode.NULL
                 );
             }
         }

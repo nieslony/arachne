@@ -5,13 +5,14 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
-import at.nieslony.arachne.utils.components.UsersGroupsAutocomplete;
+import at.nieslony.arachne.utils.components.LdapAutoComplete;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -45,6 +46,7 @@ public class RolesView extends VerticalLayout {
     final private RoleRuleRepository roleRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
     final private LdapSettings ldapSettings;
+    final private LdapController ldapController;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -55,11 +57,13 @@ public class RolesView extends VerticalLayout {
     public RolesView(
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            Settings settings
+            Settings settings,
+            LdapController ldapController
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
+        this.ldapController = ldapController;
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -132,7 +136,7 @@ public class RolesView extends VerticalLayout {
                 );
         ruleColumn.setEditorComponent(userMatchersField);
 
-        UsersGroupsAutocomplete parameterField = new UsersGroupsAutocomplete(ldapSettings, 5);
+        TextField parameterField = new TextField();
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -144,7 +148,14 @@ public class RolesView extends VerticalLayout {
                         },
                         "Value required")
                 .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
-        parameterColumn.setEditorComponent(parameterField);
+        LdapAutoComplete parameterFieldComplete = new LdapAutoComplete(
+                parameterField,
+                ldapSettings
+        );
+        parameterColumn.setEditorComponent(new HorizontalLayout(
+                parameterField,
+                parameterFieldComplete
+        ));
 
         Select<Role> roles = new Select<>();
         roles.setItems(Role.values());
@@ -195,11 +206,11 @@ public class RolesView extends VerticalLayout {
             }
             String className = umi.getClassName();
             if (className.equals(UsernameMatcher.class.getName())) {
-                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.USERS);
+                parameterFieldComplete.setCompleteMode(LdapAutoComplete.CompleteMode.USERS);
             } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
-                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.GROUPS);
+                parameterFieldComplete.setCompleteMode(LdapAutoComplete.CompleteMode.GROUPS);
             } else {
-                parameterField.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.NULL);
+                parameterFieldComplete.setCompleteMode(LdapAutoComplete.CompleteMode.NULL);
             }
             binder.validate();
         });
@@ -235,7 +246,12 @@ public class RolesView extends VerticalLayout {
         userMatchers.setEmptySelectionAllowed(false);
         userMatchers.setLabel("Role Rules");
 
-        UsersGroupsAutocomplete parameter = new UsersGroupsAutocomplete(ldapSettings, 5);
+        TextField parameter = new TextField();
+        parameter.setClearButtonVisible(true);
+        LdapAutoComplete parameterComplete = new LdapAutoComplete(parameter, ldapSettings);
+        parameterComplete.setValueConverter((value) -> value.name());
+
+        //UsersGroupsAutocomplete parameter = new UsersGroupsAutocomplete(ldapSettings, 5);
         parameter.setWidthFull();
 
         Select<Role> roles = new Select<>();
@@ -245,6 +261,7 @@ public class RolesView extends VerticalLayout {
         roles.setEmptySelectionAllowed(false);
 
         TextField description = new TextField("Description");
+        description.setClearButtonVisible(true);
 
         userMatchers.setValue(allUserMatchers.get(0));
         roles.setValue(allRoles[0]);
@@ -288,11 +305,11 @@ public class RolesView extends VerticalLayout {
             }
             String className = umi.getClassName();
             if (className.equals(UsernameMatcher.class.getName())) {
-                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.USERS);
+                parameterComplete.setCompleteMode(LdapAutoComplete.CompleteMode.USERS);
             } else if (className.equals(LdapGroupUserMatcher.class.getName())) {
-                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.GROUPS);
+                parameterComplete.setCompleteMode(LdapAutoComplete.CompleteMode.GROUPS);
             } else {
-                parameter.setCompleteMode(UsersGroupsAutocomplete.CompleteMode.NULL);
+                parameterComplete.setCompleteMode(LdapAutoComplete.CompleteMode.NULL);
             }
 
             binder.validate();
@@ -304,6 +321,7 @@ public class RolesView extends VerticalLayout {
         dialog.add(new FormLayout(
                 userMatchers,
                 parameter,
+                parameterComplete,
                 roles,
                 description
         ));
