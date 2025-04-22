@@ -237,7 +237,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 .withText("""
                           Placeholders
                           %h - remote hostname
-                          %u - username
+                          %u - username (e.g. doe@EXAMPLE.COM)
+                          %U - username without realm (e.g. doe)
                           """);
         Button showTooltip = new Button(
                 new Icon(VaadinIcon.INFO_CIRCLE),
