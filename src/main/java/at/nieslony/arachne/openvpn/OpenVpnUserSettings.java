@@ -130,7 +130,8 @@ public class OpenVpnUserSettings extends AbstractSettingsGroup {
     public String getFormattedClientConfigName(String username) {
         return getVpnName()
                 .replaceAll("%h", getRemote())
-                .replaceAll("%u", username);
+                .replaceAll("%u", username)
+                .replaceAll("%U", username.split("@")[0]);
     }
 
     @Override

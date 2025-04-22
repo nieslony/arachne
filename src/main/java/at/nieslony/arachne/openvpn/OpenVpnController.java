@@ -425,9 +425,7 @@ public class OpenVpnController {
         ipv4.put("dns", vpnSettings.getPushDnsServers());
 
         JSONObject json = new JSONObject();
-        String conName = vpnSettings.getVpnName()
-                .replaceAll("%h", vpnSettings.getRemote())
-                .replaceAll("%u", username);
+        String conName = vpnSettings.getFormattedClientConfigName(username);
         json.put("name", conName);
         json.put("certificates", certs);
         json.put("data", data);
