@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504180034_7a696a8
+Version:        1.3.16.git_2504222330_505f2af
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue Apr 22 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504222330_505f2af-1
+- 
+
 * Fri Apr 18 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504180034_7a696a8-1
 - Allow removing of role rule (github@nieslony.at)
 - Remove old autocomplete (github@nieslony.at)
