@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504230004_d59bcb8
+Version:        1.3.16.git_2504231329_1123c38
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Apr 23 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504231329_1123c38-1
+- Push domains (github@nieslony.at)
+
 * Wed Apr 23 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504230004_d59bcb8-1
 - Allow connection name with realm (github@nieslony.at)
 
