@@ -227,6 +227,9 @@ public class OpenVpnController {
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }
+            for (String domain : settings.getDnsSearch()) {
+                writer.println("push \"DOMAIN-SEARCH " + domain + "\"");
+            }
             for (String route : settings.getPushRoutes()) {
                 String[] components = route.split("/");
                 if (components.length == 2) {
