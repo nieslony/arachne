@@ -38,19 +38,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class GenericEditableListBox<T extends Object, TE extends Component & HasValue<?, T>>
         extends AbstractCompositeField<VerticalLayout, GenericEditableListBox<T, TE>, List<T>>
         implements HasSize {
-
-    private static final Logger logger = LoggerFactory.getLogger(GenericEditableListBox.class);
 
     private ListBox<T> itemsField;
     private Binder<T> binder;
@@ -92,8 +90,10 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 VaadinIcon.PLUS.create(),
                 e -> {
                     List<T> items = new LinkedList<>(getValue());
-                    items.add(editField.getValue());
+                    var newItem = editField.getValue();
+                    items.add(newItem);
                     itemsField.setItems(items);
+                    itemsField.setValue(newItem);
                     setModelValue(new LinkedList<>(items), true);
                 });
         addButton.setTooltipText("Add");
@@ -102,9 +102,11 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 VaadinIcon.REFRESH.create(),
                 e -> {
                     List<T> items = new LinkedList<>(getValue());
+                    var newItem = editField.getValue();
                     items.remove(itemsField.getValue());
-                    items.add(editField.getValue());
+                    items.add(newItem);
                     itemsField.setItems(items);
+                    itemsField.setValue(newItem);
                     setModelValue(new LinkedList<>(items), true);
                 });
         updateButton.setTooltipText("Update");
@@ -115,6 +117,9 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                     List<T> items = new LinkedList<>(getValue());
                     items.remove(itemsField.getValue());
                     itemsField.setItems(items);
+                    if (!items.isEmpty()) {
+                        itemsField.setValue(items.get(0));
+                    }
                     setModelValue(new LinkedList<>(items), true);
                 });
         removeButton.setTooltipText("Delete");
