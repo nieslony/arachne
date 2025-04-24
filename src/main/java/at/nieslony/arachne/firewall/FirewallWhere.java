@@ -22,6 +22,13 @@ import at.nieslony.arachne.utils.net.MxRecord;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.SrvRecord;
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,6 +46,7 @@ import java.util.Set;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.slf4j.Logger;
@@ -52,6 +60,7 @@ import org.slf4j.LoggerFactory;
 @Setter
 @Entity
 @Table(name = "firewallWhere")
+@Slf4j
 public class FirewallWhere {
 
     private static final Logger logger = LoggerFactory.getLogger(FirewallWhere.class);
@@ -208,5 +217,69 @@ public class FirewallWhere {
         }
 
         return new LinkedList<>(ips);
+    }
+
+    public Component createInfoPopover(Component parent) {
+        Component info = switch (getType()) {
+            case Everywhere ->
+                null;
+            case Hostname -> {
+                try {
+                    var addrs = InetAddress.getAllByName(getHostname());
+                    if (addrs.length > 0) {
+                        UnorderedList list = new UnorderedList();
+                        for (var a : addrs) {
+                            list.add(new ListItem(a.toString()));
+                        }
+                        yield list;
+                    }
+                    yield new Text("Unresolvable");
+                } catch (UnknownHostException ex) {
+                    yield null;
+                }
+            }
+            case MxRecord -> {
+                try {
+                    UnorderedList list = new UnorderedList();
+                    NetUtils.mxLookup(mxDomain).forEach(mx -> {
+                        list.add(new ListItem(mx.getValue()));
+                    });
+                    yield list;
+                } catch (NamingException ex) {
+                    yield new Text("Unresolvable");
+                }
+            }
+            case ServiceRecord -> {
+                try {
+                    List<SrvRecord> srvRecs = NetUtils.srvLookup(
+                            getServiceRecName(),
+                            getServiceRecProtocol(),
+                            getServiceRecDomain()
+                    );
+                    UnorderedList list = new UnorderedList();
+                    srvRecs.forEach(rec -> {
+                        list.add(new ListItem(rec.getHostname()));
+                    });
+                    yield list;
+                } catch (NamingException ex) {
+                    yield new Text("Unresolvable");
+                }
+            }
+            default ->
+                null;
+        };
+
+        if (info != null) {
+            Popover popover = new Popover(info);
+            popover.setTarget(parent);
+            popover.setPosition(PopoverPosition.END);
+            popover.addThemeVariants(PopoverVariant.ARROW);
+            popover.setOpenOnClick(false);
+            popover.setOpenOnHover(true);
+            popover.setWidth("32em");
+            return popover;
+        } else {
+            return null;
+        }
     }
 }

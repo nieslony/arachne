@@ -489,6 +489,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 "Default Routes",
                 () -> NetUtils.getDefaultPushRoutes()
         );
+        binder.bind(pushRoutesField,
+                OpenVpnUserSettings::getPushRoutes,
+                OpenVpnUserSettings::setPushRoutes
+        );
 
         Checkbox routeInternetThroughVpn
                 = new Checkbox("Route Internet Traffic through VPN");

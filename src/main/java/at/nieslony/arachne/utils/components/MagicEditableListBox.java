@@ -18,6 +18,7 @@ import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.HasValidator;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
@@ -188,5 +189,9 @@ public class MagicEditableListBox<T extends Object>
         clearButton.setEnabled(!items.isEmpty());
         itemsField.setItems(items);
         setModelValue(items, true);
+    }
+
+    public void setItemRenderer(ComponentRenderer<?, T> renderer) {
+        itemsField.setRenderer(renderer);
     }
 }
