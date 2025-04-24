@@ -17,6 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import com.vaadin.flow.component.Component;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -66,7 +67,7 @@ public class FirewallWhat {
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
-    private Type type = Type.OnePort;
+    private Type type = Type.Service;
     private int port = 1;
     private TransportProtocol portProtocol = TransportProtocol.TCP;
     private int portFrom = 1;
@@ -86,5 +87,18 @@ public class FirewallWhat {
             case Everything ->
                 "Everything";
         };
+    }
+
+    public Component createInfoPopover(Component parent) {
+        if (getType() == Type.Service) {
+            FirewalldService srv = FirewalldService.getService(getService());
+            if (srv != null) {
+                return srv.createInfoPopover(parent);
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }

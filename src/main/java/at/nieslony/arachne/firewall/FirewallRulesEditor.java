@@ -8,6 +8,7 @@ import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
 import at.nieslony.arachne.utils.components.YesNoIcon;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,18 +30,17 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.Collection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.vaadin.firitin.layouts.HorizontalFloatLayout;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 class FirewallRulesEditor extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(FirewallRulesEditor.class);
 
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
@@ -298,6 +299,23 @@ class FirewallRulesEditor extends VerticalLayout {
                     () -> new EditFirewallWhere()
             );
             to.setMinWidth(25, Unit.EM);
+            to.setItemRenderer(new ComponentRenderer<>(t -> {
+                HorizontalLayout layout = new HorizontalFloatLayout();
+                layout.setMargin(false);
+                layout.setPadding(false);
+                layout.setAlignItems(Alignment.CENTER);
+
+                Text label = new Text(t.toString());
+                layout.addToStart(label);
+
+                Div d = new Div(VaadinIcon.INFO_CIRCLE.create());
+                Component info = t.createInfoPopover(d);
+                if (info != null) {
+                    layout.addToEnd(d, info);
+                }
+
+                return layout;
+            }));
             binder.forField(to)
                     .bind(FirewallRuleModel::getTo, FirewallRuleModel::setTo);
             horLayout.add(to);
@@ -310,6 +328,23 @@ class FirewallRulesEditor extends VerticalLayout {
                 "What",
                 () -> new EditFirewallWhat()
         );
+        what.setItemRenderer(new ComponentRenderer<>(w -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setMargin(false);
+            layout.setPadding(false);
+            layout.setAlignItems(Alignment.CENTER);
+
+            Text label = new Text(w.toString());
+            layout.addToStart(label);
+
+            Div infoButton = new Div(VaadinIcon.INFO_CIRCLE.create());
+            Component info = w.createInfoPopover(infoButton);
+            if (info != null) {
+                layout.addToEnd(infoButton, info);
+            }
+
+            return layout;
+        }));
         what.setMinWidth(25, Unit.EM);
         binder.forField(what)
                 .bind(FirewallRuleModel::getWhat, FirewallRuleModel::setWhat);
