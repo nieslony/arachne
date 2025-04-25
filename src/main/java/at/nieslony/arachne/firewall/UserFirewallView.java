@@ -40,10 +40,9 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -52,9 +51,8 @@ import org.slf4j.LoggerFactory;
 @Route(value = "userVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("User VPN | Firewall")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class UserFirewallView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserFirewallView.class);
 
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
@@ -138,6 +136,7 @@ public class UserFirewallView extends VerticalLayout {
                 .bind(UserFirewallBasicsSettings::isEnableFirewall, UserFirewallBasicsSettings::setEnableFirewall);
 
         TextField firewallZoneField = new TextField("Firewall Zone");
+        firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
         binder.forField(firewallZoneField)
                 .bind(UserFirewallBasicsSettings::getFirewallZone, UserFirewallBasicsSettings::setFirewallZone);
 
@@ -160,7 +159,7 @@ public class UserFirewallView extends VerticalLayout {
         Button saveButton = new Button("Save and Restart VPN", (e) -> {
             OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
-            logger.info("Saving firewall settings");
+            log.info("Saving firewall settings");
             try {
                 firewallBasicSettings.save(settings);
                 openVpnRestController.writeOpenVpnPluginUserConfig(
@@ -171,9 +170,9 @@ public class UserFirewallView extends VerticalLayout {
                 ShowNotification.info("OpenVpn restarted with new configuration");
 
             } catch (SettingsException ex) {
-                logger.error("Cannot save firewall settings: " + ex.getMessage());
+                log.error("Cannot save firewall settings: " + ex.getMessage());
             } catch (DBusException | DBusExecutionException ex) {
-                logger.error("Cannot restart openVPN: " + ex.getMessage());
+                log.error("Cannot restart openVPN: " + ex.getMessage());
                 ShowNotification.error("Cannot restart openVPN", ex.getMessage());
             }
         });
