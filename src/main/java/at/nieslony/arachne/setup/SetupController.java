@@ -5,6 +5,7 @@
 package at.nieslony.arachne.setup;
 
 import at.nieslony.arachne.Arachne;
+import at.nieslony.arachne.apiindex.ApiDescription;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
@@ -13,6 +14,7 @@ import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.KeyModel;
 import at.nieslony.arachne.pki.KeyRepository;
 import at.nieslony.arachne.pki.Pki;
+import at.nieslony.arachne.pki.PkiSettings;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
 import at.nieslony.arachne.roles.RoleRuleRepository;
@@ -34,27 +36,26 @@ import at.nieslony.arachne.utils.FolderFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import at.nieslony.arachne.apiindex.ApiDescription;
 
 /**
  *
  * @author claas
  */
 @RestController
+@Slf4j
 public class SetupController {
-
-    private static final org.slf4j.Logger logger
-            = LoggerFactory.getLogger(SetupController.class);
 
     public static final String SETUP_STATUS_KEY = "setup.status";
 
@@ -108,7 +109,7 @@ public class SetupController {
             SetupStatus status = settings.get(SETUP_STATUS_KEY, SetupStatus.class);
             return status != null;
         } catch (SettingsException ex) {
-            logger.error(
+            log.error(
                     "Cannot get settings %s: %s"
                             .formatted(SETUP_STATUS_KEY, ex.getMessage())
             );
@@ -118,8 +119,8 @@ public class SetupController {
     }
 
     public String setupArachne(SetupData setupData) throws SettingsException {
-        logger.info("Performing setup: " + setupData);
-        logger.info("Work directory: " + folderFactory.getArachneConfigDir());
+        log.info("Performing setup: " + setupData);
+        log.info("Work directory: " + folderFactory.getArachneConfigDir());
 
         settings.put(SETUP_STATUS_KEY, SetupStatus.RUNNING);
 
@@ -146,17 +147,37 @@ public class SetupController {
         try {
             pki.fromSetupData(setupData);
         } catch (CertSpecsValidationException ex) {
-            logger.error("Setup failed: " + ex.getMessage());
+            log.error("Setup failed: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         }
 
-        taskScheduler.runTask(UpdateDhParams.class, null, null);
+        File dhParamsFile = new File(folderFactory.getVpnConfigDir("dh.pem"));
+        if (dhParamsFile.exists()) {
+            try {
+                log.info("Reading DH params from " + dhParamsFile.getPath());
+                FileInputStream fis = new FileInputStream(dhParamsFile);
+                String dhParams = new String(fis.readAllBytes());
+                PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
+                pkiSettings.setDhParams(dhParams);
+                pkiSettings.save(settings);
+            } catch (IOException ex) {
+                throw new SettingsException(
+                        "DH params file %s exists but cannot be read: %s"
+                                .formatted(
+                                        dhParamsFile.getPath(),
+                                        ex.getMessage()
+                                )
+                );
+            }
+        } else {
+            taskScheduler.runTask(UpdateDhParams.class, null, null);
+        }
 
         settings.put(SETUP_STATUS_KEY, SetupStatus.FINISHED);
 
         String msg;
         msg = "Setup completed.";
-        logger.info(msg);
+        log.info(msg);
 
         return msg;
     }
@@ -174,13 +195,13 @@ public class SetupController {
     }
 
     public void restore(InputStream is) {
-        logger.info("Starting restore");
+        log.info("Starting restore");
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             JsonNode node = objectMapper.readTree(is);
             node.fields().forEachRemaining((Map.Entry<String, JsonNode> n) -> {
                 String key = n.getKey();
-                logger.info("Restoring " + key);
+                log.info("Restoring " + key);
                 try {
                     switch (key) {
                         case "roleRules" -> {
@@ -233,20 +254,20 @@ public class SetupController {
                         }
                         case "version" -> {
                             int version = n.getValue().asInt();
-                            logger.info("We restore back version " + String.valueOf(version));
+                            log.info("We restore back version " + String.valueOf(version));
                         }
                         default ->
-                            logger.info("Unhandled key: " + key);
+                            log.info("Unhandled key: " + key);
                     }
                 } catch (IOException ex) {
-                    logger.error("Cannot read value: " + ex.getMessage());
+                    log.error("Cannot read value: " + ex.getMessage());
                 }
             });
         } catch (IOException ex) {
-            logger.error("Error reading json: " + ex.getMessage());
+            log.error("Error reading json: " + ex.getMessage());
         }
-        logger.info("Restarting server");
+        log.info("Restarting server");
         Arachne.restart();
-        logger.info("Restore completed");
+        log.info("Restore completed");
     }
 }
