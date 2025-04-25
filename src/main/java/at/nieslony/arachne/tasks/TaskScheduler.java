@@ -266,7 +266,6 @@ public class TaskScheduler implements BeanFactoryAware {
         TaskModel taskModel = new TaskModel();
         taskModel.setTaskClassName(taskClass.getName());
         taskModel.setStatus(TaskModel.Status.WAITING);
-        log.info(taskModel.toString());
         runTask(taskClass, taskRepository.save(taskModel), onStart, onStop);
     }
 
