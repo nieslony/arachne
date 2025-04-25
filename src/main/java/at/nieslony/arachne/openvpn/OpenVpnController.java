@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
 import java.util.Optional;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -424,8 +425,8 @@ public class OpenVpnController {
 
         JSONObject ipv4 = new JSONObject();
         ipv4.put("never-default", !vpnSettings.getInternetThrouphVpn());
-        ipv4.put("dns-search", vpnSettings.getDnsSearch());
-        ipv4.put("dns", vpnSettings.getPushDnsServers());
+        ipv4.put("dns-search", new JSONArray(vpnSettings.getDnsSearch()));
+        ipv4.put("dns", new JSONArray(vpnSettings.getPushDnsServers()));
 
         JSONObject json = new JSONObject();
         String conName = vpnSettings.getFormattedClientConfigName(username);
