@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504242342_e7c3723
+Version:        1.3.16.git_2504252157_a496a5e
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Apr 25 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504252157_a496a5e-1
+- Fix: add lists (github@nieslony.at)
+
 * Thu Apr 24 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504242342_e7c3723-1
 - Show infos aboute firewall to/what (github@nieslony.at)
 - Allow custom item renderer (github@nieslony.at)
