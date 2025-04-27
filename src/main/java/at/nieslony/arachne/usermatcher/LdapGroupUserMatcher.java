@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.usermatcher;
 
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapGroup;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUserSource;
@@ -46,7 +47,9 @@ public class LdapGroupUserMatcher extends UserMatcher {
             return false;
         }
         try {
-            LdapGroup ldapGroup = ldapSettings.getGroup(this.parameter);
+            LdapGroup ldapGroup = LdapController
+                    .getInstance()
+                    .getGroup(ldapSettings, this.parameter);
             if (ldapGroup == null) {
                 logger.info("Group %s not found".formatted(parameter));
                 return false;

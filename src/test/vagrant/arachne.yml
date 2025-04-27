@@ -41,6 +41,11 @@
       force: yes
       follow: no
 
+  - name: "Create DH params"
+    community.crypto.openssl_dhparam:
+      path: /var/lib/arachne/vpnconfig/dh.pem
+      size: 2048
+
   - name: "Set seboolean"
     seboolean:
       name: "{{ item }}"

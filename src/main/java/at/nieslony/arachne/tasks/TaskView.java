@@ -18,8 +18,10 @@ package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -31,14 +33,23 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.CastUtils;
@@ -50,26 +61,55 @@ import org.springframework.data.util.CastUtils;
 @Route(value = "tasks", layout = ViewTemplate.class)
 @PageTitle("All Tasks")
 @RolesAllowed("ADMIN")
-public class TaskView extends VerticalLayout {
+@Log4j2
+public class TaskView
+        extends VerticalLayout
+        implements BeforeEnterObserver, BeforeLeaveObserver {
+
+    Grid<TaskModel> tasksGrid;
+    ComboBox<Integer> refreshInterval;
+    Timer timer;
 
     public TaskView(TaskRepository taskRepository, TaskScheduler taskScheduler) {
-        Grid<TaskModel> grid = new Grid<>();
-        MenuBar createTaskMenu = new MenuBar();
-        createTaskMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
-        MenuItem taskTypeItem = createTaskMenu.addItem("Create Task");
-        SubMenu taskTypeMenu = taskTypeItem.getSubMenu();
-        for (var task : taskScheduler.getTaskTypes()) {
-            taskTypeMenu.addItem(getTaskName(task), (e) -> {
-                taskScheduler.runTask(
-                        task,
-                        () -> grid.getDataProvider().refreshAll(),
-                        () -> grid.getDataProvider().refreshAll()
-                );
-                grid.getDataProvider().refreshAll();
-            });
-        }
+        timer = new Timer();
+        tasksGrid = new Grid<>();
 
-        grid
+        HorizontalLayout buttonBar = new HorizontalLayout();
+        buttonBar.setWidthFull();
+        buttonBar.setMargin(false);
+        buttonBar.setPadding(false);
+
+        MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+        MenuItem taskTypeItem = menuBar.addItem("Create Task");
+        SubMenu taskTypeMenu = taskTypeItem.getSubMenu();
+        taskScheduler.getTaskTypes().forEach((task) -> {
+            taskTypeMenu.addItem(getTaskName(task), (e) -> {
+                taskScheduler.runTask(task,
+                        () -> tasksGrid.getDataProvider().refreshAll(),
+                        () -> tasksGrid.getDataProvider().refreshAll()
+                );
+                tasksGrid.getDataProvider().refreshAll();
+                scheduleRefresh();
+            });
+        });
+        buttonBar.addToStart(menuBar);
+
+        Button autoRefresh = new Button("Autorefresh");
+        autoRefresh.addClassNames(
+                LumoUtility.Background.PRIMARY,
+                LumoUtility.TextColor.PRIMARY_CONTRAST
+        );
+        buttonBar.addToEnd(autoRefresh);
+
+        refreshInterval = new ComboBox<>();
+        refreshInterval.setItems(1, 2, 5, 10, 20);
+        refreshInterval.setItemLabelGenerator((l) -> l.toString() + " min");
+        refreshInterval.addValueChangeListener((e) -> scheduleRefresh());
+        refreshInterval.setValue(1);
+        buttonBar.addToEnd(refreshInterval);
+
+        tasksGrid
                 .addColumn((source) -> {
                     try {
                         Class c = Class.forName(source.getTaskClassName());
@@ -79,34 +119,40 @@ public class TaskView extends VerticalLayout {
                     }
                 })
                 .setHeader("Name");
-        grid
+        tasksGrid
                 .addColumn((source) -> {
                     if (source.getScheduled() == null) {
                         return "";
                     } else {
-                        return source.getScheduled();
+                        return DateFormat
+                                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                                .format(source.getScheduled());
                     }
                 })
                 .setHeader("Scheduled");
-        grid
+        tasksGrid
                 .addColumn((source) -> {
                     if (source.getStarted() == null) {
                         return "";
                     } else {
-                        return source.getStarted();
+                        return DateFormat
+                                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                                .format(source.getStarted());
                     }
                 })
                 .setHeader("Started");
-        grid
+        tasksGrid
                 .addColumn((source) -> {
                     if (source.getStopped() == null) {
                         return "";
                     } else {
-                        return source.getStopped();
+                        return DateFormat
+                                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                                .format(source.getStopped());
                     }
                 })
                 .setHeader("Stopped");
-        grid
+        tasksGrid
                 .addColumn((source) -> source.getStatus())
                 .setTooltipGenerator((source) -> {
                     if (source.getStatusMsg() == null) {
@@ -118,12 +164,12 @@ public class TaskView extends VerticalLayout {
                     return source.getStatusMsg();
                 })
                 .setHeader("Status");
-        grid.addComponentColumn((source) -> {
+        tasksGrid.addComponentColumn((source) -> {
             if (source.getStatus() == TaskModel.Status.SCHEDULED) {
                 return new Button("Reschedule...", (t) -> {
                     Dialog dlg = createRescheduleDialog(source, () -> {
                         taskRepository.save(source);
-                        grid.getDataProvider().refreshItem(source);
+                        tasksGrid.getDataProvider().refreshItem(source);
                         taskScheduler.scheduleTask(source);
                     });
                     dlg.open();
@@ -145,13 +191,31 @@ public class TaskView extends VerticalLayout {
                 },
                 (query) -> (int) taskRepository.count()
         );
-        grid.setDataProvider(dataProvider);
+        tasksGrid.setDataProvider(dataProvider);
+        tasksGrid.setHeightFull();
 
         add(
-                createTaskMenu,
-                grid
+                buttonBar,
+                tasksGrid
         );
         setPadding(false);
+
+        autoRefresh.addClickListener(e -> {
+            if (refreshInterval.isEnabled()) {
+                refreshInterval.setEnabled(false);
+                autoRefresh.removeClassNames(
+                        LumoUtility.Background.PRIMARY,
+                        LumoUtility.TextColor.PRIMARY_CONTRAST
+                );
+            } else {
+                refreshInterval.setEnabled(true);
+                autoRefresh.addClassNames(
+                        LumoUtility.Background.PRIMARY,
+                        LumoUtility.TextColor.PRIMARY_CONTRAST
+                );
+            }
+            scheduleRefresh();
+        });
     }
 
     private String getTaskName(Class<? extends Task> c) {
@@ -228,5 +292,49 @@ public class TaskView extends VerticalLayout {
                 okButton
         );
         return dlg;
+    }
+
+    private void scheduleRefresh() {
+        try {
+            timer.cancel();
+        } catch (IllegalStateException ex) {
+        }
+        if (refreshInterval.isEnabled()) {
+            timer = new Timer();
+            int delay = 1000;
+            int interval = refreshInterval.getValue() * 1000 * 60;
+            UI ui = UI.getCurrent();
+
+            timer.scheduleAtFixedRate(
+                    new TimerTask() {
+                @Override
+                public void run() {
+                    ui.access(() -> {
+                        tasksGrid.getDataProvider().refreshAll();
+                    });
+                    ui.push();
+                }
+            },
+                    delay,
+                    interval
+            );
+        }
+    }
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent ble) {
+        try {
+            if (timer != null) {
+                timer.cancel();
+            }
+        } catch (IllegalStateException ex) {
+        }
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        if (timer != null) {
+            scheduleRefresh();
+        }
     }
 }

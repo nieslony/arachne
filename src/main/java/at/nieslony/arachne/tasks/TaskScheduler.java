@@ -35,8 +35,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -50,14 +49,13 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @Component
+@Log4j2
 public class TaskScheduler implements BeanFactoryAware {
-
-    private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
     private final ThreadGroup threadGroup;
     private BeanFactory beanFactory;
     private int taskNr = 0;
-    private Map<String, ScheduledFuture<?>> scheduledTasks;
+    private final Map<String, ScheduledFuture<?>> scheduledTasks;
 
     @Getter
     ScheduledExecutorService scheduler;
@@ -79,17 +77,17 @@ public class TaskScheduler implements BeanFactoryAware {
     }
 
     private void killTerminatedTasks() {
-        logger.info("Kill terminated tasks");
+        log.info("Kill terminated tasks");
         for (TaskModel task : taskRepository.findAllByStatus(TaskModel.Status.RUNNING)) {
             task.setStatus(TaskModel.Status.ERROR);
             task.setStatusMsg("Killed during Server Termination");
-            logger.info("Killing " + task.getTaskClassName());
+            log.info("Killing " + task.getTaskClassName());
             taskRepository.save(task);
         }
     }
 
     private void registerTaskTypes() {
-        logger.info("Registering task types");
+        log.info("Registering task types");
         for (var task : taskTypes) {
             String className = task.getName();
             RecurringTaskModel model
@@ -111,7 +109,7 @@ public class TaskScheduler implements BeanFactoryAware {
                             !model.getStartAt().isEmpty()
                     );
                 }
-                logger.info("Registering task " + model.getClassName());
+                log.info("Registering task " + model.getClassName());
                 recurringTaskRepository.save(model);
             }
         }
@@ -150,7 +148,7 @@ public class TaskScheduler implements BeanFactoryAware {
 
     @EventListener(ApplicationReadyEvent.class)
     public void scheduleTasks() {
-        logger.info("Scheduling tasks");
+        log.info("Scheduling tasks");
         var alreadyScheduledTasks = taskRepository.findAllByStatus(
                 TaskModel.Status.SCHEDULED
         );
@@ -169,16 +167,16 @@ public class TaskScheduler implements BeanFactoryAware {
                     model.setScheduled(next);
                     model.setTaskClassName(taskClassName);
                     model.setStatus(TaskModel.Status.SCHEDULED);
-                    logger.info("Scheduling task %s for %s".formatted(
+                    log.info("Scheduling task %s for %s".formatted(
                             model.getTaskClassName(), next.toString()
                     ));
                     taskRepository.save(model);
                     scheduleTask(model);
                 } else {
-                    logger.info("Task %s is not repeated".formatted(taskClassName));
+                    log.info("Task %s is not repeated".formatted(taskClassName));
                 }
             } else {
-                logger.info(
+                log.info(
                         "Task %s is already scheduled at %s"
                                 .formatted(
                                         taskClassName,
@@ -196,7 +194,7 @@ public class TaskScheduler implements BeanFactoryAware {
                         model.getTaskClassName()
                 );
         if (scheduledTasks.containsKey(model.getTaskClassName())) {
-            logger.info("Cancelling job to reschedule it");
+            log.info("Cancelling job to reschedule it");
             var futureTask = scheduledTasks.remove(model.getTaskClassName());
             futureTask.cancel(false);
         }
@@ -216,7 +214,7 @@ public class TaskScheduler implements BeanFactoryAware {
             } else {
                 startAt = now.getTime();
             }
-            logger.info(
+            log.info(
                     "Task scheduled in past, rescheduled to "
                     + startAt.toString()
             );
@@ -233,7 +231,7 @@ public class TaskScheduler implements BeanFactoryAware {
                     .formatted(
                             model.getTaskClassName(),
                             ex.getMessage());
-            logger.error(msg);
+            log.error(msg);
             model.setStatusMsg(msg);
             model.setStatus(TaskModel.Status.ERROR);
             taskRepository.save(model);
@@ -268,7 +266,6 @@ public class TaskScheduler implements BeanFactoryAware {
         TaskModel taskModel = new TaskModel();
         taskModel.setTaskClassName(taskClass.getName());
         taskModel.setStatus(TaskModel.Status.WAITING);
-        logger.info(taskModel.toString());
         runTask(taskClass, taskRepository.save(taskModel), onStart, onStop);
     }
 
@@ -283,7 +280,7 @@ public class TaskScheduler implements BeanFactoryAware {
                 () -> {
                     Task task;
                     try {
-                        logger.info("Task %s started".formatted(taskModel.getTaskClassName()));
+                        log.info("Task %s started".formatted(taskModel.getTaskClassName()));
                         taskModel.setStatus(TaskModel.Status.RUNNING);
                         taskModel.setStarted(new Date());
                         taskRepository.save(taskModel);
@@ -298,12 +295,17 @@ public class TaskScheduler implements BeanFactoryAware {
                         }
                     } catch (Exception ex) {
                         String msg = ex.getMessage();
-                        logger.error(msg);
+                        log.error("Task %s returns error: %s"
+                                .formatted(
+                                        taskModel.getTaskClassName(),
+                                        msg
+                                )
+                        );
                         taskModel.setStatus(TaskModel.Status.ERROR);
                         taskModel.setStatusMsg(msg);
                     }
                     taskModel.setStopped(new Date());
-                    logger.info("Task %s stopped".formatted(taskModel.getTaskClassName()));
+                    log.info("Task %s stopped".formatted(taskModel.getTaskClassName()));
                     taskRepository.save(taskModel);
                     if (onStop != null) {
                         onStop.run();

@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.tasks.scheduled;
 
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
@@ -41,7 +42,9 @@ public class RefreshLdapUsers extends Task {
             int noUsersUpdated = 0;
             int noUsersAdded = 0;
             int noUsersSkipped = 0;
-            for (var ldapUser : ldapSettings.findUsers("*", 1000)) {
+            for (var ldapUser : LdapController
+                    .getInstance()
+                    .findUsers(ldapSettings, "*", 1000)) {
                 var repoUser = userRepository.findByUsername(ldapUser.getUsername());
                 var roles = rolesCollestor.findRolesForUser(ldapUser);
                 if (repoUser != null) {

@@ -237,7 +237,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 .withText("""
                           Placeholders
                           %h - remote hostname
-                          %u - username
+                          %u - username (e.g. doe@EXAMPLE.COM)
+                          %U - username without realm (e.g. doe)
                           """);
         Button showTooltip = new Button(
                 new Icon(VaadinIcon.INFO_CIRCLE),
@@ -487,6 +488,10 @@ public class OpenVpnUserView extends VerticalLayout {
         pushRoutesField.setDefaultValuesSupplier(
                 "Default Routes",
                 () -> NetUtils.getDefaultPushRoutes()
+        );
+        binder.bind(pushRoutesField,
+                OpenVpnUserSettings::getPushRoutes,
+                OpenVpnUserSettings::setPushRoutes
         );
 
         Checkbox routeInternetThroughVpn

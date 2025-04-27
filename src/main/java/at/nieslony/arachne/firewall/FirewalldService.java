@@ -17,6 +17,15 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.utils.FolderFactory;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.ListItem;
+import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.popover.PopoverVariant;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -264,5 +273,47 @@ public class FirewalldService {
                                     ex.getMessage())
             );
         }
+    }
+
+    public Component createInfoPopover(Component parent) {
+        Popover popover = new Popover();
+        popover.setTarget(parent);
+        popover.setPosition(PopoverPosition.END);
+        popover.addThemeVariants(PopoverVariant.ARROW);
+        popover.setOpenOnClick(false);
+        popover.setOpenOnHover(true);
+        popover.setWidth("32em");
+
+        Div poTitle = new Div(getShortDescription());
+        poTitle.addClassNames(LumoUtility.FontWeight.BOLD);
+
+        UnorderedList poPorts = new UnorderedList();
+        if (getProtocolPorts() != null) {
+            getProtocolPorts().forEach((port) -> {
+                poPorts.add(new ListItem(port.toString()));
+            });
+        }
+        getIncludes().forEach(include -> {
+            FirewalldService incSrv = FirewalldService.getService(include);
+            incSrv.getProtocolPorts().forEach(port -> {
+                String label = "%s (%s)".formatted(
+                        port.toString(),
+                        incSrv.getShortDescription()
+                );
+                poPorts.add(new ListItem(label));
+            });
+        });
+
+        Div poDescription = new Div(getLongDescription());
+        poDescription.addClassNames(LumoUtility.FontSize.SMALL);
+        poDescription.addClassNames(LumoUtility.TextAlignment.JUSTIFY);
+
+        popover.add(
+                poTitle,
+                new Text("Ports:"), poPorts,
+                poDescription
+        );
+
+        return popover;
     }
 }
