@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504271111_bbe668f
+Version:        1.3.16.git_2504271113_0036dba
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,31 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271113_0036dba-1
+- Set max length 17 of firewall zone (github@nieslony.at)
+- Fix: add lists (github@nieslony.at)
+- Create DH params (github@nieslony.at)
+- Don't create DH params if dh.pem exists (github@nieslony.at)
+- Remove useless log entry (github@nieslony.at)
+- Show infos aboute firewall to/what (github@nieslony.at)
+- Allow custom item renderer (github@nieslony.at)
+- Preselect item after add/update/delete (github@nieslony.at)
+- Load routes from settings (github@nieslony.at)
+- Push domains (github@nieslony.at)
+- Allow connection name with realm (github@nieslony.at)
+- Allow removing of role rule (github@nieslony.at)
+- Remove old autocomplete (github@nieslony.at)
+- Replace old UsersGroupsAutocomplete.java by new LdapAutoComplete.java
+  (github@nieslony.at)
+- find...Pretty returns PrettyResult (github@nieslony.at)
+- Introduce LdapController (github@nieslony.at)
+- Fix: stop task on leave (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Autorefresh task list (github@nieslony.at)
+- Set content full height (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Fix: lombok & netbeans 25 (github@nieslony.at)
+
 * Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271111_bbe668f-1
 - 
 
