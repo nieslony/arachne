@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504252157_a496a5e
+Version:        1.3.16.git_2504271116_fd0a4a9
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,16 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271116_fd0a4a9-1
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504271113_0036dba-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504271111_bbe668f-1]. (github@nieslony.at)
+- Set max length 17 of firewall zone (github@nieslony.at)
+- Create DH params (github@nieslony.at)
+- Don't create DH params if dh.pem exists (github@nieslony.at)
+- Remove useless log entry (github@nieslony.at)
+
 * Fri Apr 25 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504252157_a496a5e-1
 - Fix: add lists (github@nieslony.at)
 
