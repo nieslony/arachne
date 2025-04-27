@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504271113_0036dba
+Version:        1.3.16.git_2504252157_a496a5e
 
 Release:        1
 License:        GPLv3
@@ -99,33 +99,41 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
-* Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271113_0036dba-1
-- Set max length 17 of firewall zone (github@nieslony.at)
+* Fri Apr 25 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504252157_a496a5e-1
 - Fix: add lists (github@nieslony.at)
-- Create DH params (github@nieslony.at)
-- Don't create DH params if dh.pem exists (github@nieslony.at)
-- Remove useless log entry (github@nieslony.at)
+
+* Thu Apr 24 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504242342_e7c3723-1
 - Show infos aboute firewall to/what (github@nieslony.at)
 - Allow custom item renderer (github@nieslony.at)
 - Preselect item after add/update/delete (github@nieslony.at)
 - Load routes from settings (github@nieslony.at)
+
+* Wed Apr 23 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504231329_1123c38-1
 - Push domains (github@nieslony.at)
+
+* Wed Apr 23 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504230004_d59bcb8-1
 - Allow connection name with realm (github@nieslony.at)
+
+* Tue Apr 22 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504222330_505f2af-1
+- 
+
+* Fri Apr 18 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504180034_7a696a8-1
 - Allow removing of role rule (github@nieslony.at)
 - Remove old autocomplete (github@nieslony.at)
 - Replace old UsersGroupsAutocomplete.java by new LdapAutoComplete.java
   (github@nieslony.at)
 - find...Pretty returns PrettyResult (github@nieslony.at)
 - Introduce LdapController (github@nieslony.at)
+
+* Thu Apr 17 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504170844_620eb6a-1
 - Fix: stop task on leave (github@nieslony.at)
+
+* Wed Apr 16 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504162232_b46b8b5-1
 - Bump dependency versions (github@nieslony.at)
 - Autorefresh task list (github@nieslony.at)
 - Set content full height (github@nieslony.at)
 - Bump vaadin version (github@nieslony.at)
 - Fix: lombok & netbeans 25 (github@nieslony.at)
-
-* Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271111_bbe668f-1
-- 
 
 * Thu Apr 10 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504101514_32e8dab-1
 - Add random device (github@nieslony.at)
