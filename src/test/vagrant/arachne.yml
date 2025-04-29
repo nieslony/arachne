@@ -32,6 +32,7 @@
         - arachne
         - firewalld
       state: latest
+    notify: reboot
 
   - name: "Symlink arachne.conf"
     file:
@@ -131,3 +132,9 @@
     with_items:
       - tcp
       - udp
+
+  handlers:
+  - name: "Reboot"
+    reboot:
+    listen: reboot
+    
