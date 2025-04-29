@@ -27,6 +27,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -89,9 +90,19 @@ public class PkiSettingsView extends VerticalLayout {
         );
 
         IntegerField serverCertRenewDaysField
-                = new IntegerField("Renew Server Certificate before Expiration");
+                = new IntegerField();
         serverCertRenewDaysField.setStepButtonsVisible(true);
         serverCertRenewDaysField.setSuffixComponent(new Div(new Text("days")));
+        serverCertRenewDaysField.setId("serverCertRenewDaysField");
+
+        NativeLabel lbl = new NativeLabel("Renew Server Certificate before Expiration");
+        lbl.setFor(serverCertRenewDaysField);
+
+        VerticalLayout vbox = new VerticalLayout(lbl, serverCertRenewDaysField);
+        vbox.setSpacing(false);
+        vbox.setPadding(false);
+        vbox.setMargin(false);
+
         binder.bind(
                 serverCertRenewDaysField,
                 PkiSettings::getServerCertRenewDays,
@@ -105,8 +116,7 @@ public class PkiSettingsView extends VerticalLayout {
 
         HorizontalLayout crlLayout = new HorizontalLayout(
                 crlLifetimeDaysField,
-                createCrlButton,
-                serverCertRenewDaysField
+                createCrlButton
         );
         crlLayout.setAlignItems(Alignment.BASELINE);
 
@@ -122,6 +132,7 @@ public class PkiSettingsView extends VerticalLayout {
         add(
                 dhParamsLayout,
                 crlLayout,
+                vbox,
                 saveButton
         );
         setPadding(false);
