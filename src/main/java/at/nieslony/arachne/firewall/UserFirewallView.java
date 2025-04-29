@@ -123,6 +123,8 @@ public class UserFirewallView extends VerticalLayout {
             firewallRuleRepository.save(rule);
         }
 
+        tabs.setHeightFull();
+
         add(tabs);
         setPadding(false);
     }
@@ -192,6 +194,8 @@ public class UserFirewallView extends VerticalLayout {
                 icmpRules,
                 saveButton
         );
+        layout.setMargin(false);
+        layout.setPadding(false);
 
         binder.setBean(firewallBasicSettings);
 

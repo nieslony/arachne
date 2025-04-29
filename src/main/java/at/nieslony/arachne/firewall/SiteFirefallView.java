@@ -47,6 +47,7 @@ public class SiteFirefallView extends VerticalLayout {
                 "Incoming",
                 incomingRulesEditor
         );
+        tabs.setHeightFull();
 
         if (firewallRuleRepository.countByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.SITE,
