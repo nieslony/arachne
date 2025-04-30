@@ -34,10 +34,9 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -46,18 +45,17 @@ import org.slf4j.LoggerFactory;
 @Route(value = "admin-home", layout = ViewTemplate.class)
 @PageTitle("Admin Dashboard")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class AdminHome
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdminHome.class);
-
-    class ConnectedClientsListener implements Consumer<IFaceOpenVpnStatus> {
+    class ConnectedUsersListener implements Consumer<IFaceOpenVpnStatus> {
 
         private final UI ui;
         private final Grid<IFaceConnectedClient> grid;
 
-        ConnectedClientsListener(UI ui, Grid<IFaceConnectedClient> grid) {
+        ConnectedUsersListener(UI ui, Grid<IFaceConnectedClient> grid) {
             this.ui = ui;
             this.grid = grid;
         }
@@ -112,17 +110,24 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             var knownSites = vpnSiteRepository.findAll();
             var connectedSites = status.getConnectedClients();
+            log.debug("Connected sites: " + connectedSites.toString());
 
             List<SiteStatus> statusList = new LinkedList<>();
             for (var site : knownSites) {
                 if (!site.isDefaultSite()) {
-                    logger.info(connectedSites.toString());
-                    logger.info(site.toString());
                     var client = connectedSites.stream()
-                            .filter((s) -> s.getCommonName().equals(site.getSiteHostname()))
+                            .filter((s)
+                                    -> s
+                                    .getCommonName()
+                                    .equals(site.getSiteHostname())
+                            )
                             .findFirst()
                             .orElse(null);
-                    statusList.add(new SiteStatus(site, client));
+                    var siteStatus = new SiteStatus(site, client);
+                    log.debug("Site is connected: %b %s"
+                            .formatted(siteStatus.isConnected(), site.toString())
+                    );
+                    statusList.add(siteStatus);
                 }
             }
             ui.access(() -> {
@@ -162,7 +167,7 @@ public class AdminHome
         content.setWidthFull();
         add(content);
 
-        this.updateConnectedUserListener = new ConnectedClientsListener(UI.getCurrent(), connectedUsersGrid);
+        this.updateConnectedUserListener = new ConnectedUsersListener(UI.getCurrent(), connectedUsersGrid);
         this.updateConnectedSitesListener = new ConnectedSitesListener(UI.getCurrent(), connectedSitesGrid);
         setPadding(false);
 
@@ -173,7 +178,7 @@ public class AdminHome
     @PostConstruct
     public void init() {
         addDetachListener((t) -> {
-            logger.info("Detach");
+            log.info("Detach");
             if (openVpnUserSettings.isAlreadyConfigured()) {
                 arachneDbus.removeServerStatusChangedListener(
                         ArachneDbus.ServerType.USER,
@@ -202,7 +207,7 @@ public class AdminHome
                 msgConnectedUsers.setText("User VPN not yet configured");
             }
         } catch (DBusException | DBusExecutionException ex) {
-            logger.error("Error getting connected users: " + ex.getMessage());
+            log.error("Error getting connected users: " + ex.getMessage());
             msgConnectedUsers.setText("DBusError: " + ex.getMessage());
         }
     }
@@ -216,7 +221,7 @@ public class AdminHome
                 msgConnectedSites.setText("Site VPN not yet configured");
             }
         } catch (DBusException | DBusExecutionException ex) {
-            logger.error("DBus Error: " + ex.getMessage());
+            log.error("DBus Error: " + ex.getMessage());
             msgConnectedSites.setText("DBusError: " + ex.getMessage());
         }
     }
