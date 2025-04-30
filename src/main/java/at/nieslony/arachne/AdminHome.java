@@ -15,6 +15,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
@@ -62,14 +63,18 @@ public class AdminHome
 
         @Override
         public void accept(IFaceOpenVpnStatus status) {
-            ui.access(() -> {
-                var clients = status.getConnectedClients();
-                grid.setItems(clients);
-                msgConnectedUsers.setText(createMsgConnectedUsers(
-                        status.getConnectedClients().size()
-                ));
-                ui.push();
-            });
+            try {
+                ui.access(() -> {
+                    var clients = status.getConnectedClients();
+                    grid.setItems(clients);
+                    msgConnectedUsers.setText(createMsgConnectedUsers(
+                            status.getConnectedClients().size()
+                    ));
+                    ui.push();
+                });
+            } catch (UIDetachedException ex) {
+                log.warn("Cannot up date grid: UI is detached");
+            }
         }
     };
 
@@ -130,13 +135,17 @@ public class AdminHome
                     statusList.add(siteStatus);
                 }
             }
-            ui.access(() -> {
-                grid.setItems(statusList);
-                msgConnectedSites.setText("%d/%d sites connected"
-                        .formatted(status.getConnectedClients().size(),
-                                vpnSiteRepository.count() - 1
-                        ));
-            });
+            try {
+                ui.access(() -> {
+                    grid.setItems(statusList);
+                    msgConnectedSites.setText("%d/%d sites connected"
+                            .formatted(status.getConnectedClients().size(),
+                                    vpnSiteRepository.count() - 1
+                            ));
+                });
+            } catch (UIDetachedException ex) {
+                log.warn("Cannot up date grid: UI is detached");
+            }
         }
     }
 
