@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504301559_f9d22f7
+Version:        1.3.16.git_2504301636_7d5de06
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301636_7d5de06-1
+- Fix: push ui (github@nieslony.at)
+
 * Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301559_f9d22f7-1
 - Fix: handle session timeout (github@nieslony.at)
 
