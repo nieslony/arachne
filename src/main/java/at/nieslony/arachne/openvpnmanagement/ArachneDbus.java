@@ -107,12 +107,18 @@ public class ArachneDbus {
             case SITE ->
                 sigHandlerSiteStatus;
         };
+        var server = switch (serverType) {
+            case USER ->
+                arachneUser;
+            case SITE ->
+                arachneSite;
+        };
         if (statusListener.isEmpty()) {
             logger.info("First listener added: Adding signal handler");
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
-                        arachneUser,
+                        server,
                         signalHandlerStatus
                 );
             } catch (DBusException ex) {
@@ -120,7 +126,7 @@ public class ArachneDbus {
                 return;
             }
         }
-        userServerStatusListeners.add(listener);
+        statusListener.add(listener);
     }
 
     public void removeServerStatusChangedListener(
