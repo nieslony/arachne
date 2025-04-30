@@ -180,6 +180,7 @@ class FirewallRulesEditor extends VerticalLayout {
                     );
                     layout.setPadding(false);
                     layout.setMargin(false);
+                    layout.setSpacing(false);
                     return layout;
                 }))
                 .setFlexGrow(0);
@@ -193,6 +194,9 @@ class FirewallRulesEditor extends VerticalLayout {
         });
 
         add(addRule, grid);
+        setHeightFull();
+        setMargin(false);
+        setPadding(false);
 
         grid.setItems(dataProvider);
     }
