@@ -115,7 +115,13 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             var knownSites = vpnSiteRepository.findAll();
             var connectedSites = status.getConnectedClients();
-            log.debug("Connected sites: " + connectedSites.toString());
+            log.debug(
+                    "Connected sites on %s: %s"
+                            .formatted(
+                                    status.getTimeAsDate().toString(),
+                                    connectedSites.toString()
+                            )
+            );
 
             List<SiteStatus> statusList = new LinkedList<>();
             for (var site : knownSites) {
@@ -142,6 +148,7 @@ public class AdminHome
                             .formatted(status.getConnectedClients().size(),
                                     vpnSiteRepository.count() - 1
                             ));
+                    ui.push();
                 });
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up date grid: UI is detached");
