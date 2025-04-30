@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504271116_fd0a4a9
+Version:        1.3.16.git_2504301144_04a9c45
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,14 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301144_04a9c45-1
+- Improve logging (github@nieslony.at)
+- Fix firewall layout (github@nieslony.at)
+- Fix layout (github@nieslony.at)
+- Bump vaadin vertsion (github@nieslony.at)
+- Move VM to network Lab_DMZ (github@nieslony.at)
+- Reboot to apply polkit rules (github@nieslony.at)
+
 * Sun Apr 27 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504271116_fd0a4a9-1
 - Automatic commit of package [arachne] release
   [1.3.16.git_2504271113_0036dba-1]. (github@nieslony.at)
