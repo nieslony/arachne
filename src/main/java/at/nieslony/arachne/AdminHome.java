@@ -32,6 +32,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -65,15 +67,23 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             try {
                 ui.access(() -> {
-                    var clients = status.getConnectedClients();
-                    grid.setItems(clients);
+                    var connectedUsers = status.getConnectedClients();
+                    log.debug(
+                            "Connected users on %s: %s"
+                                    .formatted(
+                                            status.getTimeAsDate().toString(),
+                                            connectedUsers.toString()
+                                    )
+                    );
+                    grid.setItems(connectedUsers);
                     msgConnectedUsers.setText(createMsgConnectedUsers(
                             status.getConnectedClients().size()
                     ));
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot up users grid: UI is detached");
+                removeListeners();
             }
         }
     };
@@ -151,7 +161,8 @@ public class AdminHome
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot up sites grid: UI is detached");
+                removeListeners();
             }
         }
     }
@@ -194,7 +205,6 @@ public class AdminHome
     @PostConstruct
     public void init() {
         addDetachListener((t) -> {
-            log.info("Detach");
             if (openVpnUserSettings.isAlreadyConfigured()) {
                 arachneDbus.removeServerStatusChangedListener(
                         ArachneDbus.ServerType.USER,
@@ -259,14 +269,22 @@ public class AdminHome
         connectedUsersGrid = new Grid<>();
         connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
                 .setHeader("Common Name");
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesReceived)
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
+                        .getInstance()
+                        .format(source.getBytesReceived()))
                 .setHeader("Bytes Received")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesSent)
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
+                        .getInstance()
+                        .format(source.getBytesSent()))
                 .setHeader("Bytes Sent")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getConnectedSinceAsDate)
-                .setHeader("Connected since");
+        connectedUsersGrid.addColumn((source) -> DateFormat
+                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                .format(source.getConnectedSinceAsDate())
+        );
         connectedUsersGrid.addColumn(IFaceConnectedClient::getRealAddress)
                 .setHeader("Real Address");
         connectedUsersGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
@@ -309,22 +327,36 @@ public class AdminHome
                 .setFlexGrow(0);
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getBytesReceived()
+                ? DecimalFormat
+                        .getInstance()
+                        .format(site.getConnectedClient().getBytesReceived())
                 : "")
                 .setHeader("Bytes Received");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getBytesSent()
+                ? DecimalFormat
+                        .getInstance()
+                        .format(site.getConnectedClient().getBytesSent())
                 : "")
                 .setHeader("Bytes Sent");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getConnectedSinceAsDate()
+                ? DateFormat
+                        .getDateTimeInstance(
+                                DateFormat.SHORT,
+                                DateFormat.MEDIUM
+                        )
+                        .format(site
+                                .getConnectedClient()
+                                .getConnectedSinceAsDate()
+                        )
                 : "")
-                .setHeader("Connected Since");
+                .setHeader("Connected since");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getRealAddress()
+                ? site.getConnectedClient()
+                        .getRealAddress()
+                        .split(":")[0]
                 : "")
                 .setHeader("Real Address");
         connectedSitesGrid.addColumn(
@@ -342,15 +374,16 @@ public class AdminHome
         return layout;
     }
 
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
+    public void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
+            log.debug("Removing connected users listener");
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
                     updateConnectedUserListener
             );
         }
         if (openVpnSiteSettings.isAlreadyConfigured()) {
+            log.debug("Removing connected sites listener");
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.SITE,
                     updateConnectedSitesListener
@@ -359,14 +392,22 @@ public class AdminHome
     }
 
     @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        log.debug("About to leave admin-home, removing connected users/sites listeners");
+        removeListeners();
+    }
+
+    @Override
     public void beforeEnter(BeforeEnterEvent bee) {
         if (openVpnUserSettings.isAlreadyConfigured()) {
+            log.debug("About to enter admin-home, adding connected users listener");
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
                     updateConnectedUserListener
             );
         }
         if (openVpnSiteSettings.isAlreadyConfigured()) {
+            log.debug("About to enter admin-home, adding connected sites listener");
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.SITE,
                     updateConnectedSitesListener
