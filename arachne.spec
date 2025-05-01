@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2504301807_9e014da
+Version:        1.3.16.git_2505011937_6b5f312
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505011937_6b5f312-1
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+
 * Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301807_9e014da-1
 - Fix: user ≠ site (github@nieslony.at)
 - Add some debug log (github@nieslony.at)
