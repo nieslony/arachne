@@ -32,6 +32,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -259,14 +261,22 @@ public class AdminHome
         connectedUsersGrid = new Grid<>();
         connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
                 .setHeader("Common Name");
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesReceived)
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
+                        .getInstance()
+                        .format(source.getBytesReceived()))
                 .setHeader("Bytes Received")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getBytesSent)
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
+                        .getInstance()
+                        .format(source.getBytesSent()))
                 .setHeader("Bytes Sent")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getConnectedSinceAsDate)
-                .setHeader("Connected since");
+        connectedUsersGrid.addColumn((source) -> DateFormat
+                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                .format(source.getConnectedSinceAsDate())
+        );
         connectedUsersGrid.addColumn(IFaceConnectedClient::getRealAddress)
                 .setHeader("Real Address");
         connectedUsersGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
@@ -309,22 +319,36 @@ public class AdminHome
                 .setFlexGrow(0);
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getBytesReceived()
+                ? DecimalFormat
+                        .getInstance()
+                        .format(site.getConnectedClient().getBytesReceived())
                 : "")
                 .setHeader("Bytes Received");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getBytesSent()
+                ? DecimalFormat
+                        .getInstance()
+                        .format(site.getConnectedClient().getBytesSent())
                 : "")
                 .setHeader("Bytes Sent");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getConnectedSinceAsDate()
+                ? DateFormat
+                        .getDateTimeInstance(
+                                DateFormat.SHORT,
+                                DateFormat.MEDIUM
+                        )
+                        .format(site
+                                .getConnectedClient()
+                                .getConnectedSinceAsDate()
+                        )
                 : "")
-                .setHeader("Connected Since");
+                .setHeader("Connected since");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getRealAddress()
+                ? site.getConnectedClient()
+                        .getRealAddress()
+                        .split(":")[0]
                 : "")
                 .setHeader("Real Address");
         connectedSitesGrid.addColumn(
