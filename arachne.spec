@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2505011937_6b5f312
+Version:        1.3.16.git_2505012012_129324e
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012012_129324e-1
+- Fux: ui push (github@nieslony.at)
+
 * Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505011937_6b5f312-1
 - - add more debug info - fix: removeval of connected clients listner
   (github@nieslony.at)
