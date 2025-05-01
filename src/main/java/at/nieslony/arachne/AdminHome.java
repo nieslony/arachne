@@ -67,15 +67,23 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             try {
                 ui.access(() -> {
-                    var clients = status.getConnectedClients();
-                    grid.setItems(clients);
+                    var connectedUsers = status.getConnectedClients();
+                    log.debug(
+                            "Connected users on %s: %s"
+                                    .formatted(
+                                            status.getTimeAsDate().toString(),
+                                            connectedUsers.toString()
+                                    )
+                    );
+                    grid.setItems(connectedUsers);
                     msgConnectedUsers.setText(createMsgConnectedUsers(
                             status.getConnectedClients().size()
                     ));
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot up users grid: UI is detached");
+                removeListeners();
             }
         }
     };
@@ -153,7 +161,8 @@ public class AdminHome
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot up sites grid: UI is detached");
+                removeListeners();
             }
         }
     }
@@ -196,7 +205,6 @@ public class AdminHome
     @PostConstruct
     public void init() {
         addDetachListener((t) -> {
-            log.info("Detach");
             if (openVpnUserSettings.isAlreadyConfigured()) {
                 arachneDbus.removeServerStatusChangedListener(
                         ArachneDbus.ServerType.USER,
@@ -366,15 +374,16 @@ public class AdminHome
         return layout;
     }
 
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
+    public void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
+            log.debug("Removing connected users listener");
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
                     updateConnectedUserListener
             );
         }
         if (openVpnSiteSettings.isAlreadyConfigured()) {
+            log.debug("Removing connected sites listener");
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.SITE,
                     updateConnectedSitesListener
@@ -383,14 +392,22 @@ public class AdminHome
     }
 
     @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        log.debug("About to leave admin-home, removing connected users/sites listeners");
+        removeListeners();
+    }
+
+    @Override
     public void beforeEnter(BeforeEnterEvent bee) {
         if (openVpnUserSettings.isAlreadyConfigured()) {
+            log.debug("About to enter admin-home, adding connected users listener");
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
                     updateConnectedUserListener
             );
         }
         if (openVpnSiteSettings.isAlreadyConfigured()) {
+            log.debug("About to enter admin-home, adding connected sites listener");
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.SITE,
                     updateConnectedSitesListener

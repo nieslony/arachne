@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.openvpnmanagement;
 
+import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.annotations.DBusInterfaceName;
@@ -31,7 +32,14 @@ public interface IFaceServer extends DBusInterface {
                 throws DBusException {
             super(objectPath, time, clients);
             status = new IFaceOpenVpnStatus(time, clients);
-            log.debug("New status: " + status.getConnectedClients());
+            log.debug(
+                    "New server status from %s at %s: %s"
+                            .formatted(
+                                    objectPath,
+                                    new Date(time).toString(),
+                                    status.toString()
+                            )
+            );
         }
 
         public IFaceOpenVpnStatus getServerStatus() {
