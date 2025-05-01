@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.3.16.git_2505012012_129324e
+Version:        1.3.16.git_2505012126_cf4a9c4
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012126_cf4a9c4-1
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+
 * Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012012_129324e-1
 - Fux: ui push (github@nieslony.at)
 
