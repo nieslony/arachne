@@ -79,7 +79,6 @@ public class AdminHome
                     msgConnectedUsers.setText(createMsgConnectedUsers(
                             status.getConnectedClients().size()
                     ));
-                    ui.push();
                 });
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up users grid: UI is detached");
@@ -158,7 +157,6 @@ public class AdminHome
                             .formatted(status.getConnectedClients().size(),
                                     vpnSiteRepository.count() - 1
                             ));
-                    ui.push();
                 });
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up sites grid: UI is detached");
