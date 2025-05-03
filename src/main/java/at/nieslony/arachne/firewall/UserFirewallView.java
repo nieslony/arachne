@@ -59,7 +59,7 @@ public class UserFirewallView extends VerticalLayout {
     private final OpenVpnController openVpnRestController;
     private final Settings settings;
 
-    private final Binder<UserFirewallBasicsSettings> binder;
+    private final Binder<FirewallBasicsSettings> binder;
     private final UserFirewallBasicsSettings firewallBasicSettings;
     private final LdapSettings ldapSettings;
     private final ArachneDbus arachneDbus;
@@ -135,27 +135,27 @@ public class UserFirewallView extends VerticalLayout {
         Checkbox enableFirewallField = new Checkbox("Enable Firewall");
         enableFirewallField.setValue(true);
         binder.forField(enableFirewallField)
-                .bind(UserFirewallBasicsSettings::isEnableFirewall, UserFirewallBasicsSettings::setEnableFirewall);
+                .bind(FirewallBasicsSettings::isEnableFirewall, FirewallBasicsSettings::setEnableFirewall);
 
         TextField firewallZoneField = new TextField("Firewall Zone");
         firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
         binder.forField(firewallZoneField)
-                .bind(UserFirewallBasicsSettings::getFirewallZone, UserFirewallBasicsSettings::setFirewallZone);
+                .bind(FirewallBasicsSettings::getFirewallZone, FirewallBasicsSettings::setFirewallZone);
 
-        RadioButtonGroup<UserFirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
+        RadioButtonGroup<FirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
                 = new RadioButtonGroup<>("Enable Routing");
-        enableRoutingMode.setItems(UserFirewallBasicsSettings.EnableRoutingMode.values());
+        enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
-                .bind(UserFirewallBasicsSettings::getEnableRoutingMode, UserFirewallBasicsSettings::setEnableRoutingMode);
+                .bind(FirewallBasicsSettings::getEnableRoutingMode, FirewallBasicsSettings::setEnableRoutingMode);
 
-        Select<UserFirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
+        Select<FirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
         icmpRules.setLabel("Allow PING");
-        icmpRules.setItems(UserFirewallBasicsSettings.IcmpRules.values());
+        icmpRules.setItems(FirewallBasicsSettings.IcmpRules.values());
         icmpRules.setMinWidth("20em");
         binder.bind(
                 icmpRules,
-                UserFirewallBasicsSettings::getIcmpRules,
-                UserFirewallBasicsSettings::setIcmpRules
+                FirewallBasicsSettings::getIcmpRules,
+                FirewallBasicsSettings::setIcmpRules
         );
 
         Button saveButton = new Button("Save and Restart VPN", (e) -> {

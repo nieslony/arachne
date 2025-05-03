@@ -8,6 +8,7 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
@@ -22,19 +23,28 @@ import java.util.LinkedList;
 @Route(value = "siteVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
-public class SiteFirefallView extends VerticalLayout {
+public class SiteFirewallView extends VerticalLayout {
 
-    private FirewallRulesEditor incomingRulesEditor;
+    private final FirewallRulesEditor incomingRulesEditor;
 
-    public SiteFirefallView(
+    private SiteFirewallBasicsSettings firewallBasicsSettings;
+
+    public SiteFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             Settings settings
     ) {
+        firewallBasicsSettings = settings.getSettings(SiteFirewallBasicsSettings.class);
+
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
 
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+
+        tabs.add(
+                "Basics",
+                createBasicsTab()
+        );
 
         incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
@@ -82,5 +92,9 @@ public class SiteFirefallView extends VerticalLayout {
 
         add(tabs);
         setPadding(false);
+    }
+
+    private Component createBasicsTab() {
+        return new VerticalLayout();
     }
 }

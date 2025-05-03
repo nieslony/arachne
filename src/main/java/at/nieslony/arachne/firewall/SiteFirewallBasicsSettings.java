@@ -21,6 +21,6 @@ package at.nieslony.arachne.firewall;
  *
  * @author claas
  */
-public class UserFirewallBasicsSettings extends FirewallBasicsSettings {
+public class SiteFirewallBasicsSettings extends FirewallBasicsSettings {
 
 }
