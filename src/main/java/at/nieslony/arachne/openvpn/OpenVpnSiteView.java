@@ -6,6 +6,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
 import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
@@ -892,9 +893,15 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private void onSaveBasics() {
         try {
+            SiteFirewallBasicsSettings firewallBasicSettings
+                    = settings.getSettings(SiteFirewallBasicsSettings.class);
+
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
-            openVpnRestController.writeOpenVpnPluginSiteConfig();
+            openVpnRestController.writeOpenVpnPluginSiteConfig(
+                    openVpnSiteSettings,
+                    firewallBasicSettings
+            );
             openVpnRestController.writeCrl();
             arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
             ShowNotification.info("OpenVpn restarted with new configuration");

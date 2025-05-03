@@ -23,4 +23,7 @@ package at.nieslony.arachne.firewall;
  */
 public class SiteFirewallBasicsSettings extends FirewallBasicsSettings {
 
+    public SiteFirewallBasicsSettings() {
+        setFirewallZone("arachne-site");
+    }
 }
