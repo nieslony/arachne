@@ -54,12 +54,9 @@ import org.freedesktop.dbus.exceptions.DBusExecutionException;
 @Slf4j
 public class UserFirewallView extends VerticalLayout {
 
-    private final FirewallRuleRepository firewallRuleRepository;
-    private final UserMatcherCollector userMatcherCollector;
     private final OpenVpnController openVpnRestController;
     private final Settings settings;
-
-    private final Binder<FirewallBasicsSettings> binder;
+    private final Binder<UserFirewallBasicsSettings> binder;
     private final UserFirewallBasicsSettings firewallBasicSettings;
     private final LdapSettings ldapSettings;
     private final ArachneDbus arachneDbus;
@@ -71,8 +68,6 @@ public class UserFirewallView extends VerticalLayout {
             ArachneDbus arachneDbus,
             Settings settings
     ) {
-        this.firewallRuleRepository = firewallRuleRepository;
-        this.userMatcherCollector = userMatcherCollector;
         this.openVpnRestController = openVpnRestController;
         this.arachneDbus = arachneDbus;
         this.settings = settings;
