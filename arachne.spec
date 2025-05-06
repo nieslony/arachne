@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.0
+Version:        1.4.0.git_2505061927_39e842d
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,20 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061927_39e842d-1
+- Fix: save firewall basic settings (github@nieslony.at)
+- Edit firewall basic settings (github@nieslony.at)
+- Remove unused variables (github@nieslony.at)
+- Create firewall basics tab for site firewall (github@nieslony.at)
+- Fix: show full path of apache config (github@nieslony.at)
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+- Fix: user ≠ site (github@nieslony.at)
+- Add some debug log (github@nieslony.at)
 * Fri May 02 2025 Claas Nieslony <github@nieslony.at> 1.4.0-1
 - Fix: push ui (github@nieslony.at)
 - Fix: handle session timeout (github@nieslony.at)
