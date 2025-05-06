@@ -9,11 +9,7 @@
 %endif
 
 Name:           arachne
-<<<<<<< HEAD
-Version:        1.4.0.git_2505061927_39e842d
-=======
-Version:        1.3.16.git_2505012126_cf4a9c4
->>>>>>> 5455a4bbfe7472f4c3f509db2744d9f6013de15a
+Version:        1.4.0.git_2505061940_0c6f36c
 
 Release:        1
 License:        GPLv3
@@ -103,6 +99,30 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061940_0c6f36c-1
+- Revert "Fix: save firewall basic settings" (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012126_cf4a9c4-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012012_129324e-1]. (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505011937_6b5f312-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301807_9e014da-1]. (github@nieslony.at)
+
+* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061940_0c6f36c-1
+- Revert "Fix: save firewall basic settings" (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012126_cf4a9c4-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012012_129324e-1]. (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505011937_6b5f312-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301807_9e014da-1]. (github@nieslony.at)
+
 <<<<<<< HEAD
 * Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061927_39e842d-1
 - Fix: save firewall basic settings (github@nieslony.at)
