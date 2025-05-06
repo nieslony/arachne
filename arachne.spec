@@ -9,7 +9,11 @@
 %endif
 
 Name:           arachne
+<<<<<<< HEAD
 Version:        1.4.0.git_2505061927_39e842d
+=======
+Version:        1.3.16.git_2505012126_cf4a9c4
+>>>>>>> 5455a4bbfe7472f4c3f509db2744d9f6013de15a
 
 Release:        1
 License:        GPLv3
@@ -99,6 +103,7 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+<<<<<<< HEAD
 * Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061927_39e842d-1
 - Fix: save firewall basic settings (github@nieslony.at)
 - Edit firewall basic settings (github@nieslony.at)
@@ -114,6 +119,25 @@ fi
 - Fix: user ≠ site (github@nieslony.at)
 - Add some debug log (github@nieslony.at)
 * Fri May 02 2025 Claas Nieslony <github@nieslony.at> 1.4.0-1
+=======
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012126_cf4a9c4-1
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012012_129324e-1
+- Fux: ui push (github@nieslony.at)
+
+* Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505011937_6b5f312-1
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+
+* Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301807_9e014da-1
+- Fix: user ≠ site (github@nieslony.at)
+- Add some debug log (github@nieslony.at)
+
+* Wed Apr 30 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2504301636_7d5de06-1
+>>>>>>> 5455a4bbfe7472f4c3f509db2744d9f6013de15a
 - Fix: push ui (github@nieslony.at)
 - Fix: handle session timeout (github@nieslony.at)
 - Improve logging (github@nieslony.at)
