@@ -15,24 +15,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.firewall.basicsettings;
-
-import at.nieslony.arachne.settings.AbstractSettingsGroup;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+package at.nieslony.arachne.firewall;
 
 /**
  *
  * @author claas
  */
-@Getter
-@Setter
-@ToString
-public class SiteFirewallBasicsSettings extends AbstractSettingsGroup {
+public class UserFirewallBasicsSettings extends FirewallBasicsSettings {
 
-    private boolean enableFirewall = false;
-    private String firewallZone = "arachne-site";
-    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
-    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
+    public UserFirewallBasicsSettings() {
+        setFirewallZone("arachne-user");
+    }
 }

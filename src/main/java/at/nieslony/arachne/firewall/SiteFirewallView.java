@@ -4,10 +4,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.firewall.basicsettings.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.firewall.basicsettings.EnableRoutingMode;
-import at.nieslony.arachne.firewall.basicsettings.IcmpRules;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
@@ -131,42 +128,33 @@ public class SiteFirewallView extends VerticalLayout {
         Checkbox enableFirewallField = new Checkbox("Enable Firewall");
         enableFirewallField.setValue(true);
         binder.forField(enableFirewallField)
-                .bind(
-                        SiteFirewallBasicsSettings::isEnableFirewall,
-                        SiteFirewallBasicsSettings::setEnableFirewall
-                );
+                .bind(FirewallBasicsSettings::isEnableFirewall, FirewallBasicsSettings::setEnableFirewall);
 
         TextField firewallZoneField = new TextField("Firewall Zone");
         firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
         binder.forField(firewallZoneField)
-                .bind(
-                        SiteFirewallBasicsSettings::getFirewallZone,
-                        SiteFirewallBasicsSettings::setFirewallZone
-                );
+                .bind(FirewallBasicsSettings::getFirewallZone, FirewallBasicsSettings::setFirewallZone);
 
-        RadioButtonGroup<EnableRoutingMode> enableRoutingMode
+        RadioButtonGroup<FirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
                 = new RadioButtonGroup<>("Enable Routing");
-        enableRoutingMode.setItems(EnableRoutingMode.values());
+        enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
-                .bind(
-                        SiteFirewallBasicsSettings::getEnableRoutingMode,
-                        SiteFirewallBasicsSettings::setEnableRoutingMode
-                );
+                .bind(FirewallBasicsSettings::getEnableRoutingMode, FirewallBasicsSettings::setEnableRoutingMode);
 
-        Select<IcmpRules> icmpRules = new Select<>();
+        Select<FirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
         icmpRules.setLabel("Allow PING");
-        icmpRules.setItems(IcmpRules.values());
+        icmpRules.setItems(FirewallBasicsSettings.IcmpRules.values());
         icmpRules.setMinWidth("20em");
         binder.bind(
                 icmpRules,
-                SiteFirewallBasicsSettings::getIcmpRules,
-                SiteFirewallBasicsSettings::setIcmpRules
+                FirewallBasicsSettings::getIcmpRules,
+                FirewallBasicsSettings::setIcmpRules
         );
 
         Button saveButton = new Button("Save and Restart VPN", (e) -> {
             OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
-            log.debug("Saving firewall settings: " + firewallBasicsSettings.toString());
+            log.info("Saving firewall settings");
             try {
                 firewallBasicsSettings.save(settings);
                 openVpnRestController.writeOpenVpnPluginSiteConfig(
@@ -202,7 +190,6 @@ public class SiteFirewallView extends VerticalLayout {
         layout.setMargin(false);
         layout.setPadding(false);
 
-        log.debug("Loading firewall settings: " + firewallBasicsSettings.toString());
         binder.setBean(firewallBasicsSettings);
 
         return layout;
