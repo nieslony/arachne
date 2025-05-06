@@ -312,7 +312,6 @@ public class TaskView
                     ui.access(() -> {
                         tasksGrid.getDataProvider().refreshAll();
                     });
-                    ui.push();
                 }
             },
                     delay,

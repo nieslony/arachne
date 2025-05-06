@@ -1,32 +1,19 @@
 /*
- * Copyright (C) 2023 claas
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.firewall.basicsettings.UserFirewallBasicsSettings;
+import at.nieslony.arachne.firewall.basicsettings.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.basicsettings.EnableRoutingMode;
 import at.nieslony.arachne.firewall.basicsettings.IcmpRules;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpn.OpenVpnController;
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
@@ -51,59 +38,72 @@ import org.freedesktop.dbus.exceptions.DBusExecutionException;
  *
  * @author claas
  */
-@Route(value = "userVpn/firewall", layout = ViewTemplate.class)
-@PageTitle("User VPN | Firewall")
+@Route(value = "siteVpn/firewall", layout = ViewTemplate.class)
+@PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
 @Slf4j
-public class UserFirewallView extends VerticalLayout {
+public class SiteFirewallView extends VerticalLayout {
 
-    private final OpenVpnController openVpnRestController;
+    private final FirewallRulesEditor incomingRulesEditor;
+
     private final Settings settings;
-    private final Binder<UserFirewallBasicsSettings> binder;
-    private final UserFirewallBasicsSettings firewallBasicSettings;
-    private final LdapSettings ldapSettings;
+    private final OpenVpnController openVpnRestController;
     private final ArachneDbus arachneDbus;
 
-    public UserFirewallView(
+    private SiteFirewallBasicsSettings firewallBasicsSettings;
+    private final LdapSettings ldapSettings;
+    private final Binder<SiteFirewallBasicsSettings> binder;
+
+    public SiteFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            OpenVpnController openVpnRestController,
-            ArachneDbus arachneDbus,
-            Settings settings
+            Settings settings,
+            OpenVpnController openVpnController,
+            ArachneDbus arachneDbus
     ) {
-        this.openVpnRestController = openVpnRestController;
-        this.arachneDbus = arachneDbus;
         this.settings = settings;
+        this.openVpnRestController = openVpnController;
+        this.arachneDbus = arachneDbus;
 
         binder = new Binder<>();
-        firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
+        firewallBasicsSettings = settings.getSettings(SiteFirewallBasicsSettings.class);
         ldapSettings = settings.getSettings(LdapSettings.class);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
-        tabs.add("Basics", createBasicsTab());
-        tabs.add("Incoming Rules", new FirewallRulesEditor(
+
+        tabs.add(
+                "Basics",
+                createBasicsTab()
+        );
+
+        incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
                 ldapSettings,
-                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
-        ));
+        );
+        tabs.add(
+                "Incoming",
+                incomingRulesEditor
+        );
+        tabs.setHeightFull();
 
         if (firewallRuleRepository.countByVpnTypeAndRuleDirection(
-                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         ) == 0) {
             FirewallRuleModel rule = new FirewallRuleModel(
-                    FirewallRuleModel.VpnType.USER,
+                    FirewallRuleModel.VpnType.SITE,
                     FirewallRuleModel.RuleDirection.INCOMING
             );
-            rule.setDescription("Allow DNS access for everybody");
+            rule.setDescription("Allow DNS access from all sites");
 
-            FirewallWho who = new FirewallWho();
-            who.setUserMatcherClassName(EverybodyMatcher.class.getName());
-            rule.setWho(new LinkedList<>());
-            rule.getWho().add(who);
+            FirewallWhere from = new FirewallWhere();
+            from.setType(FirewallWhere.Type.Everywhere);
+            rule.setFrom(new LinkedList<>());
+            rule.getFrom().add(from);
 
             FirewallWhere to = new FirewallWhere();
             to.setType(FirewallWhere.Type.PushedDnsServers);
@@ -121,8 +121,6 @@ public class UserFirewallView extends VerticalLayout {
             firewallRuleRepository.save(rule);
         }
 
-        tabs.setHeightFull();
-
         add(tabs);
         setPadding(false);
     }
@@ -134,16 +132,16 @@ public class UserFirewallView extends VerticalLayout {
         enableFirewallField.setValue(true);
         binder.forField(enableFirewallField)
                 .bind(
-                        UserFirewallBasicsSettings::isEnableFirewall,
-                        UserFirewallBasicsSettings::setEnableFirewall
+                        SiteFirewallBasicsSettings::isEnableFirewall,
+                        SiteFirewallBasicsSettings::setEnableFirewall
                 );
 
         TextField firewallZoneField = new TextField("Firewall Zone");
         firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
         binder.forField(firewallZoneField)
                 .bind(
-                        UserFirewallBasicsSettings::getFirewallZone,
-                        UserFirewallBasicsSettings::setFirewallZone
+                        SiteFirewallBasicsSettings::getFirewallZone,
+                        SiteFirewallBasicsSettings::setFirewallZone
                 );
 
         RadioButtonGroup<EnableRoutingMode> enableRoutingMode
@@ -151,8 +149,8 @@ public class UserFirewallView extends VerticalLayout {
         enableRoutingMode.setItems(EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
                 .bind(
-                        UserFirewallBasicsSettings::getEnableRoutingMode,
-                        UserFirewallBasicsSettings::setEnableRoutingMode
+                        SiteFirewallBasicsSettings::getEnableRoutingMode,
+                        SiteFirewallBasicsSettings::setEnableRoutingMode
                 );
 
         Select<IcmpRules> icmpRules = new Select<>();
@@ -161,21 +159,21 @@ public class UserFirewallView extends VerticalLayout {
         icmpRules.setMinWidth("20em");
         binder.bind(
                 icmpRules,
-                UserFirewallBasicsSettings::getIcmpRules,
-                UserFirewallBasicsSettings::setIcmpRules
+                SiteFirewallBasicsSettings::getIcmpRules,
+                SiteFirewallBasicsSettings::setIcmpRules
         );
 
         Button saveButton = new Button("Save and Restart VPN", (e) -> {
-            OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+            OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
-            log.info("Saving firewall settings");
+            log.debug("Saving firewall settings: " + firewallBasicsSettings.toString());
             try {
-                firewallBasicSettings.save(settings);
-                openVpnRestController.writeOpenVpnPluginUserConfig(
-                        openVpnUserSettings,
-                        firewallBasicSettings
+                firewallBasicsSettings.save(settings);
+                openVpnRestController.writeOpenVpnPluginSiteConfig(
+                        openVpnSiteSettings,
+                        firewallBasicsSettings
                 );
-                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+                arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
                 ShowNotification.info("OpenVpn restarted with new configuration");
 
             } catch (SettingsException ex) {
@@ -204,7 +202,8 @@ public class UserFirewallView extends VerticalLayout {
         layout.setMargin(false);
         layout.setPadding(false);
 
-        binder.setBean(firewallBasicSettings);
+        log.debug("Loading firewall settings: " + firewallBasicsSettings.toString());
+        binder.setBean(firewallBasicsSettings);
 
         return layout;
     }
