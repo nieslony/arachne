@@ -184,6 +184,12 @@ class FirewallRulesEditor extends VerticalLayout {
                     return layout;
                 }))
                 .setFlexGrow(0);
+        grid.setEmptyStateText(switch (direction) {
+            case INCOMING ->
+                "All incoming traffic is blocked.";
+            case OUTGOING ->
+                "All outgoing traffic is blocked";
+        });
 
         Button addRule = new Button("Add...", e -> {
             FirewallRuleModel rule = new FirewallRuleModel(
