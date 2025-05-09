@@ -282,4 +282,10 @@ public class FirewallWhere {
             return null;
         }
     }
+
+    public static FirewallWhere createEverywhere() {
+        FirewallWhere where = new FirewallWhere();
+        where.setType(FirewallWhere.Type.Everywhere);
+        return where;
+    }
 }
