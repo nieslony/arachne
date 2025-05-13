@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpn.OpenVpnSettings;
 import at.nieslony.arachne.utils.net.DnsServiceName;
 import at.nieslony.arachne.utils.net.MxRecord;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -132,7 +132,7 @@ public class FirewallWhere {
         };
     }
 
-    public List<String> resolve(OpenVpnUserSettings openvpnSettings) {
+    public List<String> resolve(OpenVpnSettings openvpnSettings) {
         List<String> addresses = new LinkedList<>();
 
         switch (type) {

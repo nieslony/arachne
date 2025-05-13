@@ -38,11 +38,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -54,29 +56,33 @@ import org.freedesktop.dbus.exceptions.DBusExecutionException;
 @Slf4j
 public class UserFirewallView extends VerticalLayout {
 
-    private final FirewallRuleRepository firewallRuleRepository;
-    private final UserMatcherCollector userMatcherCollector;
-    private final OpenVpnController openVpnRestController;
-    private final Settings settings;
+    @Autowired
+    private FirewallRuleRepository firewallRuleRepository;
 
-    private final Binder<UserFirewallBasicsSettings> binder;
-    private final UserFirewallBasicsSettings firewallBasicSettings;
-    private final LdapSettings ldapSettings;
-    private final ArachneDbus arachneDbus;
+    @Autowired
+    private UserMatcherCollector userMatcherCollector;
 
-    public UserFirewallView(
-            FirewallRuleRepository firewallRuleRepository,
-            UserMatcherCollector userMatcherCollector,
-            OpenVpnController openVpnRestController,
-            ArachneDbus arachneDbus,
-            Settings settings
-    ) {
-        this.firewallRuleRepository = firewallRuleRepository;
-        this.userMatcherCollector = userMatcherCollector;
-        this.openVpnRestController = openVpnRestController;
-        this.arachneDbus = arachneDbus;
-        this.settings = settings;
+    @Autowired
+    private OpenVpnController openVpnRestController;
 
+    @Autowired
+    private FirewallController firewallController;
+
+    @Autowired
+    private Settings settings;
+
+    @Autowired
+    private ArachneDbus arachneDbus;
+
+    private Binder<UserFirewallBasicsSettings> binder;
+    private UserFirewallBasicsSettings firewallBasicSettings;
+    private LdapSettings ldapSettings;
+
+    public UserFirewallView() {
+    }
+
+    @PostConstruct
+    public void init() {
         binder = new Binder<>();
         firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         ldapSettings = settings.getSettings(LdapSettings.class);
@@ -88,8 +94,17 @@ public class UserFirewallView extends VerticalLayout {
                 firewallRuleRepository,
                 userMatcherCollector,
                 ldapSettings,
+                firewallController,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
+        ));
+        tabs.add("Outgoing Rules", new FirewallRulesEditor(
+                firewallRuleRepository,
+                userMatcherCollector,
+                ldapSettings,
+                firewallController,
+                FirewallRuleModel.VpnType.USER,
+                FirewallRuleModel.RuleDirection.OUTGOING
         ));
 
         if (firewallRuleRepository.countByVpnTypeAndRuleDirection(

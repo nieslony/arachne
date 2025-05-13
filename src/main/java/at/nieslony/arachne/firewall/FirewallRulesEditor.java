@@ -8,6 +8,7 @@ import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
@@ -30,9 +31,11 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.vaadin.firitin.layouts.HorizontalFloatLayout;
@@ -48,12 +51,13 @@ class FirewallRulesEditor extends VerticalLayout {
     private final UserMatcherCollector userMatcherCollector;
     private final LdapSettings ldapSettings;
 
-    private final Grid<FirewallRuleModel> grid;
+    private Grid<FirewallRuleModel> grid;
 
     public FirewallRulesEditor(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             LdapSettings ldapSettings,
+            FirewallController firewallController,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
@@ -200,8 +204,29 @@ class FirewallRulesEditor extends VerticalLayout {
             );
             editRule(rule);
         });
+        addRule.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        add(addRule, grid);
+        Button saveAllRules = new Button("Apply all Rules", e -> {
+            String fileName = "/openvpn-%s-firewall-rules.json".formatted(
+                    vpnType.name().toLowerCase()
+            );
+            try {
+                firewallController.writeRules(fileName, vpnType);
+                ShowNotification.info("Configuration written to " + fileName);
+            } catch (IOException | JSONException ex) {
+                String msg = "Cannot write firewall rules to %s: %s"
+                        .formatted(fileName, ex.getMessage());
+                log.error(msg);
+                ShowNotification.error("Error", msg);
+            }
+        });
+
+        HorizontalLayout buttonsLayout = new HorizontalLayout(
+                addRule,
+                saveAllRules
+        );
+
+        add(grid, buttonsLayout);
         setHeightFull();
         setMargin(false);
         setPadding(false);
