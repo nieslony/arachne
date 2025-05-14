@@ -175,10 +175,7 @@ public class OpenVpnController {
                 writer.println("firewall-rules = %s".formatted(
                         folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.USER)
                 ));
-                writer.println("url-firewall-user = %s/api/firewall/user_rules"
-                        .formatted(openVpnSettings.getAuthHttpUrl())
-                );
-                writer.println("url-firewall-everybody = %s/api/firewall/everybody_rules"
+                writer.println("url-firewall-user = %s/api/firewall/matching_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }

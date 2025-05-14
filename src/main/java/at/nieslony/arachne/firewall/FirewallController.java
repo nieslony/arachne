@@ -158,6 +158,12 @@ public class FirewallController {
         allRules.put("incoming", incomingRules);
         allRules.put("outgoing", outgoingRules);
 
+        if (vpnType == FirewallRuleModel.VpnType.USER) {
+            UserFirewallBasicsSettings basicSettings
+                    = settings.getSettings(UserFirewallBasicsSettings.class);
+            allRules.put("icmp-rules", basicSettings.getIcmpRules().name());
+        }
+
         try (FileWriter fileWriter = new FileWriter(
                 folderFactory.getFirewallRulesPath(vpnType))) {
             fileWriter.write(allRules.toString(2) + "\n");
