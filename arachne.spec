@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.0.git_2505061940_0c6f36c
+Version:        1.4.0.git_2505142310_8ccf2ef
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,20 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed May 14 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505142310_8ccf2ef-1
+- Get user's matching firewall rule ids (github@nieslony.at)
+- - split incoming and ougoung rules - add path of firewall rules to plugin
+  config file (github@nieslony.at)
+- Add getFirewallRulesPath (github@nieslony.at)
+- Save firewall rules in new format (github@nieslony.at)
+- Add NetUtils::isSubnetOf and NetUtils::filterSubnets + tests
+  (github@nieslony.at)
+- Add findAllByVpnType (github@nieslony.at)
+- Improve firewall rule editor (github@nieslony.at)
+- Remove margin (github@nieslony.at)
+- Add empty state message (github@nieslony.at)
+- Add empty state message (github@nieslony.at)
+
 * Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061940_0c6f36c-1
 - Revert "Fix: save firewall basic settings" (github@nieslony.at)
 - Automatic commit of package [arachne] release
