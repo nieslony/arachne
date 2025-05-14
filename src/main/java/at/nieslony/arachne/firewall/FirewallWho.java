@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -56,5 +57,11 @@ public class FirewallWho {
         return UserMatcher.getMatcherDetails(
                 getUserMatcherClassName(),
                 getParameter());
+    }
+
+    public static FirewallWho createEverybody() {
+        FirewallWho who = new FirewallWho();
+        who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+        return who;
     }
 }

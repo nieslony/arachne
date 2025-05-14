@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.openvpn;
 
-import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
+import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -182,10 +182,10 @@ public class OpenVpnController {
                 writer.println("firewall-zone = %s".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
-                writer.println("url-firewall-user = %s/api/firewall/user_rules"
-                        .formatted(openVpnSettings.getAuthHttpUrl())
-                );
-                writer.println("url-firewall-everybody = %s/api/firewall/everybody_rules"
+                writer.println("firewall-rules = %s".formatted(
+                        folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.USER)
+                ));
+                writer.println("url-firewall-user = %s/api/firewall/matching_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
                 );
             }

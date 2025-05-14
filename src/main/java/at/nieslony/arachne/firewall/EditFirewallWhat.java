@@ -35,6 +35,7 @@ import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,12 @@ class EditFirewallWhat extends AbstractCompositeField<VerticalLayout, EditFirewa
         var firewalldServices = FirewalldService.getAllServices();
 
         whatType = new Select<>();
-        whatType.setItems(FirewallWhat.Type.values());
+        whatType.setItems(
+                List.of(FirewallWhat.Type.values())
+                        .stream()
+                        .filter(i -> i != FirewallWhat.Type.Everything)
+                        .toList()
+        );
         whatType.setLabel("What Type");
         whatType.setWidthFull();
         binder.forField(whatType)

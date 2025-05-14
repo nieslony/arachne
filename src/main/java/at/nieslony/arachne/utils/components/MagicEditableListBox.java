@@ -98,7 +98,6 @@ public class MagicEditableListBox<T extends Object>
         NativeLabel mlbLabel = new NativeLabel(label);
         mlbLabel.addClassNames(
                 LumoUtility.FontSize.SMALL,
-                LumoUtility.FontWeight.BOLD,
                 LumoUtility.TextColor.BODY
         );
 
@@ -158,6 +157,8 @@ public class MagicEditableListBox<T extends Object>
                 itemsField,
                 buttonLayout
         );
+        getContent().setMargin(false);
+        getContent().setPadding(false);
     }
 
     @Override
