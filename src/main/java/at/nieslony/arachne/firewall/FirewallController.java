@@ -76,11 +76,12 @@ public class FirewallController {
                 .toList();
     }
 
-    public void writeRules(String fileName, FirewallRuleModel.VpnType vpnType)
+    public void writeRules(FirewallRuleModel.VpnType vpnType)
             throws IOException, JSONException {
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
-        JSONArray allRules = new JSONArray();
+        JSONArray incomingRules = new JSONArray();
+        JSONArray outgoingRules = new JSONArray();
         for (var rule : firewallRuleRepository.findAllByVpnType(vpnType)) {
             if (!rule.isEnabled()) {
                 continue;
@@ -105,7 +106,9 @@ public class FirewallController {
                         ports.add("%d/%s"
                                 .formatted(
                                         what.getPort(),
-                                        what.getPortProtocol().toString()
+                                        what.getPortProtocol()
+                                                .toString()
+                                                .toLowerCase()
                                 )
                         );
                     }
@@ -115,6 +118,8 @@ public class FirewallController {
                                         what.getPortFrom(),
                                         what.getPortTo(),
                                         what.getPortRangeProtocol()
+                                                .toString()
+                                                .toLowerCase()
                                 )
                         );
                     }
@@ -143,11 +148,18 @@ public class FirewallController {
             if (!services.isEmpty()) {
                 jRule.put("services", new JSONArray(services));
             }
-            allRules.put(jRule);
+            if (rule.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING) {
+                incomingRules.put(jRule);
+            } else {
+                outgoingRules.put(jRule);
+            }
         } // foreach rule
+        JSONObject allRules = new JSONObject();
+        allRules.put("incoming", incomingRules);
+        allRules.put("outgoing", outgoingRules);
 
         try (FileWriter fileWriter = new FileWriter(
-                folderFactory.getVpnConfigDir(fileName))) {
+                folderFactory.getFirewallRulesPath(vpnType))) {
             fileWriter.write(allRules.toString(2) + "\n");
         }
     }

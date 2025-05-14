@@ -211,7 +211,7 @@ class FirewallRulesEditor extends VerticalLayout {
                     vpnType.name().toLowerCase()
             );
             try {
-                firewallController.writeRules(fileName, vpnType);
+                firewallController.writeRules(vpnType);
                 ShowNotification.info("Configuration written to " + fileName);
             } catch (IOException | JSONException ex) {
                 String msg = "Cannot write firewall rules to %s: %s"
