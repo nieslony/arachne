@@ -53,7 +53,7 @@ public class FirewallController {
     Settings settings;
 
     private List<String> buildIpSet(List<FirewallWhere> wheres, OpenVpnSettings openVpnSettings) {
-        log.debug("Processing wheres" + wheres.toString());
+        log.debug("Building IP set from wheres" + wheres.toString());
         if (wheres.isEmpty()) {
             return new LinkedList<>();
         }
@@ -69,11 +69,21 @@ public class FirewallController {
             }
         });
 
-        return NetUtils
+        var sorted = NetUtils
                 .filterSubnets(ret)
                 .stream()
                 .sorted()
                 .toList();
+        log.debug("Built IP set: " + sorted.toString());
+        return sorted;
+    }
+
+    private List<String> buildIpSet(List<FirewallWho> whos) {
+        if (whos.size() == 1 && whos.get(0).isEverybody()) {
+            return null;
+        } else {
+            return new LinkedList<>();
+        }
     }
 
     public void writeRules(FirewallRuleModel.VpnType vpnType)
@@ -83,17 +93,19 @@ public class FirewallController {
         JSONArray incomingRules = new JSONArray();
         JSONArray outgoingRules = new JSONArray();
         for (var rule : firewallRuleRepository.findAllByVpnType(vpnType)) {
+            log.debug("Processing rule " + rule.toString());
             if (!rule.isEnabled()) {
                 continue;
             }
+
             List<String> sources;
             List<String> destination;
             if (rule.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING) {
-                sources = new LinkedList<>();
+                sources = buildIpSet(rule.getWho());
                 destination = buildIpSet(rule.getTo(), openVpnUserSettings);
             } else {
                 sources = buildIpSet(rule.getFrom(), openVpnUserSettings);
-                destination = new LinkedList<>();
+                destination = buildIpSet(rule.getWho());
             }
 
             Set<String> ports = new TreeSet<>();
