@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.0.git_2505151234_ad4ffa8
+Version:        1.4.0.git_2505152222_37ca6a0
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505152222_37ca6a0-1
+- Fix: who is everybody => no ip set (github@nieslony.at)
+- Make everybody check simpler (github@nieslony.at)
+
 * Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505151234_ad4ffa8-1
 - Fix: merge (github@nieslony.at)
 - Fix: add
