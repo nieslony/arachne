@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.0.git_2505142310_8ccf2ef
+Version:        1.4.0.git_2505151234_ad4ffa8
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505151234_ad4ffa8-1
+- Fix: merge (github@nieslony.at)
+- Fix: add
+  src/main/java/at/nieslony/arachne/openvpn/SiteFirewallBasicsSettings.java
+  (github@nieslony.at)
+
 * Wed May 14 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505142310_8ccf2ef-1
 - Get user's matching firewall rule ids (github@nieslony.at)
 - - split incoming and ougoung rules - add path of firewall rules to plugin
