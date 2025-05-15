@@ -150,27 +150,27 @@ public class UserFirewallView extends VerticalLayout {
         Checkbox enableFirewallField = new Checkbox("Enable Firewall");
         enableFirewallField.setValue(true);
         binder.forField(enableFirewallField)
-                .bind(FirewallBasicsSettings::isEnableFirewall, FirewallBasicsSettings::setEnableFirewall);
+                .bind(UserFirewallBasicsSettings::isEnableFirewall, UserFirewallBasicsSettings::setEnableFirewall);
 
         TextField firewallZoneField = new TextField("Firewall Zone");
         firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
         binder.forField(firewallZoneField)
-                .bind(FirewallBasicsSettings::getFirewallZone, FirewallBasicsSettings::setFirewallZone);
+                .bind(UserFirewallBasicsSettings::getFirewallZone, UserFirewallBasicsSettings::setFirewallZone);
 
-        RadioButtonGroup<FirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
+        RadioButtonGroup<UserFirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
                 = new RadioButtonGroup<>("Enable Routing");
-        enableRoutingMode.setItems(FirewallBasicsSettings.EnableRoutingMode.values());
+        enableRoutingMode.setItems(UserFirewallBasicsSettings.EnableRoutingMode.values());
         binder.forField(enableRoutingMode)
-                .bind(FirewallBasicsSettings::getEnableRoutingMode, FirewallBasicsSettings::setEnableRoutingMode);
+                .bind(UserFirewallBasicsSettings::getEnableRoutingMode, UserFirewallBasicsSettings::setEnableRoutingMode);
 
-        Select<FirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
+        Select<UserFirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
         icmpRules.setLabel("Allow PING");
-        icmpRules.setItems(FirewallBasicsSettings.IcmpRules.values());
+        icmpRules.setItems(UserFirewallBasicsSettings.IcmpRules.values());
         icmpRules.setMinWidth("20em");
         binder.bind(
                 icmpRules,
-                FirewallBasicsSettings::getIcmpRules,
-                FirewallBasicsSettings::setIcmpRules
+                UserFirewallBasicsSettings::getIcmpRules,
+                UserFirewallBasicsSettings::setIcmpRules
         );
 
         Button saveButton = new Button("Save and Restart VPN", (e) -> {

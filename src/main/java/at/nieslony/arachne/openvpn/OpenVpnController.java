@@ -131,25 +131,15 @@ public class OpenVpnController {
         return getSitePluginConfTemplate().replaceFirst("%cn", hostname);
     }
 
-    public void writeOpenVpnPluginSiteConfig(
-            OpenVpnSiteSettings openVpnSettings,
-            SiteFirewallBasicsSettings firewallBasicsSettings
-    ) {
+    public void writeOpenVpnPluginSiteConfig() {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
+        UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         logger.info("Writing openvpn-plugin-arache config to " + fileName);
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("enable-routing = " + firewallBasicsSettings.getEnableRoutingMode().name());
+            writer.println("enable-routing = " + firewallBasicSettings.getEnableRoutingMode().name());
             writer.println("client-config = " + getSitePluginConfTemplate());
-            writer.println("enable-firewall = %b".formatted(
-                    firewallBasicsSettings.isEnableFirewall()
-            ));
-            if (firewallBasicsSettings.isEnableFirewall()) {
-                writer.println("firewall-zone = %s".formatted(
-                        firewallBasicsSettings.getFirewallZone()
-                ));
-            }
         } catch (IOException ex) {
             logger.error(
                     "Cannot write to %s: %s"
