@@ -291,6 +291,11 @@ public class OpenVpnController {
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
 
+        String serverCertSubject = pki
+                .getServerCert()
+                .getSubjectX500Principal()
+                .getName();
+
         StringWriter sw = new StringWriter();
         PrintWriter writer = new PrintWriter(sw);
         writeConfigHeader(writer);
@@ -300,6 +305,7 @@ public class OpenVpnController {
                 vpnSettings.getListenProtocol().name().toLowerCase())
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
+        writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
                            <auth-user-pass>
