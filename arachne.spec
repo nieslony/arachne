@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.0.git_2505152222_37ca6a0
+Version:        1.4.0.git_2505181758_d6ba9ef
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,15 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505181758_d6ba9ef-1
+- Format fields (github@nieslony.at)
+- Fix: server type (github@nieslony.at)
+- Improve logging (github@nieslony.at)
+- Always require java 21 (github@nieslony.at)
+- Add option verify-x509-name '%%s to client conf (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump java version (github@nieslony.at)
+
 * Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505152222_37ca6a0-1
 - Fix: who is everybody => no ip set (github@nieslony.at)
 - Make everybody check simpler (github@nieslony.at)
