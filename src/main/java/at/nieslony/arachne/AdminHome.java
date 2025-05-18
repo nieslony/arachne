@@ -67,12 +67,14 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             try {
                 ui.access(() -> {
+                    log.debug("Updating connected users");
                     var clients = status.getConnectedClients();
                     grid.setItems(clients);
                     msgConnectedUsers.setText(createMsgConnectedUsers(
                             status.getConnectedClients().size()
                     ));
                     ui.push();
+                    log.debug("Connected users updated");
                 });
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up date grid: UI is detached");
@@ -115,6 +117,7 @@ public class AdminHome
 
         @Override
         public void accept(IFaceOpenVpnStatus status) {
+            log.debug("Updating connecred sites");
             var knownSites = vpnSiteRepository.findAll();
             var connectedSites = status.getConnectedClients();
             log.debug(
@@ -144,6 +147,7 @@ public class AdminHome
                 }
             }
             try {
+                log.debug("Updating connected sited with " + statusList);
                 ui.access(() -> {
                     grid.setItems(statusList);
                     msgConnectedSites.setText("%d/%d sites connected"
@@ -152,6 +156,7 @@ public class AdminHome
                             ));
                     ui.push();
                 });
+                log.debug("Connected sites updated");
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up date grid: UI is detached");
             }
@@ -195,21 +200,13 @@ public class AdminHome
 
     @PostConstruct
     public void init() {
-        addDetachListener((t) -> {
+        addDetachListener(l -> {
             log.info("Detaching from AdminHome");
-            if (openVpnUserSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.USER,
-                        updateConnectedUserListener
-                );
-            }
-            if (openVpnSiteSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.SITE,
-                        updateConnectedUserListener
-                );
-            }
+            removeListeners();
             log.info("Detached");
+        });
+        addAttachListener(l -> {
+            addListerners();
         });
     }
 
@@ -383,6 +380,16 @@ public class AdminHome
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         log.info("About to leave, removing status change listener");
+        removeListeners();
+        log.info("All listeners removed");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        addListerners();
+    }
+
+    private void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
@@ -395,11 +402,9 @@ public class AdminHome
                     updateConnectedSitesListener
             );
         }
-        log.info("All listeners removed");
     }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent bee) {
+    private void addListerners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,

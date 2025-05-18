@@ -93,25 +93,28 @@ public class ArachneDbus {
             ServerType serverType,
             Consumer<IFaceOpenVpnStatus> listener
     ) {
-        var statusListener = switch (serverType) {
-            case USER ->
-                userServerStatusListeners;
-            case SITE ->
-                siteServerStatusListeners;
-        };
-        var signalHandlerStatus = switch (serverType) {
-            case USER ->
-                sigHandlerUserStatus;
-            case SITE ->
-                sigHandlerSiteStatus;
-        };
-        var arachneServer = switch (serverType) {
-            case USER ->
-                arachneUser;
-            case SITE ->
-                arachneSite;
-        };
-        if (statusListener.isEmpty()) {
+        Set<Consumer<IFaceOpenVpnStatus>> statusListenerns;
+        DBusSigHandler<IFaceServer.ServerStatusChanged> signalHandlerStatus;
+        IFaceServer arachneServer;
+
+        switch (serverType) {
+            case USER -> {
+                statusListenerns = userServerStatusListeners;
+                signalHandlerStatus = sigHandlerUserStatus;
+                arachneServer = arachneUser;
+            }
+            case SITE -> {
+                statusListenerns = siteServerStatusListeners;
+                signalHandlerStatus = sigHandlerSiteStatus;
+                arachneServer = arachneSite;
+            }
+            default -> {
+                log.warn("Invalid serverType: " + serverType.toString());
+                return;
+            }
+        }
+
+        if (statusListenerns.isEmpty()) {
             log.info("First listener added: Adding signal handler");
             try {
                 conn.addSigHandler(
