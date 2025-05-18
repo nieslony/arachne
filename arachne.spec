@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.0.git_2505181758_d6ba9ef
+Version:        1.4.0.git_2505182134_3f20162
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,10 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505182134_3f20162-1
+- fix: detach from view (github@nieslony.at)
+- Fix: remove site listener (github@nieslony.at)
+
 * Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505181758_d6ba9ef-1
 - Format fields (github@nieslony.at)
 - Fix: server type (github@nieslony.at)
