@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.nieslony</groupId>
     <artifactId>Arachne</artifactId>
-    <version>1.4.0.git_2505182134_3f20162</version>
+    <version>1.4.0.git_2505182144_2e0a810</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
