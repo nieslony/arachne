@@ -8,12 +8,11 @@ import jakarta.annotation.PostConstruct;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.freedesktop.dbus.interfaces.DBusSigHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +21,8 @@ import org.springframework.stereotype.Service;
  * @author claas
  */
 @Service
+@Slf4j
 public class ArachneDbus {
-
-    private static final Logger logger = LoggerFactory.getLogger(ArachneDbus.class);
 
     private final String DBUS_BUS_NAME = "at.nieslony.Arachne";
     private final String DBUS_OBJ_PATH_USERVPN = "/UserVpn";
@@ -64,7 +62,7 @@ public class ArachneDbus {
 
     @PostConstruct
     public void init() {
-        logger.info("Connection to dbus type: " + dbusBusType);
+        log.info("Connection to dbus type: " + dbusBusType);
         try {
             conn = DBusConnection.getConnection(switch (dbusBusType) {
                 case "session" -> {
@@ -84,7 +82,7 @@ public class ArachneDbus {
                     DBUS_OBJ_PATH_SITEVPN,
                     IFaceServer.class);
         } catch (DBusException ex) {
-            logger.error(
+            log.error(
                     "Cannot connect to DBUS %s bus: %s"
                             .formatted(dbusBusType, ex.getMessage())
             );
@@ -107,16 +105,22 @@ public class ArachneDbus {
             case SITE ->
                 sigHandlerSiteStatus;
         };
+        var arachneServer = switch (serverType) {
+            case USER ->
+                arachneUser;
+            case SITE ->
+                arachneSite;
+        };
         if (statusListener.isEmpty()) {
-            logger.info("First listener added: Adding signal handler");
+            log.info("First listener added: Adding signal handler");
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
-                        arachneUser,
+                        arachneServer,
                         signalHandlerStatus
                 );
             } catch (DBusException ex) {
-                logger.error("Cannot signal handler: " + ex.getMessage());
+                log.error("Cannot signal handler: " + ex.getMessage());
                 return;
             }
         }
@@ -141,14 +145,14 @@ public class ArachneDbus {
         };
         statusListener.remove(listener);
         if (statusListener.isEmpty()) {
-            logger.info("Last listener removed. Removing signal handler");
+            log.info("Last listener removed. Removing signal handler");
             try {
                 conn.removeSigHandler(
                         IFaceServer.ServerStatusChanged.class,
                         signalHandlerStatus
                 );
             } catch (DBusException ex) {
-                logger.error("Cannot remove signal handler: " + ex.getMessage());
+                log.error("Cannot remove signal handler: " + ex.getMessage());
             }
         }
     }
