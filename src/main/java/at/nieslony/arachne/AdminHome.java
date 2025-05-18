@@ -67,14 +67,12 @@ public class AdminHome
         public void accept(IFaceOpenVpnStatus status) {
             try {
                 ui.access(() -> {
-                    log.debug("Updating connected users");
                     var clients = status.getConnectedClients();
                     grid.setItems(clients);
                     msgConnectedUsers.setText(createMsgConnectedUsers(
                             status.getConnectedClients().size()
                     ));
                     ui.push();
-                    log.debug("Connected users updated");
                 });
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up date grid: UI is detached");
@@ -117,7 +115,6 @@ public class AdminHome
 
         @Override
         public void accept(IFaceOpenVpnStatus status) {
-            log.debug("Updating connecred sites");
             var knownSites = vpnSiteRepository.findAll();
             var connectedSites = status.getConnectedClients();
             log.debug(
@@ -147,7 +144,6 @@ public class AdminHome
                 }
             }
             try {
-                log.debug("Updating connected sited with " + statusList);
                 ui.access(() -> {
                     grid.setItems(statusList);
                     msgConnectedSites.setText("%d/%d sites connected"
@@ -156,7 +152,6 @@ public class AdminHome
                             ));
                     ui.push();
                 });
-                log.debug("Connected sites updated");
             } catch (UIDetachedException ex) {
                 log.warn("Cannot up date grid: UI is detached");
             }
@@ -209,9 +204,6 @@ public class AdminHome
             log.debug("Attaching to AdminHome");
             addListeners();
             log.debug("Attached.");
-        });
-        addAttachListener(l -> {
-            addListerners();
         });
     }
 
