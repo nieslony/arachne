@@ -204,19 +204,11 @@ public class AdminHome
     public void init() {
         addDetachListener((t) -> {
             log.info("Detaching from AdminHome");
-            if (openVpnUserSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.USER,
-                        updateConnectedUserListener
-                );
-            }
-            if (openVpnSiteSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.SITE,
-                        updateConnectedUserListener
-                );
-            }
+            removeListeners();
             log.info("Detached");
+        });
+        addAttachListener((t) -> {
+            addListeners();
         });
     }
 
@@ -400,6 +392,10 @@ public class AdminHome
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
+        addListeners();
+    }
+
+    private void addListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             log.debug("About to enter admin-home, adding connected users listener");
             arachneDbus.addServerStatusChangedListener(
