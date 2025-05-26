@@ -33,7 +33,7 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.text.DateFormat;
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -195,15 +195,21 @@ public class AdminHome
 
     @PostConstruct
     public void init() {
-        addDetachListener(l -> {
-            log.debug("Detaching from AdminHome");
-            removeListeners();
-            log.debug("Detached");
-        });
-        addAttachListener(l -> {
-            log.debug("Attaching to AdminHome");
-            addListeners();
-            log.debug("Attached.");
+        addDetachListener((t) -> {
+            log.info("Detaching from AdminHome");
+            if (openVpnUserSettings.isAlreadyConfigured()) {
+                arachneDbus.removeServerStatusChangedListener(
+                        ArachneDbus.ServerType.USER,
+                        updateConnectedUserListener
+                );
+            }
+            if (openVpnSiteSettings.isAlreadyConfigured()) {
+                arachneDbus.removeServerStatusChangedListener(
+                        ArachneDbus.ServerType.SITE,
+                        updateConnectedUserListener
+                );
+            }
+            log.info("Detached");
         });
     }
 
@@ -256,30 +262,23 @@ public class AdminHome
         connectedUsersGrid = new Grid<>();
         connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
                 .setHeader("Common Name");
-        connectedUsersGrid.addColumn(source
-                -> NumberFormat
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
                         .getInstance()
-                        .format(source.getBytesReceived())
-        )
+                        .format(source.getBytesReceived()))
                 .setHeader("Bytes Received")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(source
-                -> NumberFormat
+        connectedUsersGrid.addColumn(
+                source -> DecimalFormat
                         .getInstance()
-                        .format(source.getBytesSent())
-        )
+                        .format(source.getBytesSent()))
                 .setHeader("Bytes Sent")
                 .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn(source
-                -> DateFormat
-                        .getDateTimeInstance(
-                                DateFormat.SHORT,
-                                DateFormat.MEDIUM)
-                        .format(source.getConnectedSinceAsDate())
-        )
-                .setHeader("Connected since");
-        connectedUsersGrid
-                .addColumn(source -> source.getRealAddress().split(":")[0])
+        connectedUsersGrid.addColumn((source) -> DateFormat
+                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                .format(source.getConnectedSinceAsDate())
+        );
+        connectedUsersGrid.addColumn(IFaceConnectedClient::getRealAddress)
                 .setHeader("Real Address");
         connectedUsersGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
                 .setHeader("Virtual Address");
@@ -321,24 +320,16 @@ public class AdminHome
                 .setFlexGrow(0);
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? NumberFormat
+                ? DecimalFormat
                         .getInstance()
-                        .format(
-                                site
-                                        .getConnectedClient()
-                                        .getBytesReceived()
-                        )
+                        .format(site.getConnectedClient().getBytesReceived())
                 : "")
                 .setHeader("Bytes Received");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? NumberFormat
+                ? DecimalFormat
                         .getInstance()
-                        .format(
-                                site
-                                        .getConnectedClient()
-                                        .getBytesSent()
-                        )
+                        .format(site.getConnectedClient().getBytesSent())
                 : "")
                 .setHeader("Bytes Sent");
         connectedSitesGrid.addColumn(
@@ -346,17 +337,19 @@ public class AdminHome
                 ? DateFormat
                         .getDateTimeInstance(
                                 DateFormat.SHORT,
-                                DateFormat.MEDIUM)
-                        .format(
-                                site
-                                        .getConnectedClient()
-                                        .getConnectedSinceAsDate()
+                                DateFormat.MEDIUM
+                        )
+                        .format(site
+                                .getConnectedClient()
+                                .getConnectedSinceAsDate()
                         )
                 : "")
                 .setHeader("Connected Since");
         connectedSitesGrid.addColumn(
                 site -> site.isConnected()
-                ? site.getConnectedClient().getRealAddress().split(":")[0]
+                ? site.getConnectedClient()
+                        .getRealAddress()
+                        .split(":")[0]
                 : "")
                 .setHeader("Real Address");
         connectedSitesGrid.addColumn(
@@ -374,19 +367,7 @@ public class AdminHome
         return layout;
     }
 
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
-        log.info("About to leave, removing status change listener");
-        removeListeners();
-        log.info("All listeners removed");
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent bee) {
-        addListeners();
-    }
-
-    private void removeListeners() {
+    public void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,

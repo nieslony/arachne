@@ -50,12 +50,28 @@ public class ArachneDbus {
 
         sigHandlerUserStatus = (t) -> {
             userServerStatusListeners.forEach((l) -> {
-                l.accept(t.getServerStatus());
+                log.debug("Listener: userServerStatus: " + l.toString());
+                try {
+                    l.accept(t.getServerStatus());
+                } catch (Exception ex) {
+                    log.error("Cannot send signal to %s: %s"
+                            .formatted(l.toString(), ex.getMessage())
+                    );
+                }
+                log.debug("End Signal: userServerStatus: " + l.toString());
             });
         };
         sigHandlerSiteStatus = (t) -> {
             siteServerStatusListeners.forEach((l) -> {
-                l.accept(t.getServerStatus());
+                log.debug("Listener: siteServerStatus: " + l.toString());
+                try {
+                    l.accept(t.getServerStatus());
+                } catch (Exception ex) {
+                    log.error("Cannot send signal to %s: %s"
+                            .formatted(l.toString(), ex.getMessage())
+                    );
+                }
+                log.debug("End Signal: siteServerStatus: " + l.toString());
             });
         };
     }
@@ -93,29 +109,29 @@ public class ArachneDbus {
             ServerType serverType,
             Consumer<IFaceOpenVpnStatus> listener
     ) {
-        Set<Consumer<IFaceOpenVpnStatus>> statusListenerns;
-        DBusSigHandler<IFaceServer.ServerStatusChanged> signalHandlerStatus;
-        IFaceServer arachneServer;
-
-        switch (serverType) {
-            case USER -> {
-                statusListenerns = userServerStatusListeners;
-                signalHandlerStatus = sigHandlerUserStatus;
-                arachneServer = arachneUser;
-            }
-            case SITE -> {
-                statusListenerns = siteServerStatusListeners;
-                signalHandlerStatus = sigHandlerSiteStatus;
-                arachneServer = arachneSite;
-            }
-            default -> {
-                log.warn("Invalid serverType: " + serverType.toString());
-                return;
-            }
-        }
-
-        if (statusListenerns.isEmpty()) {
-            log.info("First listener added: Adding signal handler");
+        log.debug("Adding %s listerner".formatted(serverType.toString()));
+        var statusListener = switch (serverType) {
+            case USER ->
+                userServerStatusListeners;
+            case SITE ->
+                siteServerStatusListeners;
+        };
+        var signalHandlerStatus = switch (serverType) {
+            case USER ->
+                sigHandlerUserStatus;
+            case SITE ->
+                sigHandlerSiteStatus;
+        };
+        var arachneServer = switch (serverType) {
+            case USER ->
+                arachneUser;
+            case SITE ->
+                arachneSite;
+        };
+        if (statusListener.isEmpty()) {
+            log.debug("First %s listener added: Adding signal handler"
+                    .formatted(serverType.toString())
+            );
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
@@ -123,7 +139,7 @@ public class ArachneDbus {
                         signalHandlerStatus
                 );
             } catch (DBusException ex) {
-                log.error("Cannot signal handler: " + ex.getMessage());
+                log.error("Cannot add signal handler: " + ex.getMessage());
                 return;
             }
         }
@@ -148,7 +164,9 @@ public class ArachneDbus {
         };
         statusListener.remove(listener);
         if (statusListener.isEmpty()) {
-            log.info("Last listener removed. Removing signal handler");
+            log.debug("Last %s listener removed. Removing signal handler"
+                    .formatted(serverType.toString())
+            );
             try {
                 conn.removeSigHandler(
                         IFaceServer.ServerStatusChanged.class,
