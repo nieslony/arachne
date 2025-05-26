@@ -53,12 +53,28 @@ public class ArachneDbus {
 
         sigHandlerUserStatus = (t) -> {
             userServerStatusListeners.forEach((l) -> {
-                l.accept(t.getServerStatus());
+                log.debug("Listener: userServerStatus: " + l.toString());
+                try {
+                    l.accept(t.getServerStatus());
+                } catch (Exception ex) {
+                    log.error("Cannot send signal to %s: %s"
+                            .formatted(l.toString(), ex.getMessage())
+                    );
+                }
+                log.debug("End Signal: userServerStatus: " + l.toString());
             });
         };
         sigHandlerSiteStatus = (t) -> {
             siteServerStatusListeners.forEach((l) -> {
-                l.accept(t.getServerStatus());
+                log.debug("Listener: siteServerStatus: " + l.toString());
+                try {
+                    l.accept(t.getServerStatus());
+                } catch (Exception ex) {
+                    log.error("Cannot send signal to %s: %s"
+                            .formatted(l.toString(), ex.getMessage())
+                    );
+                }
+                log.debug("End Signal: siteServerStatus: " + l.toString());
             });
         };
     }
