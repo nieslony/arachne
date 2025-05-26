@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.0.git_2505261157_f582822
+Version:        1.4.0.git_2505261224_f7aea1e
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon May 26 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505261224_f7aea1e-1
+- Fix: error due to merge (github@nieslony.at)
+
 * Mon May 26 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505261157_f582822-1
 - Add more debug infos (github@nieslony.at)
 - Bump dependency versions (github@nieslony.at)
