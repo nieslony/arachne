@@ -147,7 +147,7 @@ public class ArachneDbus {
             case SITE ->
                 sigHandlerSiteStatus;
         };
-        var server = switch (serverType) {
+        var arachneServer = switch (serverType) {
             case USER ->
                 arachneUser;
             case SITE ->
@@ -160,11 +160,11 @@ public class ArachneDbus {
             try {
                 conn.addSigHandler(
                         IFaceServer.ServerStatusChanged.class,
-                        server,
+                        arachneServer,
                         signalHandlerStatus
                 );
             } catch (DBusException ex) {
-                log.error("Cannot signal handler: " + ex.getMessage());
+                log.error("Cannot add signal handler: " + ex.getMessage());
                 return;
             }
         }

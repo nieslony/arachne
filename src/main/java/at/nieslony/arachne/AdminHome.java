@@ -203,6 +203,7 @@ public class AdminHome
     @PostConstruct
     public void init() {
         addDetachListener((t) -> {
+            log.info("Detaching from AdminHome");
             if (openVpnUserSettings.isAlreadyConfigured()) {
                 arachneDbus.removeServerStatusChangedListener(
                         ArachneDbus.ServerType.USER,
@@ -215,6 +216,7 @@ public class AdminHome
                         updateConnectedUserListener
                 );
             }
+            log.info("Detached");
         });
     }
 
@@ -387,6 +389,7 @@ public class AdminHome
                     updateConnectedSitesListener
             );
         }
+        log.info("All listeners removed");
     }
 
     @Override
