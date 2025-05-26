@@ -37,6 +37,7 @@ import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
@@ -55,17 +56,18 @@ public class AdminHome
 
     class ConnectedUsersListener implements Consumer<IFaceOpenVpnStatus> {
 
-        private final UI ui;
+        private final Supplier<UI> uiSupplier;
         private final Grid<IFaceConnectedClient> grid;
 
-        ConnectedUsersListener(UI ui, Grid<IFaceConnectedClient> grid) {
-            this.ui = ui;
+        ConnectedUsersListener(Supplier<UI> uiSupplier, Grid<IFaceConnectedClient> grid) {
+            this.uiSupplier = uiSupplier;
             this.grid = grid;
         }
 
         @Override
         public void accept(IFaceOpenVpnStatus status) {
             try {
+                UI ui = uiSupplier.get();
                 ui.access(() -> {
                     var clients = status.getConnectedClients();
                     grid.setItems(clients);
@@ -75,7 +77,10 @@ public class AdminHome
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot update users grid: UI is detached");
+                removeListeners();
+            } catch (Exception ex) {
+                log.warn("Cannot update ui: " + ex.getMessage());
             }
         }
     };
@@ -105,11 +110,11 @@ public class AdminHome
 
     class ConnectedSitesListener implements Consumer<IFaceOpenVpnStatus> {
 
-        private final UI ui;
+        private final Supplier<UI> uiSupplier;
         private final Grid<SiteStatus> grid;
 
-        ConnectedSitesListener(UI ui, Grid<SiteStatus> grid) {
-            this.ui = ui;
+        ConnectedSitesListener(Supplier<UI> uiSupplier, Grid<SiteStatus> grid) {
+            this.uiSupplier = uiSupplier;
             this.grid = grid;
         }
 
@@ -144,6 +149,7 @@ public class AdminHome
                 }
             }
             try {
+                UI ui = uiSupplier.get();
                 ui.access(() -> {
                     grid.setItems(statusList);
                     msgConnectedSites.setText("%d/%d sites connected"
@@ -153,7 +159,10 @@ public class AdminHome
                     ui.push();
                 });
             } catch (UIDetachedException ex) {
-                log.warn("Cannot up date grid: UI is detached");
+                log.warn("Cannot update sites grid: UI is detached");
+                removeListeners();
+            } catch (Exception ex) {
+                log.warn("Cannot update ui: " + ex.getMessage());
             }
         }
     }
@@ -185,8 +194,14 @@ public class AdminHome
         content.setWidthFull();
         add(content);
 
-        this.updateConnectedUserListener = new ConnectedUsersListener(UI.getCurrent(), connectedUsersGrid);
-        this.updateConnectedSitesListener = new ConnectedSitesListener(UI.getCurrent(), connectedSitesGrid);
+        this.updateConnectedUserListener = new ConnectedUsersListener(
+                () -> getUI().orElseThrow(),
+                connectedUsersGrid
+        );
+        this.updateConnectedSitesListener = new ConnectedSitesListener(
+                () -> getUI().orElseThrow(),
+                connectedSitesGrid
+        );
         setPadding(false);
 
         onRefreshConnectedUsers();
