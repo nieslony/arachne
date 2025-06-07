@@ -38,6 +38,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.shared.Registration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.slf4j.Logger;
@@ -62,7 +63,12 @@ class EditFirewallWhere extends AbstractCompositeField<VerticalLayout, EditFirew
 
         whereTypeSelect = new Select<>();
         whereTypeSelect.setLabel("Where Type");
-        whereTypeSelect.setItems(FirewallWhere.Type.values());
+        whereTypeSelect.setItems(
+                List.of(FirewallWhere.Type.values())
+                        .stream()
+                        .filter(c -> c != FirewallWhere.Type.Everywhere)
+                        .toList()
+        );
         whereTypeSelect.setWidthFull();
         binder.forField(whereTypeSelect)
                 .bind(FirewallWhere::getType, FirewallWhere::setType);

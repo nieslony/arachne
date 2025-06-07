@@ -37,6 +37,10 @@ public interface FirewallRuleRepository extends JpaRepository<FirewallRuleModel,
             Pageable pageable
     );
 
+    List<FirewallRuleModel> findAllByVpnType(
+            FirewallRuleModel.VpnType vpnType
+    );
+
     long countByVpnTypeAndRuleDirection(
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection ruleDirection

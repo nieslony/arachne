@@ -195,21 +195,15 @@ public class AdminHome
 
     @PostConstruct
     public void init() {
-        addDetachListener((t) -> {
-            log.info("Detaching from AdminHome");
-            if (openVpnUserSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.USER,
-                        updateConnectedUserListener
-                );
-            }
-            if (openVpnSiteSettings.isAlreadyConfigured()) {
-                arachneDbus.removeServerStatusChangedListener(
-                        ArachneDbus.ServerType.SITE,
-                        updateConnectedUserListener
-                );
-            }
-            log.info("Detached");
+        addDetachListener(l -> {
+            log.debug("Detaching from AdminHome");
+            removeListeners();
+            log.debug("Detached");
+        });
+        addAttachListener(l -> {
+            log.debug("Attaching to AdminHome");
+            addListeners();
+            log.debug("Attached.");
         });
     }
 
@@ -383,6 +377,16 @@ public class AdminHome
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         log.info("About to leave, removing status change listener");
+        removeListeners();
+        log.info("All listeners removed");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        addListeners();
+    }
+
+    private void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             arachneDbus.removeServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,
@@ -395,11 +399,9 @@ public class AdminHome
                     updateConnectedSitesListener
             );
         }
-        log.info("All listeners removed");
     }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent bee) {
+    private void addListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             arachneDbus.addServerStatusChangedListener(
                     ArachneDbus.ServerType.USER,

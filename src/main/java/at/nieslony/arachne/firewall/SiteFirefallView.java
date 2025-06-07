@@ -29,6 +29,7 @@ public class SiteFirefallView extends VerticalLayout {
     public SiteFirefallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
+            FirewallController firewallController,
             Settings settings
     ) {
         TabSheet tabs = new TabSheet();
@@ -40,6 +41,7 @@ public class SiteFirefallView extends VerticalLayout {
                 firewallRuleRepository,
                 userMatcherCollector,
                 ldapSettings,
+                firewallController,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         );

@@ -5,6 +5,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
@@ -46,7 +47,12 @@ public class EditFirewallWho extends AbstractCompositeField<VerticalLayout, Edit
 
         Select<UserMatcherInfo> userMatchersSelect = new Select<>();
         userMatchersSelect.setLabel("User Matcher");
-        userMatchersSelect.setItems(userMatcherCollector.getAllUserMatcherInfo());
+        userMatchersSelect.setItems(
+                userMatcherCollector.getAllUserMatcherInfo()
+                        .stream()
+                        .filter(c -> !c.getClassName().equals(EverybodyMatcher.class.getName()))
+                        .toList()
+        );
         userMatchersSelect.setEmptySelectionAllowed(false);
         userMatchersSelect.setWidthFull();
         binder.forField(userMatchersSelect)

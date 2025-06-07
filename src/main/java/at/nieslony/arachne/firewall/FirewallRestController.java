@@ -31,12 +31,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.HttpResponseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,9 +52,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/firewall")
+@Slf4j
 public class FirewallRestController {
-
-    private static final Logger logger = LoggerFactory.getLogger(FirewallRestController.class);
 
     @Autowired
     private FirewallRuleRepository firewallRuleRepository;
@@ -81,6 +82,54 @@ public class FirewallRestController {
         private String port;
     }
 
+    @Getter
+    public class MatchingRules {
+
+        final Set<Long> incoming = new TreeSet<>();
+        final Set<Long> outgoing = new TreeSet<>();
+    }
+
+    @GetMapping("/matching_rules")
+    @RolesAllowed(value = {"USER"})
+    public MatchingRules getMatchingRules()
+            throws HttpResponseException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        UserModel user = userRepository.findByUsername(username);
+        if (user == null) {
+            user = ldapUserSource.findUser(username);
+        }
+        if (user == null) {
+            log.error("User %s doen't exist -> no fire wall rules".formatted(username));
+            throw new HttpResponseException(HttpStatus.UNAUTHORIZED.value(), "User not found");
+        }
+
+        MatchingRules matchingRules = new MatchingRules();
+        for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnType(FirewallRuleModel.VpnType.USER)) {
+            if (!rule.isEnabled()) {
+                continue;
+            }
+            for (FirewallWho who : rule.getWho()) {
+                if (who.getUserMatcherClassName().equals(EverybodyMatcher.class.getName())) {
+                    break;
+                }
+                UserMatcher matcher = userMatcherCollector.buildUserMatcher(
+                        who.getUserMatcherClassName(),
+                        who.getParameter()
+                );
+                if (matcher.isUserMatching(user)) {
+                    switch (rule.getRuleDirection()) {
+                        case INCOMING ->
+                            matchingRules.incoming.add(rule.getId());
+                        case OUTGOING ->
+                            matchingRules.outgoing.add(rule.getId());
+                    }
+                }
+            }
+        }
+        return matchingRules;
+    }
+
     @GetMapping("/user_rules")
     @RolesAllowed(value = {"USER"})
     public List<RichRule> getUserRules(
@@ -95,23 +144,22 @@ public class FirewallRestController {
         List< RichRule> richRules = new LinkedList<>();
 
         if (user == null) {
-            logger.warn("User %s doen't exist -> no fire wall rules".formatted(username));
+            log.warn("User %s doen't exist -> no fire wall rules".formatted(username));
             return richRules;
         }
-        logger.info("Get firewall rules for " + username);
+        log.debug("Get firewall rules for " + username);
         for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         )) {
-            logger.info(rule.toString());
             if (!rule.isEnabled()) {
-                logger.info("Ignoring disabled rule");
+                log.debug("Ignoring disabled rule" + rule.toString());
                 continue;
             }
             boolean matches = false;
             for (FirewallWho who : rule.getWho()) {
                 if (who.getUserMatcherClassName().equals(EverybodyMatcher.class.getName())) {
-                    logger.info("Ignoring everybody rule");
+                    log.debug("Ignoring everybody rule" + rule.toString());
                     break;
                 }
                 UserMatcher matcher = userMatcherCollector.buildUserMatcher(
@@ -120,13 +168,13 @@ public class FirewallRestController {
                 );
                 if (matcher.isUserMatching(user)) {
                     matches = true;
-                    logger.info(
+                    log.debug(
                             "Rule %s matches user %s"
                                     .formatted(rule.toString(), username)
                     );
                     break;
                 }
-                logger.info(
+                log.debug(
                         "Rule %s does not match user %s"
                                 .formatted(rule.toString(), username)
                 );

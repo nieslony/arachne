@@ -5,12 +5,14 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.YesNoIcon;
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -29,8 +31,11 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.vaadin.firitin.layouts.HorizontalFloatLayout;
@@ -46,12 +51,13 @@ class FirewallRulesEditor extends VerticalLayout {
     private final UserMatcherCollector userMatcherCollector;
     private final LdapSettings ldapSettings;
 
-    private final Grid<FirewallRuleModel> grid;
+    private Grid<FirewallRuleModel> grid;
 
     public FirewallRulesEditor(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             LdapSettings ldapSettings,
+            FirewallController firewallController,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
@@ -184,6 +190,12 @@ class FirewallRulesEditor extends VerticalLayout {
                     return layout;
                 }))
                 .setFlexGrow(0);
+        grid.setEmptyStateText(switch (direction) {
+            case INCOMING ->
+                "All incoming traffic is blocked.";
+            case OUTGOING ->
+                "All outgoing traffic is blocked";
+        });
 
         Button addRule = new Button("Add...", e -> {
             FirewallRuleModel rule = new FirewallRuleModel(
@@ -192,8 +204,29 @@ class FirewallRulesEditor extends VerticalLayout {
             );
             editRule(rule);
         });
+        addRule.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        add(addRule, grid);
+        Button saveAllRules = new Button("Apply all Rules", e -> {
+            String fileName = "/openvpn-%s-firewall-rules.json".formatted(
+                    vpnType.name().toLowerCase()
+            );
+            try {
+                firewallController.writeRules(vpnType);
+                ShowNotification.info("Configuration written to " + fileName);
+            } catch (IOException | JSONException ex) {
+                String msg = "Cannot write firewall rules to %s: %s"
+                        .formatted(fileName, ex.getMessage());
+                log.error(msg);
+                ShowNotification.error("Error", msg);
+            }
+        });
+
+        HorizontalLayout buttonsLayout = new HorizontalLayout(
+                addRule,
+                saveAllRules
+        );
+
+        add(grid, buttonsLayout);
         setHeightFull();
         setMargin(false);
         setPadding(false);
@@ -249,6 +282,8 @@ class FirewallRulesEditor extends VerticalLayout {
     }
 
     private void editRule(FirewallRuleModel rule) {
+        final String TUPEL_WIDTH = "25em";
+
         Dialog dlg = new Dialog();
         if (rule.getId() == null) {
             dlg.setHeaderTitle("New rule");
@@ -258,27 +293,48 @@ class FirewallRulesEditor extends VerticalLayout {
         }
 
         Binder<FirewallRuleModel> binder = new Binder<>();
-
-        HorizontalLayout horLayout = new HorizontalLayout();
-        horLayout.setMargin(false);
-        horLayout.setPadding(false);
+        VerticalLayout mainLayout = new VerticalLayout();
+        mainLayout.setMargin(false);
+        mainLayout.setPadding(false);
+        HorizontalFloatLayout ruleTiupelLayout = new HorizontalFloatLayout();
+        ruleTiupelLayout.setMargin(false);
+        ruleTiupelLayout.setPadding(false);
 
         MagicEditableListBox<FirewallWho> who;
+        Checkbox everybody;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.USER) {
             who = new MagicEditableListBox<>(
                     FirewallWho.class,
                     "Who",
                     () -> new EditFirewallWho(userMatcherCollector, ldapSettings)
             );
-            who.setMinWidth(25, Unit.EM);
             binder.forField(who)
                     .bind(FirewallRuleModel::getWho, FirewallRuleModel::setWho);
-            horLayout.add(who);
+
+            everybody = new Checkbox(
+                    "Everybody",
+                    e -> who.setEnabled(!e.getValue())
+            );
+            everybody.setValue(
+                    rule.getWho() != null
+                    && rule.getWho().size() == 1
+                    && rule.getWho().get(0)
+                            .getUserMatcherClassName()
+                            .equals(EverybodyMatcher.class.getName())
+            );
+
+            VerticalLayout vbox = new VerticalLayout(everybody, who);
+            vbox.setWidth(TUPEL_WIDTH);
+            vbox.setMargin(false);
+            vbox.setPadding(false);
+            ruleTiupelLayout.add(vbox);
         } else {
+            everybody = null;
             who = null;
         }
 
         MagicEditableListBox<FirewallWhere> from;
+        Checkbox fromEveryWhere;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.SITE
                 || rule.getRuleDirection() == FirewallRuleModel.RuleDirection.OUTGOING) {
             from = new MagicEditableListBox<>(
@@ -286,15 +342,31 @@ class FirewallRulesEditor extends VerticalLayout {
                     "From",
                     () -> new EditFirewallWhere()
             );
-            from.setMinWidth(25, Unit.EM);
             binder.forField(from)
                     .bind(FirewallRuleModel::getFrom, FirewallRuleModel::setFrom);
-            horLayout.add(from);
+
+            fromEveryWhere = new Checkbox(
+                    "From everyWhere",
+                    e -> from.setEnabled(!e.getValue())
+            );
+            fromEveryWhere.setValue(
+                    rule.getFrom() != null
+                    && rule.getFrom().size() == 1
+                    && rule.getFrom().get(0).getType() == FirewallWhere.Type.Everywhere
+            );
+
+            VerticalLayout vbox = new VerticalLayout(fromEveryWhere, from);
+            vbox.setWidth(TUPEL_WIDTH);
+            vbox.setMargin(false);
+            vbox.setPadding(false);
+            ruleTiupelLayout.add(vbox);
         } else {
             from = null;
+            fromEveryWhere = null;
         }
 
         MagicEditableListBox<FirewallWhere> to;
+        Checkbox toEveryWhere;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.SITE
                 || rule.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING) {
             to = new MagicEditableListBox<>(
@@ -302,7 +374,6 @@ class FirewallRulesEditor extends VerticalLayout {
                     "To",
                     () -> new EditFirewallWhere()
             );
-            to.setMinWidth(25, Unit.EM);
             to.setItemRenderer(new ComponentRenderer<>(t -> {
                 HorizontalLayout layout = new HorizontalFloatLayout();
                 layout.setMargin(false);
@@ -322,8 +393,24 @@ class FirewallRulesEditor extends VerticalLayout {
             }));
             binder.forField(to)
                     .bind(FirewallRuleModel::getTo, FirewallRuleModel::setTo);
-            horLayout.add(to);
+
+            toEveryWhere = new Checkbox(
+                    "To everywhere",
+                    e -> to.setEnabled(!e.getValue())
+            );
+            toEveryWhere.setValue(
+                    rule.getTo() != null
+                    && rule.getTo().size() == 1
+                    && rule.getTo().get(0).getType() == FirewallWhere.Type.Everywhere
+            );
+
+            VerticalLayout vbox = new VerticalLayout(toEveryWhere, to);
+            vbox.setWidth(TUPEL_WIDTH);
+            vbox.setMargin(false);
+            vbox.setPadding(false);
+            ruleTiupelLayout.add(vbox);
         } else {
+            toEveryWhere = null;
             to = null;
         }
 
@@ -349,10 +436,24 @@ class FirewallRulesEditor extends VerticalLayout {
 
             return layout;
         }));
-        what.setMinWidth(25, Unit.EM);
         binder.forField(what)
                 .bind(FirewallRuleModel::getWhat, FirewallRuleModel::setWhat);
-        horLayout.add(what);
+
+        Checkbox everything = new Checkbox(
+                "Everything",
+                e -> what.setEnabled(!e.getValue())
+        );
+        everything.setValue(
+                rule.getWhat() != null
+                && rule.getWhat().size() == 1
+                && rule.getWhat().get(0).getType() == FirewallWhat.Type.Everything
+        );
+
+        VerticalLayout vbox = new VerticalLayout(everything, what);
+        vbox.setWidth(TUPEL_WIDTH);
+        vbox.setMargin(false);
+        vbox.setPadding(false);
+        ruleTiupelLayout.add(vbox);
 
         TextField descriptionField = new TextField("Description");
         descriptionField.setWidthFull();
@@ -364,28 +465,57 @@ class FirewallRulesEditor extends VerticalLayout {
         binder.forField(isEnabledField)
                 .bind(FirewallRuleModel::isEnabled, FirewallRuleModel::setEnabled);
 
-        VerticalLayout layout = new VerticalLayout(
-                horLayout,
+        mainLayout.add(
+                ruleTiupelLayout,
                 descriptionField,
                 isEnabledField
         );
-        layout.setMargin(false);
-        layout.setPadding(false);
-        dlg.add(layout);
 
-        Button okButton = new Button("OK", (t) -> {
+        dlg.add(mainLayout);
+
+        Button okButton = new Button("OK", (ClickEvent<Button> t) -> {
             dlg.close();
 
             if (who != null) {
-                rule.setWho(who.getValue());
+                if (!everybody.getValue()) {
+                    rule.setWho(who.getValue());
+                } else {
+                    if (rule.getWho().size() != 1
+                            || !rule.getWho().get(0)
+                                    .getUserMatcherClassName()
+                                    .equals(EverybodyMatcher.class.getName())) {
+                        rule.setWho(List.of(FirewallWho.createEverybody()));
+                    }
+                }
             }
             if (from != null) {
-                rule.setFrom(from.getValue());
+                if (!fromEveryWhere.getValue()) {
+                    rule.setFrom(from.getValue());
+                } else {
+                    if (rule.getFrom().size() != 1
+                            || rule.getFrom().get(0).getType() != FirewallWhere.Type.Everywhere) {
+                        rule.setFrom(List.of(FirewallWhere.createEverywhere()));
+                    }
+                }
             }
             if (to != null) {
-                rule.setTo(to.getValue());
+                if (!toEveryWhere.getValue()) {
+                    rule.setTo(to.getValue());
+                } else {
+                    if (rule.getTo().size() != 1
+                            || rule.getTo().get(0).getType() != FirewallWhere.Type.Everywhere) {
+                        rule.setTo(List.of(FirewallWhere.createEverywhere()));
+                    }
+                }
             }
-            rule.setWhat(what.getValue());
+            if (!everything.getValue()) {
+                rule.setWhat(what.getValue());
+            } else {
+                if (rule.getWhat().size() != 1
+                        || rule.getWhat().get(0).getType() != FirewallWhat.Type.Everything) {
+                    rule.setWhat(List.of(FirewallWhat.createEverything()));
+                }
+            }
             rule.setEnabled(isEnabledField.getValue());
             rule.setDescription(descriptionField.getValue());
             firewallRuleRepository.save(rule);
@@ -403,6 +533,7 @@ class FirewallRulesEditor extends VerticalLayout {
         );
 
         binder.setBean(rule);
+        binder.validate();
 
         dlg.open();
     }
