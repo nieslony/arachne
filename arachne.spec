@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.0
+Version:        1.4.1
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,16 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.1-1
+- Bump depenency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Format fields (github@nieslony.at)
+- Fix: server type (github@nieslony.at)
+- Improve logging (github@nieslony.at)
+- Add option verify-x509-name '%%s to client conf (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump java version (github@nieslony.at)
+
 * Fri May 02 2025 Claas Nieslony <github@nieslony.at> 1.4.0-1
 - Fix: push ui (github@nieslony.at)
 - Fix: handle session timeout (github@nieslony.at)
