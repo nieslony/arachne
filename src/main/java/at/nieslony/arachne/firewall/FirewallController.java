@@ -17,6 +17,7 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.firewall.basicsettings.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.OpenVpnSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.settings.Settings;
