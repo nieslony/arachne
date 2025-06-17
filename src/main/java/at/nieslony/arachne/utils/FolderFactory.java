@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.utils;
 
+import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.File;
 import java.io.IOException;
@@ -136,5 +137,11 @@ public class FolderFactory {
                 .of("%s/status-arachne-%s.log".formatted(getOpenVpnRunDir(), server))
                 .toAbsolutePath()
                 .toString();
+    }
+
+    public String getFirewallRulesPath(FirewallRuleModel.VpnType vpnType) {
+        return getVpnConfigDir("openvpn-%s-firewall-rules.json"
+                .formatted(vpnType.name().toLowerCase())
+        );
     }
 }

@@ -26,7 +26,9 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 @Getter
 @Setter
 @ToString
-public class OpenVpnUserSettings extends AbstractSettingsGroup {
+public class OpenVpnUserSettings
+        extends AbstractSettingsGroup
+        implements OpenVpnSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserSettings.class);
 

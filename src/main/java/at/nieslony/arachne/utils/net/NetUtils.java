@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -68,6 +69,59 @@ public class NetUtils {
         }
 
         return ret;
+    }
+
+    public static boolean isSubnetOf(String subnet, String of)
+            throws NumberFormatException, UnknownHostException {
+        String[] subnetSplit = subnet.split("/");
+        String[] ofSplit = of.split("/");
+        if (subnetSplit.length > 2 || ofSplit.length > 2) {
+            return false;
+        }
+        int subnetMask = subnetSplit.length == 1
+                ? 32
+                : Integer.parseInt(subnetSplit[1]);
+        int ofMask = ofSplit.length == 1
+                ? 32
+                : Integer.parseInt(ofSplit[1]);
+        if (subnetMask <= ofMask) {
+            return false;
+        }
+        InetAddress subnetAddr = Inet4Address.getByName(subnetSplit[0]);
+        InetAddress ofAddr = Inet4Address.getByName(ofSplit[0]);
+        byte[] subnetBytes = subnetAddr.getAddress();
+        byte[] ofBytes = ofAddr.getAddress();
+        long subnetInt = subnetBytes[0] << 24
+                | subnetBytes[1] << 16
+                | subnetBytes[2] << 8
+                | subnetBytes[3];
+        long ofInt = ofBytes[0] << 24
+                | ofBytes[1] << 16
+                | ofBytes[2] << 8
+                | ofBytes[3];
+        int mask = 0xffffffff << (32 - ofMask);
+
+        return (ofInt & mask) == (subnetInt & mask);
+    }
+
+    public static List<String> filterSubnets(List<String> nets) {
+        return nets.stream()
+                .filter(n -> {
+                    try {
+                        for (var n1 : nets) {
+                            if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                                return false;
+                            }
+                        }
+                    } catch (NumberFormatException | UnknownHostException ex) {
+                        throw new RuntimeException(
+                                "Network list contains illegal entry",
+                                ex
+                        );
+                    }
+                    return true;
+                })
+                .toList();
     }
 
     public static List<MxRecord> mxLookup(String domain) throws NamingException {

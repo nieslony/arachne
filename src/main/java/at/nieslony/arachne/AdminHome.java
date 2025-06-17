@@ -215,10 +215,15 @@ public class AdminHome
 
     @PostConstruct
     public void init() {
-        addDetachListener((t) -> {
-            log.info("Detaching from AdminHome");
+        addDetachListener(l -> {
+            log.debug("Detaching from AdminHome");
             removeListeners();
-            log.info("Detached");
+            log.debug("Detached");
+        });
+        addAttachListener(l -> {
+            log.debug("Attaching to AdminHome");
+            addListeners();
+            log.debug("Attached.");
         });
         addAttachListener((t) -> {
             addListeners();
@@ -379,7 +384,19 @@ public class AdminHome
         return layout;
     }
 
-    public void removeListeners() {
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        log.info("About to leave, removing status change listener");
+        removeListeners();
+        log.info("All listeners removed");
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent bee) {
+        addListeners();
+    }
+
+    private void removeListeners() {
         if (openVpnUserSettings.isAlreadyConfigured()) {
             log.debug("Removing connected users listener");
             arachneDbus.removeServerStatusChangedListener(
@@ -394,18 +411,6 @@ public class AdminHome
                     updateConnectedSitesListener
             );
         }
-        log.info("All listeners removed");
-    }
-
-    @Override
-    public void beforeLeave(BeforeLeaveEvent event) {
-        log.debug("About to leave admin-home, removing connected users/sites listeners");
-        removeListeners();
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent bee) {
-        addListeners();
     }
 
     private void addListeners() {

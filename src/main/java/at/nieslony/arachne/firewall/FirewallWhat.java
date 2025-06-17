@@ -26,6 +26,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -38,6 +39,7 @@ import org.hibernate.annotations.CascadeType;
 @Setter
 @Entity
 @Table(name = "firewallWhat")
+@NoArgsConstructor
 public class FirewallWhat {
 
     public enum Type {
@@ -74,6 +76,12 @@ public class FirewallWhat {
     private int portTo = 65535;
     private TransportProtocol portRangeProtocol = TransportProtocol.TCP;
     private String service = "";
+
+    public static FirewallWhat createEverything() {
+        FirewallWhat what = new FirewallWhat();
+        what.setType(Type.Everything);
+        return what;
+    }
 
     @Override
     public String toString() {

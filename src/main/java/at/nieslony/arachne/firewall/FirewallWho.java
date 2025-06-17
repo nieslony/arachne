@@ -16,7 +16,9 @@
  */
 package at.nieslony.arachne.firewall;
 
+import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,5 +58,16 @@ public class FirewallWho {
         return UserMatcher.getMatcherDetails(
                 getUserMatcherClassName(),
                 getParameter());
+    }
+
+    @JsonIgnore
+    public boolean isEverybody() {
+        return userMatcherClassName.equals(EverybodyMatcher.class.getName());
+    }
+
+    public static FirewallWho createEverybody() {
+        FirewallWho who = new FirewallWho();
+        who.setUserMatcherClassName(EverybodyMatcher.class.getName());
+        return who;
     }
 }

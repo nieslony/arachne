@@ -43,7 +43,7 @@ import org.springframework.util.ObjectUtils;
 @ToString
 @Entity
 @Table(name = "vpn-sites")
-public class VpnSite {
+public class VpnSite implements OpenVpnSettings {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

@@ -2,14 +2,10 @@
 %global moduletype contrib
 %global modulename arachne
 
-%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
 %global jdk_version 21
-%else
-%global jdk_version 17
-%endif
 
 Name:           arachne
-Version:        1.4.0
+Version:        1.4.2
 
 Release:        1
 License:        GPLv3
@@ -99,6 +95,33 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.2-1
+- fix: detach from view (github@nieslony.at)
+- Always require java 21 (github@nieslony.at)
+- Fix: who is everybody => no ip set (github@nieslony.at)
+- Make everybody check simpler (github@nieslony.at)
+- Get user's matching firewall rule ids (github@nieslony.at)
+- - split incoming and ougoung rules - add path of firewall rules to plugin
+  config file (github@nieslony.at)
+- Add getFirewallRulesPath (github@nieslony.at)
+- Save firewall rules in new format (github@nieslony.at)
+- Add NetUtils::isSubnetOf and NetUtils::filterSubnets + tests
+  (github@nieslony.at)
+- Add findAllByVpnType (github@nieslony.at)
+- Improve firewall rule editor (github@nieslony.at)
+- Remove margin (github@nieslony.at)
+- Add empty state message (github@nieslony.at)
+
+* Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.1-1
+- Bump depenency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Format fields (github@nieslony.at)
+- Fix: server type (github@nieslony.at)
+- Improve logging (github@nieslony.at)
+- Add option verify-x509-name '%%s to client conf (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump java version (github@nieslony.at)
+
 * Fri May 02 2025 Claas Nieslony <github@nieslony.at> 1.4.0-1
 - Fix: push ui (github@nieslony.at)
 - Fix: handle session timeout (github@nieslony.at)
