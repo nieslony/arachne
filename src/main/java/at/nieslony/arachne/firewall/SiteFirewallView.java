@@ -22,11 +22,11 @@ import java.util.LinkedList;
 @Route(value = "siteVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
-public class SiteFirefallView extends VerticalLayout {
+public class SiteFirewallView extends VerticalLayout {
 
     private FirewallRulesEditor incomingRulesEditor;
 
-    public SiteFirefallView(
+    public SiteFirewallView(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
             FirewallController firewallController,
