@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.2
+Version:        1.4.2.git_2506181407_7aa1092
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,163 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Jun 18 2025 Claas Nieslony <github@nieslony.at> 1.4.2.git_2506181407_7aa1092-1
+- Recreate file from master (github@nieslony.at)
+- Fix: class name (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505261448_ca3fa13-1]. (github@nieslony.at)
+- Fix: provide UI object by supplier (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505261224_f7aea1e-1]. (github@nieslony.at)
+- Fix: error due to merge (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505261157_f582822-1]. (github@nieslony.at)
+- Add more debug infos (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505182144_2e0a810-1]. (github@nieslony.at)
+- fix: merge (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505182134_3f20162-1]. (github@nieslony.at)
+- Fix: remove site listener (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505181758_d6ba9ef-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505152222_37ca6a0-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505151234_ad4ffa8-1]. (github@nieslony.at)
+- Fix: merge (github@nieslony.at)
+- Fix: add
+  src/main/java/at/nieslony/arachne/openvpn/SiteFirewallBasicsSettings.java
+  (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505142310_8ccf2ef-1]. (github@nieslony.at)
+- Add empty state message (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505061940_0c6f36c-1]. (github@nieslony.at)
+- Revert "Fix: save firewall basic settings" (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.4.0.git_2505061927_39e842d-1]. (github@nieslony.at)
+- Fix: save firewall basic settings (github@nieslony.at)
+- Edit firewall basic settings (github@nieslony.at)
+- Remove unused variables (github@nieslony.at)
+- Create firewall basics tab for site firewall (github@nieslony.at)
+- Fix: show full path of apache config (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012126_cf4a9c4-1]. (github@nieslony.at)
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505012012_129324e-1]. (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2505011937_6b5f312-1]. (github@nieslony.at)
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301807_9e014da-1]. (github@nieslony.at)
+- Fix: user ≠ site (github@nieslony.at)
+- Add some debug log (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301636_7d5de06-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301559_f9d22f7-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504301144_04a9c45-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504271116_fd0a4a9-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504271113_0036dba-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504271111_bbe668f-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504252157_a496a5e-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504242342_e7c3723-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504231329_1123c38-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504230004_d59bcb8-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504222330_505f2af-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504180034_7a696a8-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504170844_620eb6a-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504162232_b46b8b5-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2504101514_32e8dab-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2503061929_5a84a37-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2503061906_ee232c4-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2501151105_230ee52-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412212041_c549378-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412211511_a23ea4c-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412202013_4ccc7e3-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412191423_bd1e051-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412190858_2670d38-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412190856_2800a72-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412190828_a510240-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412182155_af50d32-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412181743_5fd6fea-1]. (github@nieslony.at)
+- Add lost files again (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412181736_de00a49-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412180057_3ee925e-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412172231_d3f1047-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412111254_4e5a99d-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.16.git_2412032055_73112dd-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.14.git_2411062113_c33b79d-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2407291427_8628f1c-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2407221316_a37f326-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2406141752_1e6049b-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405292333_b74de79-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405291215_b7819cd-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405232055_d18c4d1-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405052121_b2c0998-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405052034_fe3f0ad-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.10.git_2405012121_8ebfbf8-1]. (github@nieslony.at)
+- Add update-version.sh (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [1.3.6.git_2404022217_5886f45-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2403211021_85d8b28-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2403011547_2b59921-1]. (github@nieslony.at)
+- Automatic commit of package [arachne] release
+  [0.1.3.git_2402212143_ad0faa6-1]. (github@nieslony.at)
+- Add dependency (github@nieslony.at)
+- Automatic commit of package [arachne] release [0.1.3_testing-1].
+  (github@nieslony.at)
+
 * Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.2-1
 - fix: detach from view (github@nieslony.at)
 - Always require java 21 (github@nieslony.at)
