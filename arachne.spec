@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.0.git_2505261448_ca3fa13
+Version:        1.4.2
 
 Release:        1
 License:        GPLv3
@@ -95,43 +95,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
-* Mon May 26 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505261448_ca3fa13-1
-- Fix: provide UI object by supplier (github@nieslony.at)
-
-* Mon May 26 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505261224_f7aea1e-1
-- Fix: error due to merge (github@nieslony.at)
-
-* Mon May 26 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505261157_f582822-1
-- Add more debug infos (github@nieslony.at)
-- Bump dependency versions (github@nieslony.at)
-
-* Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505182144_2e0a810-1
-- fix: merge (github@nieslony.at)
-
-* Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505182134_3f20162-1
+* Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.2-1
 - fix: detach from view (github@nieslony.at)
-- Fix: remove site listener (github@nieslony.at)
-
-* Sun May 18 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505181758_d6ba9ef-1
-- Format fields (github@nieslony.at)
-- Fix: server type (github@nieslony.at)
-- Improve logging (github@nieslony.at)
 - Always require java 21 (github@nieslony.at)
-- Add option verify-x509-name '%%s to client conf (github@nieslony.at)
-- Bump vaadin version (github@nieslony.at)
-- Bump java version (github@nieslony.at)
-
-* Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505152222_37ca6a0-1
 - Fix: who is everybody => no ip set (github@nieslony.at)
 - Make everybody check simpler (github@nieslony.at)
-
-* Thu May 15 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505151234_ad4ffa8-1
-- Fix: merge (github@nieslony.at)
-- Fix: add
-  src/main/java/at/nieslony/arachne/openvpn/SiteFirewallBasicsSettings.java
-  (github@nieslony.at)
-
-* Wed May 14 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505142310_8ccf2ef-1
 - Get user's matching firewall rule ids (github@nieslony.at)
 - - split incoming and ougoung rules - add path of firewall rules to plugin
   config file (github@nieslony.at)
@@ -143,47 +111,17 @@ fi
 - Improve firewall rule editor (github@nieslony.at)
 - Remove margin (github@nieslony.at)
 - Add empty state message (github@nieslony.at)
-- Add empty state message (github@nieslony.at)
 
-* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061940_0c6f36c-1
-- Revert "Fix: save firewall basic settings" (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505012126_cf4a9c4-1]. (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505012012_129324e-1]. (github@nieslony.at)
-- Fux: ui push (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505011937_6b5f312-1]. (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2504301807_9e014da-1]. (github@nieslony.at)
+* Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.1-1
+- Bump depenency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Format fields (github@nieslony.at)
+- Fix: server type (github@nieslony.at)
+- Improve logging (github@nieslony.at)
+- Add option verify-x509-name '%%s to client conf (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump java version (github@nieslony.at)
 
-* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061940_0c6f36c-1
-- Revert "Fix: save firewall basic settings" (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505012126_cf4a9c4-1]. (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505012012_129324e-1]. (github@nieslony.at)
-- Fux: ui push (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2505011937_6b5f312-1]. (github@nieslony.at)
-- Automatic commit of package [arachne] release
-  [1.3.16.git_2504301807_9e014da-1]. (github@nieslony.at)
-
-<<<<<<< HEAD
-* Tue May 06 2025 Claas Nieslony <github@nieslony.at> 1.4.0.git_2505061927_39e842d-1
-- Fix: save firewall basic settings (github@nieslony.at)
-- Edit firewall basic settings (github@nieslony.at)
-- Remove unused variables (github@nieslony.at)
-- Create firewall basics tab for site firewall (github@nieslony.at)
-- Fix: show full path of apache config (github@nieslony.at)
-- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
-  required for AJP (github@nieslony.at)
-- Fux: ui push (github@nieslony.at)
-- - add more debug info - fix: removeval of connected clients listner
-  (github@nieslony.at)
-- Format date, decimals and addresses (github@nieslony.at)
-- Fix: user ≠ site (github@nieslony.at)
-- Add some debug log (github@nieslony.at)
 * Fri May 02 2025 Claas Nieslony <github@nieslony.at> 1.4.0-1
 =======
 * Thu May 01 2025 Claas Nieslony <github@nieslony.at> 1.3.16.git_2505012126_cf4a9c4-1
