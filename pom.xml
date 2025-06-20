@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.7.6</vaadin.version>
+        <vaadin.version>24.8.0</vaadin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
         <skipGenerateGitProperties>false</skipGenerateGitProperties>
@@ -17,7 +17,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.6</version>
+        <version>3.5.0</version>
     </parent>
 
     <repositories>
