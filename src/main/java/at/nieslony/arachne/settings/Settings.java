@@ -21,15 +21,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.data.util.CastUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
  * @author claas
  */
 @Component
+@Slf4j
 public class Settings {
-
-    private static final Logger logger = LoggerFactory.getLogger(Settings.class);
 
     @Autowired
     private SettingsRepository settingsRepository;
@@ -66,7 +62,7 @@ public class Settings {
                 | InstantiationException | InvocationTargetException
                 | NoSuchMethodException | SecurityException ex) {
             if (ex.getCause() != null) {
-                logger.error(
+                log.error(
                         "Cannot instanciate %s: exception=%s cause=%s msg=%s"
                                 .formatted(
                                         c.getName(),
@@ -76,7 +72,7 @@ public class Settings {
                                 )
                 );
             } else {
-                logger.error(
+                log.error(
                         "Cannot instanciate %s: %s %s"
                                 .formatted(
                                         c.getName(),
@@ -90,7 +86,7 @@ public class Settings {
         try {
             obj.load(this);
         } catch (SettingsException ex) {
-            logger.error("Cannot load %s: %s"
+            log.error("Cannot load %s: %s"
                     .formatted(c.getName(), ex.getMessage()
                     )
             );
@@ -109,13 +105,13 @@ public class Settings {
         }
     }
 
-    private static <T extends Serializable> T fromBytes(byte[] value)
+    private static <T extends Object> T fromBytes(byte[] value, Class<T> clazz)
             throws SettingsException {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(value);
             ObjectInputStream ois = new ObjectInputStream(bais);
             Object obj = ois.readObject();
-            return CastUtils.cast(obj);
+            return clazz.cast(obj);
         } catch (IOException | ClassNotFoundException ex) {
             throw new SettingsException(
                     "Cannot convert bytes value to object: " + ex.getMessage()
@@ -123,41 +119,43 @@ public class Settings {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends Object> T fromString(
             String value,
-            Class<? extends Object> c
+            Class<T> c
     ) throws SettingsException {
         if (c.equals(String.class)) {
-            return CastUtils.cast(value);
+            return c.cast(value);
         }
+
         if (c.isPrimitive()) {
+            log.info("Expecting " + c.getName());
             if (c.equals(boolean.class)) {
-                return CastUtils.cast(Boolean.valueOf(value));
+                return (T) Boolean.valueOf(value);
             }
             if (c.equals(byte.class)) {
-                return CastUtils.cast(Byte.valueOf(value));
+                return (T) Byte.valueOf(value);
             }
             if (c.equals(short.class)) {
-                return CastUtils.cast(Short.valueOf(value));
+                return (T) Short.valueOf(value);
             }
             if (c.equals(int.class)) {
-                return CastUtils.cast(Integer.valueOf(value));
+                return (T) Integer.valueOf(value);
             }
             if (c.equals(long.class)) {
-                return CastUtils.cast(Long.valueOf(value));
+                return (T) Long.valueOf(value);
             }
             if (c.equals(float.class)) {
-                return CastUtils.cast(Float.valueOf(value));
+                return (T) Float.valueOf(value);
             }
             if (c.equals(double.class)) {
-                return CastUtils.cast(Double.valueOf(value));
+                return (T) Double.valueOf(value);
             }
         }
         try {
             Method valueOf = c.getMethod("valueOf", String.class);
             Object obj = valueOf.invoke(null, value);
-            return CastUtils.cast(obj);
-
+            return c.cast(obj);
         } catch (IllegalAccessException
                 | IllegalArgumentException
                 | InvocationTargetException
@@ -168,7 +166,7 @@ public class Settings {
 
     public <T extends Object> T get(
             String setting,
-            Class<? extends Object> c
+            Class<T> c
     ) throws SettingsException {
         Optional<SettingsModel> value = settingsRepository.findBySetting(setting);
         if (value.isEmpty()) {
@@ -176,7 +174,7 @@ public class Settings {
         }
         byte[] content = value.get().getContent();
         if (content != null) {
-            return fromBytes(content);
+            return fromBytes(content, c);
         }
         String stringContent = value.get().getStringContent();
         if (stringContent != null) {
