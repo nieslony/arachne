@@ -14,6 +14,7 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -34,7 +35,9 @@ import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.ByteArrayInputStream;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +45,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.vaadin.olli.ClipboardHelper;
-import org.vaadin.olli.FileDownloadWrapper;
 
 /**
  *
@@ -144,24 +146,26 @@ public class UserHome extends VerticalLayout implements RouterLayout {
     private Component createOvpnPage() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        FileDownloadWrapper link = new FileDownloadWrapper(
-                openVpnUserSettings.getClientConfigName(),
-                () -> {
-                    try {
-                        return openVpnRestController
-                                .openVpnUserConfig(username)
-                                .getBytes();
-                    } catch (PkiException | SettingsException ex) {
-                        logger.error(
-                                "Cannot send openvpn config: " + ex.getMessage());
-                        return "".getBytes();
-                    }
-                }
-        );
-        link.setText("openVPN configuration");
+
+        var dlh = DownloadHandler.fromInputStream((de) -> {
+            try {
+                String config = openVpnRestController
+                        .openVpnUserConfig(username);
+                var is = new ByteArrayInputStream(config.getBytes());
+                return new DownloadResponse(
+                        is,
+                        openVpnUserSettings.getClientConfigName(),
+                        "application/x-openvpn-profile",
+                        config.getBytes().length
+                );
+            } catch (PkiException | SettingsException e) {
+                return DownloadResponse.error(500);
+            }
+        });
+        var anchor = new Anchor(dlh, "openVPN configuration");
 
         return new HorizontalLayout(
-                new Text("Download"), link
+                new Text("Download"), anchor
         );
     }
 
