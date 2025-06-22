@@ -41,7 +41,6 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -199,11 +198,11 @@ public class SetupController {
         return setupArachne(setupData);
     }
 
-    public void restore(InputStream is) {
+    public void restore(byte[] data) {
         log.info("Starting restore");
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            JsonNode node = objectMapper.readTree(is);
+            JsonNode node = objectMapper.readTree(data);
             node.fields().forEachRemaining((Map.Entry<String, JsonNode> n) -> {
                 String key = n.getKey();
                 log.info("Restoring " + key);
