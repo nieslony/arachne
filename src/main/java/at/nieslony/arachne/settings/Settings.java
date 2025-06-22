@@ -129,7 +129,6 @@ public class Settings {
         }
 
         if (c.isPrimitive()) {
-            log.info("Expecting " + c.getName());
             if (c.equals(boolean.class)) {
                 return (T) Boolean.valueOf(value);
             }

@@ -32,14 +32,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.streams.DownloadHandler;
 import jakarta.annotation.security.RolesAllowed;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -227,18 +225,12 @@ public class UserHome extends VerticalLayout implements RouterLayout {
     }
 
     private Image loadIcon(String iconName, int size) {
-        String iconPath = "icons/" + iconName;
-        Image image = new Image(new StreamResource(iconName, () -> {
-            try {
-                return new ClassPathResource(iconPath).getInputStream();
-            } catch (IOException ex) {
-                logger.error(
-                        "Cannot load resource %s: %s"
-                                .formatted(iconPath, ex.getMessage())
-                );
-                return null;
-            }
-        }), iconName);
+        String iconPath = "/icons/" + iconName;
+
+        Image image = new Image(
+                DownloadHandler.forClassResource(getClass(), iconPath),
+                iconName
+        );
         image.setWidth(size, Unit.PIXELS);
         image.setHeight(size, Unit.PIXELS);
 
