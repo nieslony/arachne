@@ -41,7 +41,6 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -203,67 +202,66 @@ public class SetupController {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             JsonNode node = objectMapper.readTree(data);
-            node.fields().forEachRemaining((Map.Entry<String, JsonNode> n) -> {
-                String key = n.getKey();
+            node.forEachEntry((String key, JsonNode value) -> {
                 log.info("Restoring " + key);
                 try {
                     switch (key) {
                         case "roleRules" -> {
                             var reader = objectMapper.readerForListOf(RoleRuleModel.class);
                             roleRuleRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "settings" -> {
                             var reader = objectMapper.readerForListOf(SettingsModel.class);
                             settingsRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "recurringTasks" -> {
                             var reader = objectMapper.readerForListOf(RecurringTaskModel.class);
                             recurringTasksRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "tasks" -> {
                             var reader = objectMapper.readerForListOf(TaskModel.class);
                             taskRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "firewallRules" -> {
                             var reader = objectMapper.readerForListOf(FirewallRuleModel.class);
                             firewallRuleRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "users" -> {
                             var reader = objectMapper.readerForListOf(UserModel.class);
                             userRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "keys" -> {
                             var reader = objectMapper.readerForListOf(KeyModel.class);
                             keyRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "certificates" -> {
                             var reader = objectMapper.readerForListOf(CertificateModel.class);
                             certificateRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "sshKeys" -> {
                             var reader = objectMapper.readerFor(SshKeyEntity.class);
                             SshKeyRepository.saveAll(
-                                    reader.readValue(n.getValue())
+                                    reader.readValue(value)
                             );
                         }
                         case "version" -> {
-                            int version = n.getValue().asInt();
+                            int version = value.asInt();
                             log.info("We restore back version " + String.valueOf(version));
                         }
                         default ->
