@@ -727,21 +727,23 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
 
         VerticalLayout routesLayout = new VerticalLayout(
-                inheritPushRoutes,
-                pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
                 ),
-                remoteNetworks
+                inheritPushRoutes,
+                pushRoutes
         );
+        routesLayout.setFlexGrow(1, pushRoutes);
         routesLayout.setMaxWidth(30, Unit.EM);
         routesLayout.setMargin(false);
+        routesLayout.setPadding(false);
 
         var layout = new HorizontalLayout(
-                routesLayout,
-                remoteNetworks
+                remoteNetworks,
+                routesLayout
         );
+        layout.setAlignItems(Alignment.STRETCH);
         layout.setWrap(true);
 
         return layout;
