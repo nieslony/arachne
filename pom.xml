@@ -169,12 +169,6 @@
             <artifactId>dbus-java</artifactId>
             <version>3.3.2</version>
         </dependency>
-
-        <dependency>
-            <groupId>in.virit</groupId>
-            <artifactId>viritin</artifactId>
-            <version>2.15.2</version>
-        </dependency>
     </dependencies>
 
     <build>
