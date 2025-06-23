@@ -24,7 +24,7 @@ import java.util.LinkedList;
 @RolesAllowed("ADMIN")
 public class SiteFirewallView extends VerticalLayout {
 
-    private FirewallRulesEditor incomingRulesEditor;
+    private final FirewallRuleRepository firewallRuleRepository;
 
     public SiteFirewallView(
             FirewallRuleRepository firewallRuleRepository,
@@ -32,12 +32,14 @@ public class SiteFirewallView extends VerticalLayout {
             FirewallController firewallController,
             Settings settings
     ) {
+        this.firewallRuleRepository = firewallRuleRepository;
+
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
 
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
 
-        incomingRulesEditor = new FirewallRulesEditor(
+        FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
                 ldapSettings,
@@ -45,44 +47,54 @@ public class SiteFirewallView extends VerticalLayout {
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         );
-        tabs.add(
-                "Incoming",
-                incomingRulesEditor
+        FirewallRulesEditor outgoingRulesEditor = new FirewallRulesEditor(
+                firewallRuleRepository,
+                userMatcherCollector,
+                ldapSettings,
+                firewallController,
+                FirewallRuleModel.VpnType.SITE,
+                FirewallRuleModel.RuleDirection.OUTGOING
         );
+        tabs.add("Incoming Rules", incomingRulesEditor);
+        tabs.add("Outgoing Rules", outgoingRulesEditor);
         tabs.setHeightFull();
 
         if (firewallRuleRepository.countByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         ) == 0) {
-            FirewallRuleModel rule = new FirewallRuleModel(
-                    FirewallRuleModel.VpnType.SITE,
-                    FirewallRuleModel.RuleDirection.INCOMING
-            );
-            rule.setDescription("Allow DNS access from all sites");
-
-            FirewallWhere from = new FirewallWhere();
-            from.setType(FirewallWhere.Type.Everywhere);
-            rule.setFrom(new LinkedList<>());
-            rule.getFrom().add(from);
-
-            FirewallWhere to = new FirewallWhere();
-            to.setType(FirewallWhere.Type.PushedDnsServers);
-            rule.setTo(new LinkedList<>());
-            rule.getTo().add(to);
-
-            FirewallWhat what = new FirewallWhat();
-            what.setType(FirewallWhat.Type.Service);
-            what.setService("dns");
-            rule.setWhat(new LinkedList<>());
-            rule.getWhat().add(what);
-
-            rule.setEnabled(true);
-
-            firewallRuleRepository.save(rule);
+            createDefaultSiteRule();
         }
 
         add(tabs);
         setPadding(false);
+    }
+
+    private void createDefaultSiteRule() {
+        FirewallRuleModel rule = new FirewallRuleModel(
+                FirewallRuleModel.VpnType.SITE,
+                FirewallRuleModel.RuleDirection.INCOMING
+        );
+        rule.setDescription("Allow DNS access from all sites");
+
+        FirewallWhere from = new FirewallWhere();
+        from.setType(FirewallWhere.Type.Everywhere);
+        rule.setFrom(new LinkedList<>());
+        rule.getFrom().add(from);
+
+        FirewallWhere to = new FirewallWhere();
+        to.setType(FirewallWhere.Type.PushedDnsServers);
+        rule.setTo(new LinkedList<>());
+        rule.getTo().add(to);
+
+        FirewallWhat what = new FirewallWhat();
+        what.setType(FirewallWhat.Type.Service);
+        what.setService("dns");
+        rule.setWhat(new LinkedList<>());
+        rule.getWhat().add(what);
+
+        rule.setEnabled(true);
+
+        firewallRuleRepository.save(rule);
     }
 }
