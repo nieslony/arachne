@@ -18,24 +18,10 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapSettings;
-import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
-import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
-import at.nieslony.arachne.usermatcher.UserMatcherCollector;
-import at.nieslony.arachne.utils.components.ShowNotification;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.tabs.TabSheet;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
@@ -43,8 +29,6 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -54,42 +38,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 @PageTitle("User VPN | Firewall")
 @RolesAllowed("ADMIN")
 @Slf4j
-public class UserFirewallView extends VerticalLayout {
+public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSettings> {
 
-    @Autowired
-    private FirewallRuleRepository firewallRuleRepository;
-
-    @Autowired
-    private UserMatcherCollector userMatcherCollector;
-
-    @Autowired
-    private OpenVpnController openVpnRestController;
-
-    @Autowired
-    private FirewallController firewallController;
-
-    @Autowired
-    private Settings settings;
-
-    @Autowired
-    private ArachneDbus arachneDbus;
-
-    private Binder<UserFirewallBasicsSettings> binder;
-    private UserFirewallBasicsSettings firewallBasicSettings;
     private LdapSettings ldapSettings;
-
-    public UserFirewallView() {
-    }
 
     @PostConstruct
     public void init() {
-        binder = new Binder<>();
-        firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         ldapSettings = settings.getSettings(LdapSettings.class);
 
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
-        tabs.add("Basics", createBasicsTab());
+        tabs.add("Basics", createBasicsTab(UserFirewallBasicsSettings.class));
         tabs.add("Incoming Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
@@ -144,76 +103,13 @@ public class UserFirewallView extends VerticalLayout {
         setPadding(false);
     }
 
-    private Component createBasicsTab() {
-        VerticalLayout layout = new VerticalLayout();
-
-        Checkbox enableFirewallField = new Checkbox("Enable Firewall");
-        enableFirewallField.setValue(true);
-        binder.forField(enableFirewallField)
-                .bind(UserFirewallBasicsSettings::isEnableFirewall, UserFirewallBasicsSettings::setEnableFirewall);
-
-        TextField firewallZoneField = new TextField("Firewall Zone");
-        firewallZoneField.setMaxLength(21 - 4); // max len 21 - len("-out") for policy
-        binder.forField(firewallZoneField)
-                .bind(UserFirewallBasicsSettings::getFirewallZone, UserFirewallBasicsSettings::setFirewallZone);
-
-        RadioButtonGroup<UserFirewallBasicsSettings.EnableRoutingMode> enableRoutingMode
-                = new RadioButtonGroup<>("Enable Routing");
-        enableRoutingMode.setItems(UserFirewallBasicsSettings.EnableRoutingMode.values());
-        binder.forField(enableRoutingMode)
-                .bind(UserFirewallBasicsSettings::getEnableRoutingMode, UserFirewallBasicsSettings::setEnableRoutingMode);
-
-        Select<UserFirewallBasicsSettings.IcmpRules> icmpRules = new Select<>();
-        icmpRules.setLabel("Allow PING");
-        icmpRules.setItems(UserFirewallBasicsSettings.IcmpRules.values());
-        icmpRules.setMinWidth("20em");
-        binder.bind(
-                icmpRules,
-                UserFirewallBasicsSettings::getIcmpRules,
-                UserFirewallBasicsSettings::setIcmpRules
+    @Override
+    protected void applyBasicSettings(UserFirewallBasicsSettings basicSettings) throws DBusException {
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+        openVpnController.writeOpenVpnPluginUserConfig(
+                openVpnUserSettings,
+                firewallBasicSettings
         );
-
-        Button saveButton = new Button("Save and Restart VPN", (e) -> {
-            OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-
-            log.info("Saving firewall settings");
-            try {
-                firewallBasicSettings.save(settings);
-                openVpnRestController.writeOpenVpnPluginUserConfig(
-                        openVpnUserSettings,
-                        firewallBasicSettings
-                );
-                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
-                ShowNotification.info("OpenVpn restarted with new configuration");
-
-            } catch (SettingsException ex) {
-                log.error("Cannot save firewall settings: " + ex.getMessage());
-            } catch (DBusException | DBusExecutionException ex) {
-                log.error("Cannot restart openVPN: " + ex.getMessage());
-                ShowNotification.error("Cannot restart openVPN", ex.getMessage());
-            }
-        });
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        enableFirewallField.addValueChangeListener((e) -> {
-            boolean isEnabled = e.getValue();
-            firewallZoneField.setEnabled(isEnabled);
-            enableRoutingMode.setEnabled(isEnabled);
-            icmpRules.setEnabled(isEnabled);
-        });
-
-        layout.add(
-                enableFirewallField,
-                firewallZoneField,
-                enableRoutingMode,
-                icmpRules,
-                saveButton
-        );
-        layout.setMargin(false);
-        layout.setPadding(false);
-
-        binder.setBean(firewallBasicSettings);
-
-        return layout;
+        arachneDbus.restartServer(ArachneDbus.ServerType.USER);
     }
 }

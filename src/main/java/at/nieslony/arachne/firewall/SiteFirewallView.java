@@ -6,14 +6,14 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapSettings;
-import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.usermatcher.UserMatcherCollector;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
+import org.freedesktop.dbus.exceptions.DBusException;
 
 /**
  *
@@ -22,18 +22,10 @@ import java.util.LinkedList;
 @Route(value = "siteVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
-public class SiteFirewallView extends VerticalLayout {
+public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSettings> {
 
-    private final FirewallRuleRepository firewallRuleRepository;
-
-    public SiteFirewallView(
-            FirewallRuleRepository firewallRuleRepository,
-            UserMatcherCollector userMatcherCollector,
-            FirewallController firewallController,
-            Settings settings
-    ) {
-        this.firewallRuleRepository = firewallRuleRepository;
-
+    @PostConstruct
+    public void init() {
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
 
@@ -55,6 +47,7 @@ public class SiteFirewallView extends VerticalLayout {
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
         );
+        tabs.add("Basics", createBasicsTab(SiteFirewallBasicsSettings.class));
         tabs.add("Incoming Rules", incomingRulesEditor);
         tabs.add("Outgoing Rules", outgoingRulesEditor);
         tabs.setHeightFull();
@@ -96,5 +89,11 @@ public class SiteFirewallView extends VerticalLayout {
         rule.setEnabled(true);
 
         firewallRuleRepository.save(rule);
+    }
+
+    @Override
+    protected void applyBasicSettings(SiteFirewallBasicsSettings basicSettings) throws DBusException {
+        openVpnController.writeOpenVpnPluginSiteConfig();
+        arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
     }
 }
