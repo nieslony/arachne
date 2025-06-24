@@ -156,6 +156,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                         loadDefaultsButton
                 )
         );
+        getContent().setFlexGrow(1, itemsField);
         itemsField.setWidthFull();
         if (editField instanceof HasSize hs) {
             hs.setWidthFull();
