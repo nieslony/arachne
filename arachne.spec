@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.3
+Version:        1.4.4
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue Jul 01 2025 Claas Nieslony <github@nieslony.at> 1.4.4-1
+- Bump vaadin version (github@nieslony.at)
+
 * Tue Jul 01 2025 Claas Nieslony <github@nieslony.at> 1.4.3-1
 - Bump versions of vaadin and spring (github@nieslony.at)
 - Restart openvpn when firewall rules are written (github@nieslony.at)
