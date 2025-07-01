@@ -18,7 +18,6 @@ import jakarta.persistence.Table;
 import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -53,11 +52,11 @@ public class RoleRuleModel implements Serializable {
     @JsonIgnore
     public String getRoleRuleDescription() {
         try {
-            Class<?> userMatcherClass = Class.forName(userMatcherClassName);
+            var userMatcherClass = Class.forName(userMatcherClassName).asSubclass(UserMatcher.class);
             if (userMatcherClass.isAnnotationPresent(
                     UserMatcherDescription.class)) {
                 UserMatcherDescription descr
-                        = CastUtils.cast(userMatcherClass.getAnnotation(UserMatcherDescription.class));
+                        = userMatcherClass.getAnnotation(UserMatcherDescription.class);
                 return descr.description();
             } else {
                 return this.getClass().getName();

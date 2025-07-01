@@ -19,16 +19,24 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,6 +59,16 @@ public class FirewallController {
 
     @Autowired
     Settings settings;
+
+    @Autowired
+    ArachneDbus arachneDbus;
+
+    MessageDigest sha256Digest;
+    private byte[] userConfigChecksum = new byte[]{};
+
+    public FirewallController() throws NoSuchAlgorithmException {
+        sha256Digest = MessageDigest.getInstance("SHA-256");
+    }
 
     private List<String> buildIpSet(List<FirewallWhere> wheres, OpenVpnSettings openVpnSettings) {
         log.debug("Building IP set from wheres" + wheres.toString());
@@ -175,10 +193,36 @@ public class FirewallController {
                     = settings.getSettings(UserFirewallBasicsSettings.class);
             allRules.put("icmp-rules", basicSettings.getIcmpRules().name());
         }
-
-        try (FileWriter fileWriter = new FileWriter(
-                folderFactory.getFirewallRulesPath(vpnType))) {
-            fileWriter.write(allRules.toString(2) + "\n");
+        String rulesStr = allRules.toString(2) + "\n";
+        byte[] checkSum = sha256Digest.digest(rulesStr.getBytes());
+        if (!Arrays.equals(checkSum, getFirewallRulesCheckSum(vpnType))) {
+            try (FileWriter fileWriter = new FileWriter(
+                    folderFactory.getFirewallRulesPath(vpnType))) {
+                fileWriter.write(rulesStr);
+                userConfigChecksum = checkSum;
+            }
+            try {
+                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+            } catch (DBusException | DBusExecutionException ex) {
+                log.warn("Cannot restart openVPN user server: " + ex.getMessage());
+            }
+        } else {
+            log.info("Firewall rule set has no changed: don't restart openvpn");
         }
+    }
+
+    private byte[] getFirewallRulesCheckSum(FirewallRuleModel.VpnType vpnType) {
+        if (userConfigChecksum.length == 0) {
+            try {
+                byte[] currentConfig = Files.readAllBytes(Paths.get(
+                        folderFactory.getFirewallRulesPath(vpnType))
+                );
+                userConfigChecksum = sha256Digest.digest(currentConfig);
+            } catch (IOException ex) {
+
+            }
+        }
+
+        return userConfigChecksum;
     }
 }

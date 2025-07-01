@@ -52,7 +52,6 @@ import java.util.TimerTask;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -112,8 +111,8 @@ public class TaskView
         tasksGrid
                 .addColumn((source) -> {
                     try {
-                        Class c = Class.forName(source.getTaskClassName());
-                        return getTaskName(CastUtils.cast(c));
+                        var c = Class.forName(source.getTaskClassName()).asSubclass(Task.class);
+                        return getTaskName(c);
                     } catch (ClassNotFoundException ex) {
                         return "Unknown Class: " + source.getTaskClassName();
                     }

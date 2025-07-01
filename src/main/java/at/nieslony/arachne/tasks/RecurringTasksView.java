@@ -38,7 +38,6 @@ import java.time.LocalTime;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.CastUtils;
 
 /**
  *
@@ -56,8 +55,8 @@ public class RecurringTasksView extends VerticalLayout {
         grid
                 .addColumn((source) -> {
                     try {
-                        Class c = Class.forName(source.getClassName());
-                        return getTaskName(CastUtils.cast(c));
+                        var c = Class.forName(source.getClassName()).asSubclass(Task.class);
+                        return getTaskName(c);
                     } catch (ClassNotFoundException ex) {
                         return "Unknown Class: " + source.getClassName();
                     }

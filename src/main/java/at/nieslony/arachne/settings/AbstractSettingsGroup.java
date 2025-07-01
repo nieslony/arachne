@@ -25,10 +25,7 @@ abstract public class AbstractSettingsGroup {
             fields.addAll(Arrays.asList(cl.getDeclaredFields()));
         }
         return fields.stream()
-                .map((field) -> {
-                    field.setAccessible(true);
-                    return field;
-                })
+                .peek((f) -> f.setAccessible(true))
                 .filter((field) -> {
                     int modifiers = field.getModifiers();
                     return !Modifier.isStatic(modifiers)
@@ -56,7 +53,6 @@ abstract public class AbstractSettingsGroup {
 
     public void save(Settings settings) throws SettingsException {
         for (Field field : getSettingFields()) {
-            Class c = field.getType();
             String n = groupName() + "." + makeKey(field.getName());
             try {
                 var value = field.get(this);
