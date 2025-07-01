@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.2
+Version:        1.4.3
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,23 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Tue Jul 01 2025 Claas Nieslony <github@nieslony.at> 1.4.3-1
+- Bump versions of vaadin and spring (github@nieslony.at)
+- Restart openvpn when firewall rules are written (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Also get fields from superclas(ses) (github@nieslony.at)
+- add flex grow for itemsField (github@nieslony.at)
+- Replace external dependency by new download API (github@nieslony.at)
+- Make use of new DownloadHandler (github@nieslony.at)
+- Highlight found pattern with markdown (github@nieslony.at)
+- New Download API (github@nieslony.at)
+- New Json API (github@nieslony.at)
+- New Upload API (github@nieslony.at)
+- Replace deprecated CastUtils (github@nieslony.at)
+- Bump versions of vaadin and spring (github@nieslony.at)
+- Fix: class name (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+
 * Sat Jun 07 2025 Claas Nieslony <github@nieslony.at> 1.4.2-1
 - fix: detach from view (github@nieslony.at)
 - Always require java 21 (github@nieslony.at)
