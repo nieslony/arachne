@@ -31,13 +31,12 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.server.streams.UploadHandler;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -521,8 +520,8 @@ public class SetupView extends VerticalLayout {
             restoreButton = new Button("Restore settings...", (e) -> {
                 try {
                     FileInputStream fis = new FileInputStream(restorePath.toString());
-                    setupController.restore(fis);
-                } catch (FileNotFoundException ex) {
+                    setupController.restore(fis.readAllBytes());
+                } catch (IOException ex) {
                     logger.error(
                             "Cannot read %s: %s"
                                     .formatted(
@@ -538,13 +537,11 @@ public class SetupView extends VerticalLayout {
                     No backup file %s found. Restore from uploaded file or
                     just continue with setup wizard by clicking "Next".
                     """.formatted(restorePath.toString()));
-            MemoryBuffer memoryBuffer = new MemoryBuffer();
-            Upload upload = new Upload(memoryBuffer);
-            upload.setAcceptedFileTypes("application/json", ".json");
-            upload.addSucceededListener((e) -> {
-                InputStream is = memoryBuffer.getInputStream();
-                setupController.restore(is);
+            var uploadHandler = UploadHandler.inMemory((metaData, data) -> {
+                setupController.restore(data);
             });
+            Upload upload = new Upload(uploadHandler);
+            upload.setAcceptedFileTypes("application/json", ".json");
             upload.addFileRejectedListener(event -> {
                 String errorMessage = event.getErrorMessage();
                 logger.error(errorMessage);

@@ -42,6 +42,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -61,11 +62,11 @@ import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,7 +79,6 @@ import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.firitin.components.DynamicFileDownloader;
 import org.vaadin.olli.ClipboardHelper;
 
 /**
@@ -478,20 +478,28 @@ public class OpenVpnSiteView extends VerticalLayout {
         MenuItem siteConfigItem = siteConfigMenu.addItem("Site Config");
         SubMenu subMenu = siteConfigItem.getSubMenu();
 
-        DynamicFileDownloader downloadComponent = new DynamicFileDownloader(
-                "Download",
-                (OutputStream out) -> openVpnRestController.writeOpenVpnSiteRemoteConfig(
-                        sites.getValue().getId(),
-                        new PrintWriter(out)
-                ))
-                .withFileNameGenerator((vr) -> {
-                    String filename = openVpnRestController.getOpenVpnSiteRemoteConfigName(
-                            openVpnSiteSettings,
-                            sites.getValue()
-                    );
-                    return filename;
-                });
-        downloadComponent.addClassNames(LumoUtility.TextColor.BODY);
+        DownloadHandler dhl = DownloadHandler.fromInputStream((de) -> {
+            StringWriter contentWriter = new StringWriter();
+            openVpnRestController.writeOpenVpnSiteRemoteConfig(
+                    sites.getValue().getId(),
+                    contentWriter
+            );
+            byte[] config = contentWriter.toString().getBytes();
+
+            String fileName = openVpnRestController.getOpenVpnSiteRemoteConfigName(
+                    openVpnSiteSettings,
+                    sites.getValue()
+            );
+            String contentType = "application/x-openvpn-profile";
+            var resp = new DownloadResponse(
+                    new ByteArrayInputStream(config),
+                    fileName,
+                    contentType,
+                    config.length
+            );
+            return resp;
+        });
+        Anchor downloadComponent = new Anchor(dhl, "Download");
 
         subMenu.addItem(downloadComponent);
         subMenu.addItem("Upload to site...", (e) -> {

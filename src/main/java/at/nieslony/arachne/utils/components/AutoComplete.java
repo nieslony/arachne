@@ -16,18 +16,15 @@
  */
 package at.nieslony.arachne.utils.components;
 
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -61,25 +58,11 @@ public class AutoComplete<T> extends Popover {
 
         ListBox<T> values = new ListBox<>();
         values.setRenderer(new ComponentRenderer<>(value -> {
-            String valueStr = value.toString();
             String pattern = parent.getValue();
-            String[] splitValue = valueStr.split(Pattern.quote(pattern));
-
-            Div div = new Div();
-            if (splitValue.length > 0) {
-                for (int i = 0; i < splitValue.length - 1; i++) {
-                    div.add(splitValue[i]);
-                    Span found = new Span(pattern);
-                    found.addClassName(LumoUtility.FontWeight.EXTRABOLD);
-                    div.add(found);
-                }
-                div.add(splitValue[splitValue.length - 1]);
-            }
-            if (valueStr.endsWith(pattern)) {
-                Span found = new Span(pattern);
-                found.addClassName(LumoUtility.FontWeight.EXTRABOLD);
-            }
-            return div;
+            String valueStr = value.toString()
+                    .replaceAll("([*()@])", "\\\\$1")
+                    .replaceAll("(?i)(%s)".formatted(pattern), "**$1**");
+            return new Markdown(valueStr);
         }));
 
         parent.setValueChangeMode(ValueChangeMode.EAGER);

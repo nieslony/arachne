@@ -29,6 +29,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -47,8 +48,11 @@ import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -60,7 +64,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.vaadin.olli.FileDownloadWrapper;
 
 /**
  *
@@ -195,22 +198,25 @@ public class UsersView extends VerticalLayout {
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);
-            FileDownloadWrapper link = new FileDownloadWrapper(
-                    openVpnUserSettings.getClientConfigName(),
-                    () -> {
-                        try {
-                            String config = openVpnRestController
-                                    .openVpnUserConfig(user.getUsername());
-                            return config.getBytes();
-                        } catch (PkiException | SettingsException ex) {
-                            logger.error(
-                                    "Cannot send openvpn config: " + ex.getMessage());
-                            return "".getBytes();
-                        }
-                    }
-            );
-            link.setText("Download Config");
-            userMenu.addItem(link);
+
+            var dlh = DownloadHandler.fromInputStream((de) -> {
+                try {
+                    String config = openVpnRestController
+                            .openVpnUserConfig(user.getUsername());
+                    var is = new ByteArrayInputStream(config.getBytes());
+                    return new DownloadResponse(
+                            is,
+                            openVpnUserSettings.getClientConfigName(),
+                            "application/x-openvpn-profile",
+                            config.getBytes().length
+                    );
+                } catch (PkiException | SettingsException e) {
+                    return DownloadResponse.error(500);
+                }
+            });
+            var anchor = new Anchor(dlh, "Download Config");
+
+            userMenu.addItem(anchor);
             userMenu.addItem("Send openVPN config as E-Mail...", (e) -> {
                 sendVpnConfig(user);
             });
