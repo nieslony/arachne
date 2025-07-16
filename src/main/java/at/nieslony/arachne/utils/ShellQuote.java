@@ -13,4 +13,8 @@ public class ShellQuote {
     public static String shellQuote(String s) {
         return "'" + s.replaceAll("'", "'\"'\"'") + "'";
     }
+
+    public static String escapeChars(String s, String chars) {
+        return s.replaceAll("([" + chars + "])", "\\\\$1");
+    }
 }
