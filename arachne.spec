@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.4
+Version:        1.4.5
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Jul 16 2025 Claas Nieslony <github@nieslony.at> 1.4.5-1
+- - add option to view client config is UsersView - make shell and json
+  download build the same config (github@nieslony.at)
+- Add methos escapeChars (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+
 * Tue Jul 01 2025 Claas Nieslony <github@nieslony.at> 1.4.4-1
 - Bump vaadin version (github@nieslony.at)
 
