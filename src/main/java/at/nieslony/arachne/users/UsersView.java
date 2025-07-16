@@ -19,6 +19,7 @@ import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
@@ -31,12 +32,15 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -50,20 +54,21 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.vaadin.olli.ClipboardHelper;
 
 /**
  *
@@ -72,38 +77,39 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @Route(value = "users", layout = ViewTemplate.class)
 @PageTitle("Users")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class UsersView extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(UsersView.class);
+    @Autowired
+    private UserRepository userRepository;
 
-    final private UserRepository userRepository;
-    final private RoleRuleRepository roleRuleRepository;
-    final private OpenVpnController openVpnRestController;
-    final private Settings settings;
-    final private MailSettingsRestController mailSettingsRestController;
+    @Autowired
+    private RoleRuleRepository roleRuleRepository;
 
-    final Grid<UserModel> usersGrid;
-    final Grid.Column<UserModel> usernameColumn;
-    final Grid.Column<UserModel> displayNameColumn;
-    final Grid.Column<UserModel> emailColumn;
-    final Grid.Column<UserModel> userSourceColumn;
+    @Autowired
+    private OpenVpnController openVpnRestController;
+
+    @Autowired
+    private Settings settings;
+
+    @Autowired
+    private MailSettingsRestController mailSettingsRestController;
+
+    Grid<UserModel> usersGrid;
+    Grid.Column<UserModel> usernameColumn;
+    Grid.Column<UserModel> displayNameColumn;
+    Grid.Column<UserModel> emailColumn;
+    Grid.Column<UserModel> userSourceColumn;
 
     DataProvider<UserModel, Void> userDataProvider;
     UserSettings userSettings;
 
-    public UsersView(
-            @Autowired UserRepository userRepository,
-            @Autowired RoleRuleRepository roleRuleRepository,
-            @Autowired OpenVpnController openVpnRestController,
-            @Autowired Settings settings,
-            @Autowired MailSettingsRestController mailSettingsRestController
-    ) {
-        this.userRepository = userRepository;
-        this.roleRuleRepository = roleRuleRepository;
-        this.settings = settings;
+    public UsersView() {
+    }
+
+    @PostConstruct
+    public void init() {
         this.userSettings = settings.getSettings(UserSettings.class);
-        this.openVpnRestController = openVpnRestController;
-        this.mailSettingsRestController = mailSettingsRestController;
 
         userDataProvider
                 = DataProvider.fromCallbacks(
@@ -214,12 +220,9 @@ public class UsersView extends VerticalLayout {
                     return DownloadResponse.error(500);
                 }
             });
-            var anchor = new Anchor(dlh, "Download Config");
-
-            userMenu.addItem(anchor);
-            userMenu.addItem("Send openVPN config as E-Mail...", (e) -> {
-                sendVpnConfig(user);
-            });
+            userMenu.addItem(new Anchor(dlh, "Download Config"));
+            userMenu.addItem("Send Config as E-Mail…", (e) -> sendVpnConfig(user));
+            userMenu.addItem("View Config…", (e) -> viewConfig(user));
         }
         if (!userMenu.getItems().isEmpty()) {
             menuBar.addItem(menuItem);
@@ -229,6 +232,71 @@ public class UsersView extends VerticalLayout {
         } else {
             return new Text("");
         }
+    }
+
+    private void viewConfig(UserModel user) {
+        String configShell;
+        String configOvpn;
+        try {
+            configShell = openVpnRestController.openVpnUserConfigShell(user.getUsername());
+            configOvpn = openVpnRestController.openVpnUserConfig(user.getUsername());
+        } catch (PkiException | SettingsException ex) {
+            log.error("Cannot create usre confifuration: " + ex.getMessage());
+            ShowNotification.error("Error", "Cannot create c onfiguration");
+            return;
+        }
+
+        Dialog dlg = new Dialog("View %s's Configuration".formatted(user.getDisplayName()));
+        TabSheet tabSheet = new TabSheet();
+
+        var configShellCopy = new ClipboardHelper(
+                configShell,
+                new Button(
+                        "Copy to clipboard",
+                        VaadinIcon.COPY.create()
+                )
+        );
+
+        Scroller configShellScroller = new Scroller(new Pre(configShell));
+        configShellScroller.setWidth(41, Unit.EM);
+        configShellScroller.setHeight(48, Unit.EX);
+
+        var configShellLayout = new VerticalLayout(
+                configShellCopy,
+                configShellScroller
+        );
+        configShellLayout.setMargin(false);
+        configShellLayout.setPadding(false);
+
+        var configOvpnCopy = new ClipboardHelper(
+                configOvpn,
+                new Button(
+                        "Copy to clipboard",
+                        VaadinIcon.COPY.create()
+                )
+        );
+
+        Scroller configOvpnScroller = new Scroller(new Pre(configOvpn));
+        configOvpnScroller.setWidth(41, Unit.EM);
+        configOvpnScroller.setHeight(48, Unit.EX);
+
+        var configOvpnLayout = new VerticalLayout(
+                configOvpnCopy,
+                configOvpnScroller
+        );
+        configShellLayout.setMargin(false);
+        configShellLayout.setPadding(false);
+
+        tabSheet.add("Shell Script", configShellLayout);
+        tabSheet.add(".ovpn File", configOvpnLayout);
+        dlg.add(tabSheet);
+
+        Button closeButton = new Button("Close", e -> dlg.close());
+        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        dlg.getFooter().add(closeButton);
+
+        dlg.setResizable(true);
+        dlg.open();
     }
 
     final void editUsersGridBuffered() {
@@ -449,7 +517,7 @@ public class UsersView extends VerticalLayout {
             try {
                 userSettings.save(settings);
             } catch (SettingsException ex) {
-                logger.error("Cannot save user settings: " + ex.getMessage());
+                log.error("Cannot save user settings: " + ex.getMessage());
             }
             dlg.close();
         });
@@ -494,7 +562,7 @@ public class UsersView extends VerticalLayout {
                 ShowNotification.info("Config sent to " + mailAddr);
             } catch (IOException | MailSendException | MessagingException | PkiException | SettingsException ex) {
                 String header = "Error sending e-mail to %s".formatted(user.getEmail());
-                logger.error(header + ": " + ex.getMessage());
+                log.error(header + ": " + ex.getMessage());
                 ShowNotification.error(header, ex.getMessage());
             }
 
