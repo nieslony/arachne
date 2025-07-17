@@ -13,6 +13,7 @@ import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.utils.ShellQuote;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import jakarta.annotation.PostConstruct;
@@ -324,9 +325,23 @@ public class OpenVpnController {
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
-        String userCertFn = "$HOME/.cert/arachne-%s.crt".formatted(username);
-        String caCertFn = "$HOME/.cert/arachne-ca-%s.crt".formatted(vpnSettings.getRemote());
-        String privateKeyFn = "$HOME/.cert/arachne-%s.key".formatted(username);
+        String userCertFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getUserCertFilename(username),
+                        "\","
+                )
+        );
+        String caCertFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getCaCertFilename(),
+                        "\","
+                ));
+        String privateKeyFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getUserKeyFilename(username),
+                        "\","
+                )
+        );
         int port = vpnSettings.getListenPort();
 
         StringWriter configWriter = new StringWriter();
@@ -359,14 +374,15 @@ public class OpenVpnController {
         if (!vpnSettings.getInternetThrouphVpn()) {
             configWriter.append("    ipv4.never-default yes\n");
         }
-        configWriter.append(
-                "    ipv4.dns-search %s\n"
+        configWriter
+                .append("    ipv4.dns-search %s\n"
                         .formatted(String.join(",", vpnSettings.getDnsSearch()))
-        );
-        configWriter.append(
-                "    ipv4.dns %s\n"
+                )
+                .append("    ipv4.dns %s\n"
                         .formatted(String.join(",", vpnSettings.getPushDnsServers()))
-        );
+                )
+                .append("    connection.autoconnect no\n")
+                .append("    connection.permissions user:$USER\n");
         configWriter.append("\"\n");
 
         configWriter.append(
@@ -376,10 +392,11 @@ public class OpenVpnController {
                     cert = %s,
                     cert-pass-flags = 4,
                     connection-type = password-tls,
+                    dev-type = tun,
                     key = %s,
                     password-flags = %d,
-                    port = %s,
-                    remote = %s,
+                    proto-tcp = %s,
+                    remote = %s:%d,
                     username = %s
                 "
                 nmcli connection add type vpn vpn-type openvpn con-name "%s" $vpn_opts vpn.data "$vpn_data"
@@ -389,13 +406,38 @@ public class OpenVpnController {
                                 userCertFn,
                                 privateKeyFn,
                                 vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
-                                port,
+                                vpnSettings.getListenProtocol() == TransportProtocol.TCP
+                                ? "yes"
+                                : "no",
                                 vpnSettings.getRemote(),
+                                port,
                                 username,
                                 conName
                         )
         );
         return configWriter.toString();
+    }
+
+    public String getCaCertFilename() {
+        return "arachne_%s.crt"
+                .formatted(
+                        pki.getRootCert()
+                                .getSubjectX500Principal()
+                                .toString()
+                                .replaceAll("[a-zA-Z]+=", "")
+                );
+    }
+
+    public String getUserCertFilename(String username) {
+        OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
+        return "arachne_%s.crt".formatted(clientConfigName);
+    }
+
+    public String getUserKeyFilename(String username) {
+        OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
+        return "arachne_%s.key".formatted(clientConfigName);
     }
 
     String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
@@ -409,6 +451,9 @@ public class OpenVpnController {
         certs.put("userCert", userCert);
         certs.put("privateKey", privateKey);
         certs.put("caCert", caCert);
+        certs.put("userCertFilename", getUserCertFilename(username));
+        certs.put("privateKeyFilename", getUserKeyFilename(username));
+        certs.put("caCertFilename", getCaCertFilename());
 
         JSONObject data = new JSONObject();
         data.put("remote",
