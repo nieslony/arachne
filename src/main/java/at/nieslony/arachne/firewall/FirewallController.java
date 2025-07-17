@@ -119,11 +119,15 @@ public class FirewallController {
             List<String> sources;
             List<String> destination;
             if (rule.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING) {
-                sources = buildIpSet(rule.getWho());
+                sources = vpnType == FirewallRuleModel.VpnType.USER
+                        ? buildIpSet(rule.getWho())
+                        : buildIpSet(rule.getFrom(), openVpnUserSettings);
                 destination = buildIpSet(rule.getTo(), openVpnUserSettings);
             } else {
                 sources = buildIpSet(rule.getFrom(), openVpnUserSettings);
-                destination = buildIpSet(rule.getWho());
+                destination = vpnType == FirewallRuleModel.VpnType.USER
+                        ? buildIpSet(rule.getWho())
+                        : buildIpSet(rule.getTo(), openVpnUserSettings);
             }
 
             Set<String> ports = new TreeSet<>();
