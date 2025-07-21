@@ -24,10 +24,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.server.StreamResource;
-import java.io.IOException;
+import com.vaadin.flow.server.streams.DownloadHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 
 /**
  *
@@ -39,21 +37,10 @@ public class AboutDialog extends Dialog {
     public AboutDialog(ArachneVersion arachneVersion) {
         super("About Arachne");
 
-        String iconPath = "icons/arachne.svg";
-        Image arachneImage = new Image(new StreamResource(
-                "arachne.svg",
-                () -> {
-                    try {
-                        return new ClassPathResource(iconPath).getInputStream();
-                    } catch (IOException ex) {
-                        log.error(
-                                "Cannot load resource %s: %s"
-                                        .formatted(iconPath, ex.getMessage())
-                        );
-                        return null;
-                    }
-                }),
-                "arachne"
+        String iconPath = "/icons/arachne.svg";
+        Image arachneImage = new Image(
+                DownloadHandler.forClassResource(getClass(), iconPath),
+                "Arachne Logo"
         );
         arachneImage.setWidth(5, Unit.EM);
         arachneImage.setHeight(5, Unit.EM);

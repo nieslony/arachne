@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.vaadin.firitin.layouts.HorizontalFloatLayout;
+//import org.vaadin.firitin.layouts.HorizontalFloatLayout;
 
 /**
  *
@@ -296,7 +296,7 @@ class FirewallRulesEditor extends VerticalLayout {
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setMargin(false);
         mainLayout.setPadding(false);
-        HorizontalFloatLayout ruleTiupelLayout = new HorizontalFloatLayout();
+        HorizontalLayout ruleTiupelLayout = new HorizontalLayout();
         ruleTiupelLayout.setMargin(false);
         ruleTiupelLayout.setPadding(false);
 
@@ -375,10 +375,9 @@ class FirewallRulesEditor extends VerticalLayout {
                     () -> new EditFirewallWhere()
             );
             to.setItemRenderer(new ComponentRenderer<>(t -> {
-                HorizontalLayout layout = new HorizontalFloatLayout();
+                HorizontalLayout layout = new HorizontalLayout();
                 layout.setMargin(false);
                 layout.setPadding(false);
-                layout.setAlignItems(Alignment.CENTER);
 
                 Text label = new Text(t.toString());
                 layout.addToStart(label);
@@ -423,7 +422,6 @@ class FirewallRulesEditor extends VerticalLayout {
             HorizontalLayout layout = new HorizontalLayout();
             layout.setMargin(false);
             layout.setPadding(false);
-            layout.setAlignItems(Alignment.CENTER);
 
             Text label = new Text(w.toString());
             layout.addToStart(label);

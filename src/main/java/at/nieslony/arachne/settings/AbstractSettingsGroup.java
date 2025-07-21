@@ -2,9 +2,10 @@ package at.nieslony.arachne.settings;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -17,11 +18,14 @@ import java.util.stream.Stream;
 abstract public class AbstractSettingsGroup {
 
     protected List<Field> getSettingFields() {
-        return Stream.of(getClass().getDeclaredFields())
-                .map((field) -> {
-                    field.setAccessible(true);
-                    return field;
-                })
+        List<Field> fields = new LinkedList<>();
+        for (Class<?> cl = getClass();
+                !cl.equals(AbstractSettingsGroup.class);
+                cl = cl.getSuperclass()) {
+            fields.addAll(Arrays.asList(cl.getDeclaredFields()));
+        }
+        return fields.stream()
+                .peek((f) -> f.setAccessible(true))
                 .filter((field) -> {
                     int modifiers = field.getModifiers();
                     return !Modifier.isStatic(modifiers)
@@ -49,7 +53,6 @@ abstract public class AbstractSettingsGroup {
 
     public void save(Settings settings) throws SettingsException {
         for (Field field : getSettingFields()) {
-            Class c = field.getType();
             String n = groupName() + "." + makeKey(field.getName());
             try {
                 var value = field.get(this);

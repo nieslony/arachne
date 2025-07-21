@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.nieslony</groupId>
     <artifactId>Arachne</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.5</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.7.6</vaadin.version>
+        <vaadin.version>24.8.3</vaadin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
         <skipGenerateGitProperties>false</skipGenerateGitProperties>
@@ -17,7 +17,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.6</version>
+        <version>3.5.3</version>
     </parent>
 
     <repositories>
@@ -147,12 +147,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.vaadin.olli</groupId>
-            <artifactId>file-download-wrapper</artifactId>
-            <version>7.1.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.vaadin.pekka</groupId>
             <artifactId>wysiwyg_e-java</artifactId>
             <version>2.0.1</version>
@@ -174,12 +168,6 @@
             <groupId>com.github.hypfvieh</groupId>
             <artifactId>dbus-java</artifactId>
             <version>3.3.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>in.virit</groupId>
-            <artifactId>viritin</artifactId>
-            <version>2.15.2</version>
         </dependency>
     </dependencies>
 
@@ -219,6 +207,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <nodeAutoUpdate>true</nodeAutoUpdate>
+                </configuration>
             </plugin>
 
             <plugin>

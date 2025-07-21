@@ -28,6 +28,7 @@ import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.security.RolesAllowed;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +39,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.HttpResponseException;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -70,6 +72,9 @@ public class FirewallRestController {
 
     @Autowired
     private Settings settings;
+
+    @Autowired
+    private FirewallController firewallController;
 
     @Getter
     @Setter
@@ -135,7 +140,7 @@ public class FirewallRestController {
     @RolesAllowed(value = {"USER"})
     public List<RichRule> getUserRules(
             @RequestParam(required = false, name = "type") String type
-    ) {
+    ) throws HttpResponseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         UserModel user = userRepository.findByUsername(username);
@@ -145,9 +150,25 @@ public class FirewallRestController {
         List< RichRule> richRules = new LinkedList<>();
 
         if (user == null) {
-            log.warn("User %s doen't exist -> no fire wall rules".formatted(username));
-            return richRules;
+            String msg = "User %s doesn't exist -> no firewall rules"
+                    .formatted(username);
+            log.warn(msg);
+            throw new HttpResponseException(
+                    HttpStatus.NOT_FOUND.value(),
+                    msg
+            );
         }
+
+        try {
+            firewallController.writeRules(FirewallRuleModel.VpnType.USER);
+        } catch (IOException | JSONException ex) {
+            log.error("Cannot write firewall rules: " + ex.getMessage());
+            throw new HttpResponseException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    username
+            );
+        }
+
         log.debug("Get firewall rules for " + username);
         for (FirewallRuleModel rule : firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
                 FirewallRuleModel.VpnType.USER,
