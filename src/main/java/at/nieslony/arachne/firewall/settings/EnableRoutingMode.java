@@ -15,24 +15,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.firewall.basicsettings;
-
-import at.nieslony.arachne.settings.AbstractSettingsGroup;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+package at.nieslony.arachne.firewall.settings;
 
 /**
  *
  * @author claas
  */
-@Getter
-@Setter
-@ToString
-public class SiteFirewallBasicsSettings extends AbstractSettingsGroup {
+public enum EnableRoutingMode {
+    OFF("Don't change"),
+    ENABLE("Enable on Startup"),
+    RESTORE_ON_EXIT("Enable and Restore Status on Exit");
 
-    private boolean enableFirewall = false;
-    private String firewallZone = "arachne-site";
-    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
-    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
+    private final String label;
+
+    private EnableRoutingMode(String label) {
+        this.label = label;
+    }
+
+    @Override
+    public String toString() {
+        return label;
+    }
+
 }

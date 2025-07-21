@@ -5,7 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.firewall.basicsettings.UserFirewallBasicsSettings;
+import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;

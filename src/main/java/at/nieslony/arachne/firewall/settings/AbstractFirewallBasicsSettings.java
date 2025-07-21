@@ -15,23 +15,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.firewall.basicsettings;
+package at.nieslony.arachne.firewall.settings;
+
+import at.nieslony.arachne.settings.AbstractSettingsGroup;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author claas
  */
-public enum IcmpRules {
-    ALLOW_ALL("Allow all Pings"), ALLOW_ALL_GRANTED("Allow Pings to all granted hosts"), DENY("Deny All");
-    private final String label;
+@Getter
+@Setter
+@ToString
+abstract public class AbstractFirewallBasicsSettings extends AbstractSettingsGroup {
 
-    private IcmpRules(String label) {
-        this.label = label;
-    }
-
-    @Override
-    public String toString() {
-        return label;
-    }
-
+    protected boolean enableFirewall = false;
+    protected String firewallZone = "arachne-???";
+    protected EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
+    protected IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }

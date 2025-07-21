@@ -72,7 +72,7 @@ public class NetUtils {
     }
 
     public static boolean isSubnetOf(String subnet, String of)
-            throws NumberFormatException {
+            throws NumberFormatException, UnknownHostException {
         String[] subnetSplit = subnet.split("/");
         String[] ofSplit = of.split("/");
         if (subnetSplit.length > 2 || ofSplit.length > 2) {
@@ -89,12 +89,8 @@ public class NetUtils {
         }
         InetAddress subnetAddr;
         InetAddress ofAddr;
-        try {
-            subnetAddr = Inet4Address.getByName(subnetSplit[0]);
-            ofAddr = Inet4Address.getByName(ofSplit[0]);
-        } catch (UnknownHostException ex) {
-            return false;
-        }
+        subnetAddr = Inet4Address.getByName(subnetSplit[0]);
+        ofAddr = Inet4Address.getByName(ofSplit[0]);
         byte[] subnetBytes = subnetAddr.getAddress();
         byte[] ofBytes = ofAddr.getAddress();
         long subnetInt = subnetBytes[0] << 24
@@ -115,7 +111,11 @@ public class NetUtils {
                 .filter(n -> {
                     try {
                         for (var n1 : nets) {
-                            if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                            try {
+                                if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                                    return false;
+                                }
+                            } catch (UnknownHostException ex) {
                                 return false;
                             }
                         }

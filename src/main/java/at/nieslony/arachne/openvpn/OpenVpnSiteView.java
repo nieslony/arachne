@@ -6,7 +6,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.firewall.basicsettings.SiteFirewallBasicsSettings;
+import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
 import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
@@ -623,6 +623,9 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteDetailsClientIp.setWidthFull();
 
         siteDetailsClientIpMode.addValueChangeListener((event) -> {
+            if (event.getValue() == null) {
+                return;
+            }
             switch (event.getValue()) {
                 case AUTO -> {
                     siteDetailsClientHostname.setVisible(false);
@@ -839,21 +842,23 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
 
         VerticalLayout routesLayout = new VerticalLayout(
-                inheritPushRoutes,
-                pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
                 ),
-                remoteNetworks
+                inheritPushRoutes,
+                pushRoutes
         );
+        routesLayout.setFlexGrow(1, pushRoutes);
         routesLayout.setMaxWidth(30, Unit.EM);
         routesLayout.setMargin(false);
+        routesLayout.setPadding(false);
 
         var layout = new HorizontalLayout(
-                routesLayout,
-                remoteNetworks
+                remoteNetworks,
+                routesLayout
         );
+        layout.setAlignItems(Alignment.STRETCH);
         layout.setWrap(true);
 
         return layout;

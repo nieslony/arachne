@@ -15,9 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.firewall.basicsettings;
+package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.settings.AbstractSettingsGroup;
+/**
+ *
+ * @author claas
+ */
+import at.nieslony.arachne.firewall.settings.AbstractFirewallBasicsSettings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -26,13 +30,12 @@ import lombok.ToString;
  *
  * @author claas
  */
-@Setter
 @Getter
-@ToString
-public class UserFirewallBasicsSettings extends AbstractSettingsGroup {
+@Setter
+@ToString(callSuper = true)
+public class SiteFirewallBasicsSettings extends AbstractFirewallBasicsSettings {
 
-    private boolean enableFirewall = false;
-    private String firewallZone = "arachne-user";
-    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
-    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
+    public SiteFirewallBasicsSettings() {
+        firewallZone = "arachne-site";
+    }
 }

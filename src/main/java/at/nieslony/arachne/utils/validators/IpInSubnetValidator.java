@@ -21,6 +21,7 @@ import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
+import java.net.UnknownHostException;
 import java.util.function.Supplier;
 
 /**
@@ -52,13 +53,16 @@ public class IpInSubnetValidator implements Validator<String> {
     public ValidationResult apply(String value, ValueContext context) {
         String subnetStr = subnetSupplier.get().toString();
 
-        if (NetUtils.isSubnetOf(value, subnetStr)) {
-            return ValidationResult.ok();
-        } else {
-            return ValidationResult.error("Subnet %s doesn't contain %s"
-                    .formatted(subnetStr, value)
-            );
+        try {
+            if (NetUtils.isSubnetOf(value, subnetStr)) {
+                return ValidationResult.ok();
+            } else {
+                return ValidationResult.error("Subnet %s doesn't contain %s"
+                        .formatted(subnetStr, value)
+                );
+            }
+        } catch (UnknownHostException ex) {
+            return ValidationResult.error("Cannot resolve " + value);
         }
     }
-
 }

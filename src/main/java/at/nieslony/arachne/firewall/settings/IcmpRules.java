@@ -15,17 +15,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.firewall.basicsettings;
+package at.nieslony.arachne.firewall.settings;
 
 /**
  *
  * @author claas
  */
-public enum EnableRoutingMode {
-    OFF("Don't change"), ENABLE("Enable on Startup"), RESTORE_ON_EXIT("Enable and Restore Status on Exit");
+public enum IcmpRules {
+    ALLOW_ALL("Allow all Pings"),
+    ALLOW_ALL_GRANTED("Allow Pings to all granted hosts"),
+    DENY("Deny All");
+
     private final String label;
 
-    private EnableRoutingMode(String label) {
+    private IcmpRules(String label) {
         this.label = label;
     }
 
