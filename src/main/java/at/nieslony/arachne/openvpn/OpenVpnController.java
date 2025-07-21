@@ -578,6 +578,7 @@ public class OpenVpnController {
 
     public void writeOpenVpnSiteServerSitesConfig() {
         VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
 
         for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
@@ -616,6 +617,28 @@ public class OpenVpnController {
                             "push \"dns search-domains %s\""
                                     .formatted(String.join(" ", site.getPushSearchDomains()))
                     );
+                }
+                switch (site.getClientIpMode()) {
+                    case AUTO -> {
+                    }
+                    case BY_HOSTNAME -> {
+                        pw.println();
+                        pw.println("ifconfig-push %s %s".formatted(
+                                site.getClientHostname(),
+                                NetUtils.maskLen2Mask(
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        ));
+                    }
+                    case FIXED_IP -> {
+                        pw.println();
+                        pw.println("ifconfig-push %s %s".formatted(
+                                site.getClientIp(),
+                                NetUtils.maskLen2Mask(
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        ));
+                    }
                 }
                 pw.close();
                 fos.close();
