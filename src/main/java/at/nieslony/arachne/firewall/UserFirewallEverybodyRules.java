@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.firewall.settings.IcmpRules;
 import at.nieslony.arachne.apiindex.ShowApiDetails;
+import at.nieslony.arachne.firewall.settings.IcmpRules;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;

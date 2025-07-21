@@ -93,7 +93,9 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
 
     @Override
     protected void applyBasicSettings(SiteFirewallBasicsSettings basicSettings) throws DBusException {
-        openVpnController.writeOpenVpnPluginSiteConfig();
+        openVpnController.writeOpenVpnPluginSiteConfig(
+                null,
+                firewallBasicSettings);
         arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
     }
 }
