@@ -72,7 +72,7 @@ public class NetUtils {
     }
 
     public static boolean isSubnetOf(String subnet, String of)
-            throws NumberFormatException, UnknownHostException {
+            throws NumberFormatException {
         String[] subnetSplit = subnet.split("/");
         String[] ofSplit = of.split("/");
         if (subnetSplit.length > 2 || ofSplit.length > 2) {
@@ -87,8 +87,14 @@ public class NetUtils {
         if (subnetMask <= ofMask) {
             return false;
         }
-        InetAddress subnetAddr = Inet4Address.getByName(subnetSplit[0]);
-        InetAddress ofAddr = Inet4Address.getByName(ofSplit[0]);
+        InetAddress subnetAddr;
+        InetAddress ofAddr;
+        try {
+            subnetAddr = Inet4Address.getByName(subnetSplit[0]);
+            ofAddr = Inet4Address.getByName(ofSplit[0]);
+        } catch (UnknownHostException ex) {
+            return false;
+        }
         byte[] subnetBytes = subnetAddr.getAddress();
         byte[] ofBytes = ofAddr.getAddress();
         long subnetInt = subnetBytes[0] << 24
@@ -113,7 +119,7 @@ public class NetUtils {
                                 return false;
                             }
                         }
-                    } catch (NumberFormatException | UnknownHostException ex) {
+                    } catch (NumberFormatException ex) {
                         throw new RuntimeException(
                                 "Network list contains illegal entry",
                                 ex
