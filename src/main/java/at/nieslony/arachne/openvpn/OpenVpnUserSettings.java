@@ -15,8 +15,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 
 /**
@@ -26,11 +25,10 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 @Getter
 @Setter
 @ToString
+@Slf4j
 public class OpenVpnUserSettings
         extends AbstractSettingsGroup
         implements OpenVpnSettings {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserSettings.class);
 
     public enum AuthType {
         CERTIFICATE("Certificate"),
@@ -41,7 +39,7 @@ public class OpenVpnUserSettings
             this.authType = authType;
         }
 
-        private String authType;
+        private final String authType;
 
         @Override
         public String toString() {
@@ -57,7 +55,7 @@ public class OpenVpnUserSettings
             this.pvt = pvt;
         }
 
-        private String pvt;
+        private final String pvt;
 
         @Override
         public String toString() {
@@ -107,6 +105,7 @@ public class OpenVpnUserSettings
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
     private int statusUpdateSecs = 60;
+    private String runAsUser;
     private List<String> pushDnsServers = NetUtils.getDnsServers();
     private List<String> dnsSearch = Arrays.asList(NetUtils.myDomain());
     private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
@@ -120,9 +119,9 @@ public class OpenVpnUserSettings
     private NetworkManagerRememberPassword networkManagerRememberPassword = NetworkManagerRememberPassword.ALWAYS_ASK;
 
     public void setPushDnsServers(List<String> pushDnsServers) {
-        logger.info(pushDnsServers.toString());
+        log.info(pushDnsServers.toString());
         this.pushDnsServers = new LinkedList<>(pushDnsServers);
-        logger.info(this.pushDnsServers.toString());
+        log.info(this.pushDnsServers.toString());
     }
 
     private String defaultAuthUrl(ServerProperties serverProperties) {

@@ -16,6 +16,7 @@ import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.ssh.AddSshKeyDialog;
 import at.nieslony.arachne.ssh.SshKeyEntity;
 import at.nieslony.arachne.ssh.SshKeyRepository;
+import at.nieslony.arachne.utils.SystemUsers;
 import at.nieslony.arachne.utils.components.EditableListBox;
 import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
@@ -28,6 +29,8 @@ import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
+import at.nieslony.arachne.utils.validators.SystemUserValidator;
+import com.sun.security.auth.module.UnixSystem;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasEnabled;
@@ -70,6 +73,8 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -372,6 +377,30 @@ public class OpenVpnSiteView extends VerticalLayout {
                 OpenVpnSiteSettings::setMtuTest
         );
 
+        ComboBox<String> runAsUserField = new ComboBox<>("Run as User");
+        Set<String> runAsUserValues = new TreeSet<>();
+        List.of("arachne", "openvpn", "open-vpn").forEach((userName) -> {
+            if (SystemUsers.getUser(userName) != null) {
+                runAsUserValues.add(userName);
+            }
+        });
+        String myUserName = new UnixSystem().getUsername();
+        var runAsUserValidator = new SystemUserValidator(myUserName);
+        runAsUserValues.add(myUserName);
+        runAsUserField.setItems(runAsUserValues);
+        runAsUserField.setAllowCustomValue(true);
+        runAsUserField.addCustomValueSetListener((event) -> {
+            String newValue = event.getDetail();
+            if (runAsUserValidator.apply(newValue, null).equals(ValidationResult.ok())) {
+                runAsUserValues.add(newValue);
+                runAsUserField.setItems(runAsUserValues);
+            }
+            runAsUserField.setValue(newValue);
+        });
+        binder.forField(runAsUserField)
+                .withValidator(runAsUserValidator)
+                .bind(OpenVpnSiteSettings::getRunAsUser, OpenVpnSiteSettings::setRunAsUser);
+
         Button saveBasicsButton = new Button("Save Basics and Restart Site VPN",
                 (e) -> onSaveBasics()
         );
@@ -387,7 +416,8 @@ public class OpenVpnSiteView extends VerticalLayout {
                 interfaceLayout,
                 siteNetLayout,
                 keepaliveLayout,
-                mtuTestField
+                mtuTestField,
+                runAsUserField
         );
         VerticalLayout layout = new VerticalLayout(
                 formLayout, saveBasicsButton

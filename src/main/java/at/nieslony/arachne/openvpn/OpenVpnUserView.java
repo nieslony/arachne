@@ -10,6 +10,7 @@ import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.SystemUsers;
 import at.nieslony.arachne.utils.components.EditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
@@ -20,6 +21,8 @@ import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
+import at.nieslony.arachne.utils.validators.SystemUserValidator;
+import com.sun.security.auth.module.UnixSystem;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -43,6 +46,7 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -50,12 +54,14 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -64,9 +70,8 @@ import org.slf4j.LoggerFactory;
 @Route(value = "userVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN User VPN")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class OpenVpnUserView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
 
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
@@ -104,10 +109,10 @@ public class OpenVpnUserView extends VerticalLayout {
                     arachneDbus.restartServer(ArachneDbus.ServerType.USER);
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
-                    logger.error("Cannot save openvpn user settings: " + ex.getMessage());
+                    log.error("Cannot save openvpn user settings: " + ex.getMessage());
                 } catch (DBusException | DBusExecutionException ex) {
                     String header = "Cannot restart openVpn";
-                    logger.error(header + ": " + ex.getMessage());
+                    log.error(header + ": " + ex.getMessage());
                     ShowNotification.error(header, ex.getMessage());
                 }
             }
@@ -330,11 +335,31 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
 
         Checkbox mtuTestField = new Checkbox("MTU Test");
-
         ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("Status Update Interval (secs)");
         statusUpdateIntervalField.setItems(
                 10, 20, 30, 45, 60, 120
         );
+
+        ComboBox<String> runAsUserField = new ComboBox<>("Run as User");
+        Set<String> runAsUserValues = new TreeSet<>();
+        List.of("arachne", "openvpn", "open-vpn").forEach((userName) -> {
+            if (SystemUsers.getUser(userName) != null) {
+                runAsUserValues.add(userName);
+            }
+        });
+        String myUserName = new UnixSystem().getUsername();
+        var runAsUserValidator = new SystemUserValidator(myUserName);
+        runAsUserValues.add(myUserName);
+        runAsUserField.setItems(runAsUserValues);
+        runAsUserField.setAllowCustomValue(true);
+        runAsUserField.addCustomValueSetListener((event) -> {
+            String newValue = event.getDetail();
+            if (runAsUserValidator.apply(newValue, null).equals(ValidationResult.ok())) {
+                runAsUserValues.add(newValue);
+                runAsUserField.setItems(runAsUserValues);
+            }
+            runAsUserField.setValue(newValue);
+        });
 
         binder.forField(name)
                 .asRequired("Value required")
@@ -403,6 +428,9 @@ public class OpenVpnUserView extends VerticalLayout {
                 OpenVpnUserSettings::getStatusUpdateSecs,
                 OpenVpnUserSettings::setStatusUpdateSecs
         );
+        binder.forField(runAsUserField)
+                .withValidator(runAsUserValidator)
+                .bind(OpenVpnUserSettings::getRunAsUser, OpenVpnUserSettings::setRunAsUser);
 
         clientMask.addValueChangeListener((e) -> binder.validate());
         protocol.addValueChangeListener((e) -> {
@@ -419,6 +447,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(keepaliveLayout);
         formLayout.add(mtuTestField);
         formLayout.add(statusUpdateIntervalField);
+        formLayout.add(runAsUserField);
 
         return formLayout;
     }

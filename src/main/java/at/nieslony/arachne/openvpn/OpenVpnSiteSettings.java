@@ -14,8 +14,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -24,9 +23,8 @@ import org.slf4j.LoggerFactory;
 @Getter
 @Setter
 @ToString
+@Slf4j
 public class OpenVpnSiteSettings extends AbstractSettingsGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteSettings.class);
 
     private boolean alreadyConfigured = false;
 
@@ -42,6 +40,8 @@ public class OpenVpnSiteSettings extends AbstractSettingsGroup {
     private Integer keepaliveTimeout = 60;
     private Integer keepaliveInterval = 10;
     private List<Integer> vpnSiteIds = new LinkedList<>();
+
+    private String runAsUser;
 
     @Override
     public void save(Settings settings) throws SettingsException {

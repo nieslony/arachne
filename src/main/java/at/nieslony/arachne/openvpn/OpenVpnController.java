@@ -31,11 +31,10 @@ import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -47,9 +46,8 @@ import org.springframework.stereotype.Controller;
  */
 @Controller
 @PropertySource("classpath:arachne.properties")
+@Slf4j
 public class OpenVpnController {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnController.class);
 
     @Autowired
     private Settings settings;
@@ -87,7 +85,7 @@ public class OpenVpnController {
         String fileName = folderFactory.getVpnConfigDir(fn);
         File f = new File(fileName);
         if (!f.exists() || f.length() == 0) {
-            logger.info("Creating dummy configuration " + fileName);
+            log.info("Creating dummy configuration " + fileName);
             try (PrintWriter pw = new PrintWriter(f)) {
                 pw.println("dev tun");
                 pw.println("local 127.11.94.%d".formatted(lasrOctett));
@@ -95,7 +93,7 @@ public class OpenVpnController {
                         "writepid " + folderFactory.getOpenVpnPidPath(serverType)
                 );
             } catch (IOException ex) {
-                logger.error("Cannot create dummy confoigirattion %s: %s"
+                log.error("Cannot create dummy confoigirattion %s: %s"
                         .formatted(fileName, ex.getMessage())
                 );
             }
@@ -113,7 +111,7 @@ public class OpenVpnController {
             try (FileWriter fw = new FileWriter(fn)) {
                 fw.write(crlString);
             } catch (IOException ex) {
-                logger.error("Cannot write %s: %s".formatted(fn, ex.getMessage()));
+                log.error("Cannot write %s: %s".formatted(fn, ex.getMessage()));
             }
         }
     }
@@ -135,14 +133,14 @@ public class OpenVpnController {
     public void writeOpenVpnPluginSiteConfig() {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
         UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
-        logger.info("Writing openvpn-plugin-arache config to " + fileName);
+        log.info("Writing openvpn-plugin-arache config to " + fileName);
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
             writer.println("enable-routing = " + firewallBasicSettings.getEnableRoutingMode().name());
             writer.println("client-config = " + getSitePluginConfTemplate());
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot write to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
@@ -154,7 +152,7 @@ public class OpenVpnController {
             UserFirewallBasicsSettings firewallBasicsSettings
     ) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_USER_CONF);
-        logger.info("Writing openvpn-plugin-arache config to " + fileName);
+        log.info("Writing openvpn-plugin-arache config to " + fileName);
 
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
@@ -181,7 +179,7 @@ public class OpenVpnController {
                 );
             }
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot write to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
@@ -190,7 +188,7 @@ public class OpenVpnController {
 
     public void writeOpenVpnUserServerConfig(OpenVpnUserSettings settings) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_USER_SERVER_CONF);
-        logger.info("Writing openvpn user server config to " + fileName);
+        log.info("Writing openvpn user server config to " + fileName);
 
         writeCrl();
 
@@ -218,6 +216,11 @@ public class OpenVpnController {
             if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
                 writer.println("mtu-test");
             }
+            if (!settings.getRunAsUser().isEmpty()) {
+                writer.println("user " + settings.getRunAsUser());
+                writer.println("persist-tun");
+                writer.println("persist-key");
+            }
             writer.println(
                     "status %s %d"
                             .formatted(
@@ -242,7 +245,7 @@ public class OpenVpnController {
                                     .formatted(components[0], components[1])
                     );
                 } else {
-                    logger.warn("Invalid route: " + route);
+                    log.warn("Invalid route: " + route);
                 }
             }
             if (settings.getAuthType() == OpenVpnUserSettings.AuthType.USERNAME_PASSWORD) {
@@ -274,14 +277,14 @@ public class OpenVpnController {
             writer.println("<key>\n%s</key>".formatted(pki.getServerKeyAsBase64()));
             writer.println("<dh>\n%s</dh>".formatted(pki.getDhParams()));
         } catch (PkiException ex) {
-            logger.error("# pki not yet initialized");
+            log.error("# pki not yet initialized");
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot write to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
         } catch (SettingsException ex) {
-            logger.error("Settings exception: " + ex.getMessage());
+            log.error("Settings exception: " + ex.getMessage());
         }
     }
 
@@ -491,17 +494,17 @@ public class OpenVpnController {
     }
 
     private String findPlugin(String pluginName) {
-        logger.info("Searching for plugin in " + pluginPath);
+        log.info("Searching for plugin in " + pluginPath);
         for (String dir : pluginPath.split(":")) {
             Path fn = Path.of(dir, pluginName);
             if (Files.exists(fn)) {
                 String absFn = fn.toAbsolutePath().toString();
-                logger.info("Found plugin: " + absFn);
+                log.info("Found plugin: " + absFn);
                 return absFn;
             }
         }
 
-        logger.error(
+        log.error(
                 "Plugin %s not found in search path %s"
                         .formatted(pluginName, pluginPath)
         );
@@ -513,13 +516,13 @@ public class OpenVpnController {
         try {
             Files.createDirectories(Path.of(clientConfDirName));
         } catch (IOException ex) {
-            logger.error("Cannot create %s: %s".formatted(clientConfDirName, ex.getMessage()));
+            log.error("Cannot create %s: %s".formatted(clientConfDirName, ex.getMessage()));
             return;
         }
         File clientConfDir = new File(clientConfDirName);
         for (File f : clientConfDir.listFiles()) {
             if (f.isFile()) {
-                logger.info("Removing " + f.getPath());
+                log.info("Removing " + f.getPath());
                 f.delete();
             }
         }
@@ -531,7 +534,7 @@ public class OpenVpnController {
                 continue;
             }
             String fileName = getSitePluginConf(site.getSiteHostname());
-            logger.info("Creating plugin site config " + fileName);
+            log.info("Creating plugin site config " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 pw.println("site-verification = " + site.getSiteVerification().name());
@@ -558,7 +561,7 @@ public class OpenVpnController {
                 pw.close();
                 fos.close();
             } catch (IOException ex) {
-                logger.error("Cannot write configuration to %s: %s"
+                log.error("Cannot write configuration to %s: %s"
                         .formatted(fileName, ex.getMessage())
                 );
             }
@@ -576,7 +579,7 @@ public class OpenVpnController {
                             site.getSiteHostname()
                     );
             site.updateInheritedValues(defaultSite);
-            logger.info("Creating site configuration " + fileName);
+            log.info("Creating site configuration " + fileName);
             try (FileOutputStream fos = new FileOutputStream(fileName); PrintWriter pw = new PrintWriter(fos)) {
                 writeConfigHeader(pw);
                 for (String dnsServer : site.getPushDnsServers()) {
@@ -594,7 +597,7 @@ public class OpenVpnController {
                                         .formatted(components[0], components[1])
                         );
                     } else {
-                        logger.warn("Invalid route: " + route);
+                        log.warn("Invalid route: " + route);
                     }
                 }
                 if (site.isRouteInternetThroughVpn()) {
@@ -609,7 +612,7 @@ public class OpenVpnController {
                 pw.close();
                 fos.close();
             } catch (IOException ex) {
-                logger.error("Cannot write configuration to %s: %s"
+                log.error("Cannot write configuration to %s: %s"
                         .formatted(fileName, ex.getMessage())
                 );
             }
@@ -620,14 +623,14 @@ public class OpenVpnController {
         OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_SITE_SERVER_CONF);
         String clientConfigDir = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
-        logger.info("Writing site VPN configuration to " + fileName);
+        log.info("Writing site VPN configuration to " + fileName);
 
         try {
             Files.createDirectory(Paths.get(clientConfigDir));
         } catch (FileAlreadyExistsException ex) {
-            logger.info("Client config dir %s already exisrs".formatted(clientConfigDir));
+            log.info("Client config dir %s already exisrs".formatted(clientConfigDir));
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot create client config dir %s: %s"
                             .formatted(clientConfigDir, ex.getMessage())
             );
@@ -660,6 +663,11 @@ public class OpenVpnController {
                             )
             );
             pw.println("topology subnet");
+            if (!openVpnSiteSettings.getRunAsUser().isEmpty()) {
+                pw.println("user " + openVpnSiteSettings.getRunAsUser());
+                pw.println("persist-tun");
+                pw.println("persist-key");
+            }
 
             pw.println(
                     "status %s %d"
@@ -689,7 +697,7 @@ public class OpenVpnController {
             pw.println("<dh>\n%s</dh>".formatted(pki.getDhParams()));
             pw.close();
         } catch (IOException | PkiException | SettingsException ex) {
-            logger.error(
+            log.error(
                     "Cannot write configuration to %s: %s"
                             .formatted(fileName, ex.getMessage())
             );
@@ -701,7 +709,7 @@ public class OpenVpnController {
                 = settings.getSettings(OpenVpnSiteSettings.class);
         Optional<VpnSite> site = vpnSiteController.getById(siteId);
         if (site.isEmpty()) {
-            logger.error("Site %i not found".formatted(siteId));
+            log.error("Site %i not found".formatted(siteId));
             return;
         }
 
@@ -743,7 +751,7 @@ public class OpenVpnController {
                     .formatted(pki.getUserKeyAsBase64(site.get().getSiteHostname()))
             );
         } catch (PkiException | SettingsException ex) {
-            logger.error("Cannot write site remote configuration: " + ex.getMessage());
+            log.error("Cannot write site remote configuration: " + ex.getMessage());
         }
     }
 
