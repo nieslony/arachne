@@ -22,9 +22,8 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -44,9 +43,8 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @RestController
 @RequestMapping("/api/openvpn")
+@Slf4j
 public class OpenVpnRestController {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnRestController.class);
 
     @Autowired
     OpenVpnController openVpnController;
@@ -74,7 +72,7 @@ public class OpenVpnRestController {
     public OpenVpnUserSettings postUserSettings(
             @RequestBody OpenVpnUserSettings vpnSettings
     ) throws SettingsException {
-        logger.info("Set new openVPN user server config: " + settings.toString());
+        log.info("Set new openVPN user server config: " + settings.toString());
         vpnSettings.save(settings);
         openVpnController.writeOpenVpnUserServerConfig(vpnSettings);
         return vpnSettings;
@@ -90,19 +88,21 @@ public class OpenVpnRestController {
             if (format == null) {
                 return openVpnController.openVpnUserConfig(username);
             }
-            logger.info("Return format: " + format);
+            log.info("Return format: " + format);
             return switch (format) {
                 case "json" ->
                     openVpnController.openVpnUserConfigJson(username);
+                case "json2" ->
+                    openVpnController.openVpnUserConfigJson2(username);
                 case "shell" ->
                     openVpnController.openVpnUserConfigShell(username);
                 default ->
                     throw new ResponseStatusException(
                             HttpStatus.UNPROCESSABLE_ENTITY,
-                            "Cannot get user config");
+                            "Cannot get user config: invalid format requested");
             };
         } catch (PkiException | JSONException ex) {
-            logger.error("Cannot create user config: " + ex.getMessage());
+            log.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     "Cannot get user config");

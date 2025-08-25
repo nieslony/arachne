@@ -30,7 +30,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,6 +76,12 @@ public class OpenVpnController {
     static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
     static final String FN_OPENVPN_CRL = "crl.pem";
     static final String FN_OPENVPN_CLIENT_CONF_DIR = "site-client-conf.d";
+
+    private enum UserVpnSettingsDataType {
+        OvpnFile,
+        Json,
+        Shell
+    }
 
     @PostConstruct
     public void init() {
@@ -304,12 +313,12 @@ public class OpenVpnController {
         PrintWriter writer = new PrintWriter(sw);
         writeConfigHeader(writer);
         writer.println("client");
-        writer.println("dev tun");
-        writer.println("proto %s".formatted(
-                vpnSettings.getListenProtocol().name().toLowerCase())
-        );
-        writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
-        writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
+
+        getUserVpnSettingsData(username, UserVpnSettingsDataType.OvpnFile)
+                .forEach((key, value)
+                        -> writer.println("%s %s".formatted(key, value))
+                );
+
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
                            <auth-user-pass>
@@ -345,34 +354,26 @@ public class OpenVpnController {
                         "\","
                 )
         );
-        int port = vpnSettings.getListenPort();
 
         StringWriter configWriter = new StringWriter();
-        configWriter.append("mkdir -v $HOME/.cert\n");
+        configWriter.append("mkdir -pv $HOME/.cert\n");
         configWriter.append("""
-                            cat <<EOF > %s
+                            cat <<EOF > "%s"
                             %s
                             EOF
                             """.formatted(caCertFn, caCert));
         configWriter.append("""
-                            cat -v <<EOF > %s
+                            cat -v <<EOF > "%s"
                             %s
                             EOF
                             """.formatted(userCertFn, userCert));
         configWriter.append("""
-                            cat -v <<EOF > %s
+                            cat -v <<EOF > "%s"
                             %s
                             EOF
-                            chmod -v 600 %s
+                            chmod -v 600 "%s"
                                """.formatted(privateKeyFn, privateKey, privateKeyFn));
-        String conName = vpnSettings.getFormattedClientConfigName(username);
-        /*  ca = /home/claas/.certs/arachne-ca.crt,
-        cert = /home/claas/.certs/arachne-cert.crt,
-        cert-pass-flags = 4, connection-type = password-tls,
-        key = /home/claas/.certs/arachne-cert.key,
-        password-flags = 2, port = , remote = odysseus.nieslony.lan,
-        username = claas@NIESLONY.LAN
-         */
+
         configWriter.append("vpn_opts=\"\n");
         if (!vpnSettings.getInternetThrouphVpn()) {
             configWriter.append("    ipv4.never-default yes\n");
@@ -391,34 +392,100 @@ public class OpenVpnController {
         configWriter.append(
                 """
                 vpn_data="
-                    ca = %s,
-                    cert = %s,
-                    cert-pass-flags = 4,
-                    connection-type = password-tls,
-                    dev-type = tun,
-                    key = %s,
-                    password-flags = %d,
-                    proto-tcp = %s,
-                    remote = %s:%d,
-                    username = %s
+                %s
                 "
                 nmcli connection add type vpn vpn-type openvpn con-name "%s" $vpn_opts vpn.data "$vpn_data"
-                """
-                        .formatted(
-                                caCertFn,
-                                userCertFn,
-                                privateKeyFn,
-                                vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
-                                vpnSettings.getListenProtocol() == TransportProtocol.TCP
-                                ? "yes"
-                                : "no",
-                                vpnSettings.getRemote(),
-                                port,
-                                username,
-                                conName
-                        )
+                """.formatted(
+                        getUserVpnSettingsData(username, UserVpnSettingsDataType.Shell)
+                                .entrySet()
+                                .stream()
+                                .map(
+                                        (entry) -> "    %s = %s".formatted(
+                                                entry.getKey(),
+                                                entry.getValue()
+                                        )
+                                )
+                                .collect(Collectors.joining(",\n")),
+                        vpnSettings.getFormattedClientConfigName(username)
+                )
         );
+
         return configWriter.toString();
+    }
+
+    private Map<String, String> getUserVpnSettingsData() {
+        Map<String, String> settingsMap = new HashMap<>();
+
+        settingsMap.put("connection.autoconnect", "no");
+        settingsMap.put("connection.permissions", "user:$USER");
+
+        return settingsMap;
+    }
+
+    private Map<String, String> getUserVpnSettingsData(String username, UserVpnSettingsDataType dataType)
+            throws PkiException, SettingsException {
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+
+        String userCertFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getUserCertFilename(username),
+                        "\","
+                )
+        );
+        String caCertFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getCaCertFilename(),
+                        "\","
+                ));
+        String privateKeyFn = "$HOME/.cert/%s".formatted(
+                ShellQuote.escapeChars(
+                        getUserKeyFilename(username),
+                        "\","
+                )
+        );
+
+        Map<String, String> settingsMap = new HashMap<>();
+
+        String serverCertSubject = pki
+                .getServerCert()
+                .getSubjectX500Principal()
+                .getName();
+
+        settingsMap.put("dev", "tun");
+        switch (dataType) {
+            case OvpnFile -> {
+                settingsMap.put("proto", vpnSettings.getListenProtocol().name().toLowerCase());
+            }
+            case Shell -> {
+                if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
+                    settingsMap.put("proto-tcp", "yes");
+                }
+            }
+
+        }
+        settingsMap.put("remote", vpnSettings.getRemote());
+        settingsMap.put("port", String.valueOf(vpnSettings.getListenPort()));
+        settingsMap.put("verify-x509-name", serverCertSubject);
+        if (dataType == UserVpnSettingsDataType.Shell) {
+            settingsMap.put("cert-pass-flags", "4");
+            settingsMap.put("connection-type", "password-tls");
+            settingsMap.put(
+                    "password-flags",
+                    switch (vpnSettings.getNetworkManagerRememberPassword()) {
+                case ALWAYS_ASK ->
+                    "2";
+                case REMEMBER_EVERYBODY ->
+                    "0";
+                case REMEMBER_USER ->
+                    "1";
+            });
+            settingsMap.put("ca", caCertFn);
+            settingsMap.put("cert", userCertFn);
+            settingsMap.put("key", privateKeyFn);
+            settingsMap.put("usernanme", username);
+        }
+
+        return settingsMap;
     }
 
     public String getCaCertFilename() {
@@ -490,6 +557,36 @@ public class OpenVpnController {
         json.put("data", data);
         json.put("ipv4", ipv4);
 
+        return json.toString(2) + "\n";
+    }
+
+    String openVpnUserConfigJson2(String username)
+            throws JSONException, PkiException, SettingsException {
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+
+        JSONObject certificates = new JSONObject();
+        String userCert = pki.getUserCertAsBase64(username);
+        String privateKey = pki.getUserKeyAsBase64(username);
+        String caCert = pki.getRootCertAsBase64();
+        certificates.put("caCert", caCert);
+        certificates.put("userCert", userCert);
+        certificates.put("privateKey", privateKey);
+
+        JSONObject connection = new JSONObject();
+        connection.put("id", vpnSettings.getFormattedClientConfigName(username));
+        connection.put("type", "vpn");
+
+        JSONObject vpnData = new JSONObject();
+        getUserVpnSettingsData(username, UserVpnSettingsDataType.Json)
+                .forEach((key, value) -> {
+                    vpnData.put(key, value);
+                });
+
+        JSONObject json = new JSONObject();
+        json.put("version", "2");
+        json.put("certificates", certificates);
+        json.put("connection", connection);
+        json.put("vpn_data", vpnData);
         return json.toString(2) + "\n";
     }
 
