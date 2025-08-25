@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.5
+Version:        1.4.99
 
 Release:        1
 License:        GPLv3
@@ -23,8 +23,8 @@ BuildRequires:  pkgconfig(systemd)
 
 Requires:       java-%{jdk_version}-openjdk-headless
 Requires:       openvpn
-Requires:       openvpn-plugin-arachne
-Requires:       arachne-dbus
+Requires:       openvpn-plugin-arachne >= 1.5, openvpn-plugin-arachne < 1.6
+Requires:       arachne-dbus >= 1.5.1, arachne-dbus < 1.6
 
 Recommends:     httpd
 
