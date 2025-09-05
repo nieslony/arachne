@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.5
+Version:        1.4.6
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Sep 05 2025 Claas Nieslony <github@nieslony.at> 1.4.6-1
+- Auto switch dark/light theme (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+
 * Wed Jul 16 2025 Claas Nieslony <github@nieslony.at> 1.4.5-1
 - - add option to view client config is UsersView - make shell and json
   download build the same config (github@nieslony.at)
