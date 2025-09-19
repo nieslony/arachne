@@ -87,8 +87,10 @@ public class NetUtils {
         if (subnetMask <= ofMask) {
             return false;
         }
-        InetAddress subnetAddr = Inet4Address.getByName(subnetSplit[0]);
-        InetAddress ofAddr = Inet4Address.getByName(ofSplit[0]);
+        InetAddress subnetAddr;
+        InetAddress ofAddr;
+        subnetAddr = Inet4Address.getByName(subnetSplit[0]);
+        ofAddr = Inet4Address.getByName(ofSplit[0]);
         byte[] subnetBytes = subnetAddr.getAddress();
         byte[] ofBytes = ofAddr.getAddress();
         long subnetInt = subnetBytes[0] << 24
@@ -109,11 +111,15 @@ public class NetUtils {
                 .filter(n -> {
                     try {
                         for (var n1 : nets) {
-                            if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                            try {
+                                if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                                    return false;
+                                }
+                            } catch (UnknownHostException ex) {
                                 return false;
                             }
                         }
-                    } catch (NumberFormatException | UnknownHostException ex) {
+                    } catch (NumberFormatException ex) {
                         throw new RuntimeException(
                                 "Network list contains illegal entry",
                                 ex
