@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>24.8.7</vaadin.version>
+        <vaadin.version>24.8.8</vaadin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
         <skipGenerateGitProperties>false</skipGenerateGitProperties>
@@ -17,7 +17,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
     </parent>
 
     <repositories>
@@ -132,12 +132,12 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.81</version>
+            <version>1.82</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.81</version>
+            <version>1.82</version>
         </dependency>
 
         <dependency>
@@ -155,7 +155,7 @@
         <dependency>
             <groupId>org.vaadin.olli</groupId>
             <artifactId>clipboardhelper</artifactId>
-            <version>2.0.0</version>
+            <version>2.1.0</version>
         </dependency>
 
         <dependency>
