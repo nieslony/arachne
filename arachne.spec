@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.6
+Version:        1.4.7
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,33 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Mon Sep 22 2025 Claas Nieslony <github@nieslony.at> 1.4.7-1
+- Bump dependency versions (github@nieslony.at)
+- Configure optional fixed client IP for sites (github@nieslony.at)
+- Add IpInSubnetValidator.java (github@nieslony.at)
+- Don't trow exeption just return false (github@nieslony.at)
+- Add basic settings to SiteFirewallView (github@nieslony.at)
+- Create outgoing page (github@nieslony.at)
+- Reorder components (github@nieslony.at)
+- Fix: package (github@nieslony.at)
+- Get file from master (github@nieslony.at)
+- Fix: provide UI object by supplier (github@nieslony.at)
+- Fix: error due to merge (github@nieslony.at)
+- Add more debug infos (github@nieslony.at)
+- Fix: save firewall basic settings (github@nieslony.at)
+- Edit firewall basic settings (github@nieslony.at)
+- Remove unused variables (github@nieslony.at)
+- Create firewall basics tab for site firewall (github@nieslony.at)
+- Fix: show full path of apache config (github@nieslony.at)
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+- Fix: user ≠ site (github@nieslony.at)
+- Add some debug log (github@nieslony.at)
+
 * Fri Sep 05 2025 Claas Nieslony <github@nieslony.at> 1.4.6-1
 - Auto switch dark/light theme (github@nieslony.at)
 - Bump dependency version (github@nieslony.at)
