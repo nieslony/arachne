@@ -51,6 +51,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,7 +204,19 @@ public class TomcatView extends VerticalLayout {
         if (tomcatSettings.isEnableAjpConnector()) {
             Div msg = new Div();
 
-            Span apacheConfigFN = new Span(tomcatService.getApacheConfigFileName());
+            String absApacheConfigFN;
+            try {
+                absApacheConfigFN = new File(tomcatService.getApacheConfigFileName())
+                        .getCanonicalPath();
+            } catch (IOException ex) {
+                absApacheConfigFN = "[%s is unresolvable: %s]"
+                        .formatted(
+                                tomcatService.getApacheConfigFileName(),
+                                ex.getMessage()
+                        );
+            }
+
+            Span apacheConfigFN = new Span(absApacheConfigFN);
             apacheConfigFN.getStyle().setFontWeight(Style.FontWeight.BOLD);
 
             Span apacheCfgFolder = new Span("/etc/httpd/conf.d");

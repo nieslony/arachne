@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.settings.AbstractSettingsGroup;
+import at.nieslony.arachne.firewall.settings.AbstractFirewallBasicsSettings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -27,45 +27,10 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString
-public class UserFirewallBasicsSettings extends AbstractSettingsGroup {
+@ToString(callSuper = true)
+public class UserFirewallBasicsSettings extends AbstractFirewallBasicsSettings {
 
-    public enum EnableRoutingMode {
-        OFF("Don't change"),
-        ENABLE("Enable on Startup"),
-        RESTORE_ON_EXIT("Enable and Restore Status on Exit");
-
-        final private String label;
-
-        private EnableRoutingMode(String label) {
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
+    public UserFirewallBasicsSettings() {
+        firewallZone = "arachne-user";
     }
-
-    public enum IcmpRules {
-        ALLOW_ALL("Allow all Pings"),
-        ALLOW_ALL_GRANTED("Allow Pings to all granted hosts"),
-        DENY("Deny All");
-
-        final private String label;
-
-        private IcmpRules(String label) {
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    private boolean enableFirewall = false;
-    private String firewallZone = "arachne-user";
-    private EnableRoutingMode enableRoutingMode = EnableRoutingMode.ENABLE;
-    private IcmpRules icmpRules = IcmpRules.ALLOW_ALL_GRANTED;
 }
