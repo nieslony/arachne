@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.7
+Version:        1.4.8
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Wed Oct 01 2025 root@len-pf287tj6.nieslony.internal <github@nieslony.at> 1.4.8-1
+- Transparent background (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Replace depricated VaadinWebSecurity (github@nieslony.at)
+- Bump vaadin version to 2.9 (github@nieslony.at)
+
 * Mon Sep 22 2025 Claas Nieslony <github@nieslony.at> 1.4.7-1
 - Bump dependency versions (github@nieslony.at)
 - Configure optional fixed client IP for sites (github@nieslony.at)
