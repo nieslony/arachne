@@ -4,6 +4,7 @@
  */
 package at.nieslony.arachne.configuration;
 
+// https://vaadin.com/docs/latest/flow/security/vaadin-security-configurer
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
@@ -11,7 +12,8 @@ import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.InternalUserDetailsService;
 import at.nieslony.arachne.users.LdapUserDetailsService;
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -25,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
@@ -43,6 +45,7 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
@@ -57,12 +60,9 @@ import org.springframework.security.web.context.SecurityContextRepository;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(
-        prePostEnabled = true,
-        securedEnabled = true,
-        jsr250Enabled = true)
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 @Slf4j
-public class SecurityConfiguration extends VaadinWebSecurity {
+public class SecurityConfiguration {
 
     @Autowired
     private Settings settings;
@@ -85,16 +85,14 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         try {
             kerberosSettings = settings.getSettings(KerberosSettings.class);
             preAuthSettings = settings.getSettings(PreAuthSettings.class);
-            log.info(kerberosSettings.toString());
+            log.debug(kerberosSettings.toString());
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
     }
 
-    @Override
-    public void configure(HttpSecurity http) throws Exception {
-        log.info("Configure");
-
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         http
                 .exceptionHandling((t) -> {
@@ -106,7 +104,7 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                         bearerTokenAuthFilter,
                         BasicAuthenticationFilter.class
                 )
-                .httpBasic((b) -> b.realmName("IMAP Admin"))
+                .httpBasic((b) -> b.realmName("Arachne"))
                 .addFilterAfter(
                         spnegoAuthenticationProcessingFilter(authenticationManager),
                         BasicAuthenticationFilter.class)
@@ -124,8 +122,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                         }
                 );
 
-        super.configure(http);
-        setLoginView(http, LoginOrSetupView.class, "/arachne/login");
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginOrSetupView.class, "/arachne/login");
+        }).build();
     }
 
     @Bean
