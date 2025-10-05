@@ -9,6 +9,7 @@ import com.vaadin.flow.server.AppShellSettings;
 import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.flow.shared.ui.Transport;
 import com.vaadin.flow.theme.Theme;
+import java.util.List;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -50,6 +51,12 @@ public class Arachne implements AppShellConfigurator {
 
     @Override
     public void configurePage(AppShellSettings settings) {
-        settings.addFavIcon("icon", "icons/arachne.png", "64x64");
+        List
+                .of(16, 32, 48, 64, 120, 144, 152, 180, 192, 512)
+                .forEach((size) -> {
+                    String fileName = "icons/arachne.png?size=%d".formatted(size);
+                    String sizesString = "%dx%d".formatted(size, size);
+                    settings.addFavIcon("icon", fileName, sizesString);
+                });
     }
 }
