@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.8
+Version:        1.4.9
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri Oct 17 2025 Claas Nieslony <github@nieslony.at> 1.4.9-1
+- Bump dependency versions (github@nieslony.at)
+- Add dark favicons (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+
 * Wed Oct 01 2025 root@len-pf287tj6.nieslony.internal <github@nieslony.at> 1.4.8-1
 - Transparent background (github@nieslony.at)
 - Bump vaadin version (github@nieslony.at)
