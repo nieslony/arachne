@@ -47,8 +47,6 @@ import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +88,6 @@ public class FirewallWhere {
     private Long id;
 
     @ManyToOne
-    @Cascade(CascadeType.ALL)
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 

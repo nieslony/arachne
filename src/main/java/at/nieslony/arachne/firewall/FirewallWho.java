@@ -28,8 +28,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 /**
  *
@@ -46,7 +44,6 @@ public class FirewallWho {
     private Long id;
 
     @ManyToOne
-    @Cascade(CascadeType.ALL)
     @JoinColumn(name = "firewallRules_id")
     private FirewallRuleModel firewallRule;
 
