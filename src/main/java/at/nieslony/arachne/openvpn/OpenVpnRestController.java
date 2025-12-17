@@ -98,13 +98,13 @@ public class OpenVpnRestController {
                     openVpnController.openVpnUserConfigShell(username);
                 default ->
                     throw new ResponseStatusException(
-                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            HttpStatus.UNPROCESSABLE_CONTENT,
                             "Cannot get user config");
             };
         } catch (PkiException | JSONException ex) {
             logger.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     "Cannot get user config");
         }
     }

@@ -61,12 +61,12 @@ public class UserRestController {
     public UserModel create(@RequestBody UserModel user) {
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     MSG_USERNAME_EMPTY);
         }
         if (userRepository.findByUsername(user.getUsername()) != null) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     MSG_USER_ALREADY_EXISTS.formatted(user.getUsername())
             );
         }
@@ -85,13 +85,13 @@ public class UserRestController {
 
         if (user.getUsername() == null || user.getUsername().isEmpty()) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     MSG_USERNAME_EMPTY);
         }
         if (!user.getUsername().equals(newUser.getUsername())
                 && userRepository.findByUsername(newUser.getUsername()) != null) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     MSG_USER_ALREADY_EXISTS.formatted(newUser.getUsername())
             );
         }

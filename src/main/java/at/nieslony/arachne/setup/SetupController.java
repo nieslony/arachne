@@ -151,7 +151,7 @@ public class SetupController {
             pki.fromSetupData(setupData);
         } catch (CertSpecsValidationException ex) {
             log.error("Setup failed: " + ex.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         }
 
         File dhParamsFile = new File(folderFactory.getVpnConfigDir("dh.pem"));
