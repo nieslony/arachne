@@ -35,8 +35,6 @@ import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.FolderFactory;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +46,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -200,80 +200,72 @@ public class SetupController {
     public void restore(byte[] data) {
         log.info("Starting restore");
         ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            JsonNode node = objectMapper.readTree(data);
-            node.forEachEntry((String key, JsonNode value) -> {
-                log.info("Restoring " + key);
-                try {
-                    switch (key) {
-                        case "roleRules" -> {
-                            var reader = objectMapper.readerForListOf(RoleRuleModel.class);
-                            roleRuleRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "settings" -> {
-                            var reader = objectMapper.readerForListOf(SettingsModel.class);
-                            settingsRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "recurringTasks" -> {
-                            var reader = objectMapper.readerForListOf(RecurringTaskModel.class);
-                            recurringTasksRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "tasks" -> {
-                            var reader = objectMapper.readerForListOf(TaskModel.class);
-                            taskRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "firewallRules" -> {
-                            var reader = objectMapper.readerForListOf(FirewallRuleModel.class);
-                            firewallRuleRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "users" -> {
-                            var reader = objectMapper.readerForListOf(UserModel.class);
-                            userRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "keys" -> {
-                            var reader = objectMapper.readerForListOf(KeyModel.class);
-                            keyRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "certificates" -> {
-                            var reader = objectMapper.readerForListOf(CertificateModel.class);
-                            certificateRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "sshKeys" -> {
-                            var reader = objectMapper.readerFor(SshKeyEntity.class);
-                            SshKeyRepository.saveAll(
-                                    reader.readValue(value)
-                            );
-                        }
-                        case "version" -> {
-                            int version = value.asInt();
-                            log.info("We restore back version " + String.valueOf(version));
-                        }
-                        default ->
-                            log.info("Unhandled key: " + key);
-                    }
-                } catch (IOException ex) {
-                    log.error("Cannot read value: " + ex.getMessage());
+        JsonNode node = objectMapper.readTree(data);
+        node.forEachEntry((String key, JsonNode value) -> {
+            log.info("Restoring " + key);
+            switch (key) {
+                case "roleRules" -> {
+                    var reader = objectMapper.readerForListOf(RoleRuleModel.class);
+                    roleRuleRepository.saveAll(
+                            reader.readValue(value)
+                    );
                 }
-            });
-        } catch (IOException ex) {
-            log.error("Error reading json: " + ex.getMessage());
-        }
+                case "settings" -> {
+                    var reader = objectMapper.readerForListOf(SettingsModel.class);
+                    settingsRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "recurringTasks" -> {
+                    var reader = objectMapper.readerForListOf(RecurringTaskModel.class);
+                    recurringTasksRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "tasks" -> {
+                    var reader = objectMapper.readerForListOf(TaskModel.class);
+                    taskRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "firewallRules" -> {
+                    var reader = objectMapper.readerForListOf(FirewallRuleModel.class);
+                    firewallRuleRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "users" -> {
+                    var reader = objectMapper.readerForListOf(UserModel.class);
+                    userRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "keys" -> {
+                    var reader = objectMapper.readerForListOf(KeyModel.class);
+                    keyRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "certificates" -> {
+                    var reader = objectMapper.readerForListOf(CertificateModel.class);
+                    certificateRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "sshKeys" -> {
+                    var reader = objectMapper.readerFor(SshKeyEntity.class);
+                    SshKeyRepository.saveAll(
+                            reader.readValue(value)
+                    );
+                }
+                case "version" -> {
+                    int version = value.asInt();
+                    log.info("We restore back version " + String.valueOf(version));
+                }
+                default ->
+                    log.info("Unhandled key: " + key);
+            }
+        });
         log.info("Restarting server");
         Arachne.restart();
         log.info("Restore completed");

@@ -20,8 +20,6 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.UserModel;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
@@ -36,6 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -54,7 +54,7 @@ public class TokenController {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonStr = objectMapper.writeValueAsString(authTokenContent);
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             log.error("Cannot create json object: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -142,7 +142,7 @@ public class TokenController {
                 | SettingsException
                 | SignatureException
                 | CMSException
-                | JsonProcessingException ex) {
+                | JacksonException ex) {
             log.error("Cannot verify token: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }

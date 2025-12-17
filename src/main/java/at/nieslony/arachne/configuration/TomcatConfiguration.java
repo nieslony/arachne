@@ -5,7 +5,6 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.PreAuthSettings;
-import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -27,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.ajp.AbstractAjpProtocol;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -41,10 +41,9 @@ import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,16 +53,11 @@ import org.springframework.context.annotation.Configuration;
  * @author claas
  */
 @Configuration
+@Slf4j
 public class TomcatConfiguration {
-
-    private static final org.slf4j.Logger logger
-            = LoggerFactory.getLogger(TomcatConfiguration.class);
 
     @Autowired
     Settings settings;
-
-    @Autowired
-    Pki pki;
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -74,7 +68,7 @@ public class TomcatConfiguration {
     private KeyPair createSslKey() {
 
         try {
-            logger.info("Creating RSA key " + tomcatKeyPath);
+            log.info("Creating RSA key " + tomcatKeyPath);
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
                     "RSA"
             );
@@ -93,7 +87,7 @@ public class TomcatConfiguration {
 
             return keyPair;
         } catch (NoSuchAlgorithmException | IOException ex) {
-            logger.error("Cannot write key to %s: %s".formatted(
+            log.error("Cannot write key to %s: %s".formatted(
                     tomcatKeyPath, ex.getMessage()
             ));
             return null;
@@ -101,7 +95,7 @@ public class TomcatConfiguration {
     }
 
     private void createSslCertificate(KeyPair keyPair) {
-        logger.info("Creating SSL certificate " + tomcatCertPath);
+        log.info("Creating SSL certificate " + tomcatCertPath);
         X509Certificate cert;
 
         String myHostname = NetUtils.myHostname();
@@ -135,14 +129,14 @@ public class TomcatConfiguration {
             cert = new JcaX509CertificateConverter()
                     .getCertificate(certHolder);
         } catch (CertIOException | OperatorCreationException | CertificateException ex) {
-            logger.error("Cannor create certificate: " + ex.getMessage());
+            log.error("Cannor create certificate: " + ex.getMessage());
             return;
         }
         try (JcaPEMWriter pemWriter
                 = new JcaPEMWriter(new FileWriter(tomcatCertPath))) {
             pemWriter.writeObject(cert);
         } catch (IOException ex) {
-            logger.error("Cannot write certificate ti %s: %s"
+            log.error("Cannot write certificate ti %s: %s"
                     .formatted(tomcatCertPath, ex.getMessage())
             );
         }
@@ -155,7 +149,7 @@ public class TomcatConfiguration {
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
         if (tomcatSettings.isHttpsConnectorEnabled()) {
-            logger.info("Enabling Tomcat SSL");
+            log.info("Enabling Tomcat SSL");
             if (!Files.exists(Paths.get(tomcatKeyPath))) {
                 KeyPair keyPair = createSslKey();
                 createSslCertificate(keyPair);
@@ -172,9 +166,9 @@ public class TomcatConfiguration {
             Connector httpConnector = new Connector();
             httpConnector.setPort(8080);
             httpConnector.setRedirectPort(8443);
-            tomcat.addAdditionalTomcatConnectors(httpConnector);
+            tomcat.addAdditionalConnectors(httpConnector);
         } else {
-            logger.info("Tomcat SSL is disabled");
+            log.info("Tomcat SSL is disabled");
         }
 
         if (tomcatSettings.isEnableAjpConnector()) {
@@ -195,7 +189,7 @@ public class TomcatConfiguration {
             }
             ajpProtocol.setAllowedRequestAttributesPattern(".*");
 
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            tomcat.addAdditionalConnectors(ajpConnector);
         }
 
         return tomcat;
