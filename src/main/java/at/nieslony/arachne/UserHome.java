@@ -39,8 +39,7 @@ import com.vaadin.flow.server.streams.DownloadResponse;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.atomic.AtomicReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,12 +52,10 @@ import org.vaadin.olli.ClipboardHelper;
 @Route(value = "user-home")
 @PageTitle("Arachne | User Home")
 @RolesAllowed("USER")
+@Slf4j
 public class UserHome extends VerticalLayout implements RouterLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserHome.class);
-
     private final OpenVpnController openVpnRestController;
-    private final Settings settings;
     private final OpenVpnUserSettings openVpnUserSettings;
     private final int ICON_SIZE_SMALL = 32;
     private final int ICON_SIZE_LARGE = 96;
@@ -67,7 +64,6 @@ public class UserHome extends VerticalLayout implements RouterLayout {
             OpenVpnController openVpnRestController,
             Settings settings
     ) {
-        this.settings = settings;
         this.openVpnRestController = openVpnRestController;
         this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
@@ -87,7 +83,7 @@ public class UserHome extends VerticalLayout implements RouterLayout {
                 content.add(networkManagerPage);
             }
         });
-        //tabs.setOrientation(Tabs.Orientation.VERTICAL);
+
         if (VaadinSession.getCurrent().getBrowser().isLinux()) {
             tabs.setSelectedTab(networkManagerTab);
         } else {
