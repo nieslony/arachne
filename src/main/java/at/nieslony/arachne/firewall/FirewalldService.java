@@ -279,7 +279,7 @@ public class FirewalldService {
         Popover popover = new Popover();
         popover.setTarget(parent);
         popover.setPosition(PopoverPosition.END);
-        popover.addThemeVariants(PopoverVariant.ARROW);
+        popover.addThemeVariants(PopoverVariant.LUMO_ARROW);
         popover.setOpenOnClick(false);
         popover.setOpenOnHover(true);
         popover.setWidth("32em");
