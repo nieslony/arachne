@@ -90,10 +90,10 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
         H1 pageTitle = new H1("Arachne");
         pageTitle.getStyle()
-                .set("font-size", "var(--lumo-font-size-l)")
+                .set("font-size", "var(--aura-font-size-l)")
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+        menuBar.addThemeVariants(MenuBarVariant.AURA_TERTIARY);
         MenuItem item = menuBar.addItem(userInfo);
         SubMenu userMenu = item.getSubMenu();
         userMenu.addItem("Logout", click -> {

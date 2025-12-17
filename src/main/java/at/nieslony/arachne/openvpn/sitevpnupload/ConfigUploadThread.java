@@ -33,17 +33,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public abstract class ConfigUploadThread extends Thread {
-
-    private static final Logger logger = LoggerFactory.getLogger(ConfigUploadThread.class);
 
     protected record CommandReturn(String stdout, String stderr, int exitStatus) {
 
@@ -138,7 +136,7 @@ public abstract class ConfigUploadThread extends Thread {
                 (e) -> uploadingDlg.close()
         );
         closeButton.setVisible(false);
-        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         uploadingDlg.add(
                 commandsItems,
@@ -237,7 +235,7 @@ public abstract class ConfigUploadThread extends Thread {
                             session.setConfig("StrictHostKeyChecking", "no");
                             session.setConfig("PreferredAuthentications", "publickey,password");
                             session.connect();
-                            logger.info("Connected.");
+                            log.info("Connected.");
                         } catch (JSchException ex) {
                             throw new CommandException(
                                     "Cannot connect to " + uploadSettings.getVpnSite().getUploadToHost(),
@@ -301,8 +299,8 @@ public abstract class ConfigUploadThread extends Thread {
                 });
                 StringWriter wr = new StringWriter();
                 ex.printStackTrace(new PrintWriter(wr));
-                logger.error(ex.getMessage());
-                logger.error(wr.toString());
+                log.error(ex.getMessage());
+                log.error(wr.toString());
             }
         } finally {
             if (session != null) {

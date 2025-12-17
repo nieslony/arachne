@@ -3,12 +3,13 @@
  */
 package at.nieslony.arachne;
 
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.AppShellSettings;
 import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.flow.shared.ui.Transport;
-import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.aura.Aura;
 import java.util.List;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
@@ -23,7 +24,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @EnableJpaRepositories("at.nieslony.arachne")
 @EntityScan("at.nieslony.arachne")
-@Theme(value = "arachne")
+@StyleSheet(Aura.STYLESHEET)
 @SpringBootApplication
 @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC)
 public class Arachne implements AppShellConfigurator {

@@ -61,8 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.InvalidNameException;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.AttributesMapper;
@@ -76,18 +75,15 @@ import org.springframework.security.core.AuthenticationException;
 @Route(value = "ldap-settings", layout = ViewTemplate.class)
 @PageTitle("LDAP User Source")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class LdapView extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(LdapView.class);
-
-    private final Settings settings;
     private final LdapSettings ldapSettings;
     private final LdapController ldapController;
     private Binder<LdapSettings> binder;
     Button saveButton;
 
     public LdapView(Settings settings, LdapController ldapController) {
-        this.settings = settings;
         this.ldapController = ldapController;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
@@ -108,11 +104,11 @@ public class LdapView extends VerticalLayout {
                     try {
                         binder.getBean().save(settings);
                     } catch (SettingsException ex) {
-                        logger.error("Cannot save ldap settings: " + ex.getMessage());
+                        log.error("Cannot save ldap settings: " + ex.getMessage());
                     }
                 }
         );
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         enableLdapUserSource.addValueChangeListener(e -> {
             tabSheet.setVisible(e.getValue());
@@ -332,7 +328,7 @@ public class LdapView extends VerticalLayout {
                             );
                         }
                     } catch (NamingException ex) {
-                        logger.error("DNS lookup failed: " + ex.getMessage());
+                        log.error("DNS lookup failed: " + ex.getMessage());
                     }
                     return ret;
                 }
@@ -418,7 +414,7 @@ public class LdapView extends VerticalLayout {
                                         keytabPath.getValue(),
                                         exMsg
                                 );
-                        logger.error(header + ex.getMessage());
+                        log.error(header + ex.getMessage());
                         ShowNotification.error(header, ex.getMessage());
                     }
                 }
@@ -490,17 +486,17 @@ public class LdapView extends VerticalLayout {
             templ.lookup(ldapSettings.getBaseDn());
             ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
-            logger.error("Authentication failed: " + ex.getMessage());
+            log.error("Authentication failed: " + ex.getMessage());
             ShowNotification.error("Connection failed", ex.getMessage());
         } catch (NameNotFoundException ex) {
             String header = "Name not found. Maybe wrong base dn. ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         } catch (InvalidNameException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             ShowNotification.error("Invalid Name", ex.getMessage());
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             ShowNotification.error("Connection failed", ex.getMessage());
         }
     }
@@ -515,7 +511,7 @@ public class LdapView extends VerticalLayout {
                     filter,
                     (AttributesMapper<Map<String, String>>) attrs -> {
                         Map<String, String> groupInfo = new HashMap<>();
-                        logger.info(attrs.toString());
+                        log.info(attrs.toString());
                         Attribute attr;
                         attr = attrs.get(ldapSettings.getGroupsAttrName());
                         if (attr != null) {
@@ -550,14 +546,14 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();
 
         } catch (Exception ex) {
             String header = "LDAP search failed: ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }
@@ -571,7 +567,7 @@ public class LdapView extends VerticalLayout {
                     filter,
                     (AttributesMapper<Map<String, String>>) attrs -> {
                         Map<String, String> userInfo = new HashMap<>();
-                        logger.info(attrs.toString());
+                        log.info(attrs.toString());
                         Attribute attr;
                         attr = attrs.get(ldapSettings.getUsersAttrUsername());
                         if (attr != null) {
@@ -609,14 +605,14 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();
 
         } catch (Exception ex) {
             String header = "LDAP search failed: ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }

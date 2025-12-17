@@ -89,7 +89,6 @@ public class UserHome extends VerticalLayout implements RouterLayout {
         } else {
             tabs.setSelectedTab(ovpnTab);
         }
-        //tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
 
         VerticalLayout tabsLayout = new VerticalLayout(tabs, content);
         tabsLayout.setMargin(false);

@@ -52,10 +52,9 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -64,9 +63,8 @@ import org.slf4j.LoggerFactory;
 @Route(value = "userVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN User VPN")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class OpenVpnUserView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnUserView.class);
 
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
@@ -86,7 +84,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Button saveSettings = new Button("Save and restart VPN");
         saveSettings.setTooltipText("All active conections will reconnect after restart");
-        saveSettings.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveSettings.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
         });
@@ -104,10 +102,10 @@ public class OpenVpnUserView extends VerticalLayout {
                     arachneDbus.restartServer(ArachneDbus.ServerType.USER);
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
-                    logger.error("Cannot save openvpn user settings: " + ex.getMessage());
+                    log.error("Cannot save openvpn user settings: " + ex.getMessage());
                 } catch (DBusException | DBusExecutionException ex) {
                     String header = "Cannot restart openVpn";
-                    logger.error(header + ": " + ex.getMessage());
+                    log.error(header + ": " + ex.getMessage());
                     ShowNotification.error(header, ex.getMessage());
                 }
             }
@@ -245,7 +243,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 (e) -> nameHints.setOpened(!nameHints.isOpened())
         );
         showTooltip.addThemeVariants(
-                ButtonVariant.LUMO_TERTIARY_INLINE,
+                ButtonVariant.AURA_TERTIARY,
                 ButtonVariant.LUMO_ICON
         );
         name.setSuffixComponent(showTooltip);

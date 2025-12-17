@@ -66,8 +66,7 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -82,9 +81,8 @@ import org.vaadin.pekka.WysiwygE;
 @Route(value = "mail-settings", layout = ViewTemplate.class)
 @PageTitle("E-Mail Settings")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class MailSettingsView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(MailSettingsView.class);
 
     private final UserRepository userRepository;
     private final MailSettingsRestController mailSettingsRestController;
@@ -115,10 +113,10 @@ public class MailSettingsView extends VerticalLayout {
             try {
                 mailSettings.save(settings);
             } catch (SettingsException ex) {
-                logger.error("Cannot save mail settings: " + ex.getMessage());
+                log.error("Cannot save mail settings: " + ex.getMessage());
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         buttons = new HorizontalLayout();
         buttons.add(saveButton);
@@ -249,7 +247,7 @@ public class MailSettingsView extends VerticalLayout {
             sendTestMail(recipiend.getValue());
             dlg.close();
         });
-        sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        sendButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         sendButton.setAutofocus(true);
         sendButton.setDisableOnClick(true);
         sendButton.setEnabled(false);
@@ -310,14 +308,14 @@ public class MailSettingsView extends VerticalLayout {
             if (!forUser.getRoles().contains(Role.USER.name())) {
                 String msg = "User %s does not have role '%s', cannot sent config"
                         .formatted(username, Role.USER.toString());
-                logger.error(msg);
+                log.error(msg);
                 ShowNotification.error("Error", msg);
             } else {
                 sendTestConfig(forUser, recipiend.getValue());
             }
             dlg.close();
         });
-        sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        sendButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         sendButton.setAutofocus(true);
         sendButton.setDisableOnClick(true);
         sendButton.setEnabled(false);
@@ -477,7 +475,7 @@ public class MailSettingsView extends VerticalLayout {
             );
         } catch (IOException | MessagingException | PkiException | SettingsException ex) {
             String header = "Cannot send Test Mail";
-            logger.error(header + ": " + ex.getMessage());
+            log.error(header + ": " + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }
@@ -500,14 +498,14 @@ public class MailSettingsView extends VerticalLayout {
                 """.formatted(to, mailSettings.getSenderDisplayname()));
 
         try {
-            logger.info("Sending Mail from %s to %s.".formatted(from, to));
+            log.info("Sending Mail from %s to %s.".formatted(from, to));
             mailSender.send(message);
             String msg = "Test Mail sent from %s to %s.".formatted(from, to);
-            logger.info(msg);
+            log.info(msg);
             ShowNotification.info(msg);
         } catch (MailException ex) {
             String header = "Cannot send Test Mail";
-            logger.error(header + ": " + ex.getMessage());
+            log.error(header + ": " + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }

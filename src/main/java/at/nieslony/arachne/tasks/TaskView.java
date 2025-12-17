@@ -49,7 +49,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -60,7 +60,7 @@ import org.springframework.data.domain.Pageable;
 @Route(value = "tasks", layout = ViewTemplate.class)
 @PageTitle("All Tasks")
 @RolesAllowed("ADMIN")
-@Log4j2
+@Slf4j
 public class TaskView
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
@@ -280,7 +280,7 @@ public class TaskView
             taskModel.setScheduled(date);
             onOk.run();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

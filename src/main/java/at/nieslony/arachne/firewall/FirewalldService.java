@@ -42,8 +42,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -54,9 +53,8 @@ import org.w3c.dom.NodeList;
  */
 @Getter
 @Setter
+@Slf4j
 public class FirewalldService {
-
-    private static final Logger logger = LoggerFactory.getLogger(FirewalldService.class);
 
     public record Port(int port, String protocol) {
 
@@ -258,7 +256,7 @@ public class FirewalldService {
                                 new FirewalldService(serviceName, doc)
                         );
                     } catch (Exception ex) {
-                        logger.error(
+                        log.error(
                                 "Cannot parse %s: %s"
                                         .formatted(path.toString(), ex.getMessage())
                         );
@@ -266,7 +264,7 @@ public class FirewalldService {
                 }
             }
         } catch (Exception ex) {
-            logger.error(
+            log.error(
                     "Error reading files from %s: %s"
                             .formatted(
                                     firewalldServiceDir,
@@ -279,7 +277,7 @@ public class FirewalldService {
         Popover popover = new Popover();
         popover.setTarget(parent);
         popover.setPosition(PopoverPosition.END);
-        popover.addThemeVariants(PopoverVariant.LUMO_ARROW);
+        popover.addThemeVariants(PopoverVariant.AURA_ARROW);
         popover.setOpenOnClick(false);
         popover.setOpenOnHover(true);
         popover.setWidth("32em");

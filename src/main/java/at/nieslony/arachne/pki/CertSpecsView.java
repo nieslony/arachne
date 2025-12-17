@@ -34,23 +34,21 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.StringWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 @Route(value = "cert-specs", layout = ViewTemplate.class)
 @RolesAllowed("ADMIN")
 public class CertSpecsView
         extends VerticalLayout
         implements HasUrlParameter<String>, HasDynamicTitle {
-
-    private static final Logger logger = LoggerFactory.getLogger(CertSpecsView.class);
 
     private CertSpecs.CertSpecType certSpecType;
     private final Settings settings;
@@ -144,11 +142,11 @@ public class CertSpecsView
                 try {
                     certSpecs.save(settings);
                 } catch (SettingsException ex) {
-                    logger.error("Cannot save settings: " + ex.getMessage());
+                    log.error("Cannot save settings: " + ex.getMessage());
                 }
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         add(
                 formLayout,
@@ -180,7 +178,7 @@ public class CertSpecsView
             CertSpecs certSpecs = new CertSpecs(settings, certSpecType);
             binder.setBean(certSpecs);
         } catch (SettingsException ex) {
-            logger.error("Cannot create cert specs: " + ex.getMessage());
+            log.error("Cannot create cert specs: " + ex.getMessage());
         }
     }
 

@@ -386,7 +386,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         binder.addStatusChangeListener((sce) -> {
             saveBasicsButton.setEnabled(sce.getBinder().isValid());
         });
-        saveBasicsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveBasicsButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(listenLayout,
@@ -531,7 +531,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteSettingsTab.setWidthFull();
 
         Button saveSitesButton = new Button("Save Site", (e) -> onSaveSite());
-        saveSitesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveSitesButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         layout.add(
                 sitesLayout,
@@ -596,7 +596,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 onOk.accept(site);
             }
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();
@@ -1055,7 +1055,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button closeButton = new Button("Close", (e) -> {
             dlg.close();
         });
-        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         dlg.getFooter().add(closeButton);
 
         return dlg;

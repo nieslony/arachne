@@ -50,7 +50,7 @@ public class AddSshKeyDialog extends Dialog {
             }
             close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         okButton.setAutofocus(true);
 
         Button cancelButton = new Button("Cancel", (e) -> close());

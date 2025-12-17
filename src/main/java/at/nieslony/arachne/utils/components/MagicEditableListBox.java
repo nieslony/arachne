@@ -24,19 +24,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  * @param <T>
  */
+@Slf4j
 public class MagicEditableListBox<T extends Object>
         extends AbstractCompositeField<VerticalLayout, MagicEditableListBox<T>, List<T>>
         implements HasSize {
-
-    private static final Logger logger = LoggerFactory.getLogger(MagicEditableListBox.class);
 
     private ListBox<T> itemsField;
     private Button clearButton;
@@ -77,7 +75,7 @@ public class MagicEditableListBox<T extends Object>
                 listBox.updateModelValue(new LinkedList<>(items));
                 close();
             });
-            okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
             Button cancelButton = new Button("Cancel", (e) -> {
                 close();
             });
@@ -174,7 +172,7 @@ public class MagicEditableListBox<T extends Object>
             try {
                 value = valueClass.getDeclaredConstructor().newInstance();
             } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException | SecurityException | InvocationTargetException ex) {
-                logger.error("cannot create new instance: " + ex.getMessage());
+                log.error("cannot create new instance: " + ex.getMessage());
                 return;
             }
         }

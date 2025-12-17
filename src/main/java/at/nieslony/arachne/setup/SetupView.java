@@ -41,8 +41,8 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -50,10 +50,8 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * @author claas
  */
+@Slf4j
 public class SetupView extends VerticalLayout {
-
-    private static final org.slf4j.Logger logger
-            = LoggerFactory.getLogger(SetupView.class);
 
     private TextField caCommonName;
     private TextField caOrganizationalUnit;
@@ -120,7 +118,7 @@ public class SetupView extends VerticalLayout {
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next", new Icon(VaadinIcon.ARROW_RIGHT));
         next.setIconAfterText(true);
-        next.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        next.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         next.addClickListener((t) -> {
             int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
@@ -455,7 +453,7 @@ public class SetupView extends VerticalLayout {
 
         finish = new Button("Finish");
         finish.setDisableOnClick(true);
-        finish.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        finish.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         finish.addClickListener((var t) -> {
             SetupData setupData = new SetupData();
 
@@ -492,10 +490,10 @@ public class SetupView extends VerticalLayout {
             try {
                 setupController.setupArachne(setupData);
             } catch (SettingsException ex) {
-                logger.error("Cannot during setup: " + ex.getMessage());
+                log.error("Cannot during setup: " + ex.getMessage());
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            logger.info("Redirecting to /");
+            log.info("Redirecting to /");
             getUI().get().navigate(AdminHome.class);
         });
 
@@ -522,7 +520,7 @@ public class SetupView extends VerticalLayout {
                     FileInputStream fis = new FileInputStream(restorePath.toString());
                     setupController.restore(fis.readAllBytes());
                 } catch (IOException ex) {
-                    logger.error(
+                    log.error(
                             "Cannot read %s: %s"
                                     .formatted(
                                             restorePath.toString(),
@@ -544,7 +542,7 @@ public class SetupView extends VerticalLayout {
             upload.setAcceptedFileTypes("application/json", ".json");
             upload.addFileRejectedListener(event -> {
                 String errorMessage = event.getErrorMessage();
-                logger.error(errorMessage);
+                log.error(errorMessage);
                 ShowNotification.error("Cannot upload backup", errorMessage);
             });
 

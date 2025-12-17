@@ -16,16 +16,14 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.Style;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class ShowNotification {
-
-    private static final Logger logger = LoggerFactory.getLogger(ShowNotification.class);
 
     public static void info(String msgText) {
         createInfo(msgText, new Text("")).open();
@@ -111,7 +109,7 @@ public class ShowNotification {
     private static Button createCloseButton(Notification notification) {
         Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create(),
                 clickEvent -> notification.close());
-        closeBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeBtn.addThemeVariants(ButtonVariant.AURA_TERTIARY);
 
         return closeBtn;
     }

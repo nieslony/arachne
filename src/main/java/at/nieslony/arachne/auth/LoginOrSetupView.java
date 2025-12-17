@@ -20,7 +20,7 @@ import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -28,12 +28,10 @@ import org.slf4j.LoggerFactory;
  */
 @Route("login")
 @AnonymousAllowed
+@Slf4j
 public class LoginOrSetupView
         extends VerticalLayout
         implements HasDynamicTitle, BeforeEnterObserver {
-
-    private static final org.slf4j.Logger logger
-            = LoggerFactory.getLogger(LoginOrSetupView.class);
 
     private final SetupController setupController;
     private final FolderFactory folderFactory;
@@ -58,7 +56,7 @@ public class LoginOrSetupView
     }
 
     private void createLogin() {
-        logger.info("Create login page");
+        log.info("Create login page");
         login = new LoginOverlay();
         removeAll();
         KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
@@ -78,15 +76,15 @@ public class LoginOrSetupView
                         login.setOpened(false);
                         var vaadinSession = VaadinSession.getCurrent();
                         if (vaadinSession != null) try {
-                            logger.info("Invalidating vaadon session");
+                            log.info("Invalidating vaadon session");
                             vaadinSession.close();
                         } catch (IllegalStateException ex) {
-                            logger.info("Vaadin session already invalidated");
+                            log.info("Vaadin session already invalidated");
                         }
                         UI.getCurrent().getPage().setLocation("/arachne");
                     }
             );
-            toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            toSSoButton.addThemeVariants(ButtonVariant.AURA_TERTIARY);
             toSSoButton.setWidthFull();
             login.getFooter().add(toSSoButton);
         }
@@ -109,7 +107,7 @@ public class LoginOrSetupView
             }
             add(login);
         } else {
-            logger.info("Show SetupView");
+            log.info("Show SetupView");
             title = "Setup | Arachne";
             add(new SetupView(setupController, folderFactory));
         }

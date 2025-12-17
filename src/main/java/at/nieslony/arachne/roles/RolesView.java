@@ -5,7 +5,6 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
@@ -40,8 +39,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -50,14 +48,12 @@ import org.slf4j.LoggerFactory;
 @Route(value = "roles", layout = ViewTemplate.class)
 @PageTitle("Roles")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class RolesView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(RolesView.class);
 
     final private RoleRuleRepository roleRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
     final private LdapSettings ldapSettings;
-    final private LdapController ldapController;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -68,13 +64,11 @@ public class RolesView extends VerticalLayout {
     public RolesView(
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            Settings settings,
-            LdapController ldapController
+            Settings settings
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
-        this.ldapController = ldapController;
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -271,7 +265,7 @@ public class RolesView extends VerticalLayout {
             roleRuleRepository.save(roleRule);
             roleRules.setItems(roleRuleRepository.findAll());
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         Button cancelButton = new Button("Cancel", e -> {
             dialog.close();
         });

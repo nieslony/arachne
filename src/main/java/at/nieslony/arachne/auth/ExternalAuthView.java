@@ -43,7 +43,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -55,8 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -66,9 +64,8 @@ import org.springframework.util.ObjectUtils;
 @Route(value = "kerberos", layout = ViewTemplate.class)
 @PageTitle("External Authentication")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class ExternalAuthView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(ExternalAuthView.class);
 
     private final Settings settings;
     private final TomcatService tomcatService;
@@ -129,7 +126,7 @@ public class ExternalAuthView extends VerticalLayout {
                 "Save and Restart Arachne",
                 e -> onSaveAndRestart()
         );
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
         saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();
@@ -179,7 +176,7 @@ public class ExternalAuthView extends VerticalLayout {
                         KeytabFile keytabFile = new KeytabFile(filename);
                         Set<String> principals = keytabFile.getPrincipals();
                         servicePrincipalField.setItems(principals);
-                        logger.info(
+                        log.info(
                                 "Found principals in %s: %s"
                                         .formatted(filename, principals)
                         );
@@ -192,7 +189,7 @@ public class ExternalAuthView extends VerticalLayout {
                         String header = "Cannot read %s: %s"
                                 .formatted(filename, ex.getMessage()
                                 );
-                        logger.error(header + ex.getMessage());
+                        log.error(header + ex.getMessage());
                         ShowNotification.error(header, ex.getMessage());
                     }
                     kerberosBinder.validate();
@@ -260,7 +257,6 @@ public class ExternalAuthView extends VerticalLayout {
 
         preAuthSource = new RadioButtonGroup<>();
         preAuthSource.setLabel("Authentication Source");
-        preAuthSource.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         preAuthSource.setItems(PreAuthSettings.PreAuthSource.values());
         preAuthSource.setWidthFull();
         preAuthSource.addValueChangeListener((e) -> {
@@ -341,7 +337,7 @@ public class ExternalAuthView extends VerticalLayout {
             Notification.show("Restarting Arachne");
             Arachne.restart();
         } catch (SettingsException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
         }
     }
 }

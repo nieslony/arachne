@@ -36,8 +36,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -46,9 +45,8 @@ import org.slf4j.LoggerFactory;
 @Route(value = "recurring-tasks", layout = ViewTemplate.class)
 @PageTitle("Recurring Tasks")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class RecurringTasksView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(RecurringTaskModel.class);
 
     public RecurringTasksView(RecurringTasksRepository recurringTaskRepository) {
         Grid<RecurringTaskModel> grid = new Grid<>();
@@ -209,12 +207,12 @@ public class RecurringTasksView extends VerticalLayout {
             try {
                 binder.writeBean(model);
             } catch (ValidationException ex) {
-                logger.error("Cannot write recurring task settings: " + ex.getMessage());
+                log.error("Cannot write recurring task settings: " + ex.getMessage());
             }
             onSave.accept(model);
             dlg.close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

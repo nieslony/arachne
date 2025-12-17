@@ -4,9 +4,9 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
+import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
@@ -31,8 +31,7 @@ import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -46,9 +45,8 @@ import org.springframework.web.context.annotation.SessionScope;
  */
 @Service
 @SessionScope
+@Slf4j
 public class SiteConfigUploader implements BeanFactoryAware {
-
-    private static final Logger logger = LoggerFactory.getLogger(SiteConfigUploader.class);
 
     private Dialog dlg;
     private Binder<SiteUploadSettings> binder;
@@ -263,10 +261,10 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 vpnSiteRepository.save(uploadSettings.getVpnSite());
                 thread.start();
             } catch (ValidationException ex) {
-                logger.error("Input validation Error: " + ex.getMessage());
+                log.error("Input validation Error: " + ex.getMessage());
             }
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();
