@@ -44,8 +44,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.annotation.security.PermitAll;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -55,9 +55,9 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author claas
  */
 @JsModule("./os-theme-switcher.js")
+@PermitAll
+@Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
-
-    private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
@@ -82,8 +82,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         String username = authentication.getName();
         String userInfo;
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        if (userDetails instanceof ArachneUserDetails aud) {
+        if (authentication.getPrincipal() instanceof ArachneUserDetails aud) {
             userInfo = "%s (%s)".formatted(aud.getDisplayName(), username);
         } else {
             userInfo = username;
@@ -106,7 +105,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 userMenu.addItem("Change Password...", click -> changePassword());
             }
         } else {
-            logger.warn("Cannot find user %s in user repository".formatted(username));
+            log.warn("Cannot find user %s in user repository".formatted(username));
         }
         if (!userMenu.getItems().isEmpty()) {
             userMenu.addSeparator();
