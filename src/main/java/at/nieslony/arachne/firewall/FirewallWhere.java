@@ -273,7 +273,7 @@ public class FirewallWhere {
             Popover popover = new Popover(info);
             popover.setTarget(parent);
             popover.setPosition(PopoverPosition.END);
-            popover.addThemeVariants(PopoverVariant.ARROW);
+            popover.addThemeVariants(PopoverVariant.LUMO_ARROW);
             popover.setOpenOnClick(false);
             popover.setOpenOnHover(true);
             popover.setWidth("32em");
