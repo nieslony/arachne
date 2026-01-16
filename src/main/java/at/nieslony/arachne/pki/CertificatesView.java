@@ -18,13 +18,14 @@ package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -56,35 +57,36 @@ public class CertificatesView extends VerticalLayout {
                 .addColumn(CertificateModel::getValidTo)
                 .setHeader("Valid to");
         grid
-                .addColumn((source) -> {
-                    if (source.getRevocationDate() == null) {
-                        return "no";
-                    } else {
-                        return source.getRevocationDate().toString();
-                    }
-                })
-                .setHeader("Is Revoked");
+                .addColumn(new ComponentRenderer<>(
+                        (var model) -> {
+                            YesNoIcon icon = new YesNoIcon();
+                            icon.setValue(model.getRevocationDate() == null);
+                            return icon;
+                        }))
+                .setHeader("Is Valid")
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         grid
                 .addColumn(CertificateModel::getCertType)
                 .setHeader("Type");
-
         grid
-                .addComponentColumn((source) -> {
-                    MenuBar menuBar = new MenuBar();
-                    menuBar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
-                    MenuItem menuItem = menuBar.addItem("Actions");
-                    SubMenu actionsMenu = menuItem.getSubMenu();
-                    actionsMenu.addItem("Revoke", (e) -> {
-                        if (source.getRevocationDate() == null) {
-                            source.setRevocationDate(new Date());
-                            certificateReposttory.save(source);
-                            grid.getDataProvider().refreshItem(source);
-                            openVpnRestController.writeCrl();
-                        }
-                    });
+                .addColumn(new ComponentRenderer<>(
+                        (var model) -> {
+                            MenuBar menuBar = new MenuBar();
+                            MenuItem menuItem = menuBar.addItem("Actions");
+                            SubMenu actionsMenu = menuItem.getSubMenu();
+                            actionsMenu.addItem("Revoke", (e) -> {
+                                if (model.getRevocationDate() == null) {
+                                    model.setRevocationDate(new Date());
+                                    certificateReposttory.save(model);
+                                    grid.getDataProvider().refreshItem(model);
+                                    openVpnRestController.writeCrl();
+                                }
+                            });
 
-                    return menuBar;
-                });
+                            return menuBar;
+                        }))
+                .setAutoWidth(true);
 
         DataProvider<CertificateModel, Void> dataProvider = DataProvider.fromCallbacks(
                 (query) -> {
