@@ -47,7 +47,6 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
@@ -129,7 +128,6 @@ public class TomcatView extends VerticalLayout {
         ajpLocationField.setWidthFull();
 
         Checkbox enableAjpSecretField = new Checkbox("Enable AJP Secret");
-        enableAjpField.addClassNames(LumoUtility.FlexWrap.NOWRAP);
         enableAjpSecretField.setValue(true);
         PasswordField ajpSecretField = new PasswordField();
         Button createSecret = new Button(
