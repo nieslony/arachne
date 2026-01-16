@@ -44,6 +44,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.vaadin.olli.ClipboardHelper;
+import ua_parser.Parser;
 
 /**
  *
@@ -84,7 +85,11 @@ public class UserHome extends VerticalLayout implements RouterLayout {
             }
         });
 
-        if (VaadinSession.getCurrent().getBrowser().isLinux()) {
+        String uaString = VaadinSession.getCurrent().getBrowser().getUserAgent();
+        Parser uaParser = new Parser();
+        var os = uaParser.parseOS(uaString);
+
+        if (os.family.equals("Linux")) {
             tabs.setSelectedTab(networkManagerTab);
         } else {
             tabs.setSelectedTab(ovpnTab);
