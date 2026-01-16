@@ -1,6 +1,18 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Copyright (C) 2023 claas
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package at.nieslony.arachne.utils.components;
 
@@ -19,7 +31,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.HasValidator;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +49,7 @@ public class MagicEditableListBox<T extends Object>
 
     private ListBox<T> itemsField;
     private Button clearButton;
+
     private final Supplier<? extends HasValue<?, T>> valueEditorSupplier;
     private final Class<T> valueClass;
     private final String labelString;
@@ -92,18 +104,14 @@ public class MagicEditableListBox<T extends Object>
         }
     }
 
-    private void init(String label) {
-        NativeLabel mlbLabel = new NativeLabel(label);
-        mlbLabel.addClassNames(
-                LumoUtility.FontSize.SMALL,
-                LumoUtility.TextColor.BODY
-        );
+    private void init(String labelTxt) {
+        NativeLabel label = new NativeLabel(labelTxt);
 
         itemsField = new ListBox<>();
         itemsField.setHeight(16, Unit.EM);
         itemsField.getStyle()
-                .setBorder("1px solid var(--lumo-primary-color)")
-                .setBackground("var(--lumo-primary-color-10pct)");
+                .setBorder("1px solid var(--vaadin-border-color)")
+                .setBackground("var(--vaadin-background-color)");
         itemsField.setWidthFull();
 
         Button addButton = new Button(
@@ -113,7 +121,7 @@ public class MagicEditableListBox<T extends Object>
         addButton.setTooltipText("Add");
 
         Button removeButton = new Button(
-                VaadinIcon.DEL_A.create(),
+                VaadinIcon.MINUS.create(),
                 (e) -> {
                     List<T> values = new LinkedList<>(getValue());
                     values.remove(itemsField.getValue());
@@ -137,31 +145,35 @@ public class MagicEditableListBox<T extends Object>
         editButton.setTooltipText("Edit");
         editButton.setEnabled(false);
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(
-                addButton,
-                removeButton,
-                clearButton,
-                editButton
+        getContent().add(
+                label,
+                itemsField,
+                new HorizontalLayout(
+                        addButton,
+                        removeButton,
+                        clearButton,
+                        editButton
+                )
         );
+        getContent().setFlexGrow(1, itemsField);
+        getContent().setMargin(false);
+        getContent().setPadding(false);
+        itemsField.setWidthFull();
 
         itemsField.addValueChangeListener((vcl) -> {
             boolean enable = !vcl.getHasValue().isEmpty();
             removeButton.setEnabled(enable);
             editButton.setEnabled(enable);
         });
-
-        getContent().add(
-                mlbLabel,
-                itemsField,
-                buttonLayout
-        );
-        getContent().setMargin(false);
-        getContent().setPadding(false);
     }
 
     @Override
     protected void setPresentationValue(List<T> v) {
-        itemsField.setItems(v);
+        if (v != null) {
+            itemsField.setItems(v);
+            clearButton.setEnabled(!v.isEmpty() && isEnabled());
+            getElement().setPropertyList("value", v);
+        }
     }
 
     void editValue(T value) {
