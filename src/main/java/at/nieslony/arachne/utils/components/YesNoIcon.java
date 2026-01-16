@@ -9,7 +9,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 /**
  *
@@ -24,20 +23,17 @@ public class YesNoIcon extends AbstractCompositeField<HorizontalLayout, YesNoIco
         super(true);
 
         yesIcon = new Button(VaadinIcon.CHECK.create());
-        yesIcon.addClassNames(
-                LumoUtility.Padding.NONE,
-                LumoUtility.Margin.NONE
-        );
-        yesIcon.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        yesIcon.addThemeVariants(ButtonVariant.AURA_TERTIARY);
         yesIcon.setVisible(true);
+        yesIcon.setEnabled(false);
 
         noIcon = new Button(VaadinIcon.CLOSE.create());
-        noIcon.addClassNames(
-                LumoUtility.Padding.NONE,
-                LumoUtility.Margin.NONE
+        noIcon.addThemeVariants(
+                ButtonVariant.AURA_DANGER,
+                ButtonVariant.AURA_TERTIARY
         );
-        noIcon.addThemeVariants(ButtonVariant.LUMO_ERROR);
         noIcon.setVisible(false);
+        noIcon.setEnabled(false);
 
         getContent().add(yesIcon, noIcon);
         getContent().setMargin(false);
