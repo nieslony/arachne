@@ -68,19 +68,15 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
 
     private void init(String label) {
         binder = new Binder<>();
+        binder.setValidatorsDisabled(true);
 
         itemsField = new ListBox<>();
         itemsField.setHeight(16, Unit.EM);
         itemsField.getStyle()
-                .setBorder("1px solid var(--lumo-primary-color)")
-                .setBackground("var(--lumo-primary-color-10pct)");
+                .setBorder("1px solid var(--vaadin-border-color)")
+                .setBackground("var(--vaadin-background-color)");
 
         NativeLabel elbLabel = new NativeLabel(label);
-        elbLabel.addClassNames(
-                LumoUtility.FontSize.SMALL,
-                LumoUtility.FontWeight.BOLD,
-                LumoUtility.TextColor.BODY
-        );
 
         if (editField instanceof HasValueChangeMode hvm) {
             hvm.setValueChangeMode(ValueChangeMode.EAGER);
@@ -157,10 +153,13 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 )
         );
         getContent().setFlexGrow(1, itemsField);
+        getContent().setMargin(false);
+        getContent().setPadding(false);
         itemsField.setWidthFull();
         if (editField instanceof HasSize hs) {
             hs.setWidthFull();
         }
+
         addClassNames(
                 LumoUtility.Border.ALL,
                 LumoUtility.BorderRadius.MEDIUM
@@ -184,10 +183,12 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 editField.setValue(e.getValue());
                 updateButton.setEnabled(true);
                 removeButton.setEnabled(true);
+                binder.setValidatorsDisabled(false);
             } else {
                 editField.clear();
                 updateButton.setEnabled(false);
                 removeButton.setEnabled(false);
+                binder.setValidatorsDisabled(true);
             }
         });
 
