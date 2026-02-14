@@ -25,10 +25,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -36,7 +34,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -115,10 +112,6 @@ public class RolesView extends VerticalLayout {
         Grid.Column<RoleRuleModel> editColumn = roleRules
                 .addComponentColumn(roleRule -> {
                     MenuBar menuBar = new MenuBar();
-                    menuBar.addThemeVariants(
-                            MenuBarVariant.LUMO_SMALL,
-                            MenuBarVariant.LUMO_ICON
-                    );
 
                     menuBar.addItem("Edit", e -> {
                         if (editor.isOpen()) {
@@ -127,11 +120,10 @@ public class RolesView extends VerticalLayout {
                         editor.editItem(roleRule);
                     });
 
-                    MenuItem moreItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                    MenuItem moreItem = menuBar.addItem("");
                     SubMenu moreMenu = moreItem.getSubMenu();
                     moreMenu.addItem("Delete...", e -> {
                         Div ruleTxt = new Div(roleRule.toString());
-                        ruleTxt.addClassName(LumoUtility.FontWeight.BOLD);
                         ruleTxt.setWhiteSpace(HasText.WhiteSpace.NOWRAP);
                         Div msg = new Div(
                                 new Text("Really remove role rule "),
