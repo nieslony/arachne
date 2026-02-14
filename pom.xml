@@ -219,9 +219,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <nodeAutoUpdate>true</nodeAutoUpdate>
-                </configuration>
             </plugin>
 
             <plugin>
