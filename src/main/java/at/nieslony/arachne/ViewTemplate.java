@@ -21,11 +21,14 @@ import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
+import at.nieslony.arachne.users.EditYourselfDialog;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.JsModule;
@@ -88,6 +91,13 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         } else {
             userInfo = username;
         }
+        Avatar avatar = new Avatar();
+        UserModel arachneUser;
+        if (userDetails instanceof UserModel usr) {
+            arachneUser = usr;
+        } else {
+            arachneUser = null;
+        }
 
         H1 pageTitle = new H1("Arachne");
         pageTitle.getStyle()
@@ -95,8 +105,12 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-        MenuItem item = menuBar.addItem(userInfo);
+        MenuItem item = menuBar.addItem(avatar, userInfo);
         SubMenu userMenu = item.getSubMenu();
+        userMenu.addItem("Settings…", click -> {
+            EditYourselfDialog dlg = new EditYourselfDialog(arachneUser);
+            dlg.open();
+        });
         userMenu.addItem("Logout", click -> {
             VaadinSession.getCurrent().close();
             this.authContext.logout();

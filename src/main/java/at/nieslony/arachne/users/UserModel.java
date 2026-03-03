@@ -20,19 +20,23 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -46,9 +50,38 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")
 @ShowApiDetails
+@Slf4j
 public class UserModel implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserModel.class);
+    enum ThemeVariant {
+        Dark("Dark"), Light("Light"), Auto("Auto detect");
+
+        ThemeVariant(String descr) {
+            this.descr = descr;
+        }
+
+        @Override
+        public String toString() {
+            return descr;
+        }
+
+        private final String descr;
+    }
+
+    enum AvatarSource {
+        LDAP("Load from LDAP"), Custom("Custom Avatar");
+
+        AvatarSource(String descr) {
+            this.descr = descr;
+        }
+
+        @Override
+        public final String toString() {
+            return descr;
+        }
+
+        private String descr;
+    }
 
     public UserModel(String username, String password, String displayName, String email) {
         this.username = username;
@@ -101,6 +134,33 @@ public class UserModel implements Serializable {
     @Column
     private boolean expirationEnforced;
 
+    @Column
+    private byte[] avatar;
+
+    @Column
+    @Builder.Default
+    private ThemeVariant themeVariant = ThemeVariant.Auto;
+
+    @JsonIgnore
+    public boolean hasAvatar() {
+        return avatar != null && avatar.length > 0;
+    }
+
+    @Column
+    @Builder.Default
+    private AvatarSource avatarSource = AvatarSource.LDAP;
+
+    @JsonIgnore
+    public String getInitials() {
+        String[] nameParts = displayName.split(("\s+"));
+        if (nameParts.length == 0) {
+            return null;
+        }
+        return Arrays.stream(nameParts)
+                .map((n) -> n.substring(0, 1))
+                .collect(Collectors.joining());
+    }
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     private Set<String> roles = new HashSet<>();
@@ -108,17 +168,17 @@ public class UserModel implements Serializable {
     @PrePersist
     @PreUpdate
     public void onSave() {
-        logger.info("Resetting expiration date");
+        log.info("Resetting expiration date");
         lastModified = new Date();
     }
 
     public boolean isExpired(int maxAgeMins) {
         if (expirationEnforced) {
-            logger.info("User expiration enforced");
+            log.info("User expiration enforced");
             return true;
         }
         if (lastModified == null) {
-            logger.info("never modified => expired");
+            log.info("never modified => expired");
             return true;
         }
         Calendar cal = Calendar.getInstance();
