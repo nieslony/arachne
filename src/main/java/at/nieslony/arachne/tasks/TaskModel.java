@@ -27,6 +27,7 @@ import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -37,7 +38,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class TaskModel {
+@Slf4j
+public class TaskModel implements Comparable<TaskModel> {
 
     public enum Status {
         WAITING("Waiting"),
@@ -93,7 +95,23 @@ public class TaskModel {
         stopped = new Date();
     }
 
+    @Override
+    public int compareTo(TaskModel tm) {
+        return TaskModel.compare(this, tm);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TaskModel tm) {
+            return TaskModel.compare(this, tm) == 0;
+        }
+        return false;
+    }
+
     public static int compare(TaskModel t1, TaskModel t2) {
+        log.debug(
+                "Compare %s and %s".format(t1.toString(), t2.toString())
+        );
         Date t1Date = null;
         if (t1.getStarted() != null) {
             t1Date = t1.getStarted();

@@ -19,6 +19,7 @@ package at.nieslony.arachne.tasks;
 import at.nieslony.arachne.ViewTemplate;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -32,7 +33,6 @@ import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
-import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -49,9 +49,10 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 /**
  *
@@ -60,7 +61,7 @@ import org.springframework.data.domain.Pageable;
 @Route(value = "tasks", layout = ViewTemplate.class)
 @PageTitle("All Tasks")
 @RolesAllowed("ADMIN")
-@Log4j2
+@Slf4j
 public class TaskView
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
@@ -177,20 +178,16 @@ public class TaskView
                 return new Text("");
             }
         });
-        DataProvider<TaskModel, Void> dataProvider = DataProvider.fromCallbacks(
-                (query) -> {
-                    Pageable pageable = PageRequest.of(
-                            query.getOffset(),
-                            query.getLimit()
-                    );
-                    var page = taskRepository.findAll(pageable);
-                    return page
-                            .stream()
-                            .sorted((t1, t2) -> -TaskModel.compare(t1, t2));
-                },
-                (query) -> (int) taskRepository.count()
-        );
-        tasksGrid.setDataProvider(dataProvider);
+        tasksGrid.setPageSize(1000);
+        tasksGrid.setItems(query -> {
+            Sort sort = Sort.sort(TaskModel.class);
+            Pageable pageable = PageRequest.of(
+                    query.getOffset(),
+                    query.getLimit(),
+                    sort
+            );
+            return taskRepository.findAll(pageable).stream();
+        });
         tasksGrid.setHeightFull();
 
         add(
@@ -308,9 +305,13 @@ public class TaskView
                     new TimerTask() {
                 @Override
                 public void run() {
-                    ui.access(() -> {
-                        tasksGrid.getDataProvider().refreshAll();
-                    });
+                    try {
+                        ui.access(() -> {
+                            tasksGrid.getDataProvider().refreshAll();
+                        });
+                    } catch (UIDetachedException ex) {
+                        log.debug("UI detached → don't refresh");
+                    }
                 }
             },
                     delay,
