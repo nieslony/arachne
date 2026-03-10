@@ -81,6 +81,12 @@ public class LdapController {
                     .displayName(dco.getStringAttribute(ldapSettings.getUsersAttrDisplayName()))
                     .email(dco.getStringAttribute(ldapSettings.getUsersAttrEmail()))
                     .build();
+            /*            try {
+                byte[] b = (byte[]) dco.getObjectAttribute(ldapSettings.getUsersAttrAvatar());
+            } catch (Exception ex) {
+                log.error("Somthing went wrong: " + ex.getMessage());
+            }
+             */
             return ldapUser;
         }
     }
@@ -231,7 +237,8 @@ public class LdapController {
                     "dn",
                     ldapSettings.getUsersAttrUsername(),
                     ldapSettings.getUsersAttrDisplayName(),
-                    ldapSettings.getUsersAttrEmail()
+                    ldapSettings.getUsersAttrEmail(),
+                    ldapSettings.getUsersAttrAvatar()
                 }
         );
         var result = ldap.search(

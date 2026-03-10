@@ -89,6 +89,7 @@ public class LdapSettings extends AbstractSettingsGroup {
     private String usersAttrUsername = "";
     private String usersAttrDisplayName = "";
     private String usersAttrEmail = "";
+    private String usersAttrAvatar = "";
     private String usersCustomFilter = "";
     private String usersObjectClass = "";
     private boolean usersEnableCustomFilter = false;
