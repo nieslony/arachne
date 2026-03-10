@@ -32,6 +32,7 @@ import javax.naming.directory.SearchControls;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.repository.cdi.Eager;
+import org.springframework.ldap.AuthenticationException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.AbstractContextMapper;
@@ -234,14 +235,18 @@ public class LdapController {
                     ldapSettings.getUsersAttrEmail()
                 }
         );
-        var result = ldap.search(
-                ldapSettings.getUsersOu(),
-                filter,
-                sc,
-                new UserContextMapper(ldapSettings)
-        );
-
-        return result;
+        try {
+            var result = ldap.search(
+                    ldapSettings.getUsersOu(),
+                    filter,
+                    sc,
+                    new UserContextMapper(ldapSettings)
+            );
+            return result;
+        } catch (AuthenticationException ex) {
+            log.error("Error authenticating to LDAP server: " + ex.getMessage());
+            return null;
+        }
     }
 
     public List<PrettyResult> findUsersPretty(LdapSettings ldapSettings, String pattern, int max) {
