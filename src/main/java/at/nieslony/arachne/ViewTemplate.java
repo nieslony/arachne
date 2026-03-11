@@ -22,7 +22,6 @@ import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.EditYourselfDialog;
-import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
 import com.vaadin.flow.component.Component;
@@ -47,6 +46,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -58,6 +58,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author claas
  */
 @JsModule("./os-theme-switcher.js")
+@Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
@@ -85,18 +86,12 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         String username = authentication.getName();
         String userInfo;
 
+        Avatar avatar = new Avatar();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         if (userDetails instanceof ArachneUserDetails aud) {
             userInfo = "%s (%s)".formatted(aud.getDisplayName(), username);
         } else {
             userInfo = username;
-        }
-        Avatar avatar = new Avatar();
-        UserModel arachneUser;
-        if (userDetails instanceof UserModel usr) {
-            arachneUser = usr;
-        } else {
-            arachneUser = null;
         }
 
         H1 pageTitle = new H1("Arachne");
@@ -107,18 +102,19 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
         MenuItem item = menuBar.addItem(avatar, userInfo);
         SubMenu userMenu = item.getSubMenu();
-        userMenu.addItem("Settings…", click -> {
-            EditYourselfDialog dlg = new EditYourselfDialog(arachneUser);
-            dlg.open();
-        });
         userMenu.addItem("Logout", click -> {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        if (userRepository.findByUsername(username) != null) {
-            if (userRepository.findByUsername(username).getExternalProvider() == null) {
-                userMenu.addItem("Change Password...", click -> changePassword());
+        var user = userRepository.findByUsername(username);
+        if (user != null) {
+            if (user.getExternalProvider() == null) {
+                userMenu.addItem("Change Password…", click -> changePassword());
             }
+            userMenu.addItem("Settings…", click -> {
+                EditYourselfDialog dlg = new EditYourselfDialog(user);
+                dlg.open();
+            });
         } else {
             logger.warn("Cannot find user %s in user repository".formatted(username));
         }
