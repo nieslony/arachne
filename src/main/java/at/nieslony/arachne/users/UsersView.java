@@ -24,6 +24,7 @@ import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
@@ -156,14 +157,28 @@ public class UsersView extends VerticalLayout {
                 userSettingsButton
         );
 
+        usersGrid
+                .addComponentColumn((user) -> {
+                    Avatar avatar = new Avatar();
+                    if (user.hasAvatar()) {
+                        avatar.setImageHandler(event -> {
+                            event.getOutputStream().write(user.getAvatar());
+                        });
+                    }
+                    return avatar;
+                })
+                .setAutoWidth(true);
         usernameColumn = usersGrid
                 .addColumn(UserModel::getUsername)
+                .setAutoWidth(true)
                 .setHeader("Username");
         displayNameColumn = usersGrid
                 .addColumn(UserModel::getDisplayName)
+                .setAutoWidth(true)
                 .setHeader("Displayname");
         emailColumn = usersGrid
                 .addColumn(UserModel::getEmail)
+                .setAutoWidth(true)
                 .setHeader("E-Mail");
         userSourceColumn = usersGrid
                 .addColumn(new ComponentRenderer<>((UserModel user) -> {
@@ -174,13 +189,17 @@ public class UsersView extends VerticalLayout {
                         return new Text(source);
                     }
                 }))
+                .setAutoWidth(true)
                 .setHeader("User Source");
-        usersGrid.addComponentColumn((user) -> {
-            String roles = user.getRolesWithName()
-                    .stream()
-                    .collect(Collectors.joining(", "));
-            return new Text(roles);
-        }).setHeader("Roles");
+        usersGrid
+                .addComponentColumn((user) -> {
+                    String roles = user.getRolesWithName()
+                            .stream()
+                            .collect(Collectors.joining(", "));
+                    return new Text(roles);
+                })
+                .setAutoWidth(true)
+                .setHeader("Roles");
 
         editUsersGridBuffered();
 
@@ -220,6 +239,7 @@ public class UsersView extends VerticalLayout {
                     user.update(ldapUser);
                     user.setRoles(roles);
                     userRepository.save(user);
+                    log.debug("Parent class: " + getParent().get().getClass().getName());
                 });
                 usersGrid.getDataProvider().refreshItem(user);
             } else {
