@@ -52,7 +52,6 @@ import java.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 /**
  *
@@ -178,15 +177,12 @@ public class TaskView
                 return new Text("");
             }
         });
-        tasksGrid.setPageSize(1000);
         tasksGrid.setItems(query -> {
-            Sort sort = Sort.sort(TaskModel.class);
             Pageable pageable = PageRequest.of(
                     query.getOffset(),
-                    query.getLimit(),
-                    sort
+                    query.getLimit()
             );
-            return taskRepository.findAll(pageable).stream();
+            return taskRepository.findAllSorted(pageable).stream();
         });
         tasksGrid.setHeightFull();
 
