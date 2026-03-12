@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @ToString
 @Slf4j
-public class TaskModel implements Comparable<TaskModel> {
+public class TaskModel {
 
     public enum Status {
         WAITING("Waiting"),
@@ -93,54 +93,5 @@ public class TaskModel implements Comparable<TaskModel> {
 
     public void setStopped() {
         stopped = new Date();
-    }
-
-    @Override
-    public int compareTo(TaskModel tm) {
-        return TaskModel.compare(this, tm);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof TaskModel tm) {
-            return TaskModel.compare(this, tm) == 0;
-        }
-        return false;
-    }
-
-    public static int compare(TaskModel t1, TaskModel t2) {
-        log.debug(
-                "Compare %s and %s".format(t1.toString(), t2.toString())
-        );
-        Date t1Date = null;
-        if (t1.getStarted() != null) {
-            t1Date = t1.getStarted();
-        } else if (t1.getScheduled() != null) {
-            t1Date = t1.getStarted();
-        }
-        Date t2Date = null;
-        if (t2.getStarted() != null) {
-            t2Date = t2.getStarted();
-        } else if (t2.getScheduled() != null) {
-            t2Date = t2.getStarted();
-        }
-
-        if (t1Date == null && t2Date == null) {
-            return 0;
-        }
-        if (t1Date == null) {
-            return 1;
-        }
-        if (t2Date == null) {
-            return -1;
-        }
-        if (t1Date.before(t2Date)) {
-            return -1;
-        }
-        if (t1Date.after(t2Date)) {
-            return 1;
-        }
-
-        return 0;
     }
 }
