@@ -6,7 +6,6 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
@@ -113,7 +112,6 @@ public class UsersView extends VerticalLayout {
 
     DataProvider<UserModel, Void> userDataProvider;
     UserSettings userSettings;
-    LdapSettings ldapSettings;
 
     public UsersView() {
     }
@@ -121,7 +119,6 @@ public class UsersView extends VerticalLayout {
     @PostConstruct
     public void init() {
         this.userSettings = settings.getSettings(UserSettings.class);
-        this.ldapSettings = settings.getSettings(LdapSettings.class);
 
         userDataProvider
                 = DataProvider.fromCallbacks(
@@ -215,7 +212,7 @@ public class UsersView extends VerticalLayout {
             if (user.getExternalProvider().equals(LdapUserSource.getName())) {
                 userMenu.addItem("Refresh now", e -> {
                     log.info("Refreshing user %s…".formatted(user.getUsername()));
-                    var ldapUser = ldapController.findUsers(ldapSettings, myUsername, 1).getFirst();
+                    var ldapUser = ldapController.findUsers(myUsername, 1).getFirst();
                     var roles = rolesCollestor.findRolesForUser(ldapUser);
                     user.update(ldapUser);
                     user.setRoles(roles);

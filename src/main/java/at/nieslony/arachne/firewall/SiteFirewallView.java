@@ -5,6 +5,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -14,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -23,6 +25,9 @@ import org.freedesktop.dbus.exceptions.DBusException;
 @PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
 public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSettings> {
+
+    @Autowired
+    private LdapController ldapController;
 
     @PostConstruct
     public void init() {
@@ -34,7 +39,7 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapSettings,
+                ldapController,
                 firewallController,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -42,7 +47,7 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor outgoingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapSettings,
+                ldapController,
                 firewallController,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
