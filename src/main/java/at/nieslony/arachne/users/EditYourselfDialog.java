@@ -17,6 +17,8 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.utils.ByteArrayHolder;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -30,19 +32,12 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.server.streams.UploadHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- *
- * @author claas
- */
 @Slf4j
 public class EditYourselfDialog extends Dialog {
 
-    @Autowired
-    UserRepository userRepository;
-
-    public EditYourselfDialog(UserModel user) {
+    public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapController ldapController) {
+        ByteArrayHolder avatarHolder = new ByteArrayHolder();
         setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
 
         Binder<UserModel> binder = new Binder<>();
@@ -59,21 +54,24 @@ public class EditYourselfDialog extends Dialog {
         avatarSource.setLabel("Avatar Source");
         avatarSource.setItems(UserModel.AvatarSource.values());
         avatarSource.setValue(UserModel.AvatarSource.LDAP);
+        binder.forField(avatarSource)
+                .bind(UserModel::getAvatarSource, UserModel::setAvatarSource);
 
-        Avatar avatar = new Avatar();
+        Avatar avatarImg = new Avatar();
         if (user.hasAvatar()) {
-            avatar.setImageHandler(event -> {
+            avatarImg.setImageHandler(event -> {
                 event.getOutputStream().write(user.getAvatar());
             });
         }
         Upload avatarUpload = new Upload(UploadHandler
                 .inMemory((um, bytes) -> {
-                    avatar.setImageHandler(event -> event.getOutputStream().write(bytes));
+                    avatarImg.setImageHandler(event -> event.getOutputStream().write(bytes));
+                    avatarHolder.set(bytes);
                 }));
         avatarUpload.setMaxFiles(1);
         avatarUpload.setMaxFileSize(512 * 1024);
         HorizontalLayout avatarLayout = new HorizontalLayout(
-                avatar,
+                avatarImg,
                 avatarUpload
         );
         avatarLayout.setMargin(false);
@@ -90,10 +88,13 @@ public class EditYourselfDialog extends Dialog {
 
         avatarSource.addValueChangeListener((e) -> {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
+            if (e.getValue() == UserModel.AvatarSource.LDAP) {
+            }
         });
         Button okButton = new Button("OK", e -> {
             try {
                 binder.writeBean(user);
+                user.setAvatar(avatarHolder.get());
                 userRepository.save(user);
             } catch (ValidationException ex) {
                 log.error("Error validating user: " + ex.toString());

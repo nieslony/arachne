@@ -8,6 +8,7 @@ import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
@@ -69,11 +70,11 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private String pageTitleStr = null;
 
     public ViewTemplate(
-            UserRepository userRepositoty,
+            UserRepository userRepository,
             AuthenticationContext authContext,
             ArachneVersion arachneVersion) {
         this.authContext = authContext;
-        this.userRepository = userRepositoty;
+        this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
 
         createHeader();
@@ -112,9 +113,17 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 userMenu.addItem("Change Password…", click -> changePassword());
             }
             userMenu.addItem("Settings…", click -> {
-                EditYourselfDialog dlg = new EditYourselfDialog(user);
+                EditYourselfDialog dlg = new EditYourselfDialog(user, userRepository, LdapController.getInstance());
                 dlg.open();
             });
+            if (user.hasAvatar()) {
+                log.info("Setting %s's avatar".formatted(user.getUsername()));
+                avatar.setImageHandler(event -> {
+                    event.getOutputStream().write(user.getAvatar());
+                });
+            } else {
+                log.info("User %s has no avatar".formatted(user.getUsername()));
+            }
         } else {
             logger.warn("Cannot find user %s in user repository".formatted(username));
         }
