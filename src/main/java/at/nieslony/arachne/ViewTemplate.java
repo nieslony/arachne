@@ -67,15 +67,18 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
+    private final LdapController ldapController;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepository,
             AuthenticationContext authContext,
-            ArachneVersion arachneVersion) {
+            ArachneVersion arachneVersion,
+            LdapController ldapController) {
         this.authContext = authContext;
         this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
+        this.ldapController = ldapController;
 
         createHeader();
         createDrawer();
@@ -113,7 +116,11 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 userMenu.addItem("Change Password…", click -> changePassword());
             }
             userMenu.addItem("Settings…", click -> {
-                EditYourselfDialog dlg = new EditYourselfDialog(user, userRepository, LdapController.getInstance());
+                EditYourselfDialog dlg = new EditYourselfDialog(
+                        user,
+                        userRepository,
+                        ldapController
+                );
                 dlg.open();
             });
             if (user.hasAvatar()) {
