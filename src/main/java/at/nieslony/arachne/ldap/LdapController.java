@@ -56,15 +56,6 @@ public class LdapController {
     @Autowired
     private Settings settings;
 
-    /*private static LdapController ldapController;
-    public LdapController() {
-        ldapController = this;
-    }*/
-
- /*    public static LdapController getInstance() {
-        return ldapController;
-    }
-     */
     private class UserContextMapper extends AbstractContextMapper<UserModel> {
 
         final LdapSettings ldapSettings;
@@ -86,12 +77,13 @@ public class LdapController {
                     .displayName(dco.getStringAttribute(ldapSettings.getUsersAttrDisplayName()))
                     .email(dco.getStringAttribute(ldapSettings.getUsersAttrEmail()))
                     .build();
-            /*            try {
+            try {
                 byte[] b = (byte[]) dco.getObjectAttribute(ldapSettings.getUsersAttrAvatar());
+                ldapUser.setAvatar(b);
             } catch (Exception ex) {
                 log.error("Somthing went wrong: " + ex.getMessage());
             }
-             */
+
             return ldapUser;
         }
     }
@@ -314,7 +306,6 @@ public class LdapController {
     }
 
     public UserModel getUser(String username) {
-        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         List<UserModel> users = findUsers(username, 1);
         if (users == null || users.isEmpty()) {
             return null;
