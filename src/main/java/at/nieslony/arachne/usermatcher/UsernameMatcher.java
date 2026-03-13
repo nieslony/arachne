@@ -5,6 +5,7 @@
 package at.nieslony.arachne.usermatcher;
 
 import at.nieslony.arachne.users.UserModel;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
@@ -13,8 +14,8 @@ import at.nieslony.arachne.users.UserModel;
 @UserMatcherDescription(description = "Username is", parameterLabel = "Username")
 public class UsernameMatcher extends UserMatcher {
 
-    public UsernameMatcher(String requiredUsername) {
-        super(requiredUsername);
+    public UsernameMatcher(BeanFactory beanFactory, String requiredUsername) {
+        super(beanFactory, requiredUsername);
     }
 
     @Override

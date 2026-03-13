@@ -17,7 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
@@ -29,6 +29,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -40,19 +41,18 @@ import org.freedesktop.dbus.exceptions.DBusException;
 @Slf4j
 public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSettings> {
 
-    private LdapSettings ldapSettings;
+    @Autowired
+    private LdapController ldapController;
 
     @PostConstruct
     public void init() {
-        ldapSettings = settings.getSettings(LdapSettings.class);
-
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
         tabs.add("Basics", createBasicsTab(UserFirewallBasicsSettings.class));
         tabs.add("Incoming Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapSettings,
+                ldapController,
                 firewallController,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -60,7 +60,7 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.add("Outgoing Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapSettings,
+                ldapController,
                 firewallController,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.OUTGOING

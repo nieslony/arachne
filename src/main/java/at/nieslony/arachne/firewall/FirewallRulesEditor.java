@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-//import org.vaadin.firitin.layouts.HorizontalFloatLayout;
 
 /**
  *
@@ -49,21 +48,21 @@ class FirewallRulesEditor extends VerticalLayout {
 
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
-    private final LdapSettings ldapSettings;
+    private final LdapController ldapController;
 
     private Grid<FirewallRuleModel> grid;
 
     public FirewallRulesEditor(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            LdapSettings ldapSettings,
+            LdapController ldapController,
             FirewallController firewallController,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.ldapSettings = ldapSettings;
+        this.ldapController = ldapController;
 
         DataProvider<FirewallRuleModel, Void> dataProvider = DataProvider.fromCallbacks(
                 query -> {
@@ -306,7 +305,7 @@ class FirewallRulesEditor extends VerticalLayout {
             who = new MagicEditableListBox<>(
                     FirewallWho.class,
                     "Who",
-                    () -> new EditFirewallWho(userMatcherCollector, ldapSettings)
+                    () -> new EditFirewallWho(userMatcherCollector, ldapController)
             );
             binder.forField(who)
                     .bind(FirewallRuleModel::getWho, FirewallRuleModel::setWho);

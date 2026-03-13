@@ -19,6 +19,7 @@ package at.nieslony.arachne.ldap;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.ANONYMOUS;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.BIND_DN;
 import static at.nieslony.arachne.ldap.LdapSettings.LdapBindType.KEYTAB;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -30,6 +31,7 @@ import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.repository.cdi.Eager;
 import org.springframework.ldap.AuthenticationException;
@@ -51,16 +53,18 @@ import org.springframework.util.ObjectUtils;
 @Log4j2
 public class LdapController {
 
-    private static LdapController ldapController;
+    @Autowired
+    private Settings settings;
 
+    /*private static LdapController ldapController;
     public LdapController() {
         ldapController = this;
-    }
+    }*/
 
-    public static LdapController getInstance() {
+ /*    public static LdapController getInstance() {
         return ldapController;
     }
-
+     */
     private class UserContextMapper extends AbstractContextMapper<UserModel> {
 
         final LdapSettings ldapSettings;
@@ -129,7 +133,7 @@ public class LdapController {
         }
     }
 
-    public List<String> findLdapUrls() {
+    public static List<String> findLdapUrls() {
         List<String> ldapServers = new LinkedList<>();
 
         try {
@@ -149,8 +153,12 @@ public class LdapController {
         return ldapServers;
     }
 
+    public LdapTemplate getLdapTemplate() throws Exception {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+        return getLdapTemplate(ldapSettings);
+    }
+
     public LdapTemplate getLdapTemplate(LdapSettings ldapSettings) throws Exception {
-        log.info(toString());
         String[] urls = ldapSettings.getLdapUrls().stream()
                 .map(url -> url.toString())
                 .toArray(String[]::new);
@@ -213,10 +221,11 @@ public class LdapController {
         return ldapTempl;
     }
 
-    public List<UserModel> findUsers(LdapSettings ldapSettings, String username, int max) {
+    public List<UserModel> findUsers(String username, int max) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         LdapTemplate ldap;
         try {
-            ldap = getLdapTemplate(ldapSettings);
+            ldap = getLdapTemplate();
         } catch (Exception ex) {
             return null;
         }
@@ -249,10 +258,11 @@ public class LdapController {
         }
     }
 
-    public List<PrettyResult> findUsersPretty(LdapSettings ldapSettings, String pattern, int max) {
+    public List<PrettyResult> findUsersPretty(String pattern, int max) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         LdapTemplate ldap;
         try {
-            ldap = getLdapTemplate(ldapSettings);
+            ldap = getLdapTemplate();
         } catch (Exception ex) {
             log.error("Cannot getLdapTemplate: " + ex.getMessage());
             return null;
@@ -296,18 +306,20 @@ public class LdapController {
                 .toList();
     }
 
-    public UserModel getUser(LdapSettings ldapSettings, String username) {
-        List<UserModel> users = findUsers(ldapSettings, username, 1);
+    public UserModel getUser(String username) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+        List<UserModel> users = findUsers(username, 1);
         if (users == null || users.isEmpty()) {
             return null;
         }
         return users.get(0);
     }
 
-    public List<LdapGroup> findGroups(LdapSettings ldapSettings, String groupName, int max) {
+    public List<LdapGroup> findGroups(String groupName, int max) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         LdapTemplate ldap;
         try {
-            ldap = getLdapTemplate(ldapSettings);
+            ldap = getLdapTemplate();
         } catch (Exception ex) {
             return null;
         }
@@ -336,10 +348,11 @@ public class LdapController {
         return groups;
     }
 
-    public List<PrettyResult> findGroupsPretty(LdapSettings ldapSettings, String pattern, int max) {
+    public List<PrettyResult> findGroupsPretty(String pattern, int max) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         LdapTemplate ldap;
         try {
-            ldap = getLdapTemplate(ldapSettings);
+            ldap = getLdapTemplate();
         } catch (Exception ex) {
             log.error("Cannot getLdapTemplate: " + ex.getMessage());
             return null;
@@ -382,8 +395,8 @@ public class LdapController {
                 .toList();
     }
 
-    public LdapGroup getGroup(LdapSettings ldapSettings, String groupname) {
-        List<LdapGroup> groups = findGroups(ldapSettings, groupname, 1);
+    public LdapGroup getGroup(String groupname) {
+        List<LdapGroup> groups = findGroups(groupname, 1);
         if (groups.isEmpty()) {
             return null;
         }
