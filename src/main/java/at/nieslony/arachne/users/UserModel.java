@@ -15,6 +15,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -135,6 +136,7 @@ public class UserModel implements Serializable {
     private boolean expirationEnforced;
 
     @Column
+    @Lob
     private byte[] avatar;
 
     @Column
@@ -195,6 +197,11 @@ public class UserModel implements Serializable {
         this.expirationEnforced = false;
         this.lastModified = new Date();
         this.roles.addAll(user.getRoles());
+        if (user.getAvatarSource() == AvatarSource.Custom || !hasAvatar()) {
+            log.info("Update %s's avatar");
+            this.avatar = user.avatar;
+            this.avatarSource = user.getAvatarSource();
+        }
     }
 
     @JsonIgnore
