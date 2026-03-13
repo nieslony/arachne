@@ -19,6 +19,7 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.utils.ByteArrayHolder;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -41,7 +42,6 @@ public class EditYourselfDialog extends Dialog {
         setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
 
         Binder<UserModel> binder = new Binder<>();
-        binder.readBean(user);
 
         Select<UserModel.ThemeVariant> themeVariantSelect = new Select<>();
         themeVariantSelect.setLabel("Thema Variant");
@@ -89,6 +89,8 @@ public class EditYourselfDialog extends Dialog {
         avatarSource.addValueChangeListener((e) -> {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
             if (e.getValue() == UserModel.AvatarSource.LDAP) {
+                var ldapUser = ldapController.getUser(user.getUsername());
+                avatarHolder.set(ldapUser.getAvatar());
             }
         });
         Button okButton = new Button("OK", e -> {
@@ -96,6 +98,7 @@ public class EditYourselfDialog extends Dialog {
                 binder.writeBean(user);
                 user.setAvatar(avatarHolder.get());
                 userRepository.save(user);
+                UI.getCurrent().getPage().reload();
             } catch (ValidationException ex) {
                 log.error("Error validating user: " + ex.toString());
             }
@@ -105,5 +108,7 @@ public class EditYourselfDialog extends Dialog {
         Button cancelButton = new Button("Cancel", e -> close());
 
         getFooter().add(cancelButton, okButton);
+
+        binder.readBean(user);
     }
 }
