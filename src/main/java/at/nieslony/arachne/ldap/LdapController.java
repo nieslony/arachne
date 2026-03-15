@@ -310,7 +310,7 @@ public class LdapController {
         if (users == null || users.isEmpty()) {
             return null;
         }
-        return users.get(0);
+        return users.getFirst();
     }
 
     public List<LdapGroup> findGroups(String groupName, int max) {
@@ -398,6 +398,6 @@ public class LdapController {
         if (groups.isEmpty()) {
             return null;
         }
-        return groups.get(0);
+        return groups.getFirst();
     }
 }
