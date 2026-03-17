@@ -5,7 +5,7 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -50,7 +50,7 @@ public class RolesView extends VerticalLayout {
 
     final private RoleRuleRepository roleRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
-    final private LdapSettings ldapSettings;
+    final private LdapController ldapController;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -61,11 +61,12 @@ public class RolesView extends VerticalLayout {
     public RolesView(
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            Settings settings
+            Settings settings,
+            LdapController ldapController
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.ldapSettings = settings.getSettings(LdapSettings.class);
+        this.ldapController = ldapController;
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -178,7 +179,7 @@ public class RolesView extends VerticalLayout {
                 .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
         LdapAutoComplete parameterFieldComplete = new LdapAutoComplete(
                 parameterField,
-                ldapSettings
+                ldapController
         );
         parameterColumn.setEditorComponent(new HorizontalLayout(
                 parameterField,
@@ -276,7 +277,9 @@ public class RolesView extends VerticalLayout {
 
         TextField parameter = new TextField();
         parameter.setClearButtonVisible(true);
-        LdapAutoComplete parameterComplete = new LdapAutoComplete(parameter, ldapSettings);
+        LdapAutoComplete parameterComplete = new LdapAutoComplete(
+                parameter, ldapController
+        );
         parameterComplete.setValueConverter((value) -> value.name());
 
         //UsersGroupsAutocomplete parameter = new UsersGroupsAutocomplete(ldapSettings, 5);

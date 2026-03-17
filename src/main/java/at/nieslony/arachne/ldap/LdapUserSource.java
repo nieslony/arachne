@@ -56,7 +56,6 @@ public class LdapUserSource implements ExternalUserSource {
 
     @Override
     public UserModel findUser(String username) {
-        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         UserSettings userSettings = settings.getSettings(UserSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
@@ -68,7 +67,7 @@ public class LdapUserSource implements ExternalUserSource {
             logger.info("User %s not found in database, getting from LDAP"
                     .formatted(username)
             );
-            user = ldapController.getUser(ldapSettings, username);
+            user = ldapController.getUser(username);
             if (user == null) {
                 logger.info("User %s neither found in database nor in LDAP"
                         .formatted(username)
@@ -83,7 +82,7 @@ public class LdapUserSource implements ExternalUserSource {
         } else if (user.isExpired(ldapCacheMaxMins)) {
             logger.info("User is expired. Updating from LDAP");
 
-            UserModel ldapUser = ldapController.getUser(ldapSettings, username);
+            UserModel ldapUser = ldapController.getUser(username);
             if (ldapUser != null) {
                 user.update(ldapUser);
                 Set<String> roles = rolesCollector.findRolesForUser(user);

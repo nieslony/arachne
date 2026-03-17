@@ -7,6 +7,9 @@ package at.nieslony.arachne.usermatcher;
 import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,8 +17,9 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @Component
-public class UserMatcherCollector {
+public class UserMatcherCollector implements BeanFactoryAware {
 
+    private BeanFactory beanFactory;
     List<Class<? extends UserMatcher>> userMatcherClasses = new LinkedList<>();
 
     public UserMatcherCollector() {
@@ -35,13 +39,24 @@ public class UserMatcherCollector {
     public UserMatcher buildUserMatcher(String userMatchClassName, String parameter) {
         try {
             Class<?> cl = Class.forName(userMatchClassName);
-            Constructor<?> constructor = cl.getConstructor(String.class);
+            Constructor<?> constructor = cl.getConstructor(
+                    BeanFactory.class,
+                    String.class
+            );
             UserMatcher userMatcher
-                    = (UserMatcher) constructor.newInstance(parameter);
+                    = (UserMatcher) constructor.newInstance(
+                            beanFactory,
+                            parameter
+                    );
 
             return userMatcher;
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }

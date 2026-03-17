@@ -5,9 +5,7 @@
 package at.nieslony.arachne.tasks.scheduled;
 
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.roles.RolesCollector;
-import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTaskDescription;
 import at.nieslony.arachne.tasks.Task;
 import at.nieslony.arachne.tasks.TaskDescription;
@@ -33,18 +31,14 @@ public class RefreshLdapUsers extends Task {
     @Override
     public String run(BeanFactory beanFactory) throws Exception {
         try {
-            Settings settings = beanFactory.getBean(Settings.class);
-            LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
-
+            LdapController ldapController = beanFactory.getBean(LdapController.class);
             RolesCollector rolesCollestor = beanFactory.getBean(RolesCollector.class);
-
             UserRepository userRepository = beanFactory.getBean(UserRepository.class);
             int noUsersUpdated = 0;
             int noUsersAdded = 0;
             int noUsersSkipped = 0;
-            for (var ldapUser : LdapController
-                    .getInstance()
-                    .findUsers(ldapSettings, "*", 1000)) {
+            for (var ldapUser : ldapController
+                    .findUsers("*", 1000)) {
                 var repoUser = userRepository.findByUsername(ldapUser.getUsername());
                 var roles = rolesCollestor.findRolesForUser(ldapUser);
                 if (repoUser != null) {

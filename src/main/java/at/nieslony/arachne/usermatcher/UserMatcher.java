@@ -5,6 +5,7 @@
 package at.nieslony.arachne.usermatcher;
 
 import at.nieslony.arachne.users.UserModel;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
@@ -13,9 +14,11 @@ import at.nieslony.arachne.users.UserModel;
 public abstract class UserMatcher {
 
     protected String parameter;
+    protected BeanFactory beanFactory;
 
-    public UserMatcher(String parameter) {
+    public UserMatcher(BeanFactory beanFactory, String parameter) {
         this.parameter = parameter;
+        this.beanFactory = beanFactory;
     }
 
     public abstract boolean isUserMatching(UserModel user);
