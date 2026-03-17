@@ -6,7 +6,6 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
@@ -61,7 +60,6 @@ public class RolesView extends VerticalLayout {
     public RolesView(
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            Settings settings,
             LdapController ldapController
     ) {
         this.roleRuleRepository = roleRuleRepository;
