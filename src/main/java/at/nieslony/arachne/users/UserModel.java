@@ -54,7 +54,7 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class UserModel implements Serializable {
 
-    enum ThemeVariant {
+    public enum ThemeVariant {
         Dark("Dark"), Light("Light"), Auto("Auto detect");
 
         ThemeVariant(String descr) {
@@ -69,7 +69,7 @@ public class UserModel implements Serializable {
         private final String descr;
     }
 
-    enum AvatarSource {
+    public enum AvatarSource {
         LDAP("Load from LDAP"), Custom("Custom Avatar");
 
         AvatarSource(String descr) {
