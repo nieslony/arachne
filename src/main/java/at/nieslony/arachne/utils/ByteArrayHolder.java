@@ -25,6 +25,14 @@ public class ByteArrayHolder {
 
     byte[] value = null;
 
+    public ByteArrayHolder() {
+        value = null;
+    }
+
+    public ByteArrayHolder(byte[] bytes) {
+        value = bytes;
+    }
+
     public void set(byte[] v) {
         value = v;
     }
