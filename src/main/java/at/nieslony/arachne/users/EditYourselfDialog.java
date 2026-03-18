@@ -19,6 +19,7 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.utils.ByteArrayHolder;
+import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
@@ -33,12 +34,13 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.server.streams.UploadHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ldap.CommunicationException;
 
 @Slf4j
 public class EditYourselfDialog extends Dialog {
 
     public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapController ldapController) {
-        ByteArrayHolder avatarHolder = new ByteArrayHolder();
+        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
 
         Binder<UserModel> binder = new Binder<>();
@@ -89,8 +91,19 @@ public class EditYourselfDialog extends Dialog {
         avatarSource.addValueChangeListener((e) -> {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
             if (e.getValue() == UserModel.AvatarSource.LDAP) {
-                var ldapUser = ldapController.getUser(user.getUsername());
-                avatarHolder.set(ldapUser.getAvatar());
+                try {
+                    var ldapUser = ldapController.getUser(user.getUsername());
+                    byte[] newAvatar = ldapUser.getAvatar();
+                    if (newAvatar != null) {
+                        log.debug("Got avatar fot user %s with %d bytes".formatted(user.getUsername(), newAvatar.length));
+                    } else {
+                        log.debug("No avatar for usr %s found.".formatted(user.getUsername()));
+                    }
+                    avatarHolder.set(newAvatar);
+                    avatarImg.setImageHandler(event -> event.getOutputStream().write(newAvatar));
+                } catch (CommunicationException ex) {
+                    ShowNotification.error("Cannot load Avatar from LDAP", ex.getMessage());
+                }
             }
         });
         Button okButton = new Button("OK", e -> {
