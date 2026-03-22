@@ -19,6 +19,7 @@ import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import at.nieslony.arachne.utils.components.GridPaginationControls;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -50,7 +51,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -67,8 +67,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -109,9 +107,7 @@ public class UsersView extends VerticalLayout {
     Grid.Column<UserModel> usernameColumn;
     Grid.Column<UserModel> displayNameColumn;
     Grid.Column<UserModel> emailColumn;
-    Grid.Column<UserModel> userSourceColumn;
 
-    DataProvider<UserModel, Void> userDataProvider;
     UserSettings userSettings;
 
     public UsersView() {
@@ -120,24 +116,6 @@ public class UsersView extends VerticalLayout {
     @PostConstruct
     public void init() {
         this.userSettings = settings.getSettings(UserSettings.class);
-
-        userDataProvider
-                = DataProvider.fromCallbacks(
-                        query -> {
-                            Pageable pageable = PageRequest.of(
-                                    query.getOffset(),
-                                    query.getLimit()
-                            );
-                            var page = userRepository.findAll(pageable);
-                            return page
-                                    .stream()
-                                    .peek((user) -> {
-                                        // update user !!!
-                                        //return user;
-                                    });
-                        },
-                        query -> (int) userRepository.count()
-                );
 
         usersGrid = new Grid<>(UserModel.class, false);
         Button addUserButton = new Button("Add User...",
@@ -177,7 +155,7 @@ public class UsersView extends VerticalLayout {
                 .addColumn(UserModel::getEmail)
                 .setAutoWidth(true)
                 .setHeader("E-Mail");
-        userSourceColumn = usersGrid
+        usersGrid
                 .addColumn(new ComponentRenderer<>((UserModel user) -> {
                     String source = user.getExternalProvider();
                     if (source == null) {
@@ -200,9 +178,13 @@ public class UsersView extends VerticalLayout {
 
         editUsersGridBuffered();
 
-        usersGrid.setItems(userDataProvider);
+        GridPaginationControls<UserModel> paginationControl = new GridPaginationControls<>(
+                usersGrid,
+                userRepository::count,
+                userRepository::findAll
+        );
 
-        add(buttons, usersGrid);
+        add(buttons, usersGrid, paginationControl);
         setPadding(false);
     }
 

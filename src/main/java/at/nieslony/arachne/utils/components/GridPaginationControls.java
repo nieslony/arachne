@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -59,7 +60,7 @@ public class GridPaginationControls<T> extends VerticalLayout {
     public GridPaginationControls(
             Grid<T> grid,
             Supplier<Long> noItems,
-            Function<Pageable, List<T>> items
+            Function<Pageable, Page<T>> items
     ) {
         final List<Long> pageSizes = List.of(10L, 20L, 50L, 100L, 200L, 500L);
 
