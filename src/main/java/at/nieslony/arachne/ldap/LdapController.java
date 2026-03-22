@@ -56,15 +56,6 @@ public class LdapController {
     @Autowired
     private Settings settings;
 
-    /*private static LdapController ldapController;
-    public LdapController() {
-        ldapController = this;
-    }*/
-
- /*    public static LdapController getInstance() {
-        return ldapController;
-    }
-     */
     private class UserContextMapper extends AbstractContextMapper<UserModel> {
 
         final LdapSettings ldapSettings;
@@ -86,6 +77,13 @@ public class LdapController {
                     .displayName(dco.getStringAttribute(ldapSettings.getUsersAttrDisplayName()))
                     .email(dco.getStringAttribute(ldapSettings.getUsersAttrEmail()))
                     .build();
+            try {
+                byte[] b = (byte[]) dco.getObjectAttribute(ldapSettings.getUsersAttrAvatar());
+                ldapUser.setAvatar(b);
+            } catch (Exception ex) {
+                log.error("Somthing went wrong: " + ex.getMessage());
+            }
+
             return ldapUser;
         }
     }
@@ -241,7 +239,8 @@ public class LdapController {
                     "dn",
                     ldapSettings.getUsersAttrUsername(),
                     ldapSettings.getUsersAttrDisplayName(),
-                    ldapSettings.getUsersAttrEmail()
+                    ldapSettings.getUsersAttrEmail(),
+                    ldapSettings.getUsersAttrAvatar()
                 }
         );
         try {
@@ -307,12 +306,11 @@ public class LdapController {
     }
 
     public UserModel getUser(String username) {
-        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         List<UserModel> users = findUsers(username, 1);
         if (users == null || users.isEmpty()) {
             return null;
         }
-        return users.get(0);
+        return users.getFirst();
     }
 
     public List<LdapGroup> findGroups(String groupName, int max) {
@@ -400,6 +398,6 @@ public class LdapController {
         if (groups.isEmpty()) {
             return null;
         }
-        return groups.get(0);
+        return groups.getFirst();
     }
 }
