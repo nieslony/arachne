@@ -17,6 +17,7 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.utils.components.GridPaginationControls;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.UIDetachedException;
@@ -53,8 +54,6 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 /**
  *
@@ -175,7 +174,7 @@ public class TaskView
         tasksGrid.addComponentColumn(
                 (source) -> {
                     if (source.getStatus() == TaskModel.Status.SCHEDULED) {
-                        return new Button("Reschedule...", (t) -> {
+                        Button button = new Button("Reschedule...", (t) -> {
                             Dialog dlg = createRescheduleDialog(source, () -> {
                                 taskRepository.save(source);
                                 tasksGrid.getDataProvider().refreshItem(source);
@@ -183,24 +182,27 @@ public class TaskView
                             });
                             dlg.open();
                         });
+                        button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                        return button;
                     } else {
                         return new Text("");
                     }
                 })
                 .setAutoWidth(true)
                 .setFlexGrow(0);
-        tasksGrid.setItems(query -> {
-            Pageable pageable = PageRequest.of(
-                    query.getOffset(),
-                    query.getLimit()
-            );
-            return taskRepository.findAllSorted(pageable).stream();
-        });
-        tasksGrid.setHeightFull();
         tasksGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        GridPaginationControls<TaskModel> tasksGridPageController
+                = new GridPaginationControls<>(
+                        tasksGrid,
+                        taskRepository::count,
+                        taskRepository::findAllSorted
+                );
+
         add(
                 buttonBar,
-                tasksGrid
+                tasksGrid,
+                tasksGridPageController
         );
         setPadding(false);
 

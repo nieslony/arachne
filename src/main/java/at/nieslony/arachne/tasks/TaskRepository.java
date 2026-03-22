@@ -17,6 +17,7 @@
 package at.nieslony.arachne.tasks;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,5 +41,5 @@ public interface TaskRepository extends JpaRepository<TaskModel, Long> {
             t.started DESC,
             t.scheduled DESC
     """)
-    public List<TaskModel> findAllSorted(Pageable pageable);
+    public Page<TaskModel> findAllSorted(Pageable pageable);
 }
