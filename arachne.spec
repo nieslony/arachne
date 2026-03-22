@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.10
+Version:        1.4.11
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,39 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Mar 22 2026 Claas Nieslony <github@nieslony.at> 1.4.11-1
+- Bump dependeny version (github@nieslony.at)
+- Show status icon, set column width (github@nieslony.at)
+- Fix: update avatar now (github@nieslony.at)
+- Add constructor (github@nieslony.at)
+- Change configured theme (github@nieslony.at)
+- Make enums public (github@nieslony.at)
+- Save avatar, reload page (github@nieslony.at)
+- Fix: set avatar (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Fix: get bean (github@nieslony.at)
+- Save custom avatar (github@nieslony.at)
+- Update custom avatar (github@nieslony.at)
+- Make LdapController really a controller class (github@nieslony.at)
+- Add query with special sorting (github@nieslony.at)
+- Improve error handling (github@nieslony.at)
+- Remove useless code (github@nieslony.at)
+- Add class ByteArrayHolder.java (github@nieslony.at)
+- Show avatar in user list (github@nieslony.at)
+- Force user refresh (github@nieslony.at)
+- Fix: open dialog (github@nieslony.at)
+- Add EditYourselfDialog.java (github@nieslony.at)
+- Update LDAP (github@nieslony.at)
+- Start fix (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Catch authenticating exception (github@nieslony.at)
+- Fix: logger (github@nieslony.at)
+- Show avatar, change avatar (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump dependenc versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Add overview (github@nieslony.at)
+
 * Fri Nov 21 2025 Claas Nieslony <github@nieslony.at> 1.4.10-1
 - Bump dependency versions (github@nieslony.at)
 

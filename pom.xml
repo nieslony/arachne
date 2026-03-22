@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.nieslony</groupId>
     <artifactId>Arachne</artifactId>
-    <version>1.4.10</version>
+    <version>1.4.11</version>
     <packaging>jar</packaging>
     <name>Arachne</name>
     <description>A Web Application for OpenVPN</description>
