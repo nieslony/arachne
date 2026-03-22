@@ -28,6 +28,9 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -117,6 +120,8 @@ public class TaskView
                         return "Unknown Class: " + source.getTaskClassName();
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Name");
         tasksGrid
                 .addColumn((source) -> {
@@ -128,6 +133,8 @@ public class TaskView
                                 .format(source.getScheduled());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Scheduled");
         tasksGrid
                 .addColumn((source) -> {
@@ -139,6 +146,8 @@ public class TaskView
                                 .format(source.getStarted());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Started");
         tasksGrid
                 .addColumn((source) -> {
@@ -150,33 +159,36 @@ public class TaskView
                                 .format(source.getStopped());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Stopped");
         tasksGrid
-                .addColumn((source) -> source.getStatus())
-                .setTooltipGenerator((source) -> {
-                    if (source.getStatusMsg() == null) {
-                        return null;
-                    }
-                    if (source.getStatusMsg().isEmpty()) {
-                        return null;
-                    }
-                    return source.getStatusMsg();
-                })
+                .addComponentColumn(
+                        (source) -> new HorizontalLayout(
+                                createStatusIcon(source.getStatus()),
+                                new Text(source.getStatusMsg())
+                        )
+                )
+                .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Status");
-        tasksGrid.addComponentColumn((source) -> {
-            if (source.getStatus() == TaskModel.Status.SCHEDULED) {
-                return new Button("Reschedule...", (t) -> {
-                    Dialog dlg = createRescheduleDialog(source, () -> {
-                        taskRepository.save(source);
-                        tasksGrid.getDataProvider().refreshItem(source);
-                        taskScheduler.scheduleTask(source);
-                    });
-                    dlg.open();
-                });
-            } else {
-                return new Text("");
-            }
-        });
+        tasksGrid.addComponentColumn(
+                (source) -> {
+                    if (source.getStatus() == TaskModel.Status.SCHEDULED) {
+                        return new Button("Reschedule...", (t) -> {
+                            Dialog dlg = createRescheduleDialog(source, () -> {
+                                taskRepository.save(source);
+                                tasksGrid.getDataProvider().refreshItem(source);
+                                taskScheduler.scheduleTask(source);
+                            });
+                            dlg.open();
+                        });
+                    } else {
+                        return new Text("");
+                    }
+                })
+                .setAutoWidth(true)
+                .setFlexGrow(0);
         tasksGrid.setItems(query -> {
             Pageable pageable = PageRequest.of(
                     query.getOffset(),
@@ -185,7 +197,7 @@ public class TaskView
             return taskRepository.findAllSorted(pageable).stream();
         });
         tasksGrid.setHeightFull();
-
+        tasksGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         add(
                 buttonBar,
                 tasksGrid
@@ -208,6 +220,24 @@ public class TaskView
             }
             scheduleRefresh();
         });
+    }
+
+    private Icon createStatusIcon(TaskModel.Status status) {
+        var icon = switch (status) {
+            case ERROR ->
+                VaadinIcon.EXCLAMATION.create();
+            case SCHEDULED ->
+                VaadinIcon.ALARM.create();
+            case RUNNING ->
+                VaadinIcon.AUTOMATION.create();
+            case SUCCESS ->
+                VaadinIcon.CHECK.create();
+            case WAITING ->
+                VaadinIcon.LOCK.create();
+        };
+
+        icon.setTooltipText(status.toString());
+        return icon;
     }
 
     private String getTaskName(Class<? extends Task> c) {
