@@ -34,10 +34,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.util.StringUtils;
 
 /**
  *
@@ -81,7 +78,7 @@ public class UserModel implements Serializable {
             return descr;
         }
 
-        private String descr;
+        private final String descr;
     }
 
     public UserModel(String username, String password, String displayName, String email) {
