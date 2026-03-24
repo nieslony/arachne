@@ -29,18 +29,21 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.data.provider.DataProvider;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  *
  * @author claas
  */
 @Slf4j
+
 public class GridPaginationControls<T> extends VerticalLayout {
 
     private Grid<T> grid;
@@ -59,16 +62,81 @@ public class GridPaginationControls<T> extends VerticalLayout {
 
     public GridPaginationControls(
             Grid<T> grid,
+            Function<Specification<T>, Long> noItems,
+            BiFunction<Specification<T>, Pageable, Page<T>> items,
+            Specification<T> spec
+    ) {
+        this.grid = grid;
+        initGui();
+        createDataSource(noItems, items, spec);
+    }
+
+    public GridPaginationControls(
+            Grid<T> grid,
             Supplier<Long> noItems,
             Function<Pageable, Page<T>> items
     ) {
-        final List<Long> pageSizes = List.of(10L, 20L, 50L, 100L, 200L, 500L);
-
         this.grid = grid;
+        initGui();
+        createDataSource(noItems, items);
+    }
+
+    final public void createDataSource(
+            Supplier<Long> noItems,
+            Function<Pageable, Page<T>> items
+    ) {
+        dataProvider = DataProvider.fromCallbacks(
+                query -> {
+                    query.getLimit();
+                    query.getOffset();
+
+                    Pageable pageable = PageRequest.of(
+                            (int) currentPage - 1,
+                            (int) pageSize
+                    );
+                    return items.apply(pageable).stream();
+                },
+                query
+                -> (int) (currentPage < pageCount
+                        ? pageSize
+                        : (totalItemCount - 1) % pageSize + 1)
+        );
         totalItemCount = noItems.get();
-        pageSize = pageSizes.getFirst();
+        grid.setDataProvider(dataProvider);
         updatePageCount();
-        //pageCount = (totalItemCount - 1) / pageSize + 1;
+        updateControls();
+    }
+
+    final public void createDataSource(
+            Function<Specification<T>, Long> noItems,
+            BiFunction<Specification<T>, Pageable, Page<T>> items,
+            Specification<T> spec
+    ) {
+        dataProvider = DataProvider.fromCallbacks(
+                query -> {
+                    query.getLimit();
+                    query.getOffset();
+
+                    Pageable pageable = PageRequest.of(
+                            (int) currentPage - 1,
+                            (int) pageSize
+                    );
+                    return items.apply(spec, pageable).stream();
+                },
+                query
+                -> (int) (currentPage < pageCount
+                        ? pageSize
+                        : (totalItemCount - 1) % pageSize + 1)
+        );
+        totalItemCount = noItems.apply(spec);
+        grid.setDataProvider(dataProvider);
+        updatePageCount();
+        updateControls();
+    }
+
+    private void initGui() {
+        final List<Long> pageSizes = List.of(10L, 20L, 50L, 100L, 200L, 500L);
+        pageSize = pageSizes.getFirst();
 
         Select<Long> pageSizeSelect = new Select<>();
         pageSizeSelect.addThemeVariants(SelectVariant.LUMO_SMALL);
@@ -80,7 +148,6 @@ public class GridPaginationControls<T> extends VerticalLayout {
             updatePageCount();
             currentPage = 1;
             updateControls();
-            updateItems();
             dataProvider.refreshAll();
         });
 
@@ -122,26 +189,6 @@ public class GridPaginationControls<T> extends VerticalLayout {
         controlLayout.setWidthFull();
 
         add(controlLayout);
-
-        dataProvider = DataProvider.fromCallbacks(
-                query -> {
-                    query.getLimit();
-                    query.getOffset();
-
-                    Pageable pageable = PageRequest.of(
-                            (int) currentPage - 1,
-                            (int) pageSize
-                    );
-                    return items.apply(pageable).stream();
-                },
-                query
-                -> (int) (currentPage < pageCount
-                        ? pageSize
-                        : (totalItemCount - 1) % pageSize + 1)
-        );
-        grid.setDataProvider(dataProvider);
-
-        updateControls();
     }
 
     private void updatePageCount() {
@@ -159,15 +206,10 @@ public class GridPaginationControls<T> extends VerticalLayout {
         button.addClickListener(e -> {
             onClick.run();
             updateControls();
-            updateItems();
             dataProvider.refreshAll();
         });
 
         return button;
-    }
-
-    private void updateItems() {
-
     }
 
     private void updateControls() {
