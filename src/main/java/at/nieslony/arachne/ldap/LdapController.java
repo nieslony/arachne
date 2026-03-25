@@ -77,6 +77,13 @@ public class LdapController {
                     .displayName(dco.getStringAttribute(ldapSettings.getUsersAttrDisplayName()))
                     .email(dco.getStringAttribute(ldapSettings.getUsersAttrEmail()))
                     .build();
+            try {
+                byte[] b = (byte[]) dco.getObjectAttribute(ldapSettings.getUsersAttrAvatar());
+                ldapUser.setAvatar(b);
+            } catch (Exception ex) {
+                log.error("Somthing went wrong: " + ex.getMessage());
+            }
+
             return ldapUser;
         }
     }
@@ -199,8 +206,14 @@ public class LdapController {
                 ctxSrc.setLoginConfig(loginConfig);
 
                 Map<String, Object> environment = new HashMap<>();
-                environment.put("com.sun.jndi.ldap.connect.timeout", "1000");
-                environment.put("com.sun.jndi.ldap.read.timeout", "1000");
+                environment.put(
+                        "com.sun.jndi.ldap.connect.timeout",
+                        String.valueOf(ldapSettings.getConnectionTimeoutMsec())
+                );
+                environment.put(
+                        "com.sun.jndi.ldap.read.timeout",
+                        String.valueOf(ldapSettings.getReadTimeoutMsec())
+                );
                 ctxSrc.setBaseEnvironmentProperties(environment);
 
                 ctxSrc.afterPropertiesSet();
@@ -232,7 +245,8 @@ public class LdapController {
                     "dn",
                     ldapSettings.getUsersAttrUsername(),
                     ldapSettings.getUsersAttrDisplayName(),
-                    ldapSettings.getUsersAttrEmail()
+                    ldapSettings.getUsersAttrEmail(),
+                    ldapSettings.getUsersAttrAvatar()
                 }
         );
         try {

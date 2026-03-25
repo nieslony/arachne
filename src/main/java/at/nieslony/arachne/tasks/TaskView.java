@@ -17,8 +17,10 @@
 package at.nieslony.arachne.tasks;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.utils.components.GridPaginationControls;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -27,12 +29,14 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
-import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -50,8 +54,6 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 /**
  *
@@ -117,6 +119,8 @@ public class TaskView
                         return "Unknown Class: " + source.getTaskClassName();
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Name");
         tasksGrid
                 .addColumn((source) -> {
@@ -128,6 +132,8 @@ public class TaskView
                                 .format(source.getScheduled());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Scheduled");
         tasksGrid
                 .addColumn((source) -> {
@@ -139,6 +145,8 @@ public class TaskView
                                 .format(source.getStarted());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Started");
         tasksGrid
                 .addColumn((source) -> {
@@ -150,52 +158,51 @@ public class TaskView
                                 .format(source.getStopped());
                     }
                 })
+                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("Stopped");
         tasksGrid
-                .addColumn((source) -> source.getStatus())
-                .setTooltipGenerator((source) -> {
-                    if (source.getStatusMsg() == null) {
-                        return null;
-                    }
-                    if (source.getStatusMsg().isEmpty()) {
-                        return null;
-                    }
-                    return source.getStatusMsg();
-                })
+                .addComponentColumn(
+                        (source) -> new HorizontalLayout(
+                                createStatusIcon(source.getStatus()),
+                                new Text(source.getStatusMsg())
+                        )
+                )
+                .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Status");
-        tasksGrid.addComponentColumn((source) -> {
-            if (source.getStatus() == TaskModel.Status.SCHEDULED) {
-                return new Button("Reschedule...", (t) -> {
-                    Dialog dlg = createRescheduleDialog(source, () -> {
-                        taskRepository.save(source);
-                        tasksGrid.getDataProvider().refreshItem(source);
-                        taskScheduler.scheduleTask(source);
-                    });
-                    dlg.open();
-                });
-            } else {
-                return new Text("");
-            }
-        });
-        DataProvider<TaskModel, Void> dataProvider = DataProvider.fromCallbacks(
-                (query) -> {
-                    Pageable pageable = PageRequest.of(
-                            query.getOffset(),
-                            query.getLimit()
-                    );
-                    var page = taskRepository.findAll(pageable);
-                    return page
-                            .stream()
-                            .sorted((t1, t2) -> -TaskModel.compare(t1, t2));
-                },
-                (query) -> (int) taskRepository.count()
-        );
-        tasksGrid.setDataProvider(dataProvider);
-        tasksGrid.setHeightFull();
+        tasksGrid.addComponentColumn(
+                (source) -> {
+                    if (source.getStatus() == TaskModel.Status.SCHEDULED) {
+                        Button button = new Button("Reschedule...", (t) -> {
+                            Dialog dlg = createRescheduleDialog(source, () -> {
+                                taskRepository.save(source);
+                                tasksGrid.getDataProvider().refreshItem(source);
+                                taskScheduler.scheduleTask(source);
+                            });
+                            dlg.open();
+                        });
+                        button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                        return button;
+                    } else {
+                        return new Text("");
+                    }
+                })
+                .setAutoWidth(true)
+                .setFlexGrow(0);
+        tasksGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        GridPaginationControls<TaskModel> tasksGridPageController
+                = new GridPaginationControls<>(
+                        tasksGrid,
+                        taskRepository::count,
+                        taskRepository::findAllSorted
+                );
 
         add(
                 buttonBar,
-                tasksGrid
+                tasksGrid,
+                tasksGridPageController
         );
         setPadding(false);
 
@@ -215,6 +222,24 @@ public class TaskView
             }
             scheduleRefresh();
         });
+    }
+
+    private Icon createStatusIcon(TaskModel.Status status) {
+        var icon = switch (status) {
+            case ERROR ->
+                VaadinIcon.EXCLAMATION.create();
+            case SCHEDULED ->
+                VaadinIcon.ALARM.create();
+            case RUNNING ->
+                VaadinIcon.AUTOMATION.create();
+            case SUCCESS ->
+                VaadinIcon.CHECK.create();
+            case WAITING ->
+                VaadinIcon.LOCK.create();
+        };
+
+        icon.setTooltipText(status.toString());
+        return icon;
     }
 
     private String getTaskName(Class<? extends Task> c) {
@@ -308,9 +333,13 @@ public class TaskView
                     new TimerTask() {
                 @Override
                 public void run() {
-                    ui.access(() -> {
-                        tasksGrid.getDataProvider().refreshAll();
-                    });
+                    try {
+                        ui.access(() -> {
+                            tasksGrid.getDataProvider().refreshAll();
+                        });
+                    } catch (UIDetachedException ex) {
+                        log.debug("UI detached → don't refresh");
+                    }
                 }
             },
                     delay,

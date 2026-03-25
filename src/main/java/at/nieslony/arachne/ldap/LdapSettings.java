@@ -79,6 +79,8 @@ public class LdapSettings extends AbstractSettingsGroup {
 
     List<LdapUrl> ldapUrls = new LinkedList<>();
     private String baseDn = NetUtils.defaultBaseDn();
+    int connectionTimeoutMsec = 5000;
+    int readTimeoutMsec = 15000;
     private LdapBindType bindType = LdapBindType.BIND_DN;
     private String bindDn = NetUtils.defaultBaseDn();
     private String bindPassword = "";
@@ -89,6 +91,7 @@ public class LdapSettings extends AbstractSettingsGroup {
     private String usersAttrUsername = "";
     private String usersAttrDisplayName = "";
     private String usersAttrEmail = "";
+    private String usersAttrAvatar = "";
     private String usersCustomFilter = "";
     private String usersObjectClass = "";
     private boolean usersEnableCustomFilter = false;
