@@ -206,8 +206,14 @@ public class LdapController {
                 ctxSrc.setLoginConfig(loginConfig);
 
                 Map<String, Object> environment = new HashMap<>();
-                environment.put("com.sun.jndi.ldap.connect.timeout", "1000");
-                environment.put("com.sun.jndi.ldap.read.timeout", "1000");
+                environment.put(
+                        "com.sun.jndi.ldap.connect.timeout",
+                        String.valueOf(ldapSettings.getConnectionTimeoutMsec())
+                );
+                environment.put(
+                        "com.sun.jndi.ldap.read.timeout",
+                        String.valueOf(ldapSettings.getReadTimeoutMsec())
+                );
                 ctxSrc.setBaseEnvironmentProperties(environment);
 
                 ctxSrc.afterPropertiesSet();

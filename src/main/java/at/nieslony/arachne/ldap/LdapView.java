@@ -38,6 +38,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
@@ -45,6 +46,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -361,6 +363,24 @@ public class LdapView extends VerticalLayout {
                 .asRequired("Value Required")
                 .bind(LdapSettings::getBaseDn, LdapSettings::setBaseDn);
 
+        IntegerField connectionTimeoutField = new IntegerField("Connection Timeout");
+        connectionTimeoutField.setSuffixComponent(new Div("msec"));
+        connectionTimeoutField.setMin(1);
+        connectionTimeoutField.setMax(60 * 60 * 1000);
+        connectionTimeoutField.setStepButtonsVisible(true);
+        binder.forField(connectionTimeoutField)
+                .asRequired()
+                .bind(LdapSettings::getConnectionTimeoutMsec, LdapSettings::setConnectionTimeoutMsec);
+
+        IntegerField readTimeoutField = new IntegerField("Read Timeout");
+        readTimeoutField.setSuffixComponent(new Div("msec"));
+        readTimeoutField.setMin(1);
+        readTimeoutField.setMax(60 * 60 * 1000);
+        readTimeoutField.setStepButtonsVisible(true);
+        binder.forField(readTimeoutField)
+                .asRequired()
+                .bind(LdapSettings::getReadTimeoutMsec, LdapSettings::setReadTimeoutMsec);
+
         RadioButtonGroup<LdapSettings.LdapBindType> bindType
                 = new RadioButtonGroup<>("Authentication Type");
         bindType.setItems(LdapSettings.LdapBindType.values());
@@ -477,6 +497,8 @@ public class LdapView extends VerticalLayout {
                 ldapUrlsEditor,
                 new VerticalLayout(
                         baseDnField,
+                        connectionTimeoutField,
+                        readTimeoutField,
                         bindType,
                         simpleBindLayout,
                         keytabPath,
