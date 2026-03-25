@@ -43,7 +43,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Getter
 @Setter
 @ToString
-@Builder
+@Builder(toBuilder = true)
 @Entity
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "users")

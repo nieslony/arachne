@@ -49,7 +49,10 @@ public class TokenController {
     Pki pki;
 
     public String createToken(UserModel user, Date validUntil) {
-        AuthTokenContent authTokenContent = new AuthTokenContent(validUntil, user);
+        AuthTokenContent authTokenContent = new AuthTokenContent(
+                validUntil,
+                user.toBuilder().avatar(null).build()
+        );
         String jsonStr;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
