@@ -49,8 +49,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -62,8 +60,6 @@ import org.slf4j.LoggerFactory;
 @Table(name = "firewallWhere")
 @Slf4j
 public class FirewallWhere {
-
-    private static final Logger logger = LoggerFactory.getLogger(FirewallWhere.class);
 
     public enum Type {
         Hostname("Hostname"),
@@ -145,7 +141,7 @@ public class FirewallWhere {
                         }
                     }
                 } catch (UnknownHostException ex) {
-                    logger.error(
+                    log.error(
                             "Cannot resolve %s: %s"
                                     .formatted(hostname, ex.getMessage())
                     );
@@ -171,7 +167,7 @@ public class FirewallWhere {
                         }
                     }
                 } catch (NamingException | UnknownHostException ex) {
-                    logger.info(
+                    log.info(
                             "Cannot find service record _%s._%s.%s: %s"
                                     .formatted(
                                             serviceRecName,
@@ -191,7 +187,7 @@ public class FirewallWhere {
                         addresses.add(mx.getValue());
                     }
                 } catch (NamingException ex) {
-                    logger.error("Cannot find MX records for domain %s: %s"
+                    log.error("Cannot find MX records for domain %s: %s"
                             .formatted(mxDomain, ex.getMessage()));
                 }
             }
@@ -212,7 +208,7 @@ public class FirewallWhere {
                     }
                 }
             } catch (UnknownHostException ex) {
-                logger.warn("Unknown host: %s, ignoring".formatted(addr));
+                log.warn("Unknown host: %s, ignoring".formatted(addr));
             }
         }
 

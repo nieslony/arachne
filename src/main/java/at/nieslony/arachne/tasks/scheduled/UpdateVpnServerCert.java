@@ -30,10 +30,9 @@ import at.nieslony.arachne.tasks.TaskDescription;
 import at.nieslony.arachne.utils.ArachneTimeUnit;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -46,9 +45,8 @@ import org.springframework.beans.factory.BeanFactory;
         timeUnit = ArachneTimeUnit.DAY,
         startAt = "01:00:00"
 )
+@Slf4j
 public class UpdateVpnServerCert extends Task {
-
-    private static final Logger logger = LoggerFactory.getLogger(UpdateVpnServerCert.class);
 
     @Override
     public String run(BeanFactory beanFactory) throws Exception {
@@ -59,11 +57,11 @@ public class UpdateVpnServerCert extends Task {
 
         X509Certificate serverCert = pki.getServerCert();
         Calendar cal = Calendar.getInstance();
-        logger.info("Now: " + cal.getTime().toString());
+        log.info("Now: " + cal.getTime().toString());
         cal.setTime(serverCert.getNotAfter());
-        logger.info("Cert valid until: " + cal.getTime().toString());
+        log.info("Cert valid until: " + cal.getTime().toString());
         cal.add(Calendar.DATE, -pkiSettings.getServerCertRenewDays());
-        logger.info("Renew after: " + cal.getTime().toString());
+        log.info("Renew after: " + cal.getTime().toString());
         if (cal.before(Calendar.getInstance())) {
             pki.createServerCert();
             OpenVpnController openVpnRestController

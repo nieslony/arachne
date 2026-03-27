@@ -22,17 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class EditRemoteNetwork extends AbstractCompositeField<FormLayout, EditRemoteNetwork, RemoteNetwork>
         implements HasValidator<RemoteNetwork> {
-
-    private static final Logger logger = LoggerFactory.getLogger(EditRemoteNetwork.class);
 
     private final Binder<RemoteNetwork> binder;
     private final Collection<ValidationStatusChangeListener<RemoteNetwork>> validationStatusListeners = new ArrayList<>();

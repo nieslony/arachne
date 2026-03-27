@@ -50,8 +50,6 @@ import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.Lumo;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -63,8 +61,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 @JsModule("./os-theme-switcher.js")
 @Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
-
-    private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
@@ -142,7 +138,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 );
             }
         } else {
-            logger.warn("Cannot find user %s in user repository".formatted(username));
+            log.warn("Cannot find user %s in user repository".formatted(username));
         }
         if (!userMenu.getItems().isEmpty()) {
             userMenu.addSeparator();

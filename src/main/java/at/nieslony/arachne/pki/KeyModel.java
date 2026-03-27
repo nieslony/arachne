@@ -22,8 +22,7 @@ import java.security.PrivateKey;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -34,9 +33,8 @@ import org.slf4j.LoggerFactory;
 @ToString
 @Entity
 @Table(name = "keys")
+@Slf4j
 public class KeyModel implements Serializable {
-
-    private static final Logger logger = LoggerFactory.getLogger(KeyModel.class);
 
     public KeyModel(PrivateKey privateKey) {
         this.privateKey = privateKey;
@@ -62,7 +60,7 @@ public class KeyModel implements Serializable {
 
                 return bos.toByteArray();
             } catch (IOException ex) {
-                logger.error("Cannot serialize private key: " + ex.getMessage());
+                log.error("Cannot serialize private key: " + ex.getMessage());
                 return null;
             }
         } else {
@@ -74,7 +72,7 @@ public class KeyModel implements Serializable {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             privateKey = (PrivateKey) ois.readObject();
         } catch (ClassNotFoundException | IOException ex) {
-            logger.error("Cannot deserialize private key: " + ex.getMessage());
+            log.error("Cannot deserialize private key: " + ex.getMessage());
         }
     }
 }

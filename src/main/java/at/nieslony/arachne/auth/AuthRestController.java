@@ -25,8 +25,7 @@ import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,6 +40,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @author claas
  */
 @RestController
+@Slf4j
 public class AuthRestController {
 
     @Autowired
@@ -57,11 +57,9 @@ public class AuthRestController {
         private String apiAuthToken;
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
-
     private Date createValidUntilDate(String vu) {
         Calendar validUntilCal = Calendar.getInstance();
-        logger.info("User authenticated for VPN access");
+        log.info("User authenticated for VPN access");
         try {
             if (vu == null) {
                 validUntilCal.add(Calendar.MINUTE, 10);
@@ -88,7 +86,7 @@ public class AuthRestController {
                 );
             } else {
                 String msg = "Invalid time unit. Only sec, min and h are allowed";
-                logger.error(msg);
+                log.error(msg);
                 throw new ResponseStatusException(
                         HttpStatus.UNPROCESSABLE_ENTITY,
                         msg
@@ -96,7 +94,7 @@ public class AuthRestController {
             }
         } catch (NumberFormatException ex) {
             String msg = "Unvalid number format: " + vu;
-            logger.error(msg);
+            log.error(msg);
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     msg
@@ -106,7 +104,7 @@ public class AuthRestController {
         latest.add(Calendar.HOUR, 24);
         if (validUntilCal.after(latest)) {
             String msg = "Requested tocked validity time too long";
-            logger.error(msg);
+            log.error(msg);
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     msg

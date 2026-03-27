@@ -37,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -47,8 +45,6 @@ import org.slf4j.LoggerFactory;
 @Slf4j
 class EditFirewallWhat extends AbstractCompositeField<VerticalLayout, EditFirewallWhat, FirewallWhat>
         implements HasValidator<FirewallWhat> {
-
-    private static final Logger logger = LoggerFactory.getLogger(EditFirewallWhat.class);
 
     private final Select<FirewallWhat.Type> whatType;
     private final Binder<FirewallWhat> binder;

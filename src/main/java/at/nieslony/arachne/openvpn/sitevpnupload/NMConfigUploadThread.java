@@ -12,17 +12,16 @@ import at.nieslony.arachne.utils.ShellQuote;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import com.jcraft.jsch.JSchException;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class NMConfigUploadThread extends ConfigUploadThread {
 
-    private static final Logger logger = LoggerFactory.getLogger(NMConfigUploadThread.class);
     private final VpnSiteRepository vpnSiteRepository;
 
     public NMConfigUploadThread(

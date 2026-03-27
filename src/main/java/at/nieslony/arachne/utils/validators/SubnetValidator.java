@@ -12,17 +12,16 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class SubnetValidator implements Validator<String> {
 
     private final static String ERROR_MSG = "Not a valid network address";
-    private static final Logger logger = LoggerFactory.getLogger(SubnetValidator.class);
 
     private final boolean emptyAllowed;
     private final Supplier<Integer> getPrefix;
@@ -97,7 +96,7 @@ public class SubnetValidator implements Validator<String> {
             }
         } catch (UnknownHostException ex) {
             String msg = "Cannot get IPv4 address: " + ex.getMessage();
-            logger.error(msg);
+            log.error(msg);
             return ValidationResult.error("Internal error");
         }
 

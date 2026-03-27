@@ -13,16 +13,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class AddSshKeyDialog extends Dialog {
-
-    private static final Logger logger = LoggerFactory.getLogger(AddSshKeyDialog.class);
 
     public AddSshKeyDialog(Consumer<SshKeyEntity> onOk) {
         super("Create SSH Key Pair");
@@ -46,7 +44,7 @@ public class AddSshKeyDialog extends Dialog {
                 );
                 onOk.accept(entity);
             } catch (JSchException ex) {
-                logger.error("Cannot create key pair: " + ex.getMessage());
+                log.error("Cannot create key pair: " + ex.getMessage());
             }
             close();
         });

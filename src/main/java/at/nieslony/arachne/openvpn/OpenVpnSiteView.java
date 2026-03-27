@@ -78,10 +78,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vaadin.olli.ClipboardHelper;
 
 /**
@@ -91,6 +90,7 @@ import org.vaadin.olli.ClipboardHelper;
 @Route(value = "site2siteVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN Site to Site VPN")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class OpenVpnSiteView extends VerticalLayout {
 
     enum OnDefSiteEnabled {
@@ -137,8 +137,6 @@ public class OpenVpnSiteView extends VerticalLayout {
             component.setEnabled(enable);
         }
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
 
     private final Binder<OpenVpnSiteSettings> binder;
     private final Binder<VpnSite> siteBinder;
@@ -426,7 +424,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                                     var setSite = vpnSiteController.getSite(site, allSites);
                                     sites.setValue(setSite);
                                 } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
-                                    logger.error(ex.getMessage());
+                                    log.error(ex.getMessage());
                                 }
                             }
                     );
@@ -435,7 +433,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         deleteButton = new Button("Delete...", (e) -> {
             if (sites.getValue().getId() == 0) {
-                logger.warn("Cannot remove site id=0");
+                log.warn("Cannot remove site id=0");
                 return;
             }
             ConfirmDialog dlg = new ConfirmDialog();
@@ -466,7 +464,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 sites.setItems(allSites);
                 sites.setValue(vpnSiteController.getSite(site, allSites));
                 siteBinder.validate();
-                logger.info("Created: " + site.toString());
+                log.info("Created: " + site.toString());
             });
         });
 
@@ -1022,10 +1020,10 @@ public class OpenVpnSiteView extends VerticalLayout {
             arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
             ShowNotification.info("OpenVpn restarted with new configuration");
         } catch (SettingsException ex) {
-            logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+            log.error("Cannot save openvpn site vpn: " + ex.getMessage());
         } catch (DBusException | DBusExecutionException ex) {
             String header = "Cannot restart openVpn";
-            logger.error(header + ": " + ex.getMessage());
+            log.error(header + ": " + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }
@@ -1040,7 +1038,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             siteModified = false;
         } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
-            logger.error("Cannot save site %s: %s"
+            log.error("Cannot save site %s: %s"
                     .formatted(curSite.toString(), ex.getMessage())
             );
         }
