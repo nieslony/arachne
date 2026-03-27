@@ -6,8 +6,8 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -29,18 +29,20 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
     @Autowired
     private LdapController ldapController;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @PostConstruct
     public void init() {
         TabSheet tabs = new TabSheet();
         tabs.setWidthFull();
-
-        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
 
         FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
                 ldapController,
                 firewallController,
+                userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         );
@@ -49,6 +51,7 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
                 userMatcherCollector,
                 ldapController,
                 firewallController,
+                userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
         );

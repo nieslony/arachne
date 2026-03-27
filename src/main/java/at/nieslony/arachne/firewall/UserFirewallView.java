@@ -21,6 +21,7 @@ import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -44,6 +45,9 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
     @Autowired
     private LdapController ldapController;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @PostConstruct
     public void init() {
         TabSheet tabs = new TabSheet();
@@ -54,6 +58,7 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
                 userMatcherCollector,
                 ldapController,
                 firewallController,
+                userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         ));
@@ -62,6 +67,7 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
                 userMatcherCollector,
                 ldapController,
                 firewallController,
+                userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.OUTGOING
         ));
