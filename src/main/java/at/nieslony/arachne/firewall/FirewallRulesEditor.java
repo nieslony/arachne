@@ -6,13 +6,17 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.components.LdapAutoComplete;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -28,16 +32,16 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.util.ObjectUtils;
 
 /**
  *
@@ -49,6 +53,7 @@ class FirewallRulesEditor extends VerticalLayout {
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
     private final LdapController ldapController;
+    private final UserRepository userRepository;
 
     private Grid<FirewallRuleModel> grid;
 
@@ -57,33 +62,43 @@ class FirewallRulesEditor extends VerticalLayout {
             UserMatcherCollector userMatcherCollector,
             LdapController ldapController,
             FirewallController firewallController,
+            UserRepository userRepository,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
         this.ldapController = ldapController;
+        this.userRepository = userRepository;
 
-        DataProvider<FirewallRuleModel, Void> dataProvider = DataProvider.fromCallbacks(
-                query -> {
-                    Pageable pageable = PageRequest.of(
-                            query.getOffset(),
-                            query.getLimit()
-                    );
-                    var page = firewallRuleRepository
-                            .findAllByVpnTypeAndRuleDirection(
-                                    vpnType,
-                                    direction,
-                                    pageable
-                            );
-                    return page.stream();
-                },
-                query -> (int) firewallRuleRepository
-                        .countByVpnTypeAndRuleDirection(
-                                vpnType,
-                                direction
-                        )
+        ListDataProvider<FirewallRuleModel> dataProvider = new ListDataProvider<>(firewallRuleRepository
+                .findAllByVpnTypeAndRuleDirection(
+                        vpnType,
+                        direction
+                ));
+
+        TextField filterByUser = new TextField("Find Rules matching User");
+        filterByUser.setMinWidth(30, Unit.REM);
+        filterByUser.setClearButtonVisible(true);
+
+        LdapAutoComplete findUser = new LdapAutoComplete(filterByUser, ldapController);
+        findUser.setCompleteMode(LdapAutoComplete.CompleteMode.USERS);
+
+        Button filterByUserButton = new Button(
+                VaadinIcon.SEARCH.create(),
+                (e) -> dataProvider.setFilter(
+                        createFilter(filterByUser.getValue())
+                )
         );
+
+        HorizontalLayout filterLayout = new HorizontalLayout(
+                filterByUser,
+                findUser,
+                filterByUserButton
+        );
+        filterLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+        filterLayout.setWidthFull();
+        filterLayout.setVisible(vpnType == FirewallRuleModel.VpnType.USER);
 
         grid = new Grid<>();
         grid.setWidthFull();
@@ -225,12 +240,45 @@ class FirewallRulesEditor extends VerticalLayout {
                 saveAllRules
         );
 
-        add(grid, buttonsLayout);
+        add(
+                filterLayout,
+                grid,
+                buttonsLayout
+        );
         setHeightFull();
         setMargin(false);
         setPadding(false);
 
         grid.setItems(dataProvider);
+    }
+
+    private SerializablePredicate<FirewallRuleModel> createFilter(String username) {
+        if (ObjectUtils.isEmpty(username)) {
+            return frm -> true;
+        }
+
+        return (FirewallRuleModel frm) -> {
+            if (!frm.isEnabled()) {
+                return false;
+            }
+            var user = userRepository.findByUsername(username);
+            if (user == null) {
+                return false;
+            }
+            for (FirewallWho who : frm.getWho()) {
+                if (who.isEverybody()) {
+                    return true;
+                }
+                UserMatcher matcher = userMatcherCollector.buildUserMatcher(
+                        who.getUserMatcherClassName(),
+                        who.getParameter()
+                );
+                if (matcher.isUserMatching(user)) {
+                    return true;
+                }
+            }
+            return false;
+        };
     }
 
     private <T> Details createDetails(Collection<T> items) {

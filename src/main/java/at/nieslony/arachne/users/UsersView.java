@@ -67,6 +67,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -132,6 +133,16 @@ public class UsersView extends VerticalLayout {
                 userSettingsButton
         );
 
+        TextField findUsersField = new TextField("Find Users");
+        findUsersField.setMinWidth(30, Unit.REM);
+        findUsersField.setClearButtonVisible(true);
+        Button findUserButton = new Button(VaadinIcon.SEARCH.create());
+        HorizontalLayout findUsersLayout = new HorizontalLayout(
+                findUsersField,
+                findUserButton
+        );
+        findUsersLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+
         usersGrid
                 .addComponentColumn((user) -> {
                     Avatar avatar = new Avatar();
@@ -181,11 +192,41 @@ public class UsersView extends VerticalLayout {
         GridPaginationControls<UserModel> paginationControl = new GridPaginationControls<>(
                 usersGrid,
                 userRepository::count,
-                userRepository::findAll
+                userRepository::findAll,
+                findByUsernameSpec("")
         );
 
-        add(buttons, usersGrid, paginationControl);
+        findUserButton.addClickListener((t) -> {
+            paginationControl.createDataSource(
+                    userRepository::count,
+                    userRepository::findAll,
+                    findByUsernameSpec(findUsersField.getValue())
+            );
+        });
+
+        add(
+                buttons,
+                findUsersLayout,
+                usersGrid,
+                paginationControl
+        );
         setPadding(false);
+    }
+
+    public static Specification<UserModel> findByUsernameSpec(String value) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            String pattern = "%" + value.toUpperCase() + "%";
+            return criteriaBuilder.or(
+                    criteriaBuilder.like(
+                            criteriaBuilder.upper(root.get("username")),
+                            pattern
+                    ),
+                    criteriaBuilder.like(
+                            criteriaBuilder.upper(root.get("displayName")),
+                            pattern
+                    )
+            );
+        };
     }
 
     private Component getUserEditMenu(UserModel user, Editor<UserModel> editor) {
