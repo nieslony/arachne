@@ -43,9 +43,9 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
  *
  * @author claas
  */
-@Slf4j
 @Route(value = "cert-specs", layout = ViewTemplate.class)
 @RolesAllowed("ADMIN")
+@Slf4j
 public class CertSpecsView
         extends VerticalLayout
         implements HasUrlParameter<String>, HasDynamicTitle {

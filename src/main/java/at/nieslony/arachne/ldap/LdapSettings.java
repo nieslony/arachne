@@ -27,8 +27,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -38,9 +37,8 @@ import org.springframework.beans.factory.annotation.Value;
 @Getter
 @Setter
 @ToString
+@Slf4j
 public class LdapSettings extends AbstractSettingsGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapSettings.class);
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),

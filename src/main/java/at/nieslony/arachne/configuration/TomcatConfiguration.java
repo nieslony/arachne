@@ -52,8 +52,8 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author claas
  */
-@Configuration
 @Slf4j
+@Configuration
 public class TomcatConfiguration {
 
     @Autowired

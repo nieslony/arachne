@@ -10,17 +10,15 @@ import com.vaadin.flow.component.HasLabel;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  * @param <Value>
  */
+@Slf4j
 public class IgnoringInvisibleOrDisabledValidator<Value> implements Validator<Value> {
-
-    private static final Logger logger = LoggerFactory.getLogger(IgnoringInvisibleOrDisabledValidator.class);
 
     private final Validator<Value> validator;
 
@@ -44,20 +42,20 @@ public class IgnoringInvisibleOrDisabledValidator<Value> implements Validator<Va
 
         if (comp instanceof HasEnabled hasEnabled) {
             if (!hasEnabled.isEnabled()) {
-                logger.debug(labelStr + " is disabled => OK");
+                log.debug(labelStr + " is disabled => OK");
                 return ValidationResult.ok();
             }
         }
 
         if (!comp.isVisible()) {
-            logger.debug(labelStr + " is not visible  => OK");
+            log.debug(labelStr + " is not visible  => OK");
             return ValidationResult.ok();
         } else {
             var ret = validator.apply(t, vc);
             if (ret.isError()) {
-                logger.debug(labelStr + " is invalid" + ret.getErrorMessage());
+                log.debug(labelStr + " is invalid" + ret.getErrorMessage());
             } else {
-                logger.debug(labelStr + " is valid");
+                log.debug(labelStr + " is valid");
             }
             return ret;
         }

@@ -5,8 +5,7 @@
 package at.nieslony.arachne.apiindex;
 
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -20,9 +19,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author claas
  */
 @Controller
+@Slf4j
 public class ApiIndexBean {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApiIndexBean.class);
     private Map<RequestMappingInfo, HandlerMethod> apiMap;
 
     @EventListener

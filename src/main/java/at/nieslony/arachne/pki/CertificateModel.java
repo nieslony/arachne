@@ -27,8 +27,7 @@ import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -39,9 +38,8 @@ import org.slf4j.LoggerFactory;
 @Setter
 @ToString
 @Table(name = "certitificates")
+@Slf4j
 public class CertificateModel implements Serializable {
-
-    private static final Logger logger = LoggerFactory.getLogger(CertificateModel.class);
 
     public enum CertType {
         INVALID("Invalid"),
@@ -117,7 +115,7 @@ public class CertificateModel implements Serializable {
 
                 return bos.toByteArray();
             } catch (IOException ex) {
-                logger.error("Cannot serialize certificate: " + ex.getMessage());
+                log.error("Cannot serialize certificate: " + ex.getMessage());
                 return null;
             }
         } else {
@@ -129,7 +127,7 @@ public class CertificateModel implements Serializable {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bis)) {
             certificate = (X509Certificate) ois.readObject();
         } catch (ClassNotFoundException | IOException ex) {
-            logger.error("Cannot deserialize certificate: " + ex.getMessage());
+            log.error("Cannot deserialize certificate: " + ex.getMessage());
         }
     }
 

@@ -152,7 +152,7 @@ public class SecurityConfiguration {
                         final HttpServletResponse response,
                         final Authentication authentication
                 ) throws IOException, ServletException {
-                    logger.info("Access to %s granted".formatted(request.getContextPath()));
+                    log.info("Access to %s granted".formatted(request.getContextPath()));
                     SecurityContext context = securityContextHolderStrategy.createEmptyContext();
                     context.setAuthentication(authentication);
                     securityContextHolderStrategy.setContext(context);

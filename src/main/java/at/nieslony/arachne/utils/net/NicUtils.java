@@ -12,16 +12,14 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class NicUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(NicUtils.class);
 
     public static List<NicInfo> findAllNics() {
         List<NicInfo> allNics = new LinkedList<>();
@@ -30,7 +28,7 @@ public class NicUtils {
         try {
             foundNics = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException ex) {
-            logger.error("Cannot retrieve list of NICs: " + ex.getMessage());
+            log.error("Cannot retrieve list of NICs: " + ex.getMessage());
             return null;
         }
         for (NetworkInterface nic : Collections

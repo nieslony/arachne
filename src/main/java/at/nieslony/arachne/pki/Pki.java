@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequence;
@@ -84,8 +85,6 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -93,6 +92,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
+@Slf4j
 public class Pki {
 
     @Autowired
@@ -110,8 +110,6 @@ public class Pki {
     @Value("${tomcatKeyPath:${arachneConfigDir}/server.key}")
     String tomcatKeyPath;
 
-    private static final Logger logger = LoggerFactory.getLogger(Pki.class);
-
     private KeyPairGenerator keyPairGenerator;
     private SecureRandom secureRandom;
 
@@ -124,7 +122,7 @@ public class Pki {
         try {
             secureRandom = SecureRandom.getInstance("NativePRNGNonBlocking");
         } catch (NoSuchAlgorithmException ex) {
-            logger.warn("NativePRNGNonBlocking not available, falling back to default.");
+            log.warn("NativePRNGNonBlocking not available, falling back to default.");
             secureRandom = new SecureRandom();
         }
         secureRandom.setSeed(System.currentTimeMillis());
@@ -135,13 +133,13 @@ public class Pki {
     private final X509CRL crl = null;
 
     public void fromSetupData(SetupData setupData) throws CertSpecsValidationException {
-        logger.info("Verify and save PKI settings");
+        log.info("Verify and save PKI settings");
         try {
             setupData.getCaCertSpecs().save(settings);
             setupData.getServerCertSpecs().save(settings);
             setupData.getUserCertSpecs().save(settings);
         } catch (SettingsException ex) {
-            logger.error("Cannot save setupData: " + ex.getMessage());
+            log.error("Cannot save setupData: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -163,7 +161,7 @@ public class Pki {
             jpw.writeObject(getRootCert());
         } catch (IOException ex) {
             String msg = "Cannot write CA certificate: " + ex.getMessage();
-            logger.error(msg);
+            log.error(msg);
             return msg;
         }
 
@@ -177,7 +175,7 @@ public class Pki {
             jpw.writeObject(obj);
         } catch (IOException ex) {
             String msg = "Cannot write private key: " + ex.getMessage();
-            logger.error(msg);
+            log.error(msg);
             return msg;
         }
 
@@ -193,7 +191,7 @@ public class Pki {
         try {
             caCertSpecs = new CertSpecs(settings, CertSpecs.CertSpecType.CA_SPEC);
         } catch (SettingsException ex) {
-            logger.error("cannot load caCertSpecs: " + ex.getMessage());
+            log.error("cannot load caCertSpecs: " + ex.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         String rootCertSubject = caCertSpecs.getSubject();
@@ -205,7 +203,7 @@ public class Pki {
                 );
 
         if (certModList.isEmpty()) {
-            logger.info("Creating root certificate: " + rootCertSubject);
+            log.info("Creating root certificate: " + rootCertSubject);
             createRootCert();
             KeyModel keyModel = keyRepository.save(new KeyModel(rootKey));
             certificateRepository.save(new CertificateModel(
@@ -213,7 +211,7 @@ public class Pki {
                     CertificateModel.CertType.CA,
                     keyModel));
         } else {
-            logger.info("Loading root certitificate from DB");
+            log.info("Loading root certitificate from DB");
             rootCert = certModList.get(0).getCertificate();
             rootKey = certModList.get(0).getKeyModel().getPrivateKey();
         }
@@ -290,7 +288,7 @@ public class Pki {
                 | OperatorCreationException
                 | CertificateException
                 | SettingsException ex) {
-            logger.error("Error genarating root certitficate: " + ex.getMessage());
+            log.error("Error genarating root certitficate: " + ex.getMessage());
         }
     }
 
@@ -336,7 +334,7 @@ public class Pki {
         Date now = new Date();
         for (CertificateModel cm : certModels) {
             if (cm.getRevocationDate() == null && now.compareTo(cm.getValidTo()) < 0) {
-                logger.info("Found user certificate");
+                log.info("Found user certificate");
                 return cm;
             }
         }
@@ -345,7 +343,7 @@ public class Pki {
         int keySize = userCertSpecs.getKeySize();
         int lifetimeDays = userCertSpecs.getCertLifeTimeDays();
         String signatureAlgo = userCertSpecs.getSignatureAlgo();
-        logger.info("Creating user certificate: " + subject);
+        log.info("Creating user certificate: " + subject);
         CertificateModel certModel = createCertificate(
                 CertificateModel.CertType.USER,
                 keyAlgo,
@@ -391,7 +389,7 @@ public class Pki {
         int lifetimeDays = serverCertSpecs.getCertLifeTimeDays();
         String signatureAlgo = serverCertSpecs.getSignatureAlgo();
         String subject = serverCertSpecs.getSubject();
-        logger.info("Creating server certificate: " + subject);
+        log.info("Creating server certificate: " + subject);
         CertificateModel certModel = createCertificate(
                 CertificateModel.CertType.SERVER,
                 keyAlgo,
@@ -408,7 +406,7 @@ public class Pki {
             X509Certificate cert = getServerCert();
             return asBase64(cert);
         } catch (PkiException | SettingsException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             return null;
         }
     }
@@ -418,7 +416,7 @@ public class Pki {
             X509Certificate cert = getUserCert(username);
             return asBase64(cert);
         } catch (PkiException | SettingsException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             return null;
         }
     }
@@ -520,7 +518,7 @@ public class Pki {
                 | CertIOException
                 | NoSuchAlgorithmException
                 | SettingsException ex) {
-            logger.error(
+            log.error(
                     "Cannot create certificate (%s): %s"
                             .formatted(subjectStr, ex.getMessage())
             );
@@ -538,7 +536,7 @@ public class Pki {
     }
 
     public void generateDhParams(int bits) {
-        logger.info("Generating DH params (%d bits)".formatted(bits));
+        log.info("Generating DH params (%d bits)".formatted(bits));
         DHParametersGenerator dhGen = new DHParametersGenerator();
         dhGen.init(bits, 80, secureRandom);
         DHParameters params = dhGen.generateParameters();
@@ -559,7 +557,7 @@ public class Pki {
             pkiSettings.setDhParams(sw.toString());
             pkiSettings.save(settings);
         } catch (IOException | SettingsException ex) {
-            logger.error("Error generating dh params: " + ex.getMessage());
+            log.error("Error generating dh params: " + ex.getMessage());
         }
     }
 
@@ -604,7 +602,7 @@ public class Pki {
                 | OperatorCreationException
                 | CertificateEncodingException
                 | NoSuchAlgorithmException ex) {
-            logger.error("Cannot create CRL: " + ex.getMessage());
+            log.error("Cannot create CRL: " + ex.getMessage());
         }
 
         return crl;
@@ -615,7 +613,7 @@ public class Pki {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         if (tomcatSettings.isServerCertAsWebCert()) {
             try (PrintWriter writer = new PrintWriter(new FileWriter(tomcatKeyPath))) {
-                logger.info("Writing private key to " + tomcatKeyPath);
+                log.info("Writing private key to " + tomcatKeyPath);
                 writer.print(getServerKeyAsBase64());
 
                 Set<PosixFilePermission> perms = new HashSet<>();
@@ -627,7 +625,7 @@ public class Pki {
             }
 
             try (PrintWriter writer = new PrintWriter(new FileWriter(tomcatCertPath))) {
-                logger.info("Writing server cert to " + tomcatCertPath);
+                log.info("Writing server cert to " + tomcatCertPath);
                 writer.print(getServerCertAsBase64());
             } catch (IOException ex) {
                 throw new UpdateWebServerCertificateException(tomcatCertPath, ex);

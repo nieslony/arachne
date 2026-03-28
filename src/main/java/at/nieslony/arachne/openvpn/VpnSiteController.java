@@ -7,8 +7,7 @@ package at.nieslony.arachne.openvpn;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -17,9 +16,8 @@ import org.springframework.stereotype.Controller;
  * @author claas
  */
 @Controller
+@Slf4j
 public class VpnSiteController {
-
-    private static final Logger logger = LoggerFactory.getLogger(VpnSiteController.class);
 
     public class VpnSiteNotFound extends Exception {
 
@@ -94,12 +92,12 @@ public class VpnSiteController {
                 .description(description)
                 .defaultSite(false)
                 .build();
-        logger.info("Adding site: " + site.toString());
+        log.info("Adding site: " + site.toString());
         return vpnSiteRepository.save(site);
     }
 
     public VpnSite addSite(VpnSite site) throws OnlyOneDefaultSiteAllowed {
-        logger.info("Adding site: " + site.toString());
+        log.info("Adding site: " + site.toString());
         if (site.isDefaultSite()) {
             Optional<VpnSite> defSite = vpnSiteRepository.findByDefaultSite(true);
             if (defSite.isPresent()) {
@@ -114,7 +112,7 @@ public class VpnSiteController {
     }
 
     public VpnSite saveSite(VpnSite site) throws OnlyOneDefaultSiteAllowed {
-        logger.info("Saving site: " + site.toString());
+        log.info("Saving site: " + site.toString());
         if (site.isDefaultSite()) {
             Optional<VpnSite> defSite = vpnSiteRepository.findByDefaultSite(true);
             if (defSite.isPresent()) {

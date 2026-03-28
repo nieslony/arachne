@@ -40,8 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,9 +53,9 @@ import org.vaadin.olli.ClipboardHelper;
  */
 @Route(value = "api-index")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class ApiIndexView extends VerticalLayout {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApiIndexView.class);
     private static final String DEFAULT_VALUE
             = "\n\t\t\n\t\t\n\ue000\ue001\ue002\n\t\t\t\t\n";
 
@@ -369,7 +368,7 @@ public class ApiIndexView extends VerticalLayout {
                 enumNames.add(name);
             }
         } catch (Exception ex) {
-            logger.error("Cannot get enum values: "
+            log.error("Cannot get enum values: "
                     + ex.getClass().getName() + ": "
                     + ex.getMessage());
         }

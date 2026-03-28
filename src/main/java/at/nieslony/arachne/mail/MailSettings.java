@@ -27,11 +27,10 @@ import java.util.Properties;
 import javax.naming.NamingException;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.htmlparser.jericho.Renderer;
 import net.htmlparser.jericho.Segment;
 import net.htmlparser.jericho.Source;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -42,9 +41,8 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
  */
 @Getter
 @Setter
+@Slf4j
 public class MailSettings extends AbstractSettingsGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(MailSettings.class);
 
     public enum TemplateConfigType {
         PLAIN("Plain Text"),
@@ -80,7 +78,7 @@ public class MailSettings extends AbstractSettingsGroup {
                 return recs.get(0).getValue();
             }
         } catch (NamingException ex) {
-            logger.warn("Cannot get MX record: " + ex.getMessage());
+            log.warn("Cannot get MX record: " + ex.getMessage());
         }
         return "mail." + NetUtils.myDomain();
     }
@@ -98,7 +96,7 @@ public class MailSettings extends AbstractSettingsGroup {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.debug", "true");
-        logger.info("Propertries; " + props.toString());
+        log.info("Propertries; " + props.toString());
 
         return mailSender;
     }
@@ -119,7 +117,7 @@ public class MailSettings extends AbstractSettingsGroup {
             InputStream is = new ClassPathResource(RN).getInputStream();
             return new String(is.readAllBytes());
         } catch (IOException ex) {
-            logger.error("Cannot load resource %s: %s"
+            log.error("Cannot load resource %s: %s"
                     .formatted(RN, ex.getMessage())
             );
             return "";

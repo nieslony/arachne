@@ -30,17 +30,15 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.function.ThrowingConsumer;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class NetUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
 
     static public String maskLen2Mask(int len) {
         int mask = 0xffffffff << (32 - len);
@@ -140,7 +138,7 @@ public class NetUtils {
             Attribute attr = (Attribute) en.next();
             String[] splitAttr = attr.toString().split(" +");
             if (splitAttr.length != 3) {
-                logger.warn("Doesn't look like an MX record: " + attr.toString());
+                log.warn("Doesn't look like an MX record: " + attr.toString());
                 continue;
             }
 
@@ -242,7 +240,7 @@ public class NetUtils {
                 dnsServers.add(ent.split("/")[2]);
             }
         } catch (NamingException ex) {
-            logger.warn(String.format("Cannot find DNS : %s", ex.getMessage()));
+            log.warn(String.format("Cannot find DNS : %s", ex.getMessage()));
         }
 
         return dnsServers;
@@ -271,7 +269,7 @@ public class NetUtils {
                 }
             }
         } catch (SocketException ex) {
-            logger.warn(String.format("Cannot find network address: %s", ex.getMessage()));
+            log.warn(String.format("Cannot find network address: %s", ex.getMessage()));
         }
 
         return routes;
