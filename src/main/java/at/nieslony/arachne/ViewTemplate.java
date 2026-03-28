@@ -102,7 +102,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 .set("font-size", "var(--aura-font-size-l)")
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.AURA_TERTIARY);
+        menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
         MenuItem item = menuBar.addItem(avatar, userInfo);
         SubMenu userMenu = item.getSubMenu();
         userMenu.addItem("Logout", click -> {

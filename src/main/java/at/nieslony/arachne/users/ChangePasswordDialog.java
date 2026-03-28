@@ -115,7 +115,7 @@ public class ChangePasswordDialog extends Dialog {
             close();
 
         });
-        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel", e -> close());
 
         getFooter().add(cancelButton, okButton);

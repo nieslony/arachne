@@ -110,7 +110,7 @@ public class LdapView extends VerticalLayout {
                     }
                 }
         );
-        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         enableLdapUserSource.addValueChangeListener(e -> {
             tabSheet.setVisible(e.getValue());
@@ -574,7 +574,7 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();
@@ -634,7 +634,7 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();

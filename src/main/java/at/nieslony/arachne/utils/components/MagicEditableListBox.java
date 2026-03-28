@@ -87,7 +87,7 @@ public class MagicEditableListBox<T extends Object>
                 listBox.updateModelValue(new LinkedList<>(items));
                 close();
             });
-            okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+            okButton.addThemeVariants(ButtonVariant.PRIMARY);
             Button cancelButton = new Button("Cancel", (e) -> {
                 close();
             });

@@ -146,7 +146,7 @@ public class CertSpecsView
                 }
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         add(
                 formLayout,

@@ -125,7 +125,7 @@ public class PkiSettingsView extends VerticalLayout {
                 log.error("Cannot save pki settings: " + ex.getMessage());
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         add(
                 dhParamsLayout,
@@ -155,7 +155,7 @@ public class PkiSettingsView extends VerticalLayout {
         Button okButton = new Button("OK", (e) -> {
             dlg.close();
         });
-        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

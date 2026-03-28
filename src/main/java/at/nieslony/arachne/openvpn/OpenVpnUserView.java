@@ -84,7 +84,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Button saveSettings = new Button("Save and restart VPN");
         saveSettings.setTooltipText("All active conections will reconnect after restart");
-        saveSettings.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveSettings.addThemeVariants(ButtonVariant.PRIMARY);
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
         });
@@ -243,7 +243,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 (e) -> nameHints.setOpened(!nameHints.isOpened())
         );
         showTooltip.addThemeVariants(
-                ButtonVariant.AURA_TERTIARY,
+                ButtonVariant.TERTIARY,
                 ButtonVariant.LUMO_ICON
         );
         name.setSuffixComponent(showTooltip);

@@ -215,7 +215,7 @@ class EditFirewallWhat extends AbstractCompositeField<VerticalLayout, EditFirewa
         Popover popover = new Popover();
         popover.setTarget(parent);
         popover.setPosition(PopoverPosition.END);
-        popover.addThemeVariants(PopoverVariant.AURA_ARROW);
+        popover.addThemeVariants(PopoverVariant.ARROW);
         popover.setOpenOnClick(false);
         popover.setOpenOnHover(true);
         popover.setWidth("32em");

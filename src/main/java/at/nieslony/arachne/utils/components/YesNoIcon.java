@@ -23,14 +23,14 @@ public class YesNoIcon extends AbstractCompositeField<HorizontalLayout, YesNoIco
         super(true);
 
         yesIcon = new Button(VaadinIcon.CHECK.create());
-        yesIcon.addThemeVariants(ButtonVariant.AURA_TERTIARY);
+        yesIcon.addThemeVariants(ButtonVariant.TERTIARY);
         yesIcon.setVisible(true);
         yesIcon.setEnabled(false);
 
         noIcon = new Button(VaadinIcon.CLOSE.create());
         noIcon.addThemeVariants(
-                ButtonVariant.AURA_DANGER,
-                ButtonVariant.AURA_TERTIARY
+                ButtonVariant.ERROR,
+                ButtonVariant.TERTIARY
         );
         noIcon.setVisible(false);
         noIcon.setEnabled(false);

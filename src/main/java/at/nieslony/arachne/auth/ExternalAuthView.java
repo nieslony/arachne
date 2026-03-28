@@ -126,7 +126,7 @@ public class ExternalAuthView extends VerticalLayout {
                 "Save and Restart Arachne",
                 e -> onSaveAndRestart()
         );
-        saveButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
         saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();

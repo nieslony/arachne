@@ -136,7 +136,7 @@ public abstract class ConfigUploadThread extends Thread {
                 (e) -> uploadingDlg.close()
         );
         closeButton.setVisible(false);
-        closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         uploadingDlg.add(
                 commandsItems,

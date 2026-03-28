@@ -70,7 +70,7 @@ public class AboutDialog extends Dialog {
             close();
         });
 
-        closeButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         getFooter()
                 .add(closeButton);

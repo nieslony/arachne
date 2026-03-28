@@ -256,7 +256,7 @@ public class RolesView extends VerticalLayout {
             roleRuleRepository.save(roleRule);
             roleRules.setItems(roleRuleRepository.findAll());
         });
-        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel", e -> {
             dialog.close();
         });

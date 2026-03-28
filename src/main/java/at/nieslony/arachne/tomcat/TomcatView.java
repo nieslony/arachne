@@ -100,7 +100,7 @@ public class TomcatView extends VerticalLayout {
                 e -> onSave()
         );
         saveAndRestartButton.setDisableOnClick(true);
-        saveAndRestartButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        saveAndRestartButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         add(
                 createAjpDetails(),

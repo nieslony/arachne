@@ -264,7 +264,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 log.error("Input validation Error: " + ex.getMessage());
             }
         });
-        okButton.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();
