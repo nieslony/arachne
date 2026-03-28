@@ -74,7 +74,7 @@ public class ShowNotification {
                 headerText,
                 "var(--lumo-base-text-color)",
                 msg);
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
 
         return notification;
     }

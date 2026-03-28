@@ -117,7 +117,7 @@ public class EditYourselfDialog extends Dialog {
             }
             close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel", e -> close());
 
         getFooter().add(cancelButton, okButton);

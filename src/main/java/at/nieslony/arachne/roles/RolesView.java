@@ -210,9 +210,7 @@ public class RolesView extends VerticalLayout {
         Button cancelButton = new Button(
                 VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
-        cancelButton.addThemeVariants(
-                ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_ERROR);
+        cancelButton.addThemeVariants(ButtonVariant.ERROR);
         HorizontalLayout actions = new HorizontalLayout(
                 saveButton,
                 cancelButton
