@@ -17,6 +17,8 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -47,6 +49,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 /**
@@ -56,6 +59,9 @@ import org.springframework.stereotype.Controller;
 @Controller
 @Slf4j
 public class TotpController {
+
+    @Autowired
+    UserRepository userRepository;
 
     private static final int TOTP_CODE_DIGITS = 6;
     private static final int TIME_STEP_MILLIS = 30 * 1000;
@@ -120,7 +126,7 @@ public class TotpController {
         }
     }
 
-    public Component create2FAView() {
+    public Component create2FAView(UserModel user) {
         byte[] secret = generateSecret(32);
         VerticalLayout layout = new VerticalLayout();
 
@@ -190,6 +196,10 @@ public class TotpController {
             } else {
                 ShowNotification.error("Error", "OTP does not match");
             }
+        });
+
+        attachAuthenticatorButton.addClickListener(e -> {
+            userRepository.save(user);
         });
 
         return layout;
