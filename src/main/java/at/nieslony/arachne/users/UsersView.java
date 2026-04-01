@@ -186,6 +186,15 @@ public class UsersView extends VerticalLayout {
                 })
                 .setAutoWidth(true)
                 .setHeader("Roles");
+        usersGrid
+                .addColumn(new ComponentRenderer<>((UserModel user) -> {
+                    if (user.getOtpSecret() != null) {
+                        var icon = VaadinIcon.KEY.create();
+                        icon.setTooltipText("OTP enabled");
+                        return icon;
+                    }
+                    return new Text("");
+                }));
 
         editUsersGridBuffered();
 

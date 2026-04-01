@@ -124,6 +124,13 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                         ldapController,
                         toptController
                 );
+                dlg.addOpenedChangeListener(e -> {
+                    if (e.isOpened()) {
+                        log.debug("EditYouselfDialog opened");
+                    } else {
+                        log.debug("EditYouselfDialog closed");
+                    }
+                });
                 dlg.open();
             });
             if (user.hasAvatar()) {

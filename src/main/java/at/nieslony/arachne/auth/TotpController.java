@@ -27,6 +27,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Image;
@@ -127,6 +128,11 @@ public class TotpController {
     }
 
     public Component create2FAView(UserModel user) {
+        return create2FAView(user, () -> {
+        });
+    }
+
+    public Component create2FAView(UserModel user, Runnable onAttachAuthenticator) {
         byte[] secret = generateSecret(32);
         VerticalLayout layout = new VerticalLayout();
 
@@ -177,6 +183,7 @@ public class TotpController {
         H4 attachAuthenticatorHeader = new H4("Step 4: Attach Authenticator");
         Button attachAuthenticatorButton = new Button("Attach Authenticator");
         attachAuthenticatorButton.setEnabled(false);
+        attachAuthenticatorButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         layout.add(
                 installHeader, installInstructions,
@@ -199,7 +206,9 @@ public class TotpController {
         });
 
         attachAuthenticatorButton.addClickListener(e -> {
+            user.setOtpSecret(secret);
             userRepository.save(user);
+            onAttachAuthenticator.run();
         });
 
         return layout;

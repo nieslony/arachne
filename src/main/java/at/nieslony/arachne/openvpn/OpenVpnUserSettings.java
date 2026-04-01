@@ -63,6 +63,23 @@ public class OpenVpnUserSettings
         }
     }
 
+    public enum OtpRequired {
+        NEVER("Never"),
+        PER_USER_CONFIGURED("Per User Configured"),
+        ALWAYS("Always");
+
+        private OtpRequired(String or) {
+            this.or = or;
+        }
+
+        private final String or;
+
+        @Override
+        public String toString() {
+            return or;
+        }
+    }
+
     public enum NetworkManagerRememberPassword {
         REMEMBER_EVERYBODY(0, "Remember for everybody (unencrypted)"),
         REMEMBER_USER(1, "Remember for user (encrypted)"),
@@ -115,6 +132,7 @@ public class OpenVpnUserSettings
     private String authHttpUrl = defaultAuthUrl(
             Settings.getInstance().getServerProperties()
     );
+    private OtpRequired authOtpRequired = OtpRequired.PER_USER_CONFIGURED;
     private NetworkManagerRememberPassword networkManagerRememberPassword = NetworkManagerRememberPassword.ALWAYS_ASK;
 
     public void setPushDnsServers(List<String> pushDnsServers) {

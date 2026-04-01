@@ -59,7 +59,13 @@ public class EditYourselfDialog extends Dialog {
         setHeaderTitle(user.getDisplayName() + "'s personal Settings");
         TabSheet tabs = new TabSheet();
         tabs.add("GUI Settings", createGuiTab());
-        tabs.add("Two Factor Authentication", totpController.create2FAView(user));
+        tabs.add(
+                "Two Factor Authentication",
+                totpController.create2FAView(
+                        user,
+                        () -> UI.getCurrent().getPage().reload()
+                )
+        );
 
         add(tabs);
 

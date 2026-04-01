@@ -69,16 +69,12 @@ public class OpenVpnUserView extends VerticalLayout {
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
 
-    private final ArachneDbus arachneDbus;
-
     public OpenVpnUserView(
             Settings settings,
             OpenVpnController openvpnRestController,
             ArachneDbus arachneDbus,
             Pki pki
     ) {
-        this.arachneDbus = arachneDbus;
-
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         binder = new Binder<>(OpenVpnUserSettings.class);
 
@@ -132,6 +128,11 @@ public class OpenVpnUserView extends VerticalLayout {
         authTypeField.setLabel("Authentication Type");
         authTypeField.setItems(OpenVpnUserSettings.AuthType.values());
         authTypeField.setWidthFull();
+
+        Select<OpenVpnUserSettings.OtpRequired> authOtpRequired = new Select<>();
+        authOtpRequired.setLabel("OTP Required");
+        authOtpRequired.setItems(OpenVpnUserSettings.OtpRequired.values());
+        authOtpRequired.setWidthFull();
 
         TextField authPamServiceField = new TextField();
         TextField authHttpUrlField = new TextField();
@@ -204,6 +205,8 @@ public class OpenVpnUserView extends VerticalLayout {
 
         binder.forField(authTypeField)
                 .bind(OpenVpnUserSettings::getAuthType, OpenVpnUserSettings::setAuthType);
+        binder.forField(authOtpRequired)
+                .bind(OpenVpnUserSettings::getAuthOtpRequired, OpenVpnUserSettings::setAuthOtpRequired);
         binder.forField(passwordVerificationTypeField)
                 .bind(OpenVpnUserSettings::getPasswordVerificationType, OpenVpnUserSettings::setPasswordVerificationType);
         binder.forField(authPamServiceField)
@@ -218,6 +221,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 authTypeField,
+                authOtpRequired,
                 passwordVerificationTypeField,
                 nmRememberPassword
         );

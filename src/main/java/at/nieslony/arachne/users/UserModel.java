@@ -149,6 +149,10 @@ public class UserModel implements Serializable {
     @Builder.Default
     private AvatarSource avatarSource = AvatarSource.LDAP;
 
+    @Column
+    @Lob
+    private byte[] otpSecret;
+
     @JsonIgnore
     public String getInitials() {
         String[] nameParts = displayName.split(("\s+"));
