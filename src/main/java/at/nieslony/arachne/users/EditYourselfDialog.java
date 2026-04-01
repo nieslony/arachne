@@ -17,9 +17,11 @@
  */
 package at.nieslony.arachne.users;
 
+import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.utils.ByteArrayHolder;
 import at.nieslony.arachne.utils.components.ShowNotification;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
@@ -29,6 +31,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -39,10 +42,33 @@ import org.springframework.ldap.CommunicationException;
 @Slf4j
 public class EditYourselfDialog extends Dialog {
 
-    public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapController ldapController) {
-        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
-        setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
+    private final UserModel user;
+    private final LdapController ldapController;
+    private final UserRepository userRepository;
 
+    public EditYourselfDialog(
+            UserModel user,
+            UserRepository userRepository,
+            LdapController ldapController,
+            TotpController totpController
+    ) {
+        this.user = user;
+        this.ldapController = ldapController;
+        this.userRepository = userRepository;
+
+        setHeaderTitle(user.getDisplayName() + "'s personal Settings");
+        TabSheet tabs = new TabSheet();
+        tabs.add("GUI Settings", createGuiTab());
+        tabs.add("Two Factor Authentication", totpController.create2FAView());
+
+        add(tabs);
+
+        Button closeButton = new Button("Close", e -> close());
+        getFooter().add(closeButton);
+    }
+
+    private Component createGuiTab() {
+        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         Binder<UserModel> binder = new Binder<>();
 
         Select<UserModel.ThemeVariant> themeVariantSelect = new Select<>();
@@ -81,13 +107,6 @@ public class EditYourselfDialog extends Dialog {
         avatarLayout.setEnabled(false);
         avatarLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        VerticalLayout layout = new VerticalLayout(
-                themeVariantSelect,
-                avatarSource,
-                avatarLayout
-        );
-        add(layout);
-
         avatarSource.addValueChangeListener((e) -> {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
             if (e.getValue() == UserModel.AvatarSource.LDAP) {
@@ -106,7 +125,7 @@ public class EditYourselfDialog extends Dialog {
                 }
             }
         });
-        Button okButton = new Button("OK", e -> {
+        Button applyButton = new Button("Apply", e -> {
             try {
                 binder.writeBean(user);
                 user.setAvatar(avatarHolder.get());
@@ -117,11 +136,19 @@ public class EditYourselfDialog extends Dialog {
             }
             close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button cancelButton = new Button("Cancel", e -> close());
-
-        getFooter().add(cancelButton, okButton);
+        applyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         binder.readBean(user);
+
+        VerticalLayout layout = new VerticalLayout(
+                themeVariantSelect,
+                avatarSource,
+                avatarLayout,
+                applyButton
+        );
+        layout.setMargin(false);
+        layout.setPadding(false);
+
+        return layout;
     }
 }

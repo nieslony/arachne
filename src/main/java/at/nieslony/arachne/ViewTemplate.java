@@ -6,6 +6,7 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
+import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapController;
@@ -66,17 +67,20 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
     private final LdapController ldapController;
+    private final TotpController toptController;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepository,
             AuthenticationContext authContext,
             ArachneVersion arachneVersion,
-            LdapController ldapController) {
+            LdapController ldapController,
+            TotpController totpController) {
         this.authContext = authContext;
         this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
         this.ldapController = ldapController;
+        this.toptController = totpController;
 
         createHeader();
         createDrawer();
@@ -117,7 +121,8 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 EditYourselfDialog dlg = new EditYourselfDialog(
                         user,
                         userRepository,
-                        ldapController
+                        ldapController,
+                        toptController
                 );
                 dlg.open();
             });
