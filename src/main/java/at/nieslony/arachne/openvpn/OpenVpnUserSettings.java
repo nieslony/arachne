@@ -133,6 +133,7 @@ public class OpenVpnUserSettings
             Settings.getInstance().getServerProperties()
     );
     private OtpRequired authOtpRequired = OtpRequired.PER_USER_CONFIGURED;
+    private String authOtpIssuer = NetUtils.myHostname();
     private NetworkManagerRememberPassword networkManagerRememberPassword = NetworkManagerRememberPassword.ALWAYS_ASK;
 
     public void setPushDnsServers(List<String> pushDnsServers) {

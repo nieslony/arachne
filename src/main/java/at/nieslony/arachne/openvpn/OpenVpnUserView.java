@@ -134,6 +134,9 @@ public class OpenVpnUserView extends VerticalLayout {
         authOtpRequired.setItems(OpenVpnUserSettings.OtpRequired.values());
         authOtpRequired.setWidthFull();
 
+        TextField authOtpIssuerField = new TextField();
+        authOtpIssuerField.setWidthFull();
+
         TextField authPamServiceField = new TextField();
         TextField authHttpUrlField = new TextField();
 
@@ -203,10 +206,18 @@ public class OpenVpnUserView extends VerticalLayout {
                     }
                 });
 
+        authOtpRequired.addValueChangeListener(e -> {
+            authOtpIssuerField.setEnabled(
+                    !e.getValue().equals(OpenVpnUserSettings.OtpRequired.NEVER)
+            );
+        });
+
         binder.forField(authTypeField)
                 .bind(OpenVpnUserSettings::getAuthType, OpenVpnUserSettings::setAuthType);
         binder.forField(authOtpRequired)
                 .bind(OpenVpnUserSettings::getAuthOtpRequired, OpenVpnUserSettings::setAuthOtpRequired);
+        binder.forField(authOtpIssuerField)
+                .bind(OpenVpnUserSettings::getAuthOtpIssuer, OpenVpnUserSettings::setAuthOtpIssuer);
         binder.forField(passwordVerificationTypeField)
                 .bind(OpenVpnUserSettings::getPasswordVerificationType, OpenVpnUserSettings::setPasswordVerificationType);
         binder.forField(authPamServiceField)
@@ -222,6 +233,7 @@ public class OpenVpnUserView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout(
                 authTypeField,
                 authOtpRequired,
+                authOtpIssuerField,
                 passwordVerificationTypeField,
                 nmRememberPassword
         );

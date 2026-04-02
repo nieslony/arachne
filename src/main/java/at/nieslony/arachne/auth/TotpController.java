@@ -17,6 +17,8 @@
  */
 package at.nieslony.arachne.auth;
 
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.components.ShowNotification;
@@ -52,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.ObjectUtils;
 
 /**
  *
@@ -63,6 +66,9 @@ public class TotpController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    Settings settings;
 
     private static final int TOTP_CODE_DIGITS = 6;
     private static final int TIME_STEP_MILLIS = 30 * 1000;
@@ -83,13 +89,22 @@ public class TotpController {
         return MatrixToImageWriter.toBufferedImage(bitMatrix);
     }
 
-    private String createToptUrl(String label, byte[] secret) {
+    private String createToptUrl(String label, byte[] secret, String username) {
         // ec. otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example
         //return "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example";
 
-        return "otpauth://totp/%s?secret=%s".formatted(
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+
+        String issuer = ObjectUtils.isEmpty(openVpnUserSettings.getAuthOtpIssuer())
+                ? username
+                : "%s (%s)".formatted(openVpnUserSettings.getAuthOtpIssuer(), username);
+
+        return "otpauth://totp/%s:%s?secret=%s&issuer=%s".formatted(
+                issuer,
                 label,
-                Base32.toBase32String(secret)
+                Base32.toBase32String(secret),
+                issuer,
+                username
         );
     }
 
@@ -153,7 +168,8 @@ public class TotpController {
         String label = "ArachneOpenVPN";
         String url = createToptUrl(
                 label,
-                secret
+                secret,
+                user.getUsername()
         );
 
         AtomicReference<String> urlRef = new AtomicReference<>(url);

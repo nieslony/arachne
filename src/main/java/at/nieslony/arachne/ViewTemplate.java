@@ -18,6 +18,7 @@ import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.pki.PkiSettingsView;
 import at.nieslony.arachne.roles.RolesView;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTasksView;
 import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
@@ -68,6 +69,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final ArachneVersion arachneVersion;
     private final LdapController ldapController;
     private final TotpController toptController;
+    private final Settings settings;
     private String pageTitleStr = null;
 
     public ViewTemplate(
@@ -75,12 +77,14 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             AuthenticationContext authContext,
             ArachneVersion arachneVersion,
             LdapController ldapController,
-            TotpController totpController) {
+            TotpController totpController,
+            Settings settings) {
         this.authContext = authContext;
         this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
         this.ldapController = ldapController;
         this.toptController = totpController;
+        this.settings = settings;
 
         createHeader();
         createDrawer();
@@ -122,7 +126,8 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                         user,
                         userRepository,
                         ldapController,
-                        toptController
+                        toptController,
+                        settings
                 );
                 dlg.addOpenedChangeListener(e -> {
                     if (e.isOpened()) {

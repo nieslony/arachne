@@ -19,6 +19,8 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.ByteArrayHolder;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
@@ -50,22 +52,27 @@ public class EditYourselfDialog extends Dialog {
             UserModel user,
             UserRepository userRepository,
             LdapController ldapController,
-            TotpController totpController
+            TotpController totpController,
+            Settings settings
     ) {
         this.user = user;
         this.ldapController = ldapController;
         this.userRepository = userRepository;
 
+        OpenVpnUserSettings openvpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+
         setHeaderTitle(user.getDisplayName() + "'s personal Settings");
         TabSheet tabs = new TabSheet();
         tabs.add("GUI Settings", createGuiTab());
-        tabs.add(
-                "Two Factor Authentication",
-                totpController.create2FAView(
-                        user,
-                        () -> UI.getCurrent().getPage().reload()
-                )
-        );
+        if (openvpnUserSettings.getAuthOtpRequired() != OpenVpnUserSettings.OtpRequired.NEVER) {
+            tabs.add(
+                    "Two Factor Authentication",
+                    totpController.create2FAView(
+                            user,
+                            () -> UI.getCurrent().getPage().reload()
+                    )
+            );
+        }
 
         add(tabs);
 
