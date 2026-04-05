@@ -134,7 +134,7 @@ public class OpenVpnUserView extends VerticalLayout {
         authOtpRequired.setItems(OpenVpnUserSettings.OtpRequired.values());
         authOtpRequired.setWidthFull();
 
-        TextField authOtpIssuerField = new TextField();
+        TextField authOtpIssuerField = new TextField("OTP Issuer");
         authOtpIssuerField.setWidthFull();
 
         TextField authPamServiceField = new TextField();
