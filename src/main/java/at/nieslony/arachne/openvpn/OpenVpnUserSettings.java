@@ -39,7 +39,7 @@ public class OpenVpnUserSettings
             this.authType = authType;
         }
 
-        private String authType;
+        private final String authType;
 
         @Override
         public String toString() {
@@ -55,7 +55,7 @@ public class OpenVpnUserSettings
             this.pvt = pvt;
         }
 
-        private String pvt;
+        private final String pvt;
 
         @Override
         public String toString() {
@@ -143,7 +143,10 @@ public class OpenVpnUserSettings
     }
 
     private String defaultAuthUrl(ServerProperties serverProperties) {
-        return "http://%s:%d/arachne".formatted(NetUtils.myHostname(), 8080);
+        return "http://%s:%d/arachne".formatted(
+                NetUtils.myHostname(),
+                serverProperties.getPort()
+        );
     }
 
     public String getFormattedClientConfigName(String username) {
