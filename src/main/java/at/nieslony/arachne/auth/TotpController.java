@@ -109,6 +109,9 @@ public class TotpController {
     }
 
     public String generateTOTP(byte[] secret) {
+        if (secret == null) {
+            return "";
+        }
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             SecretKeySpec keySpec = new SecretKeySpec(secret, HMAC_ALGORITHM);
@@ -228,5 +231,13 @@ public class TotpController {
         });
 
         return layout;
+    }
+
+    public boolean validateTotp(String verifiTotp, UserModel user) {
+        if (ObjectUtils.isEmpty(verifiTotp)) {
+            return false;
+        }
+        String validOtp = generateTOTP(user.getOtpSecret());
+        return validOtp.equals(verifiTotp);
     }
 }
