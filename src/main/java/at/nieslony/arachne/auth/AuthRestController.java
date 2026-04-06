@@ -123,15 +123,6 @@ public class AuthRestController {
         return getToken(validTime, userDetails);
     }
 
-    @GetMapping("/api/auth")
-    @RolesAllowed(value = {"USER"})
-    public AuthResult auth(
-            @RequestParam(required = false, defaultValue = "10min") String validTime,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        return getToken(validTime, userDetails);
-    }
-
     private AuthResult getToken(
             @RequestParam(required = false, defaultValue = "10min") String validTime,
             @AuthenticationPrincipal UserDetails userDetails

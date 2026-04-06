@@ -170,8 +170,6 @@ public class OpenVpnController {
             writeConfigHeader(writer);
             writer.println("url-login = %s/api/login".formatted(
                     openVpnSettings.getAuthHttpUrl()));
-            writer.println("url-auth = %s/api/openvpn/auth".formatted(
-                    openVpnSettings.getAuthHttpUrl()));
             writer.println("enable-routing = %s".formatted(
                     firewallBasicsSettings.getEnableRoutingMode().name()
             ));
