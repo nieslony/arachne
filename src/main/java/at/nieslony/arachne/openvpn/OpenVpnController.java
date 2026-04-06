@@ -13,6 +13,8 @@ import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.ShellQuote;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -32,6 +34,8 @@ import java.nio.file.Paths;
 import java.security.cert.X509CRL;
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,6 +65,9 @@ public class OpenVpnController {
 
     @Autowired
     private CertificateRepository certificateRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private VpnSiteController vpnSiteController;
@@ -296,6 +303,7 @@ public class OpenVpnController {
 
     public String openVpnUserConfig(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        UserModel user = userRepository.findByUsername(username);
 
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
@@ -316,6 +324,14 @@ public class OpenVpnController {
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
+        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
+                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
+                && user.getOtpSecret() != null)) {
+            writer.println("static-challenge \"%s\" %d".formatted(
+                    vpnSettings.getAuthOtpPrompt(),
+                    vpnSettings.getAuthOtpShow() ? 1 : 0
+            ));
+        }
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
                            <auth-user-pass>
@@ -331,6 +347,8 @@ public class OpenVpnController {
 
     public String openVpnUserConfigShell(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        UserModel user = userRepository.findByUsername(username);
+
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
@@ -394,33 +412,51 @@ public class OpenVpnController {
                 .append("    connection.permissions user:$USER\n");
         configWriter.append("\"\n");
 
+        var vpnDataMap = Stream.of(new String[][]{
+            {"ca", caCertFn},
+            {"cert", userCertFn},
+            {"cert-pass-flags", "4"},
+            {"connection-type", "password-tls"},
+            {"dev-type", "tun"},
+            {"key", privateKeyFn},
+            {"password-flags", String.valueOf(vpnSettings.getNetworkManagerRememberPassword().getCfgValue())},
+            {
+                "proto-tcp",
+                vpnSettings.getListenProtocol() == TransportProtocol.TCP
+                ? "yes"
+                : "no"
+            },
+            {"remote", "%s:%d".formatted(vpnSettings.getRemote(), port)},
+            {"username", username}
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
+                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
+                && user.getOtpSecret() != null)) {
+            vpnDataMap.put(
+                    "static-challenge",
+                    "\"%s\" %d".formatted(
+                            vpnSettings.getAuthOtpPrompt(),
+                            vpnSettings.getAuthOtpShow() ? 1 : 0
+                    )
+            );
+        }
+
         configWriter.append(
                 """
                 vpn_data="
-                    ca = %s,
-                    cert = %s,
-                    cert-pass-flags = 4,
-                    connection-type = password-tls,
-                    dev-type = tun,
-                    key = %s,
-                    password-flags = %d,
-                    proto-tcp = %s,
-                    remote = %s:%d,
-                    username = %s
+                %s
                 "
-                nmcli connection add type vpn vpn-type openvpn con-name "%s" $vpn_opts vpn.data "$vpn_data"
+                nmcli connection add \\
+                    type vpn \\
+                    vpn-type openvpn \\
+                    con-name "%s" \\
+                    $vpn_opts \\
+                    vpn.data "$vpn_data"
                 """
                         .formatted(
-                                caCertFn,
-                                userCertFn,
-                                privateKeyFn,
-                                vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
-                                vpnSettings.getListenProtocol() == TransportProtocol.TCP
-                                ? "yes"
-                                : "no",
-                                vpnSettings.getRemote(),
-                                port,
-                                username,
+                                vpnDataMap.entrySet().stream()
+                                        .map((e) -> "    %s = %s".formatted(e.getKey(), e.getValue()))
+                                        .collect(Collectors.joining(",\n")),
                                 conName
                         )
         );
@@ -451,6 +487,7 @@ public class OpenVpnController {
 
     String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        UserModel user = userRepository.findByUsername(username);
 
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
@@ -482,6 +519,14 @@ public class OpenVpnController {
         data.put("dev-type", vpnSettings.getDeviceType());
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             data.put("proto-tcp", "yes");
+        }
+        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
+                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
+                && user.getOtpSecret() != null)) {
+            data.put("static-challenge", "\"%s\" %d".formatted(
+                    vpnSettings.getAuthOtpPrompt(),
+                    vpnSettings.getAuthOtpShow() ? 1 : 0
+            ));
         }
 
         JSONObject ipv4 = new JSONObject();

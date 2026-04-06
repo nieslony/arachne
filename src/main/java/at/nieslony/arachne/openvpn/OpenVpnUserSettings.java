@@ -134,6 +134,8 @@ public class OpenVpnUserSettings
     );
     private OtpRequired authOtpRequired = OtpRequired.PER_USER_CONFIGURED;
     private String authOtpIssuer = NetUtils.myHostname();
+    private String authOtpPrompt = "Enter Authentication Code";
+    private Boolean authOtpShow = true;
     private NetworkManagerRememberPassword networkManagerRememberPassword = NetworkManagerRememberPassword.ALWAYS_ASK;
 
     public void setPushDnsServers(List<String> pushDnsServers) {

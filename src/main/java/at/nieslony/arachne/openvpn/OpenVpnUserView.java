@@ -136,6 +136,13 @@ public class OpenVpnUserView extends VerticalLayout {
 
         TextField authOtpIssuerField = new TextField("OTP Issuer");
         authOtpIssuerField.setWidthFull();
+        authOtpIssuerField.setClearButtonVisible(true);
+
+        TextField authOtpPromptField = new TextField("OTP Prompt");
+        authOtpPromptField.setWidthFull();
+        authOtpPromptField.setClearButtonVisible(true);
+
+        Checkbox authOtpShow = new Checkbox("Show OTP while typing");
 
         TextField authPamServiceField = new TextField();
         TextField authHttpUrlField = new TextField();
@@ -207,9 +214,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 });
 
         authOtpRequired.addValueChangeListener(e -> {
-            authOtpIssuerField.setEnabled(
-                    !e.getValue().equals(OpenVpnUserSettings.OtpRequired.NEVER)
-            );
+            boolean enable = !e.getValue().equals(OpenVpnUserSettings.OtpRequired.NEVER);
+            authOtpIssuerField.setEnabled(enable);
+            authOtpPromptField.setEnabled(enable);
+            authOtpShow.setEnabled(enable);
         });
 
         binder.forField(authTypeField)
@@ -218,6 +226,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 .bind(OpenVpnUserSettings::getAuthOtpRequired, OpenVpnUserSettings::setAuthOtpRequired);
         binder.forField(authOtpIssuerField)
                 .bind(OpenVpnUserSettings::getAuthOtpIssuer, OpenVpnUserSettings::setAuthOtpIssuer);
+        binder.forField(authOtpPromptField)
+                .bind(OpenVpnUserSettings::getAuthOtpPrompt, OpenVpnUserSettings::setAuthOtpPrompt);
+        binder.forField(authOtpShow)
+                .bind(OpenVpnUserSettings::getAuthOtpShow, OpenVpnUserSettings::setAuthOtpShow);
         binder.forField(passwordVerificationTypeField)
                 .bind(OpenVpnUserSettings::getPasswordVerificationType, OpenVpnUserSettings::setPasswordVerificationType);
         binder.forField(authPamServiceField)
@@ -234,6 +246,8 @@ public class OpenVpnUserView extends VerticalLayout {
                 authTypeField,
                 authOtpRequired,
                 authOtpIssuerField,
+                authOtpPromptField,
+                authOtpShow,
                 passwordVerificationTypeField,
                 nmRememberPassword
         );
