@@ -324,9 +324,7 @@ public class OpenVpnController {
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
-        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
-                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
-                && user.getOtpSecret() != null)) {
+        if (isOtpRequired(vpnSettings, user)) {
             writer.println("static-challenge \"%s\" %d".formatted(
                     vpnSettings.getAuthOtpPrompt(),
                     vpnSettings.getAuthOtpShow() ? 1 : 0
@@ -429,9 +427,7 @@ public class OpenVpnController {
             {"remote", "%s:%d".formatted(vpnSettings.getRemote(), port)},
             {"username", username}
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
-        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
-                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
-                && user.getOtpSecret() != null)) {
+        if (isOtpRequired(vpnSettings, user)) {
             vpnDataMap.put(
                     "static-challenge",
                     "\"%s\" %d".formatted(
@@ -520,9 +516,7 @@ public class OpenVpnController {
         if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
             data.put("proto-tcp", "yes");
         }
-        if (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.ALWAYS
-                || (vpnSettings.getAuthOtpRequired() == OpenVpnUserSettings.OtpRequired.PER_USER_CONFIGURED
-                && user.getOtpSecret() != null)) {
+        if (isOtpRequired(vpnSettings, user)) {
             data.put("static-challenge", "\"%s\" %d".formatted(
                     vpnSettings.getAuthOtpPrompt(),
                     vpnSettings.getAuthOtpShow() ? 1 : 0
@@ -836,5 +830,21 @@ public class OpenVpnController {
             VpnSite vpnSite
     ) {
         return "arachne_%s_%s".formatted(siteSettings.getConnectToHost(), vpnSite.getSiteHostname());
+    }
+
+    public boolean isOtpRequired(OpenVpnUserSettings vpnSettings, UserModel user) {
+        return switch (vpnSettings.getAuthOtpRequired()) {
+            case NEVER ->
+                false;
+            case ALWAYS ->
+                true;
+            case PER_USER_CONFIGURED ->
+                user.getOtpSecret() != null;
+        };
+    }
+
+    public boolean isOtpRequired(UserModel user) {
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        return isOtpRequired(vpnSettings, user);
     }
 }
