@@ -13,6 +13,7 @@ import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
@@ -24,6 +25,7 @@ import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
+import at.nieslony.arachne.users.ConfigureOtpTokenDialog;
 import at.nieslony.arachne.users.EditYourselfDialog;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
@@ -92,6 +94,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private void createHeader() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String username = authentication.getName();
         String userInfo;
@@ -121,23 +124,25 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             if (user.getExternalProvider() == null) {
                 userMenu.addItem("Change Password…", click -> changePassword());
             }
-            userMenu.addItem("Settings…", click -> {
+            userMenu.addItem("Personal Settings…", click -> {
                 EditYourselfDialog dlg = new EditYourselfDialog(
                         user,
                         userRepository,
-                        ldapController,
-                        toptController,
-                        settings
+                        ldapController
                 );
-                dlg.addOpenedChangeListener(e -> {
-                    if (e.isOpened()) {
-                        log.debug("EditYouselfDialog opened");
-                    } else {
-                        log.debug("EditYouselfDialog closed");
-                    }
-                });
                 dlg.open();
             });
+            if (openVpnUserSettings.getAuthOtpRequired() != OpenVpnUserSettings.OtpRequired.NEVER) {
+                userMenu.addItem("Configure OTP Token…", e -> {
+                    ConfigureOtpTokenDialog dlg = new ConfigureOtpTokenDialog(
+                            user,
+                            userRepository,
+                            toptController
+                    );
+                    dlg.open();
+                });
+            }
+
             if (user.hasAvatar()) {
                 log.info("Setting %s's avatar".formatted(user.getUsername()));
                 avatar.setImageHandler(event -> {

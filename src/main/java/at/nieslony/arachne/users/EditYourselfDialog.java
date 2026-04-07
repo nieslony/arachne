@@ -17,13 +17,9 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.ByteArrayHolder;
 import at.nieslony.arachne.utils.components.ShowNotification;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
@@ -33,7 +29,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -51,36 +46,14 @@ public class EditYourselfDialog extends Dialog {
     public EditYourselfDialog(
             UserModel user,
             UserRepository userRepository,
-            LdapController ldapController,
-            TotpController totpController,
-            Settings settings
+            LdapController ldapController
     ) {
         this.user = user;
         this.ldapController = ldapController;
         this.userRepository = userRepository;
 
-        OpenVpnUserSettings openvpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-
         setHeaderTitle(user.getDisplayName() + "'s personal Settings");
-        TabSheet tabs = new TabSheet();
-        tabs.add("GUI Settings", createGuiTab());
-        if (openvpnUserSettings.getAuthOtpRequired() != OpenVpnUserSettings.OtpRequired.NEVER) {
-            tabs.add(
-                    "Two Factor Authentication",
-                    totpController.create2FAView(
-                            user,
-                            () -> UI.getCurrent().getPage().reload()
-                    )
-            );
-        }
 
-        add(tabs);
-
-        Button closeButton = new Button("Close", e -> close());
-        getFooter().add(closeButton);
-    }
-
-    private Component createGuiTab() {
         ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         Binder<UserModel> binder = new Binder<>();
 
@@ -138,7 +111,7 @@ public class EditYourselfDialog extends Dialog {
                 }
             }
         });
-        Button applyButton = new Button("Apply", e -> {
+        Button okButton = new Button("Ok", e -> {
             try {
                 binder.writeBean(user);
                 user.setAvatar(avatarHolder.get());
@@ -149,19 +122,25 @@ public class EditYourselfDialog extends Dialog {
             }
             close();
         });
-        applyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelButton = new Button("Cancel", e -> close());
 
         binder.readBean(user);
 
         VerticalLayout layout = new VerticalLayout(
                 themeVariantSelect,
                 avatarSource,
-                avatarLayout,
-                applyButton
+                avatarLayout
         );
         layout.setMargin(false);
         layout.setPadding(false);
 
-        return layout;
+        add(layout);
+
+        getFooter().add(
+                cancelButton,
+                okButton
+        );
     }
 }

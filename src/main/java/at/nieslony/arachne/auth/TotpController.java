@@ -227,6 +227,7 @@ public class TotpController {
         attachAuthenticatorButton.addClickListener(e -> {
             user.setOtpSecret(secret);
             userRepository.save(user);
+            ShowNotification.createInfo("OTP successfully attached");
             onAttachAuthenticator.run();
         });
 
