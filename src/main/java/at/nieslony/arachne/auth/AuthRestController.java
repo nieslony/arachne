@@ -134,13 +134,18 @@ public class AuthRestController {
     public AuthResult login(
             @RequestParam(required = false, defaultValue = "10min") String validTime,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody String body
+            @RequestBody(required = false) String body
     ) {
         UserModel user = userRepository.findByUsername(userDetails.getUsername());
 
         if (openVpnController.isOtpRequired(user)) {
             log.info("Verifying OTP");
             try {
+                if (body == null) {
+                    log.error("OTP expected");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                }
+                log.debug("Parsing json: " + body);
                 JSONObject json = new JSONObject(body);
                 String otp = json.getString("otp");
                 if (!totpController.validateTotp(otp, user)) {
