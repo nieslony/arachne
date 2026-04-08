@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ChangePasswordDialog extends Dialog {
 
-    private UserRepository userRepository;
+    final private UserRepository userRepository;
     private UserModel forUser = null;
 
     @Getter
@@ -66,7 +66,7 @@ public class ChangePasswordDialog extends Dialog {
         createDialog();
     }
 
-    void createDialog() {
+    final void createDialog() {
         Binder<PasswordChanger> binder = new Binder<>(PasswordChanger.class);
 
         PasswordField currentPasswordField = null;
@@ -115,7 +115,7 @@ public class ChangePasswordDialog extends Dialog {
             close();
 
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel", e -> close());
 
         getFooter().add(cancelButton, okButton);

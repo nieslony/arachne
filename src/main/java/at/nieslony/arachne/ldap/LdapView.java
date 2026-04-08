@@ -41,7 +41,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -76,18 +75,16 @@ import org.springframework.security.core.AuthenticationException;
  */
 @Route(value = "ldap-settings", layout = ViewTemplate.class)
 @PageTitle("LDAP User Source")
-@Slf4j
 @RolesAllowed("ADMIN")
+@Slf4j
 public class LdapView extends VerticalLayout {
 
-    private final Settings settings;
     private final LdapSettings ldapSettings;
     private final LdapController ldapController;
     private Binder<LdapSettings> binder;
     Button saveButton;
 
     public LdapView(Settings settings, LdapController ldapController) {
-        this.settings = settings;
         this.ldapController = ldapController;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
@@ -112,7 +109,7 @@ public class LdapView extends VerticalLayout {
                     }
                 }
         );
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         enableLdapUserSource.addValueChangeListener(e -> {
             tabSheet.setVisible(e.getValue());
@@ -255,7 +252,6 @@ public class LdapView extends VerticalLayout {
         groupsLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         MenuBar loadDefaultsMenu = new MenuBar();
-        loadDefaultsMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");
         SubMenu subMenu = menuItem.getSubMenu();
         subMenu.addItem("FreeIPA", e -> {
@@ -576,7 +572,7 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();
@@ -636,7 +632,7 @@ public class LdapView extends VerticalLayout {
             dlg.add(new Html(html));
 
             Button closeButton = new Button("Close", e -> dlg.close());
-            closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            closeButton.addThemeVariants(ButtonVariant.PRIMARY);
             dlg.getFooter().add(closeButton);
 
             dlg.open();

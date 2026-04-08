@@ -66,7 +66,6 @@ public class ApiIndexView extends VerticalLayout {
     public ApiIndexView(ApiIndexBean apiIndexBean) {
         String urlPath = RouteConfiguration.forApplicationScope()
                 .getUrl(getClass());
-
         H1 header = new H1("API Index");
         header.addClassName(LumoUtility.TextColor.PRIMARY);
         add(header);

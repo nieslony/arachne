@@ -53,6 +53,7 @@ import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.Lumo;
+import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,6 +64,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author claas
  */
 @JsModule("./os-theme-switcher.js")
+@PermitAll
 @Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
@@ -100,8 +102,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         String userInfo;
 
         Avatar avatar = new Avatar();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        if (userDetails instanceof ArachneUserDetails aud) {
+        if (authentication.getPrincipal() instanceof ArachneUserDetails aud) {
             userInfo = "%s (%s)".formatted(aud.getDisplayName(), username);
         } else {
             userInfo = username;
@@ -109,10 +110,10 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
         H1 pageTitle = new H1("Arachne");
         pageTitle.getStyle()
-                .set("font-size", "var(--lumo-font-size-l)")
+                .set("font-size", "var(--aura-font-size-l)")
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+        menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
         MenuItem item = menuBar.addItem(avatar, userInfo);
         SubMenu userMenu = item.getSubMenu();
         userMenu.addItem("Logout", click -> {

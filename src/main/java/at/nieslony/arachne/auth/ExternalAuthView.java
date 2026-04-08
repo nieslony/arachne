@@ -43,7 +43,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -127,7 +126,7 @@ public class ExternalAuthView extends VerticalLayout {
                 "Save and Restart Arachne",
                 e -> onSaveAndRestart()
         );
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
         saveButton.setDisableOnClick(true);
 
         TabSheet tabs = new TabSheet();
@@ -258,7 +257,6 @@ public class ExternalAuthView extends VerticalLayout {
 
         preAuthSource = new RadioButtonGroup<>();
         preAuthSource.setLabel("Authentication Source");
-        preAuthSource.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         preAuthSource.setItems(PreAuthSettings.PreAuthSource.values());
         preAuthSource.setWidthFull();
         preAuthSource.addValueChangeListener((e) -> {

@@ -139,7 +139,7 @@ public class GridPaginationControls<T> extends VerticalLayout {
         pageSize = pageSizes.getFirst();
 
         Select<Long> pageSizeSelect = new Select<>();
-        pageSizeSelect.addThemeVariants(SelectVariant.LUMO_SMALL);
+        pageSizeSelect.addThemeVariants(SelectVariant.SMALL);
         pageSizeSelect.setWidth("5rem");
         pageSizeSelect.setItems(pageSizes);
         pageSizeSelect.setValue(pageSize);
@@ -202,7 +202,7 @@ public class GridPaginationControls<T> extends VerticalLayout {
     ) {
         Button button = new Button(icon);
         button.setTooltipText(tooltip);
-        button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        button.addThemeVariants(ButtonVariant.SMALL);
         button.addClickListener(e -> {
             onClick.run();
             updateControls();

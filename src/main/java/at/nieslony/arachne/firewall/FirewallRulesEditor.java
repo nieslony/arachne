@@ -218,7 +218,7 @@ class FirewallRulesEditor extends VerticalLayout {
             );
             editRule(rule);
         });
-        addRule.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addRule.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button saveAllRules = new Button("Apply all Rules", e -> {
             String fileName = "/openvpn-%s-firewall-rules.json".formatted(
@@ -566,7 +566,7 @@ class FirewallRulesEditor extends VerticalLayout {
             firewallRuleRepository.save(rule);
             grid.getDataProvider().refreshAll();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (t) -> {
             dlg.close();

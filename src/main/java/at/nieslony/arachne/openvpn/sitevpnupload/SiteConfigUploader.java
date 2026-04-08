@@ -4,9 +4,9 @@
  */
 package at.nieslony.arachne.openvpn.sitevpnupload;
 
-import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
+import at.nieslony.arachne.openvpn.vpnsite.UploadConfigType;
 import at.nieslony.arachne.ssh.SshAuthType;
 import static at.nieslony.arachne.ssh.SshAuthType.PUBLIC_KEY;
 import static at.nieslony.arachne.ssh.SshAuthType.USERNAME_PASSWORD;
@@ -264,7 +264,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
                 log.error("Input validation Error: " + ex.getMessage());
             }
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

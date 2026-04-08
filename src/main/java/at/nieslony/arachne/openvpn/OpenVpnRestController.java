@@ -104,7 +104,7 @@ public class OpenVpnRestController {
         } catch (PkiException | JSONException ex) {
             log.error("Cannot create user config: " + ex.getMessage());
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     "Cannot get user config");
         }
     }

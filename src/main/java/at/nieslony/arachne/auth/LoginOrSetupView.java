@@ -84,7 +84,7 @@ public class LoginOrSetupView
                         UI.getCurrent().getPage().setLocation("/arachne");
                     }
             );
-            toSSoButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            toSSoButton.addThemeVariants(ButtonVariant.TERTIARY);
             toSSoButton.setWidthFull();
             login.getFooter().add(toSSoButton);
         }

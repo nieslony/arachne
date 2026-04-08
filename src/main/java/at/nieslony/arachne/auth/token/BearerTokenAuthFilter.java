@@ -71,7 +71,6 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
             authenticationToken.setAuthenticated(true);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
-
         filterChain.doFilter(request, response);
     }
 }

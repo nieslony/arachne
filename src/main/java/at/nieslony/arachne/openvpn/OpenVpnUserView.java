@@ -39,7 +39,6 @@ import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -87,7 +86,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Button saveSettings = new Button("Save and restart VPN");
         saveSettings.setTooltipText("All active conections will reconnect after restart");
-        saveSettings.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveSettings.addThemeVariants(ButtonVariant.PRIMARY);
         binder.addStatusChangeListener((sce) -> {
             saveSettings.setEnabled(!sce.hasValidationErrors());
         });
@@ -186,7 +185,7 @@ public class OpenVpnUserView extends VerticalLayout {
                     return new Div(layout);
                 })
         );
-        passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
+//        passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.VERTICAL);
         passwordVerificationTypeField.setWidthFull();
 
         Select<OpenVpnUserSettings.NetworkManagerRememberPassword> nmRememberPassword
@@ -279,10 +278,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 new Icon(VaadinIcon.INFO_CIRCLE),
                 (e) -> nameHints.setOpened(!nameHints.isOpened())
         );
-        showTooltip.addThemeVariants(
-                ButtonVariant.LUMO_TERTIARY_INLINE,
-                ButtonVariant.LUMO_ICON
-        );
+        showTooltip.addThemeVariants(ButtonVariant.TERTIARY);
         name.setSuffixComponent(showTooltip);
 
         TextField clientConfigName = new TextField("Client Config Filename");

@@ -53,7 +53,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -413,7 +412,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         binder.addStatusChangeListener((sce) -> {
             saveBasicsButton.setEnabled(sce.getBinder().isValid());
         });
-        saveBasicsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveBasicsButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(listenLayout,
@@ -509,7 +508,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         sitesLayout.setWidthFull();
 
         siteConfigMenu = new MenuBar();
-        siteConfigMenu.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         MenuItem siteConfigItem = siteConfigMenu.addItem("Site Config");
         SubMenu subMenu = siteConfigItem.getSubMenu();
 
@@ -559,7 +557,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         siteSettingsTab.setWidthFull();
 
         Button saveSitesButton = new Button("Save Site", (e) -> onSaveSite());
-        saveSitesButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveSitesButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         layout.add(
                 sitesLayout,
@@ -624,7 +622,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 onOk.accept(site);
             }
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();
@@ -1083,7 +1081,7 @@ public class OpenVpnSiteView extends VerticalLayout {
         Button closeButton = new Button("Close", (e) -> {
             dlg.close();
         });
-        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.PRIMARY);
         dlg.getFooter().add(closeButton);
 
         return dlg;

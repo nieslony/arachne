@@ -103,7 +103,7 @@ public class AuthRestController {
                 String msg = "Invalid time unit. Only sec, min and h are allowed";
                 log.error(msg);
                 throw new ResponseStatusException(
-                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        HttpStatus.UNPROCESSABLE_CONTENT,
                         msg
                 );
             }
@@ -111,7 +111,7 @@ public class AuthRestController {
             String msg = "Unvalid number format: " + vu;
             log.error(msg);
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     msg
             );
         }
@@ -121,7 +121,7 @@ public class AuthRestController {
             String msg = "Requested tocked validity time too long";
             log.error(msg);
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     msg
             );
         }

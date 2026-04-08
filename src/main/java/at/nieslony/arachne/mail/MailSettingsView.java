@@ -116,7 +116,7 @@ public class MailSettingsView extends VerticalLayout {
                 log.error("Cannot save mail settings: " + ex.getMessage());
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         buttons = new HorizontalLayout();
         buttons.add(saveButton);
@@ -247,7 +247,7 @@ public class MailSettingsView extends VerticalLayout {
             sendTestMail(recipiend.getValue());
             dlg.close();
         });
-        sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        sendButton.addThemeVariants(ButtonVariant.PRIMARY);
         sendButton.setAutofocus(true);
         sendButton.setDisableOnClick(true);
         sendButton.setEnabled(false);
@@ -315,7 +315,7 @@ public class MailSettingsView extends VerticalLayout {
             }
             dlg.close();
         });
-        sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        sendButton.addThemeVariants(ButtonVariant.PRIMARY);
         sendButton.setAutofocus(true);
         sendButton.setDisableOnClick(true);
         sendButton.setEnabled(false);

@@ -44,6 +44,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.vaadin.olli.ClipboardHelper;
+import ua_parser.Parser;
 
 /**
  *
@@ -56,7 +57,6 @@ import org.vaadin.olli.ClipboardHelper;
 public class UserHome extends VerticalLayout implements RouterLayout {
 
     private final OpenVpnController openVpnRestController;
-    private final Settings settings;
     private final OpenVpnUserSettings openVpnUserSettings;
     private final int ICON_SIZE_SMALL = 32;
     private final int ICON_SIZE_LARGE = 96;
@@ -65,7 +65,6 @@ public class UserHome extends VerticalLayout implements RouterLayout {
             OpenVpnController openVpnRestController,
             Settings settings
     ) {
-        this.settings = settings;
         this.openVpnRestController = openVpnRestController;
         this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
@@ -85,13 +84,16 @@ public class UserHome extends VerticalLayout implements RouterLayout {
                 content.add(networkManagerPage);
             }
         });
-        //tabs.setOrientation(Tabs.Orientation.VERTICAL);
-        if (VaadinSession.getCurrent().getBrowser().isLinux()) {
+
+        String uaString = VaadinSession.getCurrent().getBrowser().getUserAgent();
+        Parser uaParser = new Parser();
+        var os = uaParser.parseOS(uaString);
+
+        if (os.family.equals("Linux")) {
             tabs.setSelectedTab(networkManagerTab);
         } else {
             tabs.setSelectedTab(ovpnTab);
         }
-        //tabs.addThemeVariants(TabsVariant.LUMO_EQUAL_WIDTH_TABS);
 
         VerticalLayout tabsLayout = new VerticalLayout(tabs, content);
         tabsLayout.setMargin(false);

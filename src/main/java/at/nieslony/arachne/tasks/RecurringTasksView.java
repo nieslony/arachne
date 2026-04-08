@@ -212,7 +212,7 @@ public class RecurringTasksView extends VerticalLayout {
             onSave.accept(model);
             dlg.close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

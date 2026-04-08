@@ -33,7 +33,6 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
@@ -81,7 +80,6 @@ public class TaskView
         buttonBar.setPadding(false);
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         MenuItem taskTypeItem = menuBar.addItem("Create Task");
         SubMenu taskTypeMenu = taskTypeItem.getSubMenu();
         taskScheduler.getTaskTypes().forEach((task) -> {
@@ -182,7 +180,7 @@ public class TaskView
                             });
                             dlg.open();
                         });
-                        button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                        button.addThemeVariants(ButtonVariant.SMALL);
                         return button;
                     } else {
                         return new Text("");
@@ -190,7 +188,7 @@ public class TaskView
                 })
                 .setAutoWidth(true)
                 .setFlexGrow(0);
-        tasksGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        tasksGrid.addThemeVariants(GridVariant.ROW_STRIPES);
 
         GridPaginationControls<TaskModel> tasksGridPageController
                 = new GridPaginationControls<>(
@@ -305,7 +303,7 @@ public class TaskView
             taskModel.setScheduled(date);
             onOk.run();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button cancelButton = new Button("Cancel", (e) -> {
             dlg.close();

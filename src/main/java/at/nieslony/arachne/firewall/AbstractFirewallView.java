@@ -121,7 +121,7 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
                 ShowNotification.error("Cannot restart openVPN", ex.getMessage());
             }
         });
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         enableFirewallField.addValueChangeListener((e) -> {
             boolean isEnabled = e.getValue();

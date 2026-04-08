@@ -427,7 +427,7 @@ public class OpenVpnController {
                 ? "yes"
                 : "no"
             },
-            {"remote", "%s:%d".formatted(vpnSettings.getRemote(), port)},
+            {"remote", "%s:%d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort())},
             {"username", username}
         }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
         if (isOtpRequired(vpnSettings, user)) {
@@ -456,7 +456,7 @@ public class OpenVpnController {
                                 vpnDataMap.entrySet().stream()
                                         .map((e) -> "    %s = %s".formatted(e.getKey(), e.getValue()))
                                         .collect(Collectors.joining(",\n")),
-                                conName
+                                vpnSettings.getVpnName()
                         )
         );
 

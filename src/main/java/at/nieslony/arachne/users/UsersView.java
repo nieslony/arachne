@@ -124,7 +124,7 @@ public class UsersView extends VerticalLayout {
         Button addUserButton = new Button("Add User...",
                 event -> addUser()
         );
-        addUserButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addUserButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button userSettingsButton = new Button("Settings...",
                 (e) -> openUserSettings()
@@ -266,7 +266,7 @@ public class UsersView extends VerticalLayout {
         String myUsername = authentication.getName();
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+        menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
         MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
         SubMenu userMenu = menuItem.getSubMenu();
 
@@ -393,7 +393,7 @@ public class UsersView extends VerticalLayout {
         dlg.add(tabSheet);
 
         Button closeButton = new Button("Close", e -> dlg.close());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        closeButton.addThemeVariants(ButtonVariant.PRIMARY);
         dlg.getFooter().add(closeButton);
 
         dlg.setResizable(true);
@@ -464,9 +464,7 @@ public class UsersView extends VerticalLayout {
                 VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
 
-        cancelButton.addThemeVariants(
-                ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_ERROR);
+        cancelButton.addThemeVariants(ButtonVariant.ERROR);
         HorizontalLayout actions = new HorizontalLayout(
                 saveButton,
                 cancelButton
@@ -545,7 +543,7 @@ public class UsersView extends VerticalLayout {
                         usersGrid.setItems(userRepository.findAll());
                     }
                 });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel",
                 event -> {
                     dialog.close();
@@ -622,7 +620,7 @@ public class UsersView extends VerticalLayout {
             }
             dlg.close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         okButton.setAutofocus(true);
 
         Button cancelButton = new Button("Cancel", (e) -> {
@@ -669,7 +667,7 @@ public class UsersView extends VerticalLayout {
 
             dlg.close();
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         okButton.setAutofocus(true);
 
         Button cancelButton = new Button("Cancel", (e) -> {

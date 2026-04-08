@@ -33,7 +33,6 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.value.HasValueChangeMode;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -51,8 +50,8 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         implements HasSize {
 
     private ListBox<T> itemsField;
-    private Binder<T> binder;
     private Button clearButton;
+
     private Button loadDefaultsButton;
     private Supplier<List<T>> defaultsSupplier = null;
     private final TE editField;
@@ -66,24 +65,21 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         init(label);
     }
 
-    private void init(String label) {
-        binder = new Binder<>();
+    private void init(String labelTxt) {
+        NativeLabel label = new NativeLabel(labelTxt);
 
         itemsField = new ListBox<>();
         itemsField.setHeight(16, Unit.EM);
         itemsField.getStyle()
-                .setBorder("1px solid var(--lumo-primary-color)")
-                .setBackground("var(--lumo-primary-color-10pct)");
-
-        NativeLabel elbLabel = new NativeLabel(label);
-        elbLabel.addClassNames(
-                LumoUtility.FontSize.SMALL,
-                LumoUtility.FontWeight.BOLD,
-                LumoUtility.TextColor.BODY
-        );
+                .setBorder("1px solid var(--vaadin-border-color)")
+                .setBackground("var(--vaadin-background-color)");
+        itemsField.setWidthFull();
 
         if (editField instanceof HasValueChangeMode hvm) {
             hvm.setValueChangeMode(ValueChangeMode.EAGER);
+        }
+        if (editField instanceof HasSize hs) {
+            hs.setWidthFull();
         }
 
         Button addButton = new Button(
@@ -96,21 +92,9 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                     itemsField.setValue(newItem);
                     setModelValue(new LinkedList<>(items), true);
                 });
-        addButton.setTooltipText("Add");
         addButton.setEnabled(false);
-        Button updateButton = new Button(
-                VaadinIcon.REFRESH.create(),
-                e -> {
-                    List<T> items = new LinkedList<>(getValue());
-                    var newItem = editField.getValue();
-                    items.remove(itemsField.getValue());
-                    items.add(newItem);
-                    itemsField.setItems(items);
-                    itemsField.setValue(newItem);
-                    setModelValue(new LinkedList<>(items), true);
-                });
-        updateButton.setTooltipText("Update");
-        updateButton.setEnabled(false);
+        addButton.setTooltipText("Add");
+
         Button removeButton = new Button(
                 VaadinIcon.MINUS.create(),
                 e -> {
@@ -124,6 +108,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 });
         removeButton.setTooltipText("Delete");
         removeButton.setEnabled(false);
+
         clearButton = new Button(VaadinIcon.TRASH.create(),
                 (t) -> {
                     List<T> items = new LinkedList<>(getValue());
@@ -134,6 +119,21 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         );
         clearButton.setTooltipText("Delete All");
         clearButton.setEnabled(false);
+
+        Button updateButton = new Button(
+                VaadinIcon.REFRESH.create(),
+                e -> {
+                    List<T> items = new LinkedList<>(getValue());
+                    var newItem = editField.getValue();
+                    items.remove(itemsField.getValue());
+                    items.add(newItem);
+                    itemsField.setItems(items);
+                    itemsField.setValue(newItem);
+                    setModelValue(new LinkedList<>(items), true);
+                });
+        updateButton.setTooltipText("Update");
+        updateButton.setEnabled(false);
+
         loadDefaultsButton = new Button(
                 VaadinIcon.DOWNLOAD.create(),
                 (e) -> {
@@ -145,26 +145,38 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         loadDefaultsButton.setVisible(false);
 
         getContent().add(
-                elbLabel,
+                label,
                 itemsField,
                 editField,
                 new HorizontalLayout(
                         addButton,
-                        updateButton,
                         removeButton,
                         clearButton,
+                        updateButton,
                         loadDefaultsButton
                 )
         );
         getContent().setFlexGrow(1, itemsField);
+        getContent().setMargin(false);
+        getContent().setPadding(false);
         itemsField.setWidthFull();
-        if (editField instanceof HasSize hs) {
-            hs.setWidthFull();
-        }
-        addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderRadius.MEDIUM
-        );
+
+        Binder<T> binder = new Binder<>();
+        binder.setValidatorsDisabled(true);
+
+        itemsField.addValueChangeListener((e) -> {
+            if (e.getValue() != null) {
+                editField.setValue(e.getValue());
+                updateButton.setEnabled(true);
+                removeButton.setEnabled(true);
+                binder.setValidatorsDisabled(false);
+            } else {
+                editField.clear();
+                updateButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                binder.setValidatorsDisabled(true);
+            }
+        });
 
         AtomicReference<T> edit = new AtomicReference<>();
         binder.forField(editField)
@@ -179,26 +191,12 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                         }
                 );
 
-        itemsField.addValueChangeListener((e) -> {
-            if (e.getValue() != null) {
-                editField.setValue(e.getValue());
-                updateButton.setEnabled(true);
-                removeButton.setEnabled(true);
-            } else {
-                editField.clear();
-                updateButton.setEnabled(false);
-                removeButton.setEnabled(false);
-            }
-        });
-
         binder.addStatusChangeListener((sce) -> {
             addButton.setEnabled(!sce.hasValidationErrors());
             updateButton.setEnabled(
                     !sce.hasValidationErrors() && itemsField.getValue() != null
             );
         });
-
-        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<T> getValidator() {
@@ -217,7 +215,7 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
     protected void setPresentationValue(List<T> v) {
         if (v != null) {
             itemsField.setItems(v);
-            clearButton.setEnabled(!v.isEmpty());
+            clearButton.setEnabled(!v.isEmpty() && isEnabled());
             getElement().setPropertyList("value", v);
         }
     }

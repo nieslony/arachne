@@ -6,7 +6,6 @@ package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
@@ -25,10 +24,8 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -36,9 +33,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -47,6 +44,7 @@ import java.util.List;
 @Route(value = "roles", layout = ViewTemplate.class)
 @PageTitle("Roles")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class RolesView extends VerticalLayout {
 
     final private RoleRuleRepository roleRuleRepository;
@@ -62,7 +60,6 @@ public class RolesView extends VerticalLayout {
     public RolesView(
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            Settings settings,
             LdapController ldapController
     ) {
         this.roleRuleRepository = roleRuleRepository;
@@ -114,10 +111,6 @@ public class RolesView extends VerticalLayout {
         Grid.Column<RoleRuleModel> editColumn = roleRules
                 .addComponentColumn(roleRule -> {
                     MenuBar menuBar = new MenuBar();
-                    menuBar.addThemeVariants(
-                            MenuBarVariant.LUMO_SMALL,
-                            MenuBarVariant.LUMO_ICON
-                    );
 
                     menuBar.addItem("Edit", e -> {
                         if (editor.isOpen()) {
@@ -126,11 +119,10 @@ public class RolesView extends VerticalLayout {
                         editor.editItem(roleRule);
                     });
 
-                    MenuItem moreItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+                    MenuItem moreItem = menuBar.addItem("");
                     SubMenu moreMenu = moreItem.getSubMenu();
                     moreMenu.addItem("Delete...", e -> {
                         Div ruleTxt = new Div(roleRule.toString());
-                        ruleTxt.addClassName(LumoUtility.FontWeight.BOLD);
                         ruleTxt.setWhiteSpace(HasText.WhiteSpace.NOWRAP);
                         Div msg = new Div(
                                 new Text("Really remove role rule "),
@@ -218,9 +210,7 @@ public class RolesView extends VerticalLayout {
         Button cancelButton = new Button(
                 VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
-        cancelButton.addThemeVariants(
-                ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_ERROR);
+        cancelButton.addThemeVariants(ButtonVariant.ERROR);
         HorizontalLayout actions = new HorizontalLayout(
                 saveButton,
                 cancelButton
@@ -264,7 +254,7 @@ public class RolesView extends VerticalLayout {
             roleRuleRepository.save(roleRule);
             roleRules.setItems(roleRuleRepository.findAll());
         });
-        okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        okButton.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancelButton = new Button("Cancel", e -> {
             dialog.close();
         });

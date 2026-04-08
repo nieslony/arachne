@@ -5,7 +5,6 @@
 package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.PreAuthSettings;
-import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tomcat.TomcatSettings;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -44,7 +43,7 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,9 +58,6 @@ public class TomcatConfiguration {
 
     @Autowired
     Settings settings;
-
-    @Autowired
-    Pki pki;
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -170,7 +166,7 @@ public class TomcatConfiguration {
             Connector httpConnector = new Connector();
             httpConnector.setPort(8080);
             httpConnector.setRedirectPort(8443);
-            tomcat.addAdditionalTomcatConnectors(httpConnector);
+            tomcat.addAdditionalConnectors(httpConnector);
         } else {
             log.info("Tomcat SSL is disabled");
         }
@@ -193,7 +189,7 @@ public class TomcatConfiguration {
             }
             ajpProtocol.setAllowedRequestAttributesPattern(".*");
 
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            tomcat.addAdditionalConnectors(ajpConnector);
         }
 
         return tomcat;

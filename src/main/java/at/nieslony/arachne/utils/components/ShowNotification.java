@@ -74,7 +74,7 @@ public class ShowNotification {
                 headerText,
                 "var(--lumo-base-text-color)",
                 msg);
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
 
         return notification;
     }
@@ -109,7 +109,7 @@ public class ShowNotification {
     private static Button createCloseButton(Notification notification) {
         Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create(),
                 clickEvent -> notification.close());
-        closeBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeBtn.addThemeVariants(ButtonVariant.TERTIARY);
 
         return closeBtn;
     }

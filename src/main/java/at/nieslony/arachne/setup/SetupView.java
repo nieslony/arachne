@@ -118,7 +118,7 @@ public class SetupView extends VerticalLayout {
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next", new Icon(VaadinIcon.ARROW_RIGHT));
         next.setIconAfterText(true);
-        next.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        next.addThemeVariants(ButtonVariant.PRIMARY);
         next.addClickListener((t) -> {
             int noTabs = 5;
             int curTab = tabSheet.getSelectedIndex();
@@ -453,7 +453,7 @@ public class SetupView extends VerticalLayout {
 
         finish = new Button("Finish");
         finish.setDisableOnClick(true);
-        finish.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        finish.addThemeVariants(ButtonVariant.PRIMARY);
         finish.addClickListener((var t) -> {
             SetupData setupData = new SetupData();
 
