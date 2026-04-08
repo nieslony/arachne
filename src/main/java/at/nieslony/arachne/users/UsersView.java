@@ -118,6 +118,8 @@ public class UsersView extends VerticalLayout {
     public void init() {
         this.userSettings = settings.getSettings(UserSettings.class);
 
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+
         usersGrid = new Grid<>(UserModel.class, false);
         Button addUserButton = new Button("Add User...",
                 event -> addUser()
@@ -186,6 +188,36 @@ public class UsersView extends VerticalLayout {
                 })
                 .setAutoWidth(true)
                 .setHeader("Roles");
+        usersGrid
+                .addColumn(new ComponentRenderer<>((UserModel user) -> {
+                    return switch (openVpnUserSettings.getAuthOtpRequired()) {
+                        case NEVER -> {
+                            yield new Text("");
+                        }
+                        case ALWAYS -> {
+                            if (!user.getRoles().contains(Role.USER.name())) {
+                                yield new Text("");
+                            }
+                            var icon = VaadinIcon.KEY.create();
+                            if (user.getOtpSecret() != null) {
+                                icon.setColor("green");
+                                icon.setTooltipText("OTP assigned");
+                            } else {
+                                icon.setColor("red");
+                                icon.setTooltipText("OTP required but not assigned");
+                            }
+                            yield icon;
+                        }
+                        case PER_USER_CONFIGURED -> {
+                            if (user.getOtpSecret() != null) {
+                                var icon = VaadinIcon.KEY.create();
+                                icon.setTooltipText("OTP assigned");
+                                yield icon;
+                            }
+                            yield new Text("");
+                        }
+                    };
+                }));
 
         editUsersGridBuffered();
 

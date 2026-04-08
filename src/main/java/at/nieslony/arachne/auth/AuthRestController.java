@@ -18,7 +18,10 @@ package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.auth.token.TokenController;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.users.ArachneUserDetails;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.Calendar;
 import java.util.Date;
@@ -26,11 +29,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,6 +51,15 @@ public class AuthRestController {
 
     @Autowired
     TokenController tokenController;
+
+    @Autowired
+    OpenVpnController openVpnController;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    TotpController totpController;
 
     @Getter
     @Setter
@@ -118,8 +133,34 @@ public class AuthRestController {
     @RolesAllowed(value = {"USER", "ADMIN"})
     public AuthResult login(
             @RequestParam(required = false, defaultValue = "10min") String validTime,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody(required = false) String body
     ) {
+        UserModel user = userRepository.findByUsername(userDetails.getUsername());
+
+        if (openVpnController.isOtpRequired(user)) {
+            log.info("Verifying OTP");
+            try {
+                if (body == null) {
+                    log.error("OTP expected");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                }
+                log.debug("Parsing json: " + body);
+                JSONObject json = new JSONObject(body);
+                String otp = json.getString("otp");
+                if (!totpController.validateTotp(otp, user)) {
+                    log.error("Invalid TOTP");
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+                }
+            } catch (JSONException ex) {
+                log.error("Cannot parse JSON String %s: %s".formatted(body, ex.getMessage()));
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            }
+            log.info("OTP is valid");
+        } else {
+            log.info("No OTP required");
+        }
+
         return getToken(validTime, userDetails);
     }
 

@@ -39,10 +39,22 @@ import org.springframework.ldap.CommunicationException;
 @Slf4j
 public class EditYourselfDialog extends Dialog {
 
-    public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapController ldapController) {
-        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
-        setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
+    private final UserModel user;
+    private final LdapController ldapController;
+    private final UserRepository userRepository;
 
+    public EditYourselfDialog(
+            UserModel user,
+            UserRepository userRepository,
+            LdapController ldapController
+    ) {
+        this.user = user;
+        this.ldapController = ldapController;
+        this.userRepository = userRepository;
+
+        setHeaderTitle(user.getDisplayName() + "'s personal Settings");
+
+        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         Binder<UserModel> binder = new Binder<>();
 
         Select<UserModel.ThemeVariant> themeVariantSelect = new Select<>();
@@ -81,13 +93,6 @@ public class EditYourselfDialog extends Dialog {
         avatarLayout.setEnabled(false);
         avatarLayout.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        VerticalLayout layout = new VerticalLayout(
-                themeVariantSelect,
-                avatarSource,
-                avatarLayout
-        );
-        add(layout);
-
         avatarSource.addValueChangeListener((e) -> {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
             if (e.getValue() == UserModel.AvatarSource.LDAP) {
@@ -106,7 +111,7 @@ public class EditYourselfDialog extends Dialog {
                 }
             }
         });
-        Button okButton = new Button("OK", e -> {
+        Button okButton = new Button("Ok", e -> {
             try {
                 binder.writeBean(user);
                 user.setAvatar(avatarHolder.get());
@@ -118,10 +123,24 @@ public class EditYourselfDialog extends Dialog {
             close();
         });
         okButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         Button cancelButton = new Button("Cancel", e -> close());
 
-        getFooter().add(cancelButton, okButton);
-
         binder.readBean(user);
+
+        VerticalLayout layout = new VerticalLayout(
+                themeVariantSelect,
+                avatarSource,
+                avatarLayout
+        );
+        layout.setMargin(false);
+        layout.setPadding(false);
+
+        add(layout);
+
+        getFooter().add(
+                cancelButton,
+                okButton
+        );
     }
 }

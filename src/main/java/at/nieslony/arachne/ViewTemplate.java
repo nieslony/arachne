@@ -6,22 +6,26 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
+import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
+import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
 import at.nieslony.arachne.pki.CertSpecsView;
 import at.nieslony.arachne.pki.CertificatesView;
 import at.nieslony.arachne.pki.PkiSettingsView;
 import at.nieslony.arachne.roles.RolesView;
+import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTasksView;
 import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
+import at.nieslony.arachne.users.ConfigureOtpTokenDialog;
 import at.nieslony.arachne.users.EditYourselfDialog;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
@@ -66,17 +70,23 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
     private final LdapController ldapController;
+    private final TotpController toptController;
+    private final Settings settings;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepository,
             AuthenticationContext authContext,
             ArachneVersion arachneVersion,
-            LdapController ldapController) {
+            LdapController ldapController,
+            TotpController totpController,
+            Settings settings) {
         this.authContext = authContext;
         this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
         this.ldapController = ldapController;
+        this.toptController = totpController;
+        this.settings = settings;
 
         createHeader();
         createDrawer();
@@ -84,6 +94,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
 
     private void createHeader() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
         String username = authentication.getName();
         String userInfo;
@@ -113,7 +124,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             if (user.getExternalProvider() == null) {
                 userMenu.addItem("Change Password…", click -> changePassword());
             }
-            userMenu.addItem("Settings…", click -> {
+            userMenu.addItem("Personal Settings…", click -> {
                 EditYourselfDialog dlg = new EditYourselfDialog(
                         user,
                         userRepository,
@@ -121,6 +132,17 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 );
                 dlg.open();
             });
+            if (openVpnUserSettings.getAuthOtpRequired() != OpenVpnUserSettings.OtpRequired.NEVER) {
+                userMenu.addItem("Configure OTP Token…", e -> {
+                    ConfigureOtpTokenDialog dlg = new ConfigureOtpTokenDialog(
+                            user,
+                            userRepository,
+                            toptController
+                    );
+                    dlg.open();
+                });
+            }
+
             if (user.hasAvatar()) {
                 log.info("Setting %s's avatar".formatted(user.getUsername()));
                 avatar.setImageHandler(event -> {
