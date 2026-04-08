@@ -45,6 +45,23 @@ import org.springframework.util.ObjectUtils;
 @Table(name = "vpn-sites")
 public class VpnSite implements OpenVpnSettings {
 
+    public enum ClientIpMode {
+        AUTO("Auto"),
+        FIXED_IP("Fixed IP"),
+        BY_HOSTNAME("By Hostname");
+
+        ClientIpMode(String label) {
+            this.label = label;
+        }
+
+        private final String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -118,6 +135,15 @@ public class VpnSite implements OpenVpnSettings {
     @Builder.Default
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     List<RemoteNetwork> remoteNetworks = new LinkedList<>();
+
+    @Builder.Default
+    private ClientIpMode clientIpMode = ClientIpMode.AUTO;
+
+    @Builder.Default
+    private String clientIp = "";
+
+    @Builder.Default
+    private String clientHostname = "";
 
     public VpnSite() {
     }

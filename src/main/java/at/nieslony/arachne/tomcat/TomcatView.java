@@ -51,8 +51,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -63,9 +63,8 @@ import org.springframework.beans.factory.annotation.Value;
 @Route(value = "tomcat", layout = ViewTemplate.class)
 @PageTitle("Integrated Tomcat")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class TomcatView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(TomcatView.class);
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -203,7 +202,19 @@ public class TomcatView extends VerticalLayout {
         if (tomcatSettings.isEnableAjpConnector()) {
             Div msg = new Div();
 
-            Span apacheConfigFN = new Span(tomcatService.getApacheConfigFileName());
+            String absApacheConfigFN;
+            try {
+                absApacheConfigFN = new File(tomcatService.getApacheConfigFileName())
+                        .getCanonicalPath();
+            } catch (IOException ex) {
+                absApacheConfigFN = "[%s is unresolvable: %s]"
+                        .formatted(
+                                tomcatService.getApacheConfigFileName(),
+                                ex.getMessage()
+                        );
+            }
+
+            Span apacheConfigFN = new Span(absApacheConfigFN);
             apacheConfigFN.getStyle().setFontWeight(Style.FontWeight.BOLD);
 
             Span apacheCfgFolder = new Span("/etc/httpd/conf.d");
@@ -306,10 +317,10 @@ public class TomcatView extends VerticalLayout {
             Notification.show("Restarting Arachne...").open();
             Arachne.restart();
         } catch (UpdateWebServerCertificateException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             ShowNotification.error("Cannot write %s", ex.getRoorMessage());
         } catch (SettingsException | PkiException ex) {
-            logger.error("Cannot save tomcat settings: " + ex.getMessage());
+            log.error("Cannot save tomcat settings: " + ex.getMessage());
         }
     }
 }

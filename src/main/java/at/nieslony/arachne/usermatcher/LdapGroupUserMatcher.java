@@ -10,8 +10,8 @@ import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.UserModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
@@ -22,41 +22,42 @@ import org.slf4j.LoggerFactory;
         parameterLabel = "LDAP Group",
         ignoreInternalUser = true
 )
+@Slf4j
 public class LdapGroupUserMatcher extends UserMatcher {
 
-    private static final Logger logger = LoggerFactory.getLogger(LdapGroupUserMatcher.class);
+    private final LdapController ldapController;
 
-    public LdapGroupUserMatcher(String groupname) {
-        super(groupname);
+    public LdapGroupUserMatcher(BeanFactory beanFactory, String groupname) {
+        super(beanFactory, groupname);
+        ldapController = beanFactory.getBean(LdapController.class);
     }
 
     @Override
     public boolean isUserMatching(UserModel user) {
-        logger.info("Try to match " + user.getUsername());
+        log.info("Try to match " + user.getUsername());
         Settings settings = Settings.getInstance();
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         String userSourceName = user.getExternalProvider();
         if (userSourceName == null || !userSourceName.equals(LdapUserSource.getName())) {
-            logger.info(
+            log.info(
                     "User %s is not a LDAP user -> user doesn't match"
                             .formatted(user.getUsername()));
             return false;
         }
         if (!ldapSettings.isEnableLdapUserSource()) {
-            logger.info("LDAP user source not enabled -> user does't match");
+            log.info("LDAP user source not enabled -> user does't match");
             return false;
         }
         try {
-            LdapGroup ldapGroup = LdapController
-                    .getInstance()
-                    .getGroup(ldapSettings, this.parameter);
+            LdapGroup ldapGroup = ldapController
+                    .getGroup(this.parameter);
             if (ldapGroup == null) {
-                logger.info("Group %s not found".formatted(parameter));
+                log.info("Group %s not found".formatted(parameter));
                 return false;
             }
             return ldapGroup.hasMember(user);
         } catch (Exception ex) {
-            logger.error("Cannot connect to LDAP server: " + ex.getMessage());
+            log.error("Cannot connect to LDAP server: " + ex.getMessage());
         }
         return false;
     }

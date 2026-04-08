@@ -27,8 +27,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -38,9 +37,8 @@ import org.springframework.beans.factory.annotation.Value;
 @Getter
 @Setter
 @ToString
+@Slf4j
 public class LdapSettings extends AbstractSettingsGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapSettings.class);
 
     public enum LdapBindType {
         ANONYMOUS("Anonymous"),
@@ -63,7 +61,7 @@ public class LdapSettings extends AbstractSettingsGroup {
     }
 
     public void guessDefaultsFromDns(Settings settings) {
-        ldapUrls = LdapController.getInstance().findLdapUrls()
+        ldapUrls = LdapController.findLdapUrls()
                 .stream()
                 .map(urlStr -> new LdapUrl(urlStr))
                 .toList();
@@ -79,6 +77,8 @@ public class LdapSettings extends AbstractSettingsGroup {
 
     List<LdapUrl> ldapUrls = new LinkedList<>();
     private String baseDn = NetUtils.defaultBaseDn();
+    int connectionTimeoutMsec = 5000;
+    int readTimeoutMsec = 15000;
     private LdapBindType bindType = LdapBindType.BIND_DN;
     private String bindDn = NetUtils.defaultBaseDn();
     private String bindPassword = "";
@@ -89,6 +89,7 @@ public class LdapSettings extends AbstractSettingsGroup {
     private String usersAttrUsername = "";
     private String usersAttrDisplayName = "";
     private String usersAttrEmail = "";
+    private String usersAttrAvatar = "";
     private String usersCustomFilter = "";
     private String usersObjectClass = "";
     private boolean usersEnableCustomFilter = false;

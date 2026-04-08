@@ -30,17 +30,15 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.function.ThrowingConsumer;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class NetUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
 
     static public String maskLen2Mask(int len) {
         int mask = 0xffffffff << (32 - len);
@@ -87,8 +85,10 @@ public class NetUtils {
         if (subnetMask <= ofMask) {
             return false;
         }
-        InetAddress subnetAddr = Inet4Address.getByName(subnetSplit[0]);
-        InetAddress ofAddr = Inet4Address.getByName(ofSplit[0]);
+        InetAddress subnetAddr;
+        InetAddress ofAddr;
+        subnetAddr = Inet4Address.getByName(subnetSplit[0]);
+        ofAddr = Inet4Address.getByName(ofSplit[0]);
         byte[] subnetBytes = subnetAddr.getAddress();
         byte[] ofBytes = ofAddr.getAddress();
         long subnetInt = subnetBytes[0] << 24
@@ -109,11 +109,15 @@ public class NetUtils {
                 .filter(n -> {
                     try {
                         for (var n1 : nets) {
-                            if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                            try {
+                                if (n != n1 && NetUtils.isSubnetOf(n, n1)) {
+                                    return false;
+                                }
+                            } catch (UnknownHostException ex) {
                                 return false;
                             }
                         }
-                    } catch (NumberFormatException | UnknownHostException ex) {
+                    } catch (NumberFormatException ex) {
                         throw new RuntimeException(
                                 "Network list contains illegal entry",
                                 ex
@@ -134,7 +138,7 @@ public class NetUtils {
             Attribute attr = (Attribute) en.next();
             String[] splitAttr = attr.toString().split(" +");
             if (splitAttr.length != 3) {
-                logger.warn("Doesn't look like an MX record: " + attr.toString());
+                log.warn("Doesn't look like an MX record: " + attr.toString());
                 continue;
             }
 
@@ -236,7 +240,7 @@ public class NetUtils {
                 dnsServers.add(ent.split("/")[2]);
             }
         } catch (NamingException ex) {
-            logger.warn(String.format("Cannot find DNS : %s", ex.getMessage()));
+            log.warn(String.format("Cannot find DNS : %s", ex.getMessage()));
         }
 
         return dnsServers;
@@ -265,7 +269,7 @@ public class NetUtils {
                 }
             }
         } catch (SocketException ex) {
-            logger.warn(String.format("Cannot find network address: %s", ex.getMessage()));
+            log.warn(String.format("Cannot find network address: %s", ex.getMessage()));
         }
 
         return routes;

@@ -5,7 +5,7 @@
 %global jdk_version 21
 
 Name:           arachne
-Version:        1.4.99
+Version:        1.4.11
 
 Release:        1
 License:        GPLv3
@@ -95,6 +95,86 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Mar 22 2026 Claas Nieslony <github@nieslony.at> 1.4.11-1
+- Bump dependeny version (github@nieslony.at)
+- Show status icon, set column width (github@nieslony.at)
+- Fix: update avatar now (github@nieslony.at)
+- Add constructor (github@nieslony.at)
+- Change configured theme (github@nieslony.at)
+- Make enums public (github@nieslony.at)
+- Save avatar, reload page (github@nieslony.at)
+- Fix: set avatar (github@nieslony.at)
+- Code cleanup (github@nieslony.at)
+- Fix: get bean (github@nieslony.at)
+- Save custom avatar (github@nieslony.at)
+- Update custom avatar (github@nieslony.at)
+- Make LdapController really a controller class (github@nieslony.at)
+- Add query with special sorting (github@nieslony.at)
+- Improve error handling (github@nieslony.at)
+- Remove useless code (github@nieslony.at)
+- Add class ByteArrayHolder.java (github@nieslony.at)
+- Show avatar in user list (github@nieslony.at)
+- Force user refresh (github@nieslony.at)
+- Fix: open dialog (github@nieslony.at)
+- Add EditYourselfDialog.java (github@nieslony.at)
+- Update LDAP (github@nieslony.at)
+- Start fix (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Catch authenticating exception (github@nieslony.at)
+- Fix: logger (github@nieslony.at)
+- Show avatar, change avatar (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump dependenc versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Add overview (github@nieslony.at)
+
+* Fri Nov 21 2025 Claas Nieslony <github@nieslony.at> 1.4.10-1
+- Bump dependency versions (github@nieslony.at)
+
+* Fri Oct 17 2025 Claas Nieslony <github@nieslony.at> 1.4.9-1
+- Bump dependency versions (github@nieslony.at)
+- Add dark favicons (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+
+* Wed Oct 01 2025 root@len-pf287tj6.nieslony.internal <github@nieslony.at> 1.4.8-1
+- Transparent background (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Replace depricated VaadinWebSecurity (github@nieslony.at)
+- Bump vaadin version to 2.9 (github@nieslony.at)
+
+* Mon Sep 22 2025 Claas Nieslony <github@nieslony.at> 1.4.7-1
+- Bump dependency versions (github@nieslony.at)
+- Configure optional fixed client IP for sites (github@nieslony.at)
+- Add IpInSubnetValidator.java (github@nieslony.at)
+- Don't trow exeption just return false (github@nieslony.at)
+- Add basic settings to SiteFirewallView (github@nieslony.at)
+- Create outgoing page (github@nieslony.at)
+- Reorder components (github@nieslony.at)
+- Fix: package (github@nieslony.at)
+- Get file from master (github@nieslony.at)
+- Fix: provide UI object by supplier (github@nieslony.at)
+- Fix: error due to merge (github@nieslony.at)
+- Add more debug infos (github@nieslony.at)
+- Fix: save firewall basic settings (github@nieslony.at)
+- Edit firewall basic settings (github@nieslony.at)
+- Remove unused variables (github@nieslony.at)
+- Create firewall basics tab for site firewall (github@nieslony.at)
+- Fix: show full path of apache config (github@nieslony.at)
+- Fix: @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC) is
+  required for AJP (github@nieslony.at)
+- Fux: ui push (github@nieslony.at)
+- - add more debug info - fix: removeval of connected clients listner
+  (github@nieslony.at)
+- Format date, decimals and addresses (github@nieslony.at)
+- Fix: user ≠ site (github@nieslony.at)
+- Add some debug log (github@nieslony.at)
+
+* Fri Sep 05 2025 Claas Nieslony <github@nieslony.at> 1.4.6-1
+- Auto switch dark/light theme (github@nieslony.at)
+- Bump dependency version (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+
 * Wed Jul 16 2025 Claas Nieslony <github@nieslony.at> 1.4.5-1
 - - add option to view client config is UsersView - make shell and json
   download build the same config (github@nieslony.at)

@@ -11,8 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,9 +21,9 @@ import org.springframework.stereotype.Service;
  * @author claas
  */
 @Service
+@Slf4j
 public class TomcatService {
 
-    private static final Logger logger = LoggerFactory.getLogger(TomcatService.class);
     private final String FN_ARACHNE_CONF = "arachne.conf";
     private final String FN_ARACHNE_PRE_AUTH_CONF = "arachne-preauth.conf.inc";
 
@@ -45,7 +44,7 @@ public class TomcatService {
         try {
             tomcatSettings.save(settings);
         } catch (SettingsException ex) {
-            logger.error("Cannot save tomcat settings: " + ex.getMessage());
+            log.error("Cannot save tomcat settings: " + ex.getMessage());
         }
 
         String now = new Date().toString();
@@ -90,7 +89,7 @@ public class TomcatService {
         try (FileWriter writer = new FileWriter(getApacheConfigFileName())) {
             writer.write(config.toString());
         } catch (IOException ex) {
-            logger.error("Cannot write %s: %s".formatted(getApacheConfigFileName(), ex.getMessage()));
+            log.error("Cannot write %s: %s".formatted(getApacheConfigFileName(), ex.getMessage()));
         }
     }
 }

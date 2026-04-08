@@ -10,8 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,9 +19,8 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @Component
+@Slf4j
 public class FolderFactory {
-
-    private static final Logger logger = LoggerFactory.getLogger(FolderFactory.class);
 
     @Value("${vpnConfigDir}")
     private String vpnConfigDir;
@@ -55,7 +53,7 @@ public class FolderFactory {
             File f = new File(vpnConfigDir);
             return f.getCanonicalPath();
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot create %s: %s"
                             .formatted(vpnConfigDir, ex.getMessage())
             );
@@ -76,11 +74,11 @@ public class FolderFactory {
 
         File krb5ConfFile = new File(krb5ConfPath);
         if (!krb5ConfFile.exists()) {
-            logger.info("Creating " + krb5ConfPath);
+            log.info("Creating " + krb5ConfPath);
             try {
                 NetUtils.concatKrb5Conf("/etc/krb5.conf", krb5ConfPath);
             } catch (Exception ex) {
-                logger.error("Cannot copy krb5.conf to %s: %s"
+                log.error("Cannot copy krb5.conf to %s: %s"
                         .formatted(krb5ConfPath, ex.getMessage())
                 );
             }
@@ -111,13 +109,13 @@ public class FolderFactory {
     }
 
     private String getOpenVpnRunDir() {
-        logger.info("Creating " + openVpnRunDir);
+        log.info("Creating " + openVpnRunDir);
         try {
             Files.createDirectories(Path.of(openVpnRunDir));
             File f = new File(openVpnRunDir);
             return f.getCanonicalPath();
         } catch (IOException ex) {
-            logger.error(
+            log.error(
                     "Cannot create %s: %s"
                             .formatted(openVpnRunDir, ex.getMessage())
             );

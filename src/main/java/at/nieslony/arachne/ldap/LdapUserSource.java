@@ -24,8 +24,7 @@ import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UserSettings;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,9 +33,8 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @Component
+@Slf4j
 public class LdapUserSource implements ExternalUserSource {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapUserSource.class);
 
     @Autowired
     private Settings settings;
@@ -56,7 +54,6 @@ public class LdapUserSource implements ExternalUserSource {
 
     @Override
     public UserModel findUser(String username) {
-        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         UserSettings userSettings = settings.getSettings(UserSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
 
@@ -65,12 +62,12 @@ public class LdapUserSource implements ExternalUserSource {
                 getName()
         );
         if (user == null) {
-            logger.info("User %s not found in database, getting from LDAP"
+            log.info("User %s not found in database, getting from LDAP"
                     .formatted(username)
             );
-            user = ldapController.getUser(ldapSettings, username);
+            user = ldapController.getUser(username);
             if (user == null) {
-                logger.info("User %s neither found in database nor in LDAP"
+                log.info("User %s neither found in database nor in LDAP"
                         .formatted(username)
                 );
                 return null;
@@ -81,9 +78,9 @@ public class LdapUserSource implements ExternalUserSource {
             user.createRandomPassword();
             userRepository.save(user);
         } else if (user.isExpired(ldapCacheMaxMins)) {
-            logger.info("User is expired. Updating from LDAP");
+            log.info("User is expired. Updating from LDAP");
 
-            UserModel ldapUser = ldapController.getUser(ldapSettings, username);
+            UserModel ldapUser = ldapController.getUser(username);
             if (ldapUser != null) {
                 user.update(ldapUser);
                 Set<String> roles = rolesCollector.findRolesForUser(user);
@@ -92,7 +89,7 @@ public class LdapUserSource implements ExternalUserSource {
                 user.createRandomPassword();
                 userRepository.save(user);
             } else {
-                logger.info(
+                log.info(
                         "User %s does no longer exist in LDAP. Removing user"
                                 .formatted(username)
                 );

@@ -6,6 +6,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
 import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
@@ -27,6 +28,8 @@ import at.nieslony.arachne.utils.net.NicUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.ConditionalValidator;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
+import at.nieslony.arachne.utils.validators.IpInSubnetValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
 import at.nieslony.arachne.utils.validators.SystemUserValidator;
@@ -80,10 +83,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vaadin.olli.ClipboardHelper;
 
 /**
@@ -93,6 +95,7 @@ import org.vaadin.olli.ClipboardHelper;
 @Route(value = "site2siteVpn/settings", layout = ViewTemplate.class)
 @PageTitle("OpenVPN Site to Site VPN")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class OpenVpnSiteView extends VerticalLayout {
 
     enum OnDefSiteEnabled {
@@ -140,8 +143,6 @@ public class OpenVpnSiteView extends VerticalLayout {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnSiteView.class);
-
     private final Binder<OpenVpnSiteSettings> binder;
     private final Binder<VpnSite> siteBinder;
     private final OpenVpnSiteSettings openVpnSiteSettings;
@@ -158,6 +159,10 @@ public class OpenVpnSiteView extends VerticalLayout {
     private MenuBar siteConfigMenu;
 
     private TextField remoteHostField;
+
+    private Select<VpnSite.ClientIpMode> siteDetailsClientIpMode;
+    private TextField siteDetailsClientIp;
+    private TextField siteDetailsClientHostname;
 
     private Checkbox inheritDnsServers;
     private EditableListBox dnsServers;
@@ -449,7 +454,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                                     var setSite = vpnSiteController.getSite(site, allSites);
                                     sites.setValue(setSite);
                                 } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
-                                    logger.error(ex.getMessage());
+                                    log.error(ex.getMessage());
                                 }
                             }
                     );
@@ -458,7 +463,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         deleteButton = new Button("Delete...", (e) -> {
             if (sites.getValue().getId() == 0) {
-                logger.warn("Cannot remove site id=0");
+                log.warn("Cannot remove site id=0");
                 return;
             }
             ConfirmDialog dlg = new ConfirmDialog();
@@ -489,7 +494,7 @@ public class OpenVpnSiteView extends VerticalLayout {
                 sites.setItems(allSites);
                 sites.setValue(vpnSiteController.getSite(site, allSites));
                 siteBinder.validate();
-                logger.info("Created: " + site.toString());
+                log.info("Created: " + site.toString());
             });
         });
 
@@ -548,6 +553,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         TabSheet siteSettingsTab = new TabSheet();
         siteSettingsTab.add("Connection", createPageSitesConnection());
+        siteSettingsTab.add("Details", createPageSiteDetails());
         siteSettingsTab.add("DNS", createPageSitesDns());
         siteSettingsTab.add("Routes", createPageSitesRoutes());
         siteSettingsTab.setWidthFull();
@@ -626,6 +632,105 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         dlg.getFooter().add(cancelButton, okButton);
         dlg.open();
+    }
+
+    private Component createPageSiteDetails() {
+        siteDetailsClientIpMode = new Select<>();
+        siteDetailsClientIpMode.setLabel("Client IP Mode");
+        siteDetailsClientIpMode.setItems(VpnSite.ClientIpMode.values());
+        siteDetailsClientIpMode.setWidthFull();
+
+        siteDetailsClientHostname = new TextField("DNS Hostname");
+        siteDetailsClientHostname.setClearButtonVisible(true);
+        siteDetailsClientHostname.setValueChangeMode(ValueChangeMode.EAGER);
+        siteDetailsClientHostname.setWidthFull();
+
+        siteDetailsClientIp = new TextField("Client IP");
+        siteDetailsClientIp.setClearButtonVisible(siteModified);
+        siteDetailsClientIp.setValueChangeMode(ValueChangeMode.EAGER);
+        siteDetailsClientIp.setWidthFull();
+
+        siteDetailsClientIpMode.addValueChangeListener((event) -> {
+            if (event.getValue() == null) {
+                return;
+            }
+            switch (event.getValue()) {
+                case AUTO -> {
+                    siteDetailsClientHostname.setVisible(false);
+                    siteDetailsClientIp.setVisible(false);
+                }
+                case BY_HOSTNAME -> {
+                    siteDetailsClientHostname.setVisible(true);
+                    siteDetailsClientIp.setVisible(false);
+                }
+                case FIXED_IP -> {
+                    siteDetailsClientHostname.setVisible(false);
+                    siteDetailsClientIp.setVisible(true);
+                }
+            }
+        });
+
+        siteBinder.bind(
+                siteDetailsClientIpMode,
+                VpnSite::getClientIpMode,
+                VpnSite::setClientIpMode
+        );
+        siteBinder.forField(siteDetailsClientHostname)
+                .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
+                        new HostnameValidator()
+                                .withResolvableRequired(true)
+                                .withEmptyAllowed(false)
+                ))
+                .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
+                        new IpInSubnetValidator(
+                                () -> new IpInSubnetValidator.Subnet(
+                                        openVpnSiteSettings.getSiteNetwork(),
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        )
+                ))
+                .bind(
+                        VpnSite::getClientHostname,
+                        VpnSite::setClientHostname
+                );
+        siteBinder.forField(siteDetailsClientIp)
+                .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
+                        new IpValidator(false)
+                ))
+                .withValidator(new IgnoringInvisibleOrDisabledValidator<>(
+                        new IpInSubnetValidator(
+                                () -> new IpInSubnetValidator.Subnet(
+                                        openVpnSiteSettings.getSiteNetwork(),
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        )
+                ))
+                .bind(
+                        VpnSite::getClientIp,
+                        VpnSite::setClientIp
+                );
+
+        nonDefaultComponents.add(new ComponentEnabler(
+                OnDefSiteEnabled.DefSiteDisabled, siteDetailsClientIpMode)
+        );
+        nonDefaultComponents.add(new ComponentEnabler(
+                OnDefSiteEnabled.DefSiteDisabled, siteDetailsClientHostname)
+        );
+        nonDefaultComponents.add(new ComponentEnabler(
+                OnDefSiteEnabled.DefSiteDisabled, siteDetailsClientIp)
+        );
+
+        VerticalLayout layout = new VerticalLayout(
+                siteDetailsClientIpMode,
+                siteDetailsClientHostname,
+                siteDetailsClientIp
+        );
+        layout.setMargin(false);
+        layout.setPadding(false);
+
+        siteDetailsClientIpMode.setValue(VpnSite.ClientIpMode.AUTO);
+
+        return layout;
     }
 
     private Component createPageSitesDns() {
@@ -765,21 +870,23 @@ public class OpenVpnSiteView extends VerticalLayout {
         );
 
         VerticalLayout routesLayout = new VerticalLayout(
-                inheritPushRoutes,
-                pushRoutes,
                 new HorizontalLayout(
                         inheritRouteInternet,
                         routeInternet
                 ),
-                remoteNetworks
+                inheritPushRoutes,
+                pushRoutes
         );
+        routesLayout.setFlexGrow(1, pushRoutes);
         routesLayout.setMaxWidth(30, Unit.EM);
         routesLayout.setMargin(false);
+        routesLayout.setPadding(false);
 
         var layout = new HorizontalLayout(
-                routesLayout,
-                remoteNetworks
+                remoteNetworks,
+                routesLayout
         );
+        layout.setAlignItems(Alignment.STRETCH);
         layout.setWrap(true);
 
         return layout;
@@ -930,17 +1037,23 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private void onSaveBasics() {
         try {
+            SiteFirewallBasicsSettings firewallBasicSettings
+                    = settings.getSettings(SiteFirewallBasicsSettings.class);
+
             openVpnSiteSettings.save(settings);
             openVpnRestController.writeOpenVpnSiteServerConfig();
-            openVpnRestController.writeOpenVpnPluginSiteConfig();
+            openVpnRestController.writeOpenVpnPluginSiteConfig(
+                    openVpnSiteSettings,
+                    firewallBasicSettings
+            );
             openVpnRestController.writeCrl();
             arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
             ShowNotification.info("OpenVpn restarted with new configuration");
         } catch (SettingsException ex) {
-            logger.error("Cannot save openvpn site vpn: " + ex.getMessage());
+            log.error("Cannot save openvpn site vpn: " + ex.getMessage());
         } catch (DBusException | DBusExecutionException ex) {
             String header = "Cannot restart openVpn";
-            logger.error(header + ": " + ex.getMessage());
+            log.error(header + ": " + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }
@@ -955,7 +1068,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             openVpnRestController.writeOpenVpnSiteServerSitesConfig();
             siteModified = false;
         } catch (VpnSiteController.OnlyOneDefaultSiteAllowed ex) {
-            logger.error("Cannot save site %s: %s"
+            log.error("Cannot save site %s: %s"
                     .formatted(curSite.toString(), ex.getMessage())
             );
         }

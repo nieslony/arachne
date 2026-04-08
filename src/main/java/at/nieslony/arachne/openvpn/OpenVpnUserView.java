@@ -156,7 +156,7 @@ public class OpenVpnUserView extends VerticalLayout {
                             HorizontalLayout hl
                                     = new HorizontalLayout(
                                             authHttpUrlField,
-                                            new Text("/api/auth")
+                                            new Text("/api/login")
                                     );
                             hl.setAlignItems(Alignment.BASELINE);
                             hl.setPadding(false);

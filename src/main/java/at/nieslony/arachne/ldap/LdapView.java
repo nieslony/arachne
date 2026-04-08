@@ -38,6 +38,7 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
@@ -45,6 +46,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -61,8 +63,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ldap.InvalidNameException;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.AttributesMapper;
@@ -75,10 +76,9 @@ import org.springframework.security.core.AuthenticationException;
  */
 @Route(value = "ldap-settings", layout = ViewTemplate.class)
 @PageTitle("LDAP User Source")
+@Slf4j
 @RolesAllowed("ADMIN")
 public class LdapView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapView.class);
 
     private final Settings settings;
     private final LdapSettings ldapSettings;
@@ -108,7 +108,7 @@ public class LdapView extends VerticalLayout {
                     try {
                         binder.getBean().save(settings);
                     } catch (SettingsException ex) {
-                        logger.error("Cannot save ldap settings: " + ex.getMessage());
+                        log.error("Cannot save ldap settings: " + ex.getMessage());
                     }
                 }
         );
@@ -156,6 +156,10 @@ public class LdapView extends VerticalLayout {
         binder.forField(emailAttrField)
                 .bind(LdapSettings::getUsersAttrEmail, LdapSettings::setUsersAttrEmail);
 
+        TextField avatarAttrField = new TextField("Attribute Avatar");
+        binder.forField(avatarAttrField)
+                .bind(LdapSettings::getUsersAttrAvatar, LdapSettings::setUsersAttrAvatar);
+
         TextField testUserField = new TextField("Test and find user");
         testUserField.setWidthFull();
 
@@ -178,6 +182,7 @@ public class LdapView extends VerticalLayout {
                 usersSearchFilterField,
                 displayNameAttrField,
                 emailAttrField,
+                avatarAttrField,
                 testUserLayout
         );
         usersFormLayout.setColspan(usersOuField, 2);
@@ -259,6 +264,7 @@ public class LdapView extends VerticalLayout {
             usersAttrUsernameField.setValue("krbCanonicalName");
             displayNameAttrField.setValue("displayName");
             emailAttrField.setValue("mail");
+            avatarAttrField.setValue("jpegPhoto");
 
             groupsOu.setValue("cn=groups,cn=accounts");
             groupsObjectclass.setValue("posixgroup");
@@ -332,7 +338,7 @@ public class LdapView extends VerticalLayout {
                             );
                         }
                     } catch (NamingException ex) {
-                        logger.error("DNS lookup failed: " + ex.getMessage());
+                        log.error("DNS lookup failed: " + ex.getMessage());
                     }
                     return ret;
                 }
@@ -356,6 +362,24 @@ public class LdapView extends VerticalLayout {
         binder.forField(baseDnField)
                 .asRequired("Value Required")
                 .bind(LdapSettings::getBaseDn, LdapSettings::setBaseDn);
+
+        IntegerField connectionTimeoutField = new IntegerField("Connection Timeout");
+        connectionTimeoutField.setSuffixComponent(new Div("msec"));
+        connectionTimeoutField.setMin(1);
+        connectionTimeoutField.setMax(60 * 60 * 1000);
+        connectionTimeoutField.setStepButtonsVisible(true);
+        binder.forField(connectionTimeoutField)
+                .asRequired()
+                .bind(LdapSettings::getConnectionTimeoutMsec, LdapSettings::setConnectionTimeoutMsec);
+
+        IntegerField readTimeoutField = new IntegerField("Read Timeout");
+        readTimeoutField.setSuffixComponent(new Div("msec"));
+        readTimeoutField.setMin(1);
+        readTimeoutField.setMax(60 * 60 * 1000);
+        readTimeoutField.setStepButtonsVisible(true);
+        binder.forField(readTimeoutField)
+                .asRequired()
+                .bind(LdapSettings::getReadTimeoutMsec, LdapSettings::setReadTimeoutMsec);
 
         RadioButtonGroup<LdapSettings.LdapBindType> bindType
                 = new RadioButtonGroup<>("Authentication Type");
@@ -418,7 +442,7 @@ public class LdapView extends VerticalLayout {
                                         keytabPath.getValue(),
                                         exMsg
                                 );
-                        logger.error(header + ex.getMessage());
+                        log.error(header + ex.getMessage());
                         ShowNotification.error(header, ex.getMessage());
                     }
                 }
@@ -473,6 +497,8 @@ public class LdapView extends VerticalLayout {
                 ldapUrlsEditor,
                 new VerticalLayout(
                         baseDnField,
+                        connectionTimeoutField,
+                        readTimeoutField,
                         bindType,
                         simpleBindLayout,
                         keytabPath,
@@ -490,17 +516,17 @@ public class LdapView extends VerticalLayout {
             templ.lookup(ldapSettings.getBaseDn());
             ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
-            logger.error("Authentication failed: " + ex.getMessage());
+            log.error("Authentication failed: " + ex.getMessage());
             ShowNotification.error("Connection failed", ex.getMessage());
         } catch (NameNotFoundException ex) {
             String header = "Name not found. Maybe wrong base dn. ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         } catch (InvalidNameException ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             ShowNotification.error("Invalid Name", ex.getMessage());
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
+            log.error(ex.getMessage());
             ShowNotification.error("Connection failed", ex.getMessage());
         }
     }
@@ -515,7 +541,7 @@ public class LdapView extends VerticalLayout {
                     filter,
                     (AttributesMapper<Map<String, String>>) attrs -> {
                         Map<String, String> groupInfo = new HashMap<>();
-                        logger.info(attrs.toString());
+                        log.info(attrs.toString());
                         Attribute attr;
                         attr = attrs.get(ldapSettings.getGroupsAttrName());
                         if (attr != null) {
@@ -557,7 +583,7 @@ public class LdapView extends VerticalLayout {
 
         } catch (Exception ex) {
             String header = "LDAP search failed: ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }
@@ -566,12 +592,13 @@ public class LdapView extends VerticalLayout {
         try {
             LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
             String filter = ldapSettings.getUsersFilter(username);
+            log.debug("LDAP search: " + filter);
             var result = ldap.search(
                     ldapSettings.getUsersOu(),
                     filter,
                     (AttributesMapper<Map<String, String>>) attrs -> {
                         Map<String, String> userInfo = new HashMap<>();
-                        logger.info(attrs.toString());
+                        log.info(attrs.toString());
                         Attribute attr;
                         attr = attrs.get(ldapSettings.getUsersAttrUsername());
                         if (attr != null) {
@@ -616,7 +643,7 @@ public class LdapView extends VerticalLayout {
 
         } catch (Exception ex) {
             String header = "LDAP search failed: ";
-            logger.error(header + ex.getMessage());
+            log.error(header + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
         }
     }

@@ -36,8 +36,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -46,9 +45,8 @@ import org.slf4j.LoggerFactory;
 @Route(value = "pki", layout = ViewTemplate.class)
 @PageTitle("Pki")
 @RolesAllowed("ADMIN")
+@Slf4j
 public class PkiSettingsView extends VerticalLayout {
-
-    private static final Logger logger = LoggerFactory.getLogger(PkiSettingsView.class);
 
     private Binder<PkiSettings> binder;
     private Dialog writeDhParamsDialog;
@@ -124,7 +122,7 @@ public class PkiSettingsView extends VerticalLayout {
             try {
                 binder.getBean().save(settings);
             } catch (SettingsException ex) {
-                logger.error("Cannot save pki settings: " + ex.getMessage());
+                log.error("Cannot save pki settings: " + ex.getMessage());
             }
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

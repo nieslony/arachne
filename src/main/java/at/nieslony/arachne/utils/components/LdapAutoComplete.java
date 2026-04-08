@@ -17,7 +17,6 @@
 package at.nieslony.arachne.utils.components;
 
 import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.ldap.LdapSettings;
 import com.vaadin.flow.component.textfield.TextField;
 import java.util.List;
 
@@ -27,19 +26,18 @@ import java.util.List;
  */
 public class LdapAutoComplete extends AutoComplete<LdapController.PrettyResult> {
 
-    final private LdapController ldapController = LdapController.getInstance();
+    final private LdapController ldapController;
 
     public enum CompleteMode {
         NULL, USERS, GROUPS
     }
 
-    private final LdapSettings ldapSettings;
-
+    //private final LdapSettings ldapSettings;
     private CompleteMode completeMode = CompleteMode.NULL;
 
-    public LdapAutoComplete(TextField parent, LdapSettings ldapSettings) {
+    public LdapAutoComplete(TextField parent, LdapController ldapController) {
         super(parent);
-        this.ldapSettings = ldapSettings;
+        this.ldapController = ldapController;
         setValueConverter((value) -> value.name());
         setValueCompleter((v) -> onComplete(v));
     }
@@ -48,12 +46,10 @@ public class LdapAutoComplete extends AutoComplete<LdapController.PrettyResult> 
         return switch (completeMode) {
             case GROUPS ->
                 ldapController.findGroupsPretty(
-                ldapSettings,
                 "*" + value + "*",
                 5);
             case USERS ->
                 ldapController.findUsersPretty(
-                ldapSettings,
                 "*" + value + "*",
                 5);
             default ->

@@ -21,19 +21,17 @@ import java.util.TimerTask;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class ArachneTimerTask extends TimerTask {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArachneTimerTask.class);
-
-    private Task task;
+    private final Task task;
     private final BeanFactory beanFactory;
     private TaskModel taskModel;
     private final TaskRepository taskRepository;
@@ -62,13 +60,14 @@ public class ArachneTimerTask extends TimerTask {
             task.run(beanFactory);
             taskModel.setStatus(TaskModel.Status.SUCCESS);
         } catch (Exception ex) {
-            String msg = "Error executing task %s: %s"
-                    .formatted(
-                            taskModel.getTaskClassName(),
-                            ex.getMessage()
-                    );
-            logger.error(msg);
-            taskModel.setStatusMsg(msg);
+            log.error(
+                    "Error executing task %s: %s"
+                            .formatted(
+                                    taskModel.getTaskClassName(),
+                                    ex.getMessage()
+                            )
+            );
+            taskModel.setStatusMsg(ex.getMessage());
             taskModel.setStatus(TaskModel.Status.ERROR);
         }
         taskModel.setStopped();
@@ -85,7 +84,7 @@ public class ArachneTimerTask extends TimerTask {
                     newTaskModel.setTaskClassName(taskModel.getTaskClassName());
                     taskRepository.save(newTaskModel);
                     taskModel = newTaskModel;
-                    logger.info(
+                    log.info(
                             "Creating next scheduled entry %s on %s"
                                     .formatted(
                                             taskModel.getTaskClassName(),

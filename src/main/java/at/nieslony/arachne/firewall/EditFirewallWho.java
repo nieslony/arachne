@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.ldap.LdapSettings;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -39,7 +39,7 @@ public class EditFirewallWho extends AbstractCompositeField<VerticalLayout, Edit
 
     public EditFirewallWho(
             UserMatcherCollector userMatcherCollector,
-            LdapSettings ldapSettings
+            LdapController ldapController
     ) {
         super(new FirewallWho());
         this.userMatcherCollector = userMatcherCollector;
@@ -69,7 +69,7 @@ public class EditFirewallWho extends AbstractCompositeField<VerticalLayout, Edit
         TextField parameterField = new TextField();
         LdapAutoComplete parameterFieldComplete = new LdapAutoComplete(
                 parameterField,
-                ldapSettings
+                ldapController
         );
         parameterField.setWidthFull();
         binder.forField(parameterField)

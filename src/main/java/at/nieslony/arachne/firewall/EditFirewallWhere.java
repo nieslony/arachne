@@ -41,17 +41,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 class EditFirewallWhere extends AbstractCompositeField<VerticalLayout, EditFirewallWhere, FirewallWhere>
         implements HasValidator<FirewallWhere> {
-
-    private static final Logger logger = LoggerFactory.getLogger(EditFirewallWhere.class);
 
     private final Select<FirewallWhere.Type> whereTypeSelect;
     private final Binder<FirewallWhere> binder;

@@ -10,8 +10,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -39,9 +38,8 @@ import org.springframework.stereotype.Component;
  */
 @UIScope
 @Component
+@Slf4j
 public class ChangePasswordDialog extends Dialog {
-
-    private static final Logger logger = LoggerFactory.getLogger(ChangePasswordDialog.class);
 
     private UserRepository userRepository;
     private UserModel forUser = null;

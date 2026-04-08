@@ -5,6 +5,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.firewall.FirewallRuleModel;
+import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -139,15 +140,25 @@ public class OpenVpnController {
         return getSitePluginConfTemplate().replaceFirst("%cn", hostname);
     }
 
-    public void writeOpenVpnPluginSiteConfig() {
+    public void writeOpenVpnPluginSiteConfig(
+            OpenVpnSiteSettings openVpnSettings,
+            SiteFirewallBasicsSettings firewallBasicsSettings
+    ) {
         String fileName = folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_SITE_CONF);
-        UserFirewallBasicsSettings firewallBasicSettings = settings.getSettings(UserFirewallBasicsSettings.class);
         log.info("Writing openvpn-plugin-arache config to " + fileName);
         try (FileWriter fw = new FileWriter(fileName)) {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
-            writer.println("enable-routing = " + firewallBasicSettings.getEnableRoutingMode().name());
+            writer.println("enable-routing = " + firewallBasicsSettings.getEnableRoutingMode().name());
             writer.println("client-config = " + getSitePluginConfTemplate());
+            writer.println("enable-firewall = %b".formatted(
+                    firewallBasicsSettings.isEnableFirewall()
+            ));
+            if (firewallBasicsSettings.isEnableFirewall()) {
+                writer.println("firewall-zone = %s".formatted(
+                        firewallBasicsSettings.getFirewallZone()
+                ));
+            }
         } catch (IOException ex) {
             log.error(
                     "Cannot write to %s: %s"
@@ -167,8 +178,6 @@ public class OpenVpnController {
             PrintWriter writer = new PrintWriter(fw);
             writeConfigHeader(writer);
             writer.println("url-login = %s/api/login".formatted(
-                    openVpnSettings.getAuthHttpUrl()));
-            writer.println("url-auth = %s/api/openvpn/auth".formatted(
                     openVpnSettings.getAuthHttpUrl()));
             writer.println("enable-routing = %s".formatted(
                     firewallBasicsSettings.getEnableRoutingMode().name()
@@ -667,6 +676,7 @@ public class OpenVpnController {
 
     public void writeOpenVpnSiteServerSitesConfig() {
         VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
 
         for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
@@ -705,6 +715,28 @@ public class OpenVpnController {
                             "push \"dns search-domains %s\""
                                     .formatted(String.join(" ", site.getPushSearchDomains()))
                     );
+                }
+                switch (site.getClientIpMode()) {
+                    case AUTO -> {
+                    }
+                    case BY_HOSTNAME -> {
+                        pw.println();
+                        pw.println("ifconfig-push %s %s".formatted(
+                                site.getClientHostname(),
+                                NetUtils.maskLen2Mask(
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        ));
+                    }
+                    case FIXED_IP -> {
+                        pw.println();
+                        pw.println("ifconfig-push %s %s".formatted(
+                                site.getClientIp(),
+                                NetUtils.maskLen2Mask(
+                                        openVpnSiteSettings.getSiteNetworkMask()
+                                )
+                        ));
+                    }
                 }
                 pw.close();
                 fos.close();

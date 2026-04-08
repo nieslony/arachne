@@ -18,8 +18,7 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.roles.RolesCollector;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,11 +30,8 @@ import org.springframework.stereotype.Service;
  * @author claas
  */
 @Service
+@Slf4j
 public class InternalUserDetailsService implements UserDetailsService {
-
-    private static final Logger logger = LoggerFactory.getLogger(
-            InternalUserDetailsService.class
-    );
 
     @Autowired
     private UserRepository userRepository;
@@ -47,20 +43,20 @@ public class InternalUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username == null || username.isEmpty()) {
             String msg = "No username supplied";
-            logger.error(msg);
+            log.error(msg);
             throw new UsernameNotFoundException(msg);
         }
-        logger.info("Try to find internal user \"%s\"".formatted(username));
+        log.info("Try to find internal user \"%s\"".formatted(username));
         UserModel user = userRepository.findByUsername(username);
         if (user == null) {
             String msg = "Internal user %s not found".formatted(username);
-            logger.info(msg);
+            log.info(msg);
             throw new UsernameNotFoundException(msg);
         }
         Set<String> roles = rolesCollector.findRolesForUser(user);
         user.setRoles(roles);
         user = userRepository.save(user);
-        logger.info("Found internal user %s".formatted(user.toString()));
+        log.info("Found internal user %s".formatted(user.toString()));
 
         return new ArachneUserDetails(user);
     }

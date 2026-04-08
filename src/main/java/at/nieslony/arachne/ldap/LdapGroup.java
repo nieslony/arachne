@@ -11,8 +11,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -21,9 +20,8 @@ import org.slf4j.LoggerFactory;
 @Getter
 @Setter
 @ToString
+@Slf4j
 public class LdapGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapGroup.class);
 
     private String dn;
     private String name;
@@ -40,17 +38,17 @@ public class LdapGroup {
 
     public boolean hasMember(UserModel user) {
         if (!user.getExternalProvider().equals(LdapUserSource.getName())) {
-            logger.info("User %s is not a LDAP user".formatted(user.getUsername()));
+            log.info("User %s is not a LDAP user".formatted(user.getUsername()));
         }
         if (members.contains(user.getUsername())) {
-            logger.info("User %s is member of %s".formatted(user.getUsername(), dn));
+            log.info("User %s is member of %s".formatted(user.getUsername(), dn));
             return true;
         }
         if (members.contains(user.getExternalId())) {
-            logger.info("User %s is member of %s".formatted(user.getExternalId(), dn));
+            log.info("User %s is member of %s".formatted(user.getExternalId(), dn));
             return true;
         }
-        logger.info("User %s is not member of %s".formatted(user.getExternalId(), dn));
+        log.info("User %s is not member of %s".formatted(user.getExternalId(), dn));
         return false;
     }
 }

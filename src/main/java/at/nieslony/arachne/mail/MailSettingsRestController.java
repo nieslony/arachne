@@ -29,8 +29,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -47,9 +46,8 @@ import org.springframework.web.util.HtmlUtils;
  */
 @RestController
 @RequestMapping("/api/mail")
+@Slf4j
 public class MailSettingsRestController {
-
-    private static final Logger logger = LoggerFactory.getLogger(OpenVpnController.class);
 
     @Autowired
     Settings settings;
@@ -102,11 +100,11 @@ public class MailSettingsRestController {
                 openVpnUserSettings.getClientConfigName(),
                 new ByteArrayDataSource(windowsConfig, "text/plain")
         );
-        logger.info("sender: " + mailSettings.getSenderDisplayname());
-        logger.info("Recipient: " + forUser.getDisplayName());
-        logger.info("rcpt var: " + mailSettings.getVarRcptName());
-        logger.info("sender var; " + mailSettings.getVarSenderName());
-        logger.info("attachment var: " + mailSettings.getVarAttachnement());
+        log.info("sender: " + mailSettings.getSenderDisplayname());
+        log.info("Recipient: " + forUser.getDisplayName());
+        log.info("rcpt var: " + mailSettings.getVarRcptName());
+        log.info("sender var; " + mailSettings.getVarSenderName());
+        log.info("attachment var: " + mailSettings.getVarAttachnement());
         switch (mailSettings.getTemplateConfigType()) {
             case HTML -> {
                 String msg = mailSettings

@@ -23,8 +23,7 @@ import java.util.regex.Pattern;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -34,9 +33,8 @@ import org.slf4j.LoggerFactory;
 @Setter
 @EqualsAndHashCode
 @ShowApiType(String.class)
+@Slf4j
 public class LdapUrl implements Serializable {
-
-    private static final Logger logger = LoggerFactory.getLogger(LdapUrl.class);
 
     private LdapProtocol protocol;
     private String host;

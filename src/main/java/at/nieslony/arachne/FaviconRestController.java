@@ -25,6 +25,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,15 +40,33 @@ public class FaviconRestController {
     @GetMapping("/icons/arachne.png")
     @ResponseBody
     @AnonymousAllowed
-    public ResponseEntity<InputStreamResource> getFaviconAsPng() {
+    public ResponseEntity<InputStreamResource> getFaviconAsPng(@RequestParam int size) {
         try {
-            InputStream in = new ClassPathResource("/icons/arachne.png").getInputStream();
+            String fileName = "/icons/arachne_%d.png".formatted(size);
+            InputStream in = new ClassPathResource(fileName).getInputStream();
 
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .body(new InputStreamResource(in));
         } catch (IOException ex) {
             log.error("Cannot load icon icons/arachne.png: " + ex.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/icons/arachne_dark.png")
+    @ResponseBody
+    @AnonymousAllowed
+    public ResponseEntity<InputStreamResource> getDarkFaviconAsPng(@RequestParam int size) {
+        try {
+            String fileName = "/icons/arachne_dark_%d.png".formatted(size);
+            InputStream in = new ClassPathResource(fileName).getInputStream();
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(new InputStreamResource(in));
+        } catch (IOException ex) {
+            log.error("Cannot load icon icons/arachne_dark.png: " + ex.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

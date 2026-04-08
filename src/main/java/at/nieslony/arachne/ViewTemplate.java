@@ -8,6 +8,7 @@ import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
+import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
@@ -21,13 +22,17 @@ import at.nieslony.arachne.tasks.TaskView;
 import at.nieslony.arachne.tomcat.TomcatView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
+import at.nieslony.arachne.users.EditYourselfDialog;
+import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -43,8 +48,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.vaadin.flow.theme.lumo.Lumo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,22 +58,25 @@ import org.springframework.security.core.userdetails.UserDetails;
  *
  * @author claas
  */
+@JsModule("./os-theme-switcher.js")
+@Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
-
-    private static final Logger logger = LoggerFactory.getLogger(ViewTemplate.class);
 
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
+    private final LdapController ldapController;
     private String pageTitleStr = null;
 
     public ViewTemplate(
-            UserRepository userRepositoty,
+            UserRepository userRepository,
             AuthenticationContext authContext,
-            ArachneVersion arachneVersion) {
+            ArachneVersion arachneVersion,
+            LdapController ldapController) {
         this.authContext = authContext;
-        this.userRepository = userRepositoty;
+        this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
+        this.ldapController = ldapController;
 
         createHeader();
         createDrawer();
@@ -80,6 +88,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         String username = authentication.getName();
         String userInfo;
 
+        Avatar avatar = new Avatar();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         if (userDetails instanceof ArachneUserDetails aud) {
             userInfo = "%s (%s)".formatted(aud.getDisplayName(), username);
@@ -93,18 +102,43 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 .set("margin", "0");
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
-        MenuItem item = menuBar.addItem(userInfo);
+        MenuItem item = menuBar.addItem(avatar, userInfo);
         SubMenu userMenu = item.getSubMenu();
         userMenu.addItem("Logout", click -> {
             VaadinSession.getCurrent().close();
             this.authContext.logout();
         });
-        if (userRepository.findByUsername(username) != null) {
-            if (userRepository.findByUsername(username).getExternalProvider() == null) {
-                userMenu.addItem("Change Password...", click -> changePassword());
+        var user = userRepository.findByUsername(username);
+        if (user != null) {
+            if (user.getExternalProvider() == null) {
+                userMenu.addItem("Change Password…", click -> changePassword());
+            }
+            userMenu.addItem("Settings…", click -> {
+                EditYourselfDialog dlg = new EditYourselfDialog(
+                        user,
+                        userRepository,
+                        ldapController
+                );
+                dlg.open();
+            });
+            if (user.hasAvatar()) {
+                log.info("Setting %s's avatar".formatted(user.getUsername()));
+                avatar.setImageHandler(event -> {
+                    event.getOutputStream().write(user.getAvatar());
+                });
+            } else {
+                log.info("User %s has no avatar".formatted(user.getUsername()));
+            }
+
+            if (user.getThemeVariant() != UserModel.ThemeVariant.Auto) {
+                var js = "document.documentElement.setAttribute('theme', $0)";
+                getElement().executeJs(
+                        js,
+                        user.getThemeVariant() == UserModel.ThemeVariant.Dark ? Lumo.DARK : Lumo.LIGHT
+                );
             }
         } else {
-            logger.warn("Cannot find user %s in user repository".formatted(username));
+            log.warn("Cannot find user %s in user repository".formatted(username));
         }
         if (!userMenu.getItems().isEmpty()) {
             userMenu.addSeparator();

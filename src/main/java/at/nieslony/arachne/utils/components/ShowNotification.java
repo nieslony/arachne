@@ -16,16 +16,14 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.dom.Style;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class ShowNotification {
-
-    private static final Logger logger = LoggerFactory.getLogger(ShowNotification.class);
 
     public static void info(String msgText) {
         createInfo(msgText, new Text("")).open();
