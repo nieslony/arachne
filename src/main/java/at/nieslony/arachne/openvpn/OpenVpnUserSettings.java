@@ -7,6 +7,7 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.settings.AbstractSettingsGroup;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.components.VpnRemote;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.util.Arrays;
@@ -98,6 +99,7 @@ public class OpenVpnUserSettings
     private TransportProtocol listenProtocol = TransportProtocol.TCP;
     private Boolean mtuTest = true;
     private String remote = NetUtils.myHostname();
+    private List<VpnRemote> remoteList = new LinkedList<>();
     private String deviceType = "tun";
     private String deviceName = "arachne-user";
     private String clientNetwork = "192.168.131.0";
