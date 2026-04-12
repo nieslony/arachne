@@ -62,7 +62,7 @@ public class HostnameValidator implements Validator<String> {
         }
 
         Pattern pattern = Pattern.compile(
-                "^[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"
+                "^[a-z0-9][a-z0-9\\-]*(\\.[a-z0-9][a-z0-9\\-]*)*$"
         );
         Matcher matcher = pattern.matcher(hostname);
         if (matcher.find()) {
