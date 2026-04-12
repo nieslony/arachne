@@ -18,6 +18,7 @@ import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -334,7 +335,7 @@ public class NetUtils {
 
             String ip = in.readLine();
             return ip;
-        } catch (IOException ex) {
+        } catch (IOException | URISyntaxException ex) {
             log.warn("Cannit get public IP: " + ex.getMessage());
             return null;
         }
