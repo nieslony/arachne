@@ -10,7 +10,9 @@ import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
+import at.nieslony.arachne.utils.components.EditVpnRemote;
 import at.nieslony.arachne.utils.components.EditableListBox;
+import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -50,8 +52,10 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
@@ -69,7 +73,8 @@ public class OpenVpnUserView extends VerticalLayout {
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
 
-    private final ArachneDbus arachneDbus;
+    private IntegerField portField;
+    private Select<TransportProtocol> protocol;
 
     public OpenVpnUserView(
             Settings settings,
@@ -77,8 +82,6 @@ public class OpenVpnUserView extends VerticalLayout {
             ArachneDbus arachneDbus,
             Pki pki
     ) {
-        this.arachneDbus = arachneDbus;
-
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         binder = new Binder<>(OpenVpnUserSettings.class);
 
@@ -257,24 +260,36 @@ public class OpenVpnUserView extends VerticalLayout {
         ipAddresse.setLabel("Listen on");
         ipAddresse.setWidth(20, Unit.EM);
 
-        IntegerField port = new IntegerField("Port");
-        port.setMin(1);
-        port.setMax(65534);
-        port.setStepButtonsVisible(true);
-        port.setValueChangeMode(ValueChangeMode.EAGER);
-        port.setWidth(8, Unit.EM);
+        portField = new IntegerField("Port");
+        portField.setMin(1);
+        portField.setMax(65534);
+        portField.setStepButtonsVisible(true);
+        portField.setValueChangeMode(ValueChangeMode.EAGER);
+        portField.setWidth(8, Unit.EM);
 
-        Select<TransportProtocol> protocol = new Select<>();
+        protocol = new Select<>();
         protocol.setItems(TransportProtocol.values());
         protocol.setLabel("Protocol");
         protocol.setWidth(8, Unit.EM);
 
         HorizontalLayout listenLayout = new HorizontalLayout();
-        listenLayout.add(ipAddresse, port, protocol);
+        listenLayout.add(ipAddresse, portField, protocol);
         listenLayout.setFlexGrow(1, ipAddresse);
 
         TextField connectToHost = new TextField("Connect to host");
         connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
+
+        EditVpnRemote editVpnRemoteField = new EditVpnRemote();
+        editVpnRemoteField.setWidthFull();
+        GenericEditableListBox<VpnRemote, EditVpnRemote> vpnRemoteField
+                = new GenericEditableListBox<>(
+                        "VPN Remotes",
+                        editVpnRemoteField
+                );
+        vpnRemoteField.setDefaultValuesSupplier(
+                "Set local IPS",
+                () -> getDefaultVpnRemotes()
+        );
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
@@ -349,7 +364,7 @@ public class OpenVpnUserView extends VerticalLayout {
                         (s, v) -> {
                             s.setListenIp(v.getIpAddress());
                         });
-        binder.forField(port)
+        binder.forField(portField)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getListenPort, OpenVpnUserSettings::setListenPort);
         binder.forField(protocol)
@@ -412,6 +427,7 @@ public class OpenVpnUserView extends VerticalLayout {
         formLayout.add(clientConfigName);
         formLayout.add(listenLayout);
         formLayout.add(connectToHost);
+        formLayout.add(vpnRemoteField);
         formLayout.add(interfaceLayout);
         formLayout.add(clientNetLayout);
         formLayout.add(keepaliveLayout);
@@ -502,5 +518,47 @@ public class OpenVpnUserView extends VerticalLayout {
         );
 
         return layout;
+    }
+
+    private List<VpnRemote> getDefaultVpnRemotes() {
+        int port = portField.getValue();
+        TransportProtocol prot = protocol.getValue();
+        var privateStream = NicUtils.findAllNics()
+                .stream()
+                .filter(nic -> !nic.getIpAddress().equals("0.0.0.0"))
+                .filter(nic -> !nic.getIpAddress().startsWith("127.0"))
+                .map((nic)
+                        -> new VpnRemote(
+                        nic.getIpAddress(),
+                        port,
+                        prot
+                )
+                );
+        var publicStream = Stream
+                .of(
+                        new VpnRemote(NetUtils.myPublicIpAddress(), port, prot),
+                        new VpnRemote(NetUtils.myPublicHostname(), port, prot),
+                        new VpnRemote(NetUtils.myHostname(), port, prot)
+                )
+                .filter(rem -> rem != null);
+        var l = Stream.concat(privateStream, publicStream)
+                .sorted((vr1, vr2) -> {
+                    int compHostNames = vr1.getRemoteHost().compareTo(vr2.getRemoteHost());
+                    if (compHostNames != 0) {
+                        return compHostNames;
+                    }
+                    if (vr1.getPort() < vr2.getPort()) {
+                        return -1;
+                    }
+                    if (vr1.getPort() > vr2.getPort()) {
+                        return -1;
+                    }
+                    return vr1.getTransportProtocol().name().compareTo(
+                            vr2.getTransportProtocol().name()
+                    );
+                })
+                .distinct()
+                .toList();
+        return l;
     }
 }
