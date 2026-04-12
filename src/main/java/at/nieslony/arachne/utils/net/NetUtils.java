@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
@@ -15,6 +17,8 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -320,5 +324,32 @@ public class NetUtils {
                 });
 
         return sw.toString();
+    }
+
+    public static String myPublicIpAddress() {
+        try {
+            URL whatismyip = new URI("http://checkip.amazonaws.com").toURL();
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+                    whatismyip.openStream()));
+
+            String ip = in.readLine();
+            return ip;
+        } catch (IOException ex) {
+            log.warn("Cannit get public IP: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    public static String myPublicHostname() {
+        String publicIp = myPublicIpAddress();
+        if (publicIp == null) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(publicIp).getHostName();
+        } catch (UnknownHostException ex) {
+            log.warn("Cannot get hostname for %s: %s".formatted(publicIp, ex.getMessage()));
+            return null;
+        }
     }
 }
