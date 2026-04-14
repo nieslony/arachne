@@ -551,7 +551,7 @@ public class OpenVpnUserView extends VerticalLayout {
                         return -1;
                     }
                     if (vr1.getPort() > vr2.getPort()) {
-                        return -1;
+                        return 1;
                     }
                     return vr1.getTransportProtocol().name().compareTo(
                             vr2.getTransportProtocol().name()
