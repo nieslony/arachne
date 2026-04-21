@@ -18,6 +18,7 @@
 package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.utils.net.TransportProtocol;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,7 +28,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class VpnRemote {
+public class VpnRemote implements Serializable {
 
     public VpnRemote() {
     }
