@@ -45,7 +45,9 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -373,6 +375,14 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(connectToHost)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getRemote, OpenVpnUserSettings::setRemote);
+        binder.forField(vpnRemoteField)
+                .asRequired((List<VpnRemote> value, ValueContext vc) -> {
+                    if (value.isEmpty()) {
+                        return ValidationResult.error("List of remotes cannot be empty");
+                    }
+                    return ValidationResult.ok();
+                })
+                .bind(OpenVpnUserSettings::getRemoteList, OpenVpnUserSettings::setRemoteList);
         binder.forField(interfaceType)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getDeviceType, OpenVpnUserSettings::setDeviceType);
@@ -557,7 +567,6 @@ public class OpenVpnUserView extends VerticalLayout {
                             vr2.getTransportProtocol().name()
                     );
                 })
-                .distinct()
                 .toList();
         return l;
     }
