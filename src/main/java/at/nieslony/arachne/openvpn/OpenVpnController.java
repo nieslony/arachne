@@ -313,6 +313,15 @@ public class OpenVpnController {
                 vpnSettings.getListenProtocol().name().toLowerCase())
         );
         writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
+
+        for (VpnRemote remote : vpnSettings.getRemoteList()) {
+            writer.println("remote %s %d %s".formatted(
+                    remote.getRemoteHost(),
+                    remote.getPort(),
+                    remote.getTransportProtocol().name().toLowerCase()
+            ));
+        }
+
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
