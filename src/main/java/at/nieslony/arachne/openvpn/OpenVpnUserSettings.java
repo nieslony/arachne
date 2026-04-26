@@ -86,6 +86,23 @@ public class OpenVpnUserSettings
         }
     }
 
+    public enum MtuMode {
+        DEFAULT("Default value (1500)"),
+        AUTO("Measure  MTU on Connection Startup"),
+        MANUAL("Set manually");
+
+        private MtuMode(String label) {
+            this.label = label;
+        }
+
+        private final String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     public OpenVpnUserSettings() {
     }
 
@@ -96,7 +113,9 @@ public class OpenVpnUserSettings
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
     private TransportProtocol listenProtocol = TransportProtocol.TCP;
-    private Boolean mtuTest = true;
+    private MtuMode mtuMode = MtuMode.DEFAULT;
+    private Integer tunMtu = 1500;
+    private Integer fragment = 1300;
     private String remote = NetUtils.myHostname();
     private List<VpnRemote> remoteList = new LinkedList<>();
     private String deviceType = "tun";
@@ -143,5 +162,14 @@ public class OpenVpnUserSettings
 
     public String getClientConfigName(String username) {
         return getFormattedClientConfigName(username) + ".ovpn";
+    }
+
+    public List<VpnRemote> getRemoteList() {
+        if (!remoteList.isEmpty()) {
+            return remoteList;
+        }
+
+        VpnRemote rem = new VpnRemote(remote, 1194, TransportProtocol.UDP);
+        return new LinkedList<>(List.of(rem));
     }
 }

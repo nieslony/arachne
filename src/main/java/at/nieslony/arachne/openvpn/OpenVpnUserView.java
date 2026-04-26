@@ -315,6 +315,25 @@ public class OpenVpnUserView extends VerticalLayout {
         clientNetLayout.add(clientNetwork, clientMask);
         clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
 
+        Select<OpenVpnUserSettings.MtuMode> mtuModeSelect = new Select<>();
+        mtuModeSelect.setLabel("MTU Mode");
+        mtuModeSelect.setItems(OpenVpnUserSettings.MtuMode.values());
+
+        IntegerField mtuField = new IntegerField("MTU");
+        mtuField.setStepButtonsVisible(true);
+
+        IntegerField fragmentField = new IntegerField("Fragment");
+        fragmentField.setStepButtonsVisible(true);
+        fragmentField.setClearButtonVisible(true);
+        fragmentField.setPlaceholder("Default Value");
+
+        HorizontalLayout mtuLayout = new HorizontalLayout(
+                mtuField,
+                fragmentField
+        );
+        mtuLayout.setMargin(false);
+        mtuLayout.setPadding(false);
+
         IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
         Div suffix;
         suffix = new Div();
@@ -336,8 +355,6 @@ public class OpenVpnUserView extends VerticalLayout {
 
         HorizontalLayout keepaliveLayout = new HorizontalLayout();
         keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
-
-        Checkbox mtuTestField = new Checkbox("MTU Test");
 
         ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("User Status Update Interval (secs)");
         statusUpdateIntervalField.setItems(
@@ -398,32 +415,54 @@ public class OpenVpnUserView extends VerticalLayout {
                             s.setClientMask(v.getBits());
                         }
                 );
+        binder.forField(mtuModeSelect)
+                .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
+        binder.forField(mtuField)
+                .bind(OpenVpnUserSettings::getTunMtu, OpenVpnUserSettings::setTunMtu);
+        binder.forField(fragmentField)
+                .bind(OpenVpnUserSettings::getFragment, OpenVpnUserSettings::setFragment);
         binder.forField(keepaliveInterval)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
         binder.forField(keepaliveTimeout)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
-        binder.bind(
-                mtuTestField,
-                OpenVpnUserSettings::getMtuTest,
-                OpenVpnUserSettings::setMtuTest
-        );
         binder.bind(statusUpdateIntervalField,
                 OpenVpnUserSettings::getStatusUpdateSecs,
                 OpenVpnUserSettings::setStatusUpdateSecs
         );
 
-        clientMask.addValueChangeListener((e) -> binder.validate());
-        protocol.addValueChangeListener((e) -> {
-            mtuTestField.setEnabled(e.getValue() == TransportProtocol.UDP);
+        mtuModeSelect.setItemEnabledProvider((item) -> {
+            if (item == OpenVpnUserSettings.MtuMode.AUTO) {
+                return protocol.getValue() == TransportProtocol.UDP;
+            }
+            return true;
         });
+
+        mtuModeSelect.addValueChangeListener((e) -> {
+            if (e.getValue() == OpenVpnUserSettings.MtuMode.MANUAL) {
+                mtuField.setEnabled(true);
+                fragmentField.setEnabled(protocol.getValue() != TransportProtocol.TCP);
+            } else {
+                mtuField.setEnabled(false);
+                fragmentField.setEnabled(false);
+            }
+        });
+
+        protocol.addValueChangeListener((e) -> {
+            var v = mtuModeSelect.getValue();
+            mtuModeSelect.getDataProvider().refreshAll();
+            mtuModeSelect.setValue(v);
+        });
+
+        clientMask.addValueChangeListener((e) -> binder.validate());
 
         VerticalLayout connectionBasicsLayout = new VerticalLayout(
                 listenLayout,
                 interfaceLayout,
                 clientNetLayout,
-                mtuTestField
+                mtuModeSelect,
+                mtuLayout
         );
         connectionBasicsLayout.setMargin(false);
         connectionBasicsLayout.setPadding(false);

@@ -226,8 +226,19 @@ public class OpenVpnController {
                             settings.getKeepaliveInterval(),
                             settings.getKeepaliveTimeout()));
             writer.println("topology subnet");
-            if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
-                writer.println("mtu-test");
+            switch (settings.getMtuMode()) {
+                case AUTO -> {
+                    writer.println("mtu-test");
+                }
+                case DEFAULT -> {
+                }
+                case MANUAL -> {
+                    writer.println("tun-mtu %d".formatted(settings.getTunMtu()));
+                    if (settings.getListenProtocol() == TransportProtocol.UDP
+                            && settings.getFragment() != null) {
+                        writer.println("fragment %d".formatted(settings.getFragment()));
+                    }
+                }
             }
             writer.println(
                     "status %s %d"
