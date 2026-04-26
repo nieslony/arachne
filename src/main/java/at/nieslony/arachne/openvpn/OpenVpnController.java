@@ -30,8 +30,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509CRL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -332,97 +336,105 @@ public class OpenVpnController {
         String userCert = pki.getUserCertAsBase64(username);
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
-        String userCertFn = "$HOME/.cert/%s".formatted(
-                ShellQuote.escapeChars(
-                        getUserCertFilename(username),
-                        "\","
-                )
-        );
-        String caCertFn = "$HOME/.cert/%s".formatted(
-                ShellQuote.escapeChars(
-                        getCaCertFilename(),
-                        "\","
-                ));
-        String privateKeyFn = "$HOME/.cert/%s".formatted(
-                ShellQuote.escapeChars(
-                        getUserKeyFilename(username),
-                        "\","
-                )
-        );
-        int port = vpnSettings.getListenPort();
 
-        StringWriter configWriter = new StringWriter();
-        configWriter.append("mkdir -v $HOME/.cert\n");
-        configWriter.append("""
-                            cat <<EOF > %s
-                            %s
-                            EOF
-                            """.formatted(caCertFn, caCert));
-        configWriter.append("""
-                            cat -v <<EOF > %s
-                            %s
-                            EOF
-                            """.formatted(userCertFn, userCert));
-        configWriter.append("""
-                            cat -v <<EOF > %s
-                            %s
-                            EOF
-                            chmod -v 600 %s
-                               """.formatted(privateKeyFn, privateKey, privateKeyFn));
-        String conName = vpnSettings.getFormattedClientConfigName(username);
-        /*  ca = /home/claas/.certs/arachne-ca.crt,
-        cert = /home/claas/.certs/arachne-cert.crt,
-        cert-pass-flags = 4, connection-type = password-tls,
-        key = /home/claas/.certs/arachne-cert.key,
-        password-flags = 2, port = , remote = odysseus.nieslony.lan,
-        username = claas@NIESLONY.LAN
-         */
-        configWriter.append("vpn_opts=\"\n");
+        List<String> vpnOpts = new ArrayList<>(Arrays.asList(
+                "ipv4.dns-search %s"
+                        .formatted(String.join(",", vpnSettings.getDnsSearch())),
+                "ipv4.dns %s"
+                        .formatted(String.join(",", vpnSettings.getPushDnsServers())
+                        ),
+                "connection.autoconnect no",
+                "connection.permissions user:$USER"
+        ));
         if (!vpnSettings.getInternetThrouphVpn()) {
-            configWriter.append("    ipv4.never-default yes\n");
+            vpnOpts.add("ipv4.never-default yes");
         }
-        configWriter
-                .append("    ipv4.dns-search %s\n"
-                        .formatted(String.join(",", vpnSettings.getDnsSearch()))
-                )
-                .append("    ipv4.dns %s\n"
-                        .formatted(String.join(",", vpnSettings.getPushDnsServers()))
-                )
-                .append("    connection.autoconnect no\n")
-                .append("    connection.permissions user:$USER\n");
-        configWriter.append("\"\n");
 
-        configWriter.append(
-                """
-                vpn_data="
-                    ca = %s,
-                    cert = %s,
-                    cert-pass-flags = 4,
-                    connection-type = password-tls,
-                    dev-type = tun,
-                    key = %s,
-                    password-flags = %d,
-                    proto-tcp = %s,
-                    remote = %s:%d,
-                    username = %s
+        List<String> vpnData = new ArrayList<>(Arrays.asList(
+                "ca = ${ca_crt_path@E}",
+                "cert = ${crt_path@E}",
+                "cert-pass-flags = 4",
+                "connection-type = password-tls",
+                "dev-type = tun",
+                "key = ${key_path@E}",
+                "password-flags = %d".formatted(
+                        vpnSettings.getNetworkManagerRememberPassword().getCfgValue()
+                ),
+                "proto-tcp = %s".formatted(
+                        vpnSettings.getListenProtocol() == TransportProtocol.TCP
+                        ? "yes"
+                        : "no"
+                ),
+                "remote = %s:%d".formatted(
+                        vpnSettings.getRemote(),
+                        vpnSettings.getListenPort()
+                ),
+                "username = %s".formatted(username)
+        ));
+
+        String config
+                = """
+                #!/bin/bash
+                set -eu
+                LANG=C
+
+                con_name=%s
+                ca_crt_fn=%s
+                crt_fn=%s
+                key_fn=%s
+                cert_folder=${HOME@E}/.cert
+                ca_crt_path=${cert_folder@E}/${ca_crt_fn@E}
+                crt_path=${cert_folder@E}/${crt_fn@E}
+                key_path=${cert_folder@E}/${key_fn@E}
+
+                mkdir -vp "${cert_folder@E}"
+
+                cat <<EOF > "${ca_crt_path@E}"
+                %s
+                EOF
+
+                cat -v <<EOF > "${crt_path@E}"
+                %s
+                EOF
+
+                cat -v <<EOF > "${key_path@E}"
+                %s
+                EOF
+
+                chmod -v 600 "${key_path@E}"
+
+                vpn_opts="
+                %s
                 "
-                nmcli connection add type vpn vpn-type openvpn con-name "%s" $vpn_opts vpn.data "$vpn_data"
-                """
-                        .formatted(
-                                caCertFn,
-                                userCertFn,
-                                privateKeyFn,
-                                vpnSettings.getNetworkManagerRememberPassword().getCfgValue(),
-                                vpnSettings.getListenProtocol() == TransportProtocol.TCP
-                                ? "yes"
-                                : "no",
-                                vpnSettings.getRemote(),
-                                port,
-                                username,
-                                conName
-                        )
-        );
-        return configWriter.toString();
+
+                vpn_data="
+                %s
+                "
+
+                nmcli connection add \\
+                    type vpn \\
+                    vpn-type openvpn \\
+                    con-name "${con_name@E}" \\
+                    ${vpn_opts@E} \\
+                    vpn.data "${vpn_data@E}"
+                """.formatted(
+                        ShellQuote.shellQuote(
+                                vpnSettings.getFormattedClientConfigName(username)
+                        ),
+                        ShellQuote.shellQuote(getCaCertFilename()),
+                        ShellQuote.shellQuote(getUserCertFilename(username)),
+                        ShellQuote.shellQuote(getUserKeyFilename(username)),
+                        caCert,
+                        userCert,
+                        privateKey,
+                        vpnOpts.stream()
+                                .map((o) -> "    " + o)
+                                .collect(Collectors.joining("\n")),
+                        vpnData.stream()
+                                .map((o) -> "    " + o)
+                                .collect(Collectors.joining(",\n"))
+                );
+        return config;
     }
 
     public String getCaCertFilename() {
@@ -432,19 +444,22 @@ public class OpenVpnController {
                                 .getSubjectX500Principal()
                                 .toString()
                                 .replaceAll("[a-zA-Z]+=", "")
-                );
+                )
+                .replaceAll(",", "");
     }
 
     public String getUserCertFilename(String username) {
         OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
-        return "arachne_%s.crt".formatted(clientConfigName);
+        return "arachne_%s.crt".formatted(clientConfigName)
+                .replaceAll(",", "");
     }
 
     public String getUserKeyFilename(String username) {
         OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
-        return "arachne_%s.key".formatted(clientConfigName);
+        return "arachne_%s.key".formatted(clientConfigName)
+                .replaceAll(",", "");
     }
 
     String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
