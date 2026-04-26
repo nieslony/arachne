@@ -2,7 +2,11 @@
 %global moduletype contrib
 %global modulename arachne
 
+%if 0%{fedora} >= 44
+%global jdk_version 25
+%else
 %global jdk_version 21
+%endif
 
 Name:           arachne
 Version:        1.4.11

@@ -92,7 +92,7 @@ public class OpenVpnUserSettings
     private boolean alreadyConfigured = false;
 
     private String vpnName = "Arachne OpenVPN - %u@%h";
-    private String clientConfigName = "arachne-openVPN-client.conf";
+    // private String clientConfigName = "arachne-openVPN-client.conf";
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
     private TransportProtocol listenProtocol = TransportProtocol.TCP;
@@ -139,5 +139,9 @@ public class OpenVpnUserSettings
     public void save(Settings settings) throws SettingsException {
         alreadyConfigured = true;
         super.save(settings);
+    }
+
+    public String getClientConfigName(String username) {
+        return getFormattedClientConfigName(username) + ".ovpn";
     }
 }
