@@ -152,7 +152,7 @@ public class UserHome extends VerticalLayout implements RouterLayout {
                 var is = new ByteArrayInputStream(config.getBytes());
                 return new DownloadResponse(
                         is,
-                        openVpnUserSettings.getClientConfigName(),
+                        openVpnUserSettings.getClientConfigName(username),
                         "application/x-openvpn-profile",
                         config.getBytes().length
                 );
