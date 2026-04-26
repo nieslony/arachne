@@ -19,6 +19,7 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import java.io.Serializable;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -46,5 +47,31 @@ public class VpnRemote implements Serializable {
     @Override
     public String toString() {
         return "%s:%d/%s".formatted(remoteHost, port, transportProtocol.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(remoteHost, port, transportProtocol);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final VpnRemote other = (VpnRemote) obj;
+        if (this.port != other.port) {
+            return false;
+        }
+        if (!Objects.equals(this.remoteHost, other.remoteHost)) {
+            return false;
+        }
+        return this.transportProtocol == other.transportProtocol;
     }
 }

@@ -274,9 +274,6 @@ public class OpenVpnUserView extends VerticalLayout {
         listenLayout.add(ipAddresse, portField, protocol);
         listenLayout.setFlexGrow(1, ipAddresse);
 
-        TextField connectToHost = new TextField("Connect to host");
-        connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
-
         EditVpnRemote editVpnRemoteField = new EditVpnRemote();
         editVpnRemoteField.setWidthFull();
         GenericEditableListBox<VpnRemote, EditVpnRemote> vpnRemoteField
@@ -365,9 +362,6 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(protocol)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getListenProtocol, OpenVpnUserSettings::setListenProtocol);
-        binder.forField(connectToHost)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getRemote, OpenVpnUserSettings::setRemote);
         binder.forField(vpnRemoteField)
                 .asRequired((List<VpnRemote> value, ValueContext vc) -> {
                     if (value.isEmpty()) {
@@ -427,11 +421,11 @@ public class OpenVpnUserView extends VerticalLayout {
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
+        formLayout.setColspan(name, 2);
         formLayout.add(listenLayout);
-        formLayout.add(connectToHost);
-        formLayout.add(vpnRemoteField);
         formLayout.add(interfaceLayout);
         formLayout.add(clientNetLayout);
+        formLayout.add(vpnRemoteField);
         formLayout.add(keepaliveLayout);
         formLayout.add(mtuTestField);
         formLayout.add(statusUpdateIntervalField);
@@ -559,6 +553,7 @@ public class OpenVpnUserView extends VerticalLayout {
                             vr2.getTransportProtocol().name()
                     );
                 })
+                .distinct()
                 .toList();
         return l;
     }
