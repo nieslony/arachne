@@ -11,7 +11,7 @@ package at.nieslony.arachne.utils;
 public class ShellQuote {
 
     public static String shellQuote(String s) {
-        return "'" + s.replaceAll("'", "'\"'\"'") + "'";
+        return "'" + s.replaceAll("'", "'\\\\''") + "'";
     }
 
     public static String escapeChars(String s, String chars) {
