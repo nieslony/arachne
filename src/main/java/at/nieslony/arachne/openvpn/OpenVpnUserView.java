@@ -339,7 +339,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Checkbox mtuTestField = new Checkbox("MTU Test");
 
-        ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("Status Update Interval (secs)");
+        ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("User Status Update Interval (secs)");
         statusUpdateIntervalField.setItems(
                 10, 20, 30, 45, 60, 120
         );
@@ -419,15 +419,22 @@ public class OpenVpnUserView extends VerticalLayout {
             mtuTestField.setEnabled(e.getValue() == TransportProtocol.UDP);
         });
 
+        VerticalLayout connectionBasicsLayout = new VerticalLayout(
+                listenLayout,
+                interfaceLayout,
+                clientNetLayout,
+                mtuTestField
+        );
+        connectionBasicsLayout.setMargin(false);
+        connectionBasicsLayout.setPadding(false);
+        connectionBasicsLayout.setAlignItems(Alignment.STRETCH);
+
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
         formLayout.setColspan(name, 2);
-        formLayout.add(listenLayout);
-        formLayout.add(interfaceLayout);
-        formLayout.add(clientNetLayout);
+        formLayout.add(connectionBasicsLayout);
         formLayout.add(vpnRemoteField);
         formLayout.add(keepaliveLayout);
-        formLayout.add(mtuTestField);
         formLayout.add(statusUpdateIntervalField);
 
         return formLayout;
