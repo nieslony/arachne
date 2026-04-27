@@ -57,6 +57,10 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
     private Supplier<List<T>> defaultsSupplier = null;
     private final TE editField;
 
+    private boolean enableReorder = false;
+    private Button upButton;
+    private Button downButton;
+
     public GenericEditableListBox(
             String label,
             TE editField
@@ -144,6 +148,44 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         );
         loadDefaultsButton.setVisible(false);
 
+        upButton = new Button(
+                VaadinIcon.ANGLE_UP.create(),
+                e -> {
+                    List<T> items = new LinkedList<>(getValue());
+                    var item = itemsField.getValue();
+                    int pos = items.indexOf(item);
+                    items.remove(pos);
+                    items.add(pos - 1, item);
+                    itemsField.setItems(items);
+                    itemsField.setValue(item);
+                    setModelValue(new LinkedList<>(items), true);
+                    if (pos == 1) {
+                        upButton.setEnabled(false);
+                    }
+                }
+        );
+        upButton.setVisible(false);
+        upButton.setEnabled(false);
+
+        downButton = new Button(
+                VaadinIcon.ANGLE_DOWN.create(),
+                e -> {
+                    List<T> items = new LinkedList<>(getValue());
+                    var item = itemsField.getValue();
+                    int pos = items.indexOf(item);
+                    items.remove(pos);
+                    items.add(pos + 1, item);
+                    itemsField.setItems(items);
+                    itemsField.setValue(item);
+                    setModelValue(new LinkedList<>(items), true);
+                    if (pos == items.size() - 2) {
+                        downButton.setEnabled(false);
+                    }
+                }
+        );
+        downButton.setVisible(false);
+        downButton.setEnabled(false);
+
         getContent().add(
                 elbLabel,
                 itemsField,
@@ -153,6 +195,8 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                         updateButton,
                         removeButton,
                         clearButton,
+                        upButton,
+                        downButton,
                         loadDefaultsButton
                 )
         );
@@ -184,10 +228,14 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 editField.setValue(e.getValue());
                 updateButton.setEnabled(true);
                 removeButton.setEnabled(true);
+                upButton.setEnabled(e.getValue() != getValue().getFirst());
+                downButton.setEnabled(e.getValue() != getValue().getLast());
             } else {
                 editField.clear();
                 updateButton.setEnabled(false);
                 removeButton.setEnabled(false);
+                upButton.setEnabled(false);
+                downButton.setEnabled(false);
             }
         });
 
@@ -234,5 +282,15 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         } else {
             loadDefaultsButton.setTooltipText(toolTipText);
         }
+    }
+
+    public void setEnableReorder(boolean enable) {
+        upButton.setVisible(enable);
+        downButton.setVisible(enable);
+        enableReorder = enable;
+    }
+
+    public boolean getEnableReorder() {
+        return enableReorder;
     }
 }
