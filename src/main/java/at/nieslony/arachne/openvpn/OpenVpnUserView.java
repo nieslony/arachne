@@ -285,6 +285,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 "Set local IPS",
                 () -> getDefaultVpnRemotes()
         );
+        vpnRemoteField.setEnableReorder(true);
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
