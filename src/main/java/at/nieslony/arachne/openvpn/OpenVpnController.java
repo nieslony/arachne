@@ -324,10 +324,6 @@ public class OpenVpnController {
         writeConfigHeader(writer);
         writer.println("client");
         writer.println("dev tun");
-        writer.println("proto %s".formatted(
-                vpnSettings.getListenProtocol().name().toLowerCase())
-        );
-        writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
 
         for (VpnRemote remote : vpnSettings.getRemoteList()) {
             writer.println("remote %s %d %s".formatted(
