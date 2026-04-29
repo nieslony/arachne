@@ -228,6 +228,12 @@
                         <arg>-Xlint:deprecation</arg>
                         <arg>-Xlint:unchecked</arg>
                     </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
