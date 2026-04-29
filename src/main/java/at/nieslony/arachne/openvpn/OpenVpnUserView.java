@@ -282,7 +282,7 @@ public class OpenVpnUserView extends VerticalLayout {
                         editVpnRemoteField
                 );
         vpnRemoteField.setDefaultValuesSupplier(
-                "Set local IPS",
+                "Guess from local and public IPs",
                 () -> getDefaultVpnRemotes()
         );
         vpnRemoteField.setEnableReorder(true);
