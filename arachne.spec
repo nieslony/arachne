@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.12
+Version:        1.4.13
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,9 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.13-1
+- Add lombok annotation processor (github@nieslony.at)
+
 * Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.12-1
 - Bump dependency versions (github@nieslony.at)
 - Set JDK version=25 for fedora >= 44 (github@nieslony.at)
