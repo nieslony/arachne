@@ -118,6 +118,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Basics", createBasicsPage());
+        tabSheet.add("Connection Details", createConnectionDetailsPage());
         tabSheet.add("DNS", createDnsPage());
         tabSheet.add("Routing", createRoutingPage());
         tabSheet.add("Authentication", createAuthPage());
@@ -316,25 +317,6 @@ public class OpenVpnUserView extends VerticalLayout {
         clientNetLayout.add(clientNetwork, clientMask);
         clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
 
-        Select<OpenVpnUserSettings.MtuMode> mtuModeSelect = new Select<>();
-        mtuModeSelect.setLabel("MTU Mode");
-        mtuModeSelect.setItems(OpenVpnUserSettings.MtuMode.values());
-
-        IntegerField mtuField = new IntegerField("MTU");
-        mtuField.setStepButtonsVisible(true);
-
-        IntegerField fragmentField = new IntegerField("Fragment");
-        fragmentField.setStepButtonsVisible(true);
-        fragmentField.setClearButtonVisible(true);
-        fragmentField.setPlaceholder("Default Value");
-
-        HorizontalLayout mtuLayout = new HorizontalLayout(
-                mtuField,
-                fragmentField
-        );
-        mtuLayout.setMargin(false);
-        mtuLayout.setPadding(false);
-
         IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
         Div suffix;
         suffix = new Div();
@@ -416,12 +398,6 @@ public class OpenVpnUserView extends VerticalLayout {
                             s.setClientMask(v.getBits());
                         }
                 );
-        binder.forField(mtuModeSelect)
-                .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
-        binder.forField(mtuField)
-                .bind(OpenVpnUserSettings::getTunMtu, OpenVpnUserSettings::setTunMtu);
-        binder.forField(fragmentField)
-                .bind(OpenVpnUserSettings::getFragment, OpenVpnUserSettings::setFragment);
         binder.forField(keepaliveInterval)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
@@ -433,37 +409,12 @@ public class OpenVpnUserView extends VerticalLayout {
                 OpenVpnUserSettings::setStatusUpdateSecs
         );
 
-        mtuModeSelect.setItemEnabledProvider((item) -> {
-            if (item == OpenVpnUserSettings.MtuMode.AUTO) {
-                return protocol.getValue() == TransportProtocol.UDP;
-            }
-            return true;
-        });
-
-        mtuModeSelect.addValueChangeListener((e) -> {
-            if (e.getValue() == OpenVpnUserSettings.MtuMode.MANUAL) {
-                mtuField.setEnabled(true);
-                fragmentField.setEnabled(protocol.getValue() != TransportProtocol.TCP);
-            } else {
-                mtuField.setEnabled(false);
-                fragmentField.setEnabled(false);
-            }
-        });
-
-        protocol.addValueChangeListener((e) -> {
-            var v = mtuModeSelect.getValue();
-            mtuModeSelect.getDataProvider().refreshAll();
-            mtuModeSelect.setValue(v);
-        });
-
         clientMask.addValueChangeListener((e) -> binder.validate());
 
         VerticalLayout connectionBasicsLayout = new VerticalLayout(
                 listenLayout,
                 interfaceLayout,
-                clientNetLayout,
-                mtuModeSelect,
-                mtuLayout
+                clientNetLayout
         );
         connectionBasicsLayout.setMargin(false);
         connectionBasicsLayout.setPadding(false);
@@ -603,5 +554,62 @@ public class OpenVpnUserView extends VerticalLayout {
                 .distinct()
                 .toList();
         return l;
+    }
+
+    private Component createConnectionDetailsPage() {
+        FormLayout layout = new FormLayout();
+
+        Select<OpenVpnUserSettings.MtuMode> mtuModeSelect = new Select<>();
+        mtuModeSelect.setLabel("MTU Mode");
+        mtuModeSelect.setItems(OpenVpnUserSettings.MtuMode.values());
+
+        IntegerField mtuField = new IntegerField("MTU");
+        mtuField.setStepButtonsVisible(true);
+
+        IntegerField fragmentField = new IntegerField("Fragment");
+        fragmentField.setStepButtonsVisible(true);
+        fragmentField.setClearButtonVisible(true);
+        fragmentField.setPlaceholder("Default Value");
+
+        HorizontalLayout mtuLayout = new HorizontalLayout(
+                mtuField,
+                fragmentField
+        );
+        mtuLayout.setMargin(false);
+        mtuLayout.setPadding(false);
+
+        binder.forField(mtuModeSelect)
+                .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
+        binder.forField(mtuField)
+                .bind(OpenVpnUserSettings::getTunMtu, OpenVpnUserSettings::setTunMtu);
+        binder.forField(fragmentField)
+                .bind(OpenVpnUserSettings::getFragment, OpenVpnUserSettings::setFragment);
+
+        mtuModeSelect.setItemEnabledProvider((item) -> {
+            if (item == OpenVpnUserSettings.MtuMode.AUTO) {
+                return protocol.getValue() == TransportProtocol.UDP;
+            }
+            return true;
+        });
+
+        mtuModeSelect.addValueChangeListener((e) -> {
+            if (e.getValue() == OpenVpnUserSettings.MtuMode.MANUAL) {
+                mtuField.setEnabled(true);
+                fragmentField.setEnabled(protocol.getValue() != TransportProtocol.TCP);
+            } else {
+                mtuField.setEnabled(false);
+                fragmentField.setEnabled(false);
+            }
+        });
+
+        protocol.addValueChangeListener((e) -> {
+            var v = mtuModeSelect.getValue();
+            mtuModeSelect.getDataProvider().refreshAll();
+            mtuModeSelect.setValue(v);
+        });
+
+        layout.add(mtuModeSelect, mtuField, fragmentField);
+
+        return layout;
     }
 }
