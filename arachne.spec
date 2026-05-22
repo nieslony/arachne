@@ -2,14 +2,14 @@
 %global moduletype contrib
 %global modulename arachne
 
-%if 0%{fedora} >= 44
+%if 0%{?fedora} >= 44
 %global jdk_version 25
 %else
 %global jdk_version 21
 %endif
 
 Name:           arachne
-Version:        1.4.11
+Version:        1.4.14
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,33 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.14-1
+- Fix: syntax in spec (github@nieslony.at)
+
+* Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.13-1
+- Add lombok annotation processor (github@nieslony.at)
+
+* Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.12-1
+- Bump dependency versions (github@nieslony.at)
+- Set JDK version=25 for fedora >= 44 (github@nieslony.at)
+- User same connection name for standard .ovpn file and shell script
+  (github@nieslony.at)
+- Fix: shell escape (github@nieslony.at)
+- Fix: quoting (github@nieslony.at)
+- Fix: typo (github@nieslony.at)
+- Make test VM ready for almalinux 10 (github@nieslony.at)
+- No longer support /api/auth (github@nieslony.at)
+- Bump dependency versions (github@nieslony.at)
+- Replace logger (github@nieslony.at)
+- Filter firewall rules by user (github@nieslony.at)
+- Configure LDAP timeouts (github@nieslony.at)
+- Don't include avatar in bearer token (github@nieslony.at)
+- Filter users by name (github@nieslony.at)
+- Make attribute final (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Make UsersView pageable (github@nieslony.at)
+- Select page and page size (github@nieslony.at)
+
 * Sun Mar 22 2026 Claas Nieslony <github@nieslony.at> 1.4.11-1
 - Bump dependeny version (github@nieslony.at)
 - Show status icon, set column width (github@nieslony.at)
