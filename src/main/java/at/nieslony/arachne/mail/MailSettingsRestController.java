@@ -83,10 +83,12 @@ public class MailSettingsRestController {
         String from = mailSettings.getPrettySenderMailAddress();
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
+        String username = forUser.getUsername();
+
         String windowsConfig = openVpnRestController
-                .openVpnUserConfig(forUser.getUsername());
+                .openVpnUserConfig(username);
         String linuxConfig = openVpnRestController
-                .openVpnUserConfigShell(forUser.getUsername());
+                .openVpnUserConfigShell(username);
 
         MimeMessageHelper helper = new MimeMessageHelper(
                 message,
@@ -97,7 +99,7 @@ public class MailSettingsRestController {
         helper.setTo(to);
         helper.setSubject(subject);
         helper.addAttachment(
-                openVpnUserSettings.getClientConfigName(),
+                openVpnUserSettings.getClientConfigName(username),
                 new ByteArrayDataSource(windowsConfig, "text/plain")
         );
         log.info("sender: " + mailSettings.getSenderDisplayname());
@@ -121,7 +123,7 @@ public class MailSettingsRestController {
                                 HtmlUtils.htmlEscape(linuxConfig)
                         )
                         .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname())
-                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName());
+                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName(username));
                 String style = """
                                <style>
                                code {
@@ -146,7 +148,7 @@ public class MailSettingsRestController {
                         .replace(mailSettings.getVarSenderName(), forUser.getDisplayName())
                         .replace(mailSettings.getVarLinuxInstructions(), linuxConfig)
                         .replace(mailSettings.getVarRcptName(), mailSettings.getSenderDisplayname())
-                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName());
+                        .replace(mailSettings.getVarAttachnement(), openVpnUserSettings.getClientConfigName(username));
                 helper.setText(msg, false);
             }
         }

@@ -262,7 +262,7 @@ public class OpenVpnUserView extends VerticalLayout {
     }
 
     private Component createBasicsPage() {
-        TextField name = new TextField("Network Manager configuration name");
+        TextField name = new TextField("Configuration name");
         name.setWidthFull();
         name.setValueChangeMode(ValueChangeMode.EAGER);
         Tooltip nameHints = name.getTooltip()
@@ -280,10 +280,6 @@ public class OpenVpnUserView extends VerticalLayout {
         );
         showTooltip.addThemeVariants(ButtonVariant.TERTIARY);
         name.setSuffixComponent(showTooltip);
-
-        TextField clientConfigName = new TextField("Client Config Filename");
-        clientConfigName.setWidthFull();
-        clientConfigName.setValueChangeMode(ValueChangeMode.EAGER);
 
         Select<NicInfo> ipAddresse = new Select<>();
         ipAddresse.setItems(NicUtils.findAllNics());
@@ -390,9 +386,6 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(name)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getVpnName, OpenVpnUserSettings::setVpnName);
-        binder.forField(clientConfigName)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getClientConfigName, OpenVpnUserSettings::setClientConfigName);
         binder.forField(ipAddresse)
                 .asRequired("Value required")
                 .bind(
@@ -465,7 +458,6 @@ public class OpenVpnUserView extends VerticalLayout {
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(name);
-        formLayout.add(clientConfigName);
         formLayout.add(listenLayout);
         formLayout.add(connectToHost);
         formLayout.add(interfaceLayout);

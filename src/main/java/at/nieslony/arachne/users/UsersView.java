@@ -305,12 +305,13 @@ public class UsersView extends VerticalLayout {
 
             var dlh = DownloadHandler.fromInputStream((de) -> {
                 try {
+                    String username = user.getUsername();
                     String config = openVpnRestController
-                            .openVpnUserConfig(user.getUsername());
+                            .openVpnUserConfig(username);
                     var is = new ByteArrayInputStream(config.getBytes());
                     return new DownloadResponse(
                             is,
-                            openVpnUserSettings.getClientConfigName(),
+                            openVpnUserSettings.getClientConfigName(username),
                             "application/x-openvpn-profile",
                             config.getBytes().length
                     );

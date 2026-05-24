@@ -467,19 +467,22 @@ public class OpenVpnController {
                                 .getSubjectX500Principal()
                                 .toString()
                                 .replaceAll("[a-zA-Z]+=", "")
-                );
+                )
+                .replaceAll(",", "");
     }
 
     public String getUserCertFilename(String username) {
         OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
-        return "arachne_%s.crt".formatted(clientConfigName);
+        return "arachne_%s.crt".formatted(clientConfigName)
+                .replaceAll(",", "");
     }
 
     public String getUserKeyFilename(String username) {
         OpenVpnUserSettings openVpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         String clientConfigName = openVpnSettings.getFormattedClientConfigName(username);
-        return "arachne_%s.key".formatted(clientConfigName);
+        return "arachne_%s.key".formatted(clientConfigName)
+                .replaceAll(",", "");
     }
 
     String openVpnUserConfigJson(String username) throws JSONException, PkiException, SettingsException {
