@@ -92,8 +92,6 @@ public class OpenVpnRestController {
             return switch (format) {
                 case "json" ->
                     openVpnController.openVpnUserConfigJson(username);
-                case "json2" ->
-                    openVpnController.openVpnUserConfigJson2(username);
                 case "shell" ->
                     openVpnController.openVpnUserConfigShell(username);
                 default ->
