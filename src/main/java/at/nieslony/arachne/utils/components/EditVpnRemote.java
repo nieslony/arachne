@@ -18,12 +18,12 @@
 package at.nieslony.arachne.utils.components;
 
 import at.nieslony.arachne.openvpn.VpnRemote;
-import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
 import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
+import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.HasSize;
-import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.HasValidation;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -32,6 +32,12 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.HasValidator;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.ValidationStatusChangeListener;
+import com.vaadin.flow.data.value.HasValueChangeMode;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import java.util.LinkedList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -40,26 +46,36 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, EditVpnRemote, VpnRemote>
-        implements HasValidator<RemoteNetwork>, HasSize {
+        implements HasSize, HasValidation, HasValueChangeMode, HasValidator<VpnRemote> {
 
-    Binder<VpnRemote> binder = new Binder<>();
+    private Binder<VpnRemote> binder = new Binder<>();
+    private List<TransportProtocol> allowedProtocols;
+    private Select<TransportProtocol> protocolField;
+    private ValueChangeMode valueChangeMode;
+    private TextField remoteHostField;
+    private IntegerField portField;
+    private final List<ValidationStatusChangeListener<VpnRemote>> validationStatusListeners
+            = new LinkedList<>();
 
     public EditVpnRemote() {
         super(new VpnRemote());
+        this.allowedProtocols = List.of();
 
-        TextField remoteHostField = new TextField("Remote Host");
+        remoteHostField = new TextField("Remote Host");
         remoteHostField.setClearButtonVisible(true);
 
-        IntegerField portField = new IntegerField("Port");
+        portField = new IntegerField("Port");
         portField.setMin(1);
         portField.setMax(65535);
         portField.setStepButtonsVisible(true);
         portField.setMaxWidth(10, Unit.REM);
+        portField.setValue(1194);
 
-        Select<TransportProtocol> protocolField = new Select<>();
+        protocolField = new Select<>();
         protocolField.setLabel("Protocol");
-        protocolField.setItems(TransportProtocol.values());
         protocolField.setMaxWidth(6, Unit.REM);
+
+        setAllowedProtocols(allowedProtocols);
 
         binder.forField(remoteHostField)
                 .asRequired()
@@ -73,14 +89,25 @@ public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, Edit
                 .asRequired()
                 .bind(VpnRemote::getPort, VpnRemote::setPort);
         binder.forField(protocolField)
-                .asRequired()
+                .asRequired(new IgnoringInvisibleOrDisabledValidator<>((t, vc) -> {
+                    if (t != null) {
+                        return ValidationResult.ok();
+                    } else {
+                        return ValidationResult.error("Please select protocol");
+                    }
+                }))
                 .bind(VpnRemote::getTransportProtocol, VpnRemote::setTransportProtocol);
+
+        binder.setBean(new VpnRemote());
+        binder.addValueChangeListener((e) -> {
+            VpnRemote value = binder.getBean();
+            setModelValue(value, false);
+        });
+        binder.validate();
 
         getContent().add(
                 remoteHostField,
-                new Text(":"),
                 portField,
-                new Text("/"),
                 protocolField
         );
         getContent().setDefaultVerticalComponentAlignment(FlexComponent.Alignment.BASELINE);
@@ -93,5 +120,43 @@ public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, Edit
     protected void setPresentationValue(VpnRemote vpnRemote) {
         binder.setBean(vpnRemote);
         binder.validate();
+    }
+
+    final public void setAllowedProtocols(List<TransportProtocol> allowedProtocols) {
+        protocolField.setItems(allowedProtocols);
+        protocolField.setEnabled(allowedProtocols.size() > 1);
+        if (allowedProtocols.size() == 1) {
+            protocolField.setValue(allowedProtocols.getFirst());
+        }
+    }
+
+    @Override
+    public ValueChangeMode getValueChangeMode() {
+        return valueChangeMode;
+    }
+
+    @Override
+    public void setValueChangeMode(ValueChangeMode vcm) {
+        valueChangeMode = vcm;
+        remoteHostField.setValueChangeMode(valueChangeMode);
+        portField.setValueChangeMode(valueChangeMode);
+    }
+
+    @Override
+    public boolean isInvalid() {
+        return !binder.isValid();
+    }
+
+    @Override
+    public void setErrorMessage(String string) {
+    }
+
+    @Override
+    public String getErrorMessage() {
+        return "";
+    }
+
+    @Override
+    public void setInvalid(boolean bln) {
     }
 }

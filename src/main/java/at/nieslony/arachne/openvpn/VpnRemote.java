@@ -32,6 +32,9 @@ import lombok.Setter;
 public class VpnRemote implements Serializable {
 
     public VpnRemote() {
+        this.remoteHost = "";
+        this.port = 1194;
+        this.transportProtocol = TransportProtocol.UDP;
     }
 
     public VpnRemote(String remoteHost, int port, TransportProtocol transportProtocol) {

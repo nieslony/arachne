@@ -10,9 +10,8 @@ import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.components.EditVpnRemote;
+import at.nieslony.arachne.utils.components.EditVpnRemoteList;
 import at.nieslony.arachne.utils.components.EditableListBox;
-import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -275,13 +274,7 @@ public class OpenVpnUserView extends VerticalLayout {
         listenLayout.add(ipAddresse, portField, protocol);
         listenLayout.setFlexGrow(1, ipAddresse);
 
-        EditVpnRemote editVpnRemoteField = new EditVpnRemote();
-        editVpnRemoteField.setWidthFull();
-        GenericEditableListBox<VpnRemote, EditVpnRemote> vpnRemoteField
-                = new GenericEditableListBox<>(
-                        "VPN Remotes",
-                        editVpnRemoteField
-                );
+        EditVpnRemoteList vpnRemoteField = new EditVpnRemoteList("VPN Remotes");
         vpnRemoteField.setDefaultValuesSupplier(
                 "Guess from local and public IPs",
                 () -> getDefaultVpnRemotes()
@@ -408,6 +401,10 @@ public class OpenVpnUserView extends VerticalLayout {
                 OpenVpnUserSettings::getStatusUpdateSecs,
                 OpenVpnUserSettings::setStatusUpdateSecs
         );
+
+        protocol.addValueChangeListener((e) -> {
+            vpnRemoteField.setAllowedProtocols(List.of(e.getValue()));
+        });
 
         clientMask.addValueChangeListener((e) -> binder.validate());
 

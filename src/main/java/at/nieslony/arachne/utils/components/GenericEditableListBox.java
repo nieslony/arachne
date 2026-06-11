@@ -46,16 +46,17 @@ import org.springframework.util.ObjectUtils;
  * @author claas
  */
 @Slf4j
-public class GenericEditableListBox<T extends Object, TE extends Component & HasValue<?, T>>
+public class GenericEditableListBox<
+        T extends Object, TE extends Component & HasValue<?, T>>
         extends AbstractCompositeField<VerticalLayout, GenericEditableListBox<T, TE>, List<T>>
         implements HasSize {
 
-    private ListBox<T> itemsField;
+    protected ListBox<T> itemsField;
     private Binder<T> binder;
     private Button clearButton;
     private Button loadDefaultsButton;
     private Supplier<List<T>> defaultsSupplier = null;
-    private final TE editField;
+    protected final TE editField;
 
     private boolean enableReorder = false;
     private Button upButton;
@@ -228,8 +229,14 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                 editField.setValue(e.getValue());
                 updateButton.setEnabled(true);
                 removeButton.setEnabled(true);
-                upButton.setEnabled(e.getValue() != getValue().getFirst());
-                downButton.setEnabled(e.getValue() != getValue().getLast());
+                addButton.setEnabled(true);
+                if (getValue() != null && e.getValue() != null && !getValue().isEmpty()) {
+                    upButton.setEnabled(e.getValue() != getValue().getFirst());
+                    downButton.setEnabled(e.getValue() != getValue().getLast());
+                } else {
+                    upButton.setEnabled(false);
+                    downButton.setEnabled(false);
+                }
             } else {
                 editField.clear();
                 updateButton.setEnabled(false);
@@ -239,21 +246,16 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
             }
         });
 
-        binder.addStatusChangeListener((sce) -> {
-            addButton.setEnabled(!sce.hasValidationErrors());
-            updateButton.setEnabled(
-                    !sce.hasValidationErrors() && itemsField.getValue() != null
-            );
-        });
-
         getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<T> getValidator() {
         if (editField instanceof HasValidation ef) {
-            return (t, vc) -> ef.isInvalid()
-                    ? ValidationResult.error(ef.getErrorMessage())
-                    : ValidationResult.ok();
+            return (t, vc) -> {
+                return ef.isInvalid()
+                        ? ValidationResult.error(ef.getErrorMessage())
+                        : ValidationResult.ok();
+            };
         } else {
             return (t, vc) -> ObjectUtils.isEmpty(t)
                     ? ValidationResult.error("Empty value not allowed")
