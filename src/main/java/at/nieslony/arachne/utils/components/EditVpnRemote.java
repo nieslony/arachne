@@ -22,6 +22,7 @@ import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import com.vaadin.flow.component.AbstractCompositeField;
+import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.HasValidation;
 import com.vaadin.flow.component.Unit;
@@ -31,7 +32,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.HasValidator;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValidationStatusChangeListener;
 import com.vaadin.flow.data.value.HasValueChangeMode;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, EditVpnRemote, VpnRemote>
-        implements HasSize, HasValidation, HasValueChangeMode, HasValidator<VpnRemote> {
+        implements HasSize, HasValidation, HasValueChangeMode {
 
     private Binder<VpnRemote> binder = new Binder<>();
     private List<TransportProtocol> allowedProtocols;
@@ -100,8 +100,16 @@ public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, Edit
 
         binder.setBean(new VpnRemote());
         binder.addValueChangeListener((e) -> {
-            VpnRemote value = binder.getBean();
-            setModelValue(value, false);
+            VpnRemote newValue = binder.getBean();
+            VpnRemote oldValue = getValue();
+            setModelValue(newValue, false);
+            var event = new AbstractField.ComponentValueChangeEvent<EditVpnRemote, VpnRemote>(
+                    this,
+                    this,
+                    oldValue,
+                    e.isFromClient()
+            );
+            fireEvent(event);
         });
         binder.validate();
 
@@ -144,6 +152,8 @@ public class EditVpnRemote extends AbstractCompositeField<HorizontalLayout, Edit
 
     @Override
     public boolean isInvalid() {
+        binder.validate();
+        log.debug("Value is valid: " + binder.isValid());
         return !binder.isValid();
     }
 

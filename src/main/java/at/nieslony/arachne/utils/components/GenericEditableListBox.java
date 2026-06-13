@@ -214,7 +214,11 @@ public class GenericEditableListBox<
         AtomicReference<T> edit = new AtomicReference<>();
         binder.forField(editField)
                 .withValidator(getValidator())
-                .asRequired()
+                .withValidationStatusHandler((bvs) -> {
+                    log.debug("Value of editField is valid: " + !bvs.isError());
+                    addButton.setEnabled(!bvs.isError());
+                    updateButton.setEnabled(!bvs.isError() && itemsField.getValue() != null);
+                })
                 .bind(
                         ip -> {
                             return edit.get();
@@ -252,11 +256,13 @@ public class GenericEditableListBox<
     protected Validator<T> getValidator() {
         if (editField instanceof HasValidation ef) {
             return (t, vc) -> {
+                log.debug("editField implements HasValidation => check isInvalid");
                 return ef.isInvalid()
                         ? ValidationResult.error(ef.getErrorMessage())
                         : ValidationResult.ok();
             };
         } else {
+            log.debug("editField doesn't implement HasValidation => empty validator");
             return (t, vc) -> ObjectUtils.isEmpty(t)
                     ? ValidationResult.error("Empty value not allowed")
                     : ValidationResult.ok();
