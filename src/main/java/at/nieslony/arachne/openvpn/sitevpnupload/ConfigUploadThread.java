@@ -222,7 +222,9 @@ public abstract class ConfigUploadThread extends Thread {
                             );
                             switch (uploadSettings.getVpnSite().getSshAuthType()) {
                                 case USERNAME_PASSWORD ->
-                                    session.setPassword(uploadSettings.getPassword());
+                                    session.setPassword(
+                                            uploadSettings.getPassword().getBytes()
+                                    );
                                 case PUBLIC_KEY -> {
                                     SshKeyEntity sshKey = uploadSettings.getVpnSite().getSshKey();
                                     ssh.addIdentity(
