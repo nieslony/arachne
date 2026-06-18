@@ -18,6 +18,7 @@
 package at.nieslony.arachne.utils.net;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +35,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MutableUrl implements Serializable {
 
-    public record SchemaDescr(String name, int defaultPort) {
+    public record SchemaDescr(String name, int defaultPort) implements Serializable {
 
     }
 
@@ -98,14 +99,23 @@ public class MutableUrl implements Serializable {
         if (findSchema(schema) == null) {
             throw new UrlParseException(
                     "Schema %s not allowed. Allowed: %s".
-                            formatted(
-                                    schema,
-                                    allowedSchemata.toString()
+                            formatted(schema,
+                                    Arrays.toString(allowedSchemata)
                             )
             );
         }
         this.host = host;
         this.port = port;
+    }
+
+    public void setSchema(String schema) throws UrlParseException {
+        if (findSchema(schema) == null) {
+            throw new UrlParseException(
+                    "Schema %s not allowed. Allowed: %s".
+                            formatted(schema, allowedSchemata.toString())
+            );
+        }
+        this.schema = schema;
     }
 
     @Override

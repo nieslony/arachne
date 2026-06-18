@@ -41,7 +41,7 @@ public class MutableUrlTest {
             Assertions.fail();
             return;
         }
-        Assertions.assertEquals("http", up.getSchema());
+        Assertions.assertEquals("ldap", up.getSchema());
         Assertions.assertEquals("example.com", up.getHost());
         Assertions.assertEquals(123, up.getPort());
     }
@@ -65,12 +65,12 @@ public class MutableUrlTest {
         LdapUrl up;
         try {
             up = new LdapUrl(url);
+            up.setSchema("ldap");
         } catch (UrlParseException ex) {
             Assertions.fail();
             return;
         }
 
-        up.setSchema("ldap");
         Assertions.assertEquals("ldap://example.com:123", up.toString());
 
         up.setHost("www.example.com");
@@ -79,5 +79,9 @@ public class MutableUrlTest {
         up.setPort(443);
         Assertions.assertEquals("ldap://www.example.com:443", up.toString());
 
+        Assertions.assertThrows(
+                UrlParseException.class,
+                () -> up.setSchema("http")
+        );
     }
 }

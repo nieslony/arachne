@@ -27,7 +27,9 @@ import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.components.GenericEditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.UrlField;
+import at.nieslony.arachne.utils.net.MutableUrl;
 import at.nieslony.arachne.utils.net.NetUtils;
+import at.nieslony.arachne.utils.net.UrlParseException;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
@@ -50,6 +52,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -318,22 +321,30 @@ public class LdapView extends VerticalLayout {
     }
 
     final Component createBasicsPage() {
-        GenericEditableListBox<String, UrlField> ldapUrlsEditor = new GenericEditableListBox<>(
-                "LDAP Sources",
-                new UrlField(UrlField.SCHEMATA_LDAP)
-        );
-        ldapUrlsEditor.setDefaultValuesSupplier(
-                "Guess from DNS",
+        UrlField<LdapUrl> editUrl = new UrlField<>(new LdapUrl());
+        editUrl.setValueChangeMode(ValueChangeMode.EAGER);
+        GenericEditableListBox<MutableUrl, UrlField<LdapUrl>> ldapUrlsEditor;
+
+        ldapUrlsEditor = new GenericEditableListBox<>("LDAP Sources", editUrl);
+        ldapUrlsEditor.setDefaultValuesSupplier("Guess from DNS",
                 () -> {
-                    List<String> ret = new LinkedList<>();
+                    List<MutableUrl> ret = new LinkedList<>();
                     try {
                         var recs = NetUtils.srvLookup("ldap");
                         if (recs != null) {
                             ret.addAll(recs.stream()
-                                    .map((r) -> "ldap://%s:%d".formatted(
-                                    r.getHostname(),
-                                    r.getPort())
-                                    )
+                                    .map((r) -> {
+                                        try {
+                                            return new LdapUrl(
+                                                    "ldap",
+                                                    r.getHostname(),
+                                                    r.getPort());
+                                        } catch (UrlParseException ex) {
+                                            log.warn(ex.getMessage());
+                                            return null;
+                                        }
+                                    })
+                                    .filter(r -> r != null)
                                     .toList()
                             );
                         }
@@ -345,13 +356,13 @@ public class LdapView extends VerticalLayout {
         );
         binder.forField(ldapUrlsEditor)
                 .bind(
-                        (source) -> source.getLdapUrls()
+                        (bean) -> bean.getLdapUrls()
                                 .stream()
-                                .map((url) -> url.toString())
+                                .map(u -> (MutableUrl) u)
                                 .toList(),
                         (bean, value) -> bean.setLdapUrls(
                                 value.stream()
-                                        .map((u) -> new LdapUrl(u))
+                                        .map(u -> (LdapUrl) u)
                                         .toList()
                         )
                 );
