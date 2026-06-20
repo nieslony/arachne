@@ -270,9 +270,10 @@ public class OpenVpnUserView extends VerticalLayout {
         protocol.setLabel("Protocol");
         protocol.setWidth(8, Unit.EM);
 
-        HorizontalLayout listenLayout = new HorizontalLayout();
-        listenLayout.add(ipAddresse, portField, protocol);
-        listenLayout.setFlexGrow(1, ipAddresse);
+        FormLayout.FormRow listenRow = new FormLayout.FormRow();
+        listenRow.add(ipAddresse, 2);
+        listenRow.add(portField);
+        listenRow.add(protocol);
 
         EditVpnRemoteList vpnRemoteField = new EditVpnRemoteList("VPN Remotes");
         vpnRemoteField.setDefaultValuesSupplier(
@@ -289,9 +290,9 @@ public class OpenVpnUserView extends VerticalLayout {
         TextField interfaceName = new TextField("Interface Name");
         interfaceName.setValueChangeMode(ValueChangeMode.EAGER);
 
-        HorizontalLayout interfaceLayout = new HorizontalLayout();
-        interfaceLayout.add(interfaceType, interfaceName);
-        interfaceLayout.setFlexGrow(1, interfaceName);
+        FormLayout.FormRow interfaceRow = new FormLayout.FormRow();
+        interfaceRow.add(interfaceType);
+        interfaceRow.add(interfaceName, 3);
 
         TextField clientNetwork = new TextField("Client Network");
         clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
@@ -306,31 +307,27 @@ public class OpenVpnUserView extends VerticalLayout {
         );
         clientMask.setLabel("Subnet Mask");
 
-        HorizontalLayout clientNetLayout = new HorizontalLayout();
-        clientNetLayout.add(clientNetwork, clientMask);
-        clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
+        FormLayout.FormRow clientNetRow = new FormLayout.FormRow();
+        clientNetRow.add(clientNetwork, 2);
+        clientNetRow.add(clientMask, 2);
 
-        IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
-        Div suffix;
-        suffix = new Div();
-        suffix.setText("seconds");
-        keepaliveInterval.setSuffixComponent(suffix);
-        keepaliveInterval.setMin(1);
-        keepaliveInterval.setStepButtonsVisible(true);
-        keepaliveInterval.setWidth(12, Unit.EM);
-        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+        IntegerField connectionTimeoutField = new IntegerField("Connection Timeout");
+        connectionTimeoutField.setMin(0);
+        connectionTimeoutField.setMax(60 * 60);
+        connectionTimeoutField.setSuffixComponent(new Div("seconds"));
+        connectionTimeoutField.setStepButtonsVisible(true);
 
-        IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
-        suffix = new Div();
-        suffix.setText("seconds");
-        keepaliveTimeout.setSuffixComponent(suffix);
-        keepaliveTimeout.setMin(1);
-        keepaliveTimeout.setStepButtonsVisible(true);
-        keepaliveTimeout.setWidth(12, Unit.EM);
-        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+        IntegerField connectionRetryCount = new IntegerField("Retry count");
+        connectionRetryCount.setMin(1);
+        connectionRetryCount.setMax(9999);
+        connectionRetryCount.setClearButtonVisible(true);
+        connectionRetryCount.setPlaceholder("Unlimited");
+        connectionRetryCount.setStepButtonsVisible(true);
+        connectionRetryCount.setRequired(false);
 
-        HorizontalLayout keepaliveLayout = new HorizontalLayout();
-        keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+        FormLayout.FormRow retryRow = new FormLayout.FormRow();
+        retryRow.add(connectionTimeoutField, 2);
+        retryRow.add(connectionRetryCount, 2);
 
         ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("User Status Update Interval (secs)");
         statusUpdateIntervalField.setItems(
@@ -391,12 +388,11 @@ public class OpenVpnUserView extends VerticalLayout {
                             s.setClientMask(v.getBits());
                         }
                 );
-        binder.forField(keepaliveInterval)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
-        binder.forField(keepaliveTimeout)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
+        binder.forField(connectionTimeoutField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getConnectionTimeout, OpenVpnUserSettings::setConnectionTimeout);
+        binder.forField(connectionRetryCount)
+                .bind(OpenVpnUserSettings::getConnectRetryMax, OpenVpnUserSettings::setConnectRetryMax);
         binder.bind(statusUpdateIntervalField,
                 OpenVpnUserSettings::getStatusUpdateSecs,
                 OpenVpnUserSettings::setStatusUpdateSecs
@@ -408,24 +404,28 @@ public class OpenVpnUserView extends VerticalLayout {
 
         clientMask.addValueChangeListener((e) -> binder.validate());
 
-        VerticalLayout connectionBasicsLayout = new VerticalLayout(
-                listenLayout,
-                interfaceLayout,
-                clientNetLayout
+        FormLayout formLayout = new FormLayout(
+                listenRow,
+                interfaceRow,
+                clientNetRow,
+                retryRow,
+                statusUpdateIntervalField);
+        formLayout.setAutoResponsive(true);
+        formLayout.setExpandFields(true);
+        formLayout.setMinColumns(4);
+
+        HorizontalLayout detailsLayout = new HorizontalLayout(
+                formLayout,
+                vpnRemoteField
         );
-        connectionBasicsLayout.setMargin(false);
-        connectionBasicsLayout.setPadding(false);
-        connectionBasicsLayout.setAlignItems(Alignment.STRETCH);
+        detailsLayout.setFlexGrow(1, formLayout, vpnRemoteField);
 
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(name);
-        formLayout.setColspan(name, 2);
-        formLayout.add(connectionBasicsLayout);
-        formLayout.add(vpnRemoteField);
-        formLayout.add(keepaliveLayout);
-        formLayout.add(statusUpdateIntervalField);
+        VerticalLayout layout = new VerticalLayout(
+                name,
+                detailsLayout
+        );
 
-        return formLayout;
+        return layout;
     }
 
     private Component createDnsPage() {
@@ -575,12 +575,40 @@ public class OpenVpnUserView extends VerticalLayout {
         mtuLayout.setMargin(false);
         mtuLayout.setPadding(false);
 
+        IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
+        Div suffix;
+        suffix = new Div();
+        suffix.setText("seconds");
+        keepaliveInterval.setSuffixComponent(suffix);
+        keepaliveInterval.setMin(1);
+        keepaliveInterval.setStepButtonsVisible(true);
+        keepaliveInterval.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+
+        IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
+        suffix = new Div();
+        suffix.setText("seconds");
+        keepaliveTimeout.setSuffixComponent(suffix);
+        keepaliveTimeout.setMin(1);
+        keepaliveTimeout.setStepButtonsVisible(true);
+        keepaliveTimeout.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+
+        HorizontalLayout keepaliveLayout = new HorizontalLayout();
+        keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+
         binder.forField(mtuModeSelect)
                 .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
         binder.forField(mtuField)
                 .bind(OpenVpnUserSettings::getTunMtu, OpenVpnUserSettings::setTunMtu);
         binder.forField(fragmentField)
                 .bind(OpenVpnUserSettings::getFragment, OpenVpnUserSettings::setFragment);
+        binder.forField(keepaliveInterval)
+                .asRequired("Value required")
+                .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
+        binder.forField(keepaliveTimeout)
+                .asRequired("Value required")
+                .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
 
         mtuModeSelect.setItemEnabledProvider((item) -> {
             if (item == OpenVpnUserSettings.MtuMode.AUTO) {
@@ -605,7 +633,7 @@ public class OpenVpnUserView extends VerticalLayout {
             mtuModeSelect.setValue(v);
         });
 
-        layout.add(mtuModeSelect, mtuField, fragmentField);
+        layout.add(mtuModeSelect, mtuField, fragmentField, keepaliveLayout);
 
         return layout;
     }

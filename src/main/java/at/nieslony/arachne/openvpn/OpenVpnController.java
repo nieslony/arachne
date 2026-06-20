@@ -332,6 +332,10 @@ public class OpenVpnController {
                     remote.getTransportProtocol().name().toLowerCase()
             ));
         }
+        if (vpnSettings.getConnectRetryMax() != null) {
+            writer.println("connect-retry-max %d".formatted(vpnSettings.getConnectRetryMax()));
+        }
+        writer.println("server-poll-timeout %d".formatted(vpnSettings.getConnectionTimeout()));
 
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {

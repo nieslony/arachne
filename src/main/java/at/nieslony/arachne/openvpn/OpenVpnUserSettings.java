@@ -108,27 +108,42 @@ public class OpenVpnUserSettings
 
     private boolean alreadyConfigured = false;
 
+    // Page Basics
     private String vpnName = "Arachne OpenVPN - %u@%h";
     // private String clientConfigName = "arachne-openVPN-client.conf";
     private String listenIp = "0.0.0.0";
     private int listenPort = 1194;
     private TransportProtocol listenProtocol = TransportProtocol.TCP;
-    private MtuMode mtuMode = MtuMode.DEFAULT;
-    private Integer tunMtu = 1500;
-    private Integer fragment = 1300;
+
     private String remote = NetUtils.myHostname();
     private List<VpnRemote> remoteList = new LinkedList<>();
+    private Integer connectionTimeout = 120;
+    private Integer connectRetryMax = null;
+
     private String deviceType = "tun";
     private String deviceName = "arachne-user";
     private String clientNetwork = "192.168.131.0";
     private int clientMask = 24;
+
+    private int statusUpdateSecs = 60;
+
+    // Page Connection Details
+    private MtuMode mtuMode = MtuMode.DEFAULT;
+    private Integer tunMtu = 1500;
+    private Integer fragment = 1300;
+
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
-    private int statusUpdateSecs = 60;
+
+    // Page DNS
     private List<String> pushDnsServers = NetUtils.getDnsServers();
     private List<String> dnsSearch = Arrays.asList(NetUtils.myDomain());
+
+    // Page Routing
     private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
     private Boolean internetThrouphVpn = false;
+
+    // Page Aiuthentication
     private AuthType authType = AuthType.USERNAME_PASSWORD_CERTIFICATE;
     private PasswordVerificationType passwordVerificationType = PasswordVerificationType.HTTP_URL;
     private String authPamService = "arachne";
