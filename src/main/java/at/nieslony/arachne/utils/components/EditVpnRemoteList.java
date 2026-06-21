@@ -57,7 +57,23 @@ public class EditVpnRemoteList extends GenericEditableListBox<VpnRemote, EditVpn
     }
 
     public void setAllowedProtocols(List<TransportProtocol> allowedProtocols) {
+        log.debug("setAllowedProtocols: " + allowedProtocols.toString());
         this.allowedProtocols = allowedProtocols;
+        if (allowedProtocols.size() == 1) {
+            var items = getValue();
+            long noProts = items.stream()
+                    .map(v -> v.getTransportProtocol())
+                    .distinct()
+                    .count();
+            if (noProts == 1) {
+                items.forEach(v -> v.setTransportProtocol(allowedProtocols.getFirst()));
+            } else if (noProts == 2) {
+                items = items.stream()
+                        .filter(v -> v.getTransportProtocol() == allowedProtocols.getFirst())
+                        .toList();
+            }
+            setModelValue(items, true);
+        }
         editVpnRemote.setAllowedProtocols(allowedProtocols);
     }
 }
