@@ -103,6 +103,24 @@ public class OpenVpnUserSettings
         }
     }
 
+    public enum TlsVersion {
+        V_1_0("1.0"),
+        V_1_1("1.1"),
+        V_1_2("1.2"),
+        HIGHEST_SUPPORTED("Highest supported");
+
+        private TlsVersion(String label) {
+            this.label = label;
+        }
+
+        private final String label;
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     public OpenVpnUserSettings() {
     }
 
@@ -134,6 +152,9 @@ public class OpenVpnUserSettings
 
     private int keepaliveTimeout = 60;
     private int keepaliveInterval = 10;
+
+    private TlsVersion tlsVersionMin = TlsVersion.V_1_2;
+    private TlsVersion tlsVersionMax = TlsVersion.HIGHEST_SUPPORTED;
 
     // Page DNS
     private List<String> pushDnsServers = NetUtils.getDnsServers();

@@ -554,8 +554,6 @@ public class OpenVpnUserView extends VerticalLayout {
     }
 
     private Component createConnectionDetailsPage() {
-        FormLayout layout = new FormLayout();
-
         Select<OpenVpnUserSettings.MtuMode> mtuModeSelect = new Select<>();
         mtuModeSelect.setLabel("MTU Mode");
         mtuModeSelect.setItems(OpenVpnUserSettings.MtuMode.values());
@@ -594,8 +592,17 @@ public class OpenVpnUserView extends VerticalLayout {
         keepaliveTimeout.setWidth(12, Unit.EM);
         keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
 
-        HorizontalLayout keepaliveLayout = new HorizontalLayout();
-        keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+        Select<OpenVpnUserSettings.TlsVersion> tlsVersionMinField = new Select<>();
+        tlsVersionMinField.setLabel("Minimum TLS version");
+        tlsVersionMinField.setItems(
+                OpenVpnUserSettings.TlsVersion.V_1_0,
+                OpenVpnUserSettings.TlsVersion.V_1_1,
+                OpenVpnUserSettings.TlsVersion.V_1_2
+        );
+
+        Select<OpenVpnUserSettings.TlsVersion> tlsVersionMaxField = new Select<>();
+        tlsVersionMaxField.setLabel("Maximum TLS version");
+        tlsVersionMaxField.setItems(OpenVpnUserSettings.TlsVersion.values());
 
         binder.forField(mtuModeSelect)
                 .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
@@ -609,6 +616,12 @@ public class OpenVpnUserView extends VerticalLayout {
         binder.forField(keepaliveTimeout)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
+        binder.forField(tlsVersionMinField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getTlsVersionMin, OpenVpnUserSettings::setTlsVersionMin);
+        binder.forField(tlsVersionMaxField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getTlsVersionMax, OpenVpnUserSettings::setTlsVersionMax);
 
         mtuModeSelect.setItemEnabledProvider((item) -> {
             if (item == OpenVpnUserSettings.MtuMode.AUTO) {
@@ -633,7 +646,29 @@ public class OpenVpnUserView extends VerticalLayout {
             mtuModeSelect.setValue(v);
         });
 
-        layout.add(mtuModeSelect, mtuField, fragmentField, keepaliveLayout);
+        FormLayout layout = new FormLayout();
+        layout.setAutoResponsive(true);
+        layout.setExpandFields(true);
+
+        FormLayout.FormRow mtuModeRow = new FormLayout.FormRow();
+        mtuModeRow.add(mtuModeSelect, 2);
+        layout.addFormRow(mtuModeRow);
+
+        FormLayout.FormRow mtuRow = new FormLayout.FormRow();
+        mtuRow.add(mtuField, fragmentField);
+
+        FormLayout.FormRow keepaliveRow = new FormLayout.FormRow();
+        keepaliveRow.add(keepaliveInterval, keepaliveTimeout);
+
+        FormLayout.FormRow tlsVersionRow = new FormLayout.FormRow();
+        tlsVersionRow.add(tlsVersionMinField, tlsVersionMaxField);
+
+        layout.add(
+                mtuModeRow,
+                mtuRow,
+                keepaliveRow,
+                tlsVersionRow
+        );
 
         return layout;
     }

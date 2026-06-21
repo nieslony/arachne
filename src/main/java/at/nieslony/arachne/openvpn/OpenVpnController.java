@@ -339,6 +339,10 @@ public class OpenVpnController {
         writer.println("server-poll-timeout %d".formatted(vpnSettings.getConnectionTimeout()));
 
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
+        writer.println("tls-version-min %s".formatted(vpnSettings.getTlsVersionMin().toString()));
+        if (vpnSettings.getTlsVersionMax() != OpenVpnUserSettings.TlsVersion.HIGHEST_SUPPORTED) {
+            writer.println("tls-version-max %s".formatted(vpnSettings.getTlsVersionMax().toString()));
+        }
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
                            <auth-user-pass>
