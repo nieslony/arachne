@@ -19,7 +19,6 @@ package at.nieslony.arachne.ldap;
 import at.nieslony.arachne.apiindex.ShowApiType;
 import at.nieslony.arachne.utils.net.MutableUrl;
 import at.nieslony.arachne.utils.net.UrlParseException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ShowApiType(String.class)
 @Slf4j
 public class LdapUrl extends MutableUrl {

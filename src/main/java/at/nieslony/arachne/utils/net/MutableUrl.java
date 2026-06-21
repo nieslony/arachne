@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,6 +34,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
+@EqualsAndHashCode
 public class MutableUrl implements Serializable {
 
     public record SchemaDescr(String name, int defaultPort) implements Serializable {
