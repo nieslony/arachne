@@ -232,19 +232,16 @@ public class OpenVpnController {
             writer.println("port %d".formatted(settings.getListenPort()));
             writer.println("dev-type %s".formatted(settings.getDeviceType()));
             writer.println("dev %s".formatted(settings.getDeviceName()));
-            writer.println("keepalive %d %d"
-                    .formatted(
-                            settings.getKeepaliveInterval(),
-                            settings.getKeepaliveTimeout()));
-            writer.println("topology subnet");
-            if (settings.getListenProtocol() == TransportProtocol.UDP && settings.getMtuTest()) {
-                writer.println("mtu-test");
-            }
             if (!settings.getRunAsUser().isEmpty()) {
                 writer.println("user " + settings.getRunAsUser());
                 writer.println("persist-tun");
                 writer.println("persist-key");
             }
+            writer.println("keepalive %d %d"
+                    .formatted(
+                            settings.getKeepaliveInterval(),
+                            settings.getKeepaliveTimeout()));
+            writer.println("topology subnet");
             writer.println(
                     "status %s %d"
                             .formatted(

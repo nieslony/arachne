@@ -47,22 +47,6 @@ public class OpenVpnUserSettings
         }
     }
 
-    public enum PasswordVerificationType {
-        PAM("Pam"),
-        HTTP_URL("Http URL");
-
-        private PasswordVerificationType(String pvt) {
-            this.pvt = pvt;
-        }
-
-        private final String pvt;
-
-        @Override
-        public String toString() {
-            return pvt;
-        }
-    }
-
     public enum OtpRequired {
         NEVER("Never"),
         PER_USER_CONFIGURED("Per User Configured"),
@@ -77,6 +61,22 @@ public class OpenVpnUserSettings
         @Override
         public String toString() {
             return or;
+        }
+    }
+
+    public enum PasswordVerificationType {
+        PAM("Pam"),
+        HTTP_URL("Http URL");
+
+        private PasswordVerificationType(String pvt) {
+            this.pvt = pvt;
+        }
+
+        private final String pvt;
+
+        @Override
+        public String toString() {
+            return pvt;
         }
     }
 
