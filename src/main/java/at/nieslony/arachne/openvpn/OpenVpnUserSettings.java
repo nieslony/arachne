@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 
 /**
  *
@@ -61,22 +60,6 @@ public class OpenVpnUserSettings
         @Override
         public String toString() {
             return or;
-        }
-    }
-
-    public enum PasswordVerificationType {
-        PAM("Pam"),
-        HTTP_URL("Http URL");
-
-        private PasswordVerificationType(String pvt) {
-            this.pvt = pvt;
-        }
-
-        private final String pvt;
-
-        @Override
-        public String toString() {
-            return pvt;
         }
     }
 
@@ -184,11 +167,8 @@ public class OpenVpnUserSettings
 
     // Page Aiuthentication
     private AuthType authType = AuthType.USERNAME_PASSWORD_CERTIFICATE;
-    private PasswordVerificationType passwordVerificationType = PasswordVerificationType.HTTP_URL;
     private String authPamService = "arachne";
-    private String authHttpUrl = defaultAuthUrl(
-            Settings.getInstance().getServerProperties()
-    );
+    private String authHttpUrl = null;
     private OtpRequired authOtpRequired = OtpRequired.PER_USER_CONFIGURED;
     private String authOtpIssuer = NetUtils.myHostname();
     private String authOtpPrompt = "Enter Authentication Code";
@@ -199,13 +179,6 @@ public class OpenVpnUserSettings
         log.info(pushDnsServers.toString());
         this.pushDnsServers = new LinkedList<>(pushDnsServers);
         log.info(this.pushDnsServers.toString());
-    }
-
-    private String defaultAuthUrl(ServerProperties serverProperties) {
-        return "http://%s:%d/arachne".formatted(
-                NetUtils.myHostname(),
-                serverProperties.getPort()
-        );
     }
 
     public String getFormattedClientConfigName(String username) {

@@ -282,23 +282,11 @@ public class OpenVpnController {
                 writer.println("client-cert-not-required");
             }
             if (settings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
-                switch (settings.getPasswordVerificationType()) {
-                    case HTTP_URL -> {
-                        writer.println("plugin %s %s"
-                                .formatted(findPlugin("arachne.so"),
-                                        folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_USER_CONF)
-                                )
-                        );
-                    }
-                    case PAM -> {
-                        writer.println(
-                                "plugin %s %s".formatted(
-                                        findPlugin("openvpn-plugin-auth-pam.so"),
-                                        settings.getAuthPamService()
-                                )
-                        );
-                    }
-                }
+                writer.println("plugin %s %s"
+                        .formatted(findPlugin("arachne.so"),
+                                folderFactory.getVpnConfigDir(FN_OPENVPN_PLUGIN_USER_CONF)
+                        )
+                );
             }
 
             writer.println("crl-verify " + folderFactory.getVpnConfigDir(FN_OPENVPN_CRL));

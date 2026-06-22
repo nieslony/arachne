@@ -36,7 +36,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -46,10 +45,10 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
@@ -59,6 +58,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 
 /**
  *
@@ -127,6 +127,27 @@ public class OpenVpnUserView extends VerticalLayout {
         );
         setPadding(false);
 
+        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        log.debug("Additional connectors:");
+        tomcat.getAdditionalConnectors().forEach(con -> {
+            log.debug("    %s://%s:%d".formatted(
+                    con.getScheme(),
+                    "???",
+                    con.getPort()
+            ));
+        });
+
+        log.debug("Tomcat connector: %s://%s:%d/%s".formatted(
+                tomcat.getSsl(),
+                "???",
+                tomcat.getPort(),
+                tomcat.getContextPath()
+        ));
+
+        if (vpnSettings.getAuthHttpUrl() == null) {
+            vpnSettings.setAuthHttpUrl(getDefaultAuthUrl());
+        }
+
         binder.setBean(vpnSettings);
         binder.validate();
     }
@@ -152,43 +173,20 @@ public class OpenVpnUserView extends VerticalLayout {
 
         Checkbox authOtpShow = new Checkbox("Show OTP while typing");
 
-        TextField authPamServiceField = new TextField();
-        TextField authHttpUrlField = new TextField();
-
-        RadioButtonGroup<OpenVpnUserSettings.PasswordVerificationType> passwordVerificationTypeField
-                = new RadioButtonGroup<>("Password Verification Type");
-        passwordVerificationTypeField.setItems(
-                OpenVpnUserSettings.PasswordVerificationType.values()
+        TextField authHttpUrlField = new TextField("HTTP Authentication URL");
+        Button defaultAuthHttpUrlButton = new Button(
+                VaadinIcon.REFRESH.create(),
+                e -> authHttpUrlField.setValue(getDefaultAuthUrl())
         );
-        passwordVerificationTypeField.setRenderer(
-                new ComponentRenderer<>(type -> {
-                    Text typeField = new Text(type.toString());
-                    Component valueField = switch (type) {
-                        case HTTP_URL -> {
-                            HorizontalLayout hl
-                                    = new HorizontalLayout(
-                                            authHttpUrlField,
-                                            new Text("/api/login")
-                                    );
-                            hl.setAlignItems(Alignment.BASELINE);
-                            hl.setPadding(false);
-                            hl.setFlexGrow(1, authHttpUrlField);
-                            yield hl;
-                        }
-                        case PAM ->
-                            authPamServiceField;
-                    };
-                    HorizontalLayout layout = new HorizontalLayout(
-                            typeField,
-                            valueField
-                    );
-                    layout.setAlignItems(Alignment.BASELINE);
-                    layout.setFlexGrow(1, valueField);
-                    return new Div(layout);
-                })
-        );
-//        passwordVerificationTypeField.addThemeVariants(RadioGroupVariant.VERTICAL);
-        passwordVerificationTypeField.setWidthFull();
+        HorizontalLayout authHttpUrlLayout
+                = new HorizontalLayout(
+                        authHttpUrlField,
+                        new Text("/api/login"),
+                        defaultAuthHttpUrlButton
+                );
+        authHttpUrlLayout.setFlexGrow(1, authHttpUrlField);
+        authHttpUrlLayout.setAlignItems(Alignment.BASELINE);
+        authHttpUrlLayout.setWidthFull();
 
         Select<OpenVpnUserSettings.NetworkManagerRememberPassword> nmRememberPassword
                 = new Select<>();
@@ -199,27 +197,13 @@ public class OpenVpnUserView extends VerticalLayout {
         nmRememberPassword.setWidthFull();
 
         authTypeField.addValueChangeListener((e) -> {
-            passwordVerificationTypeField.setEnabled(
+            authHttpUrlField.setEnabled(
                     e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
             );
             nmRememberPassword.setEnabled(
                     e.getValue() != OpenVpnUserSettings.AuthType.CERTIFICATE
             );
         });
-
-        passwordVerificationTypeField.addValueChangeListener(
-                (e) -> {
-                    switch (e.getValue()) {
-                        case HTTP_URL -> {
-                            authHttpUrlField.setEnabled(true);
-                            authPamServiceField.setEnabled(false);
-                        }
-                        case PAM -> {
-                            authHttpUrlField.setEnabled(false);
-                            authPamServiceField.setEnabled(true);
-                        }
-                    }
-                });
 
         authOtpRequired.addValueChangeListener(e -> {
             boolean enable = !e.getValue().equals(OpenVpnUserSettings.OtpRequired.NEVER);
@@ -238,10 +222,6 @@ public class OpenVpnUserView extends VerticalLayout {
                 .bind(OpenVpnUserSettings::getAuthOtpPrompt, OpenVpnUserSettings::setAuthOtpPrompt);
         binder.forField(authOtpShow)
                 .bind(OpenVpnUserSettings::getAuthOtpShow, OpenVpnUserSettings::setAuthOtpShow);
-        binder.forField(passwordVerificationTypeField)
-                .bind(OpenVpnUserSettings::getPasswordVerificationType, OpenVpnUserSettings::setPasswordVerificationType);
-        binder.forField(authPamServiceField)
-                .bind(OpenVpnUserSettings::getAuthPamService, OpenVpnUserSettings::setAuthPamService);
         binder.forField(authHttpUrlField)
                 .bind(OpenVpnUserSettings::getAuthHttpUrl, OpenVpnUserSettings::setAuthHttpUrl);
         binder.forField(nmRememberPassword)
@@ -252,11 +232,11 @@ public class OpenVpnUserView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 authTypeField,
+                authHttpUrlLayout,
                 authOtpRequired,
                 authOtpIssuerField,
                 authOtpPromptField,
                 authOtpShow,
-                passwordVerificationTypeField,
                 nmRememberPassword
         );
         layout.setMinWidth(50, Unit.EM);
@@ -700,5 +680,16 @@ public class OpenVpnUserView extends VerticalLayout {
         );
 
         return layout;
+    }
+
+    private String getDefaultAuthUrl() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        String url = "%s://%s:%d%s".formatted(
+                request.getScheme(),
+                request.getLocalName(),
+                request.getLocalPort(),
+                request.getServletContext().getContextPath()
+        );
+        return url;
     }
 }
