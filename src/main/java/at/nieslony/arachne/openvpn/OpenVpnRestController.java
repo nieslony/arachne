@@ -96,7 +96,7 @@ public class OpenVpnRestController {
                     openVpnController.openVpnUserConfigShell(username);
                 default ->
                     throw new ResponseStatusException(
-                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            HttpStatus.UNPROCESSABLE_CONTENT,
                             "Cannot get user config: invalid format requested");
             };
         } catch (PkiException | JSONException ex) {
