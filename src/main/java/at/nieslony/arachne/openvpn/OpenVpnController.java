@@ -232,16 +232,25 @@ public class OpenVpnController {
             writer.println("port %d".formatted(settings.getListenPort()));
             writer.println("dev-type %s".formatted(settings.getDeviceType()));
             writer.println("dev %s".formatted(settings.getDeviceName()));
-            if (!settings.getRunAsUser().isEmpty()) {
-                writer.println("user " + settings.getRunAsUser());
-                writer.println("persist-tun");
-                writer.println("persist-key");
-            }
             writer.println("keepalive %d %d"
                     .formatted(
                             settings.getKeepaliveInterval(),
                             settings.getKeepaliveTimeout()));
             writer.println("topology subnet");
+            switch (settings.getMtuMode()) {
+                case AUTO -> {
+                    writer.println("mtu-test");
+                }
+                case DEFAULT -> {
+                }
+                case MANUAL -> {
+                    writer.println("tun-mtu %d".formatted(settings.getTunMtu()));
+                    if (settings.getListenProtocol() == TransportProtocol.UDP
+                            && settings.getFragment() != null) {
+                        writer.println("fragment %d".formatted(settings.getFragment()));
+                    }
+                }
+            }
             writer.println(
                     "status %s %d"
                             .formatted(
@@ -327,16 +336,30 @@ public class OpenVpnController {
         writeConfigHeader(writer);
         writer.println("client");
         writer.println("dev tun");
-        writer.println("proto %s".formatted(
-                vpnSettings.getListenProtocol().name().toLowerCase())
-        );
-        writer.println("remote %s %d".formatted(vpnSettings.getRemote(), vpnSettings.getListenPort()));
+        writer.println("nobind");
+
+        for (VpnRemote remote : vpnSettings.getRemoteList()) {
+            writer.println("remote %s %d %s".formatted(
+                    remote.getRemoteHost(),
+                    remote.getPort(),
+                    remote.getTransportProtocol().name().toLowerCase()
+            ));
+        }
+        if (vpnSettings.getConnectRetryMax() != null) {
+            writer.println("connect-retry-max %d".formatted(vpnSettings.getConnectRetryMax()));
+        }
+        writer.println("server-poll-timeout %d".formatted(vpnSettings.getConnectionTimeout()));
+
         writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
         if (isOtpRequired(vpnSettings, user)) {
             writer.println("static-challenge \"%s\" %d".formatted(
                     vpnSettings.getAuthOtpPrompt(),
                     vpnSettings.getAuthOtpShow() ? 1 : 0
             ));
+        }
+        writer.println("tls-version-min %s".formatted(vpnSettings.getTlsVersionMin().toString()));
+        if (vpnSettings.getTlsVersionMax() != OpenVpnUserSettings.TlsVersion.HIGHEST_SUPPORTED) {
+            writer.println("tls-version-max %s".formatted(vpnSettings.getTlsVersionMax().toString()));
         }
         if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""

@@ -273,7 +273,9 @@ public class OpenVpnSiteView extends VerticalLayout {
                 new Text("/"),
                 protocol);
         listenLayout.setAlignItems(Alignment.BASELINE);
-        listenLayout.setFlexGrow(1, ipAddresse);
+        listenLayout.setFlexGrow(2, ipAddresse);
+        listenLayout.setFlexGrow(1, port);
+        listenLayout.setFlexGrow(2, protocol);
 
         TextField connectToHost = new TextField("Connect to host");
         connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
@@ -373,6 +375,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
         HorizontalLayout keepaliveLayout = new HorizontalLayout();
         keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+        keepaliveLayout.setFlexGrow(1, keepaliveInterval, keepaliveTimeout);
 
         Checkbox mtuTestField = new Checkbox("MTU Test");
         binder.bind(

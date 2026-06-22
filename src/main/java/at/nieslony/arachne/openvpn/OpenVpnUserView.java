@@ -10,7 +10,7 @@ import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.utils.SystemUsers;
+import at.nieslony.arachne.utils.components.EditVpnRemoteList;
 import at.nieslony.arachne.utils.components.EditableListBox;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.net.NetMask;
@@ -21,8 +21,6 @@ import at.nieslony.arachne.utils.net.TransportProtocol;
 import at.nieslony.arachne.utils.validators.HostnameValidator;
 import at.nieslony.arachne.utils.validators.IpValidator;
 import at.nieslony.arachne.utils.validators.SubnetValidator;
-import at.nieslony.arachne.utils.validators.SystemUserValidator;
-import com.sun.security.auth.module.UnixSystem;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
@@ -47,6 +45,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
+import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -54,10 +53,9 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
@@ -74,6 +72,9 @@ public class OpenVpnUserView extends VerticalLayout {
 
     private OpenVpnUserSettings vpnSettings;
     private Binder<OpenVpnUserSettings> binder;
+
+    private IntegerField portField;
+    private Select<TransportProtocol> protocol;
 
     public OpenVpnUserView(
             Settings settings,
@@ -115,6 +116,7 @@ public class OpenVpnUserView extends VerticalLayout {
 
         TabSheet tabSheet = new TabSheet();
         tabSheet.add("Basics", createBasicsPage());
+        tabSheet.add("Connection Details", createConnectionDetailsPage());
         tabSheet.add("DNS", createDnsPage());
         tabSheet.add("Routing", createRoutingPage());
         tabSheet.add("Authentication", createAuthPage());
@@ -286,24 +288,29 @@ public class OpenVpnUserView extends VerticalLayout {
         ipAddresse.setLabel("Listen on");
         ipAddresse.setWidth(20, Unit.EM);
 
-        IntegerField port = new IntegerField("Port");
-        port.setMin(1);
-        port.setMax(65534);
-        port.setStepButtonsVisible(true);
-        port.setValueChangeMode(ValueChangeMode.EAGER);
-        port.setWidth(8, Unit.EM);
+        portField = new IntegerField("Port");
+        portField.setMin(1);
+        portField.setMax(65534);
+        portField.setStepButtonsVisible(true);
+        portField.setValueChangeMode(ValueChangeMode.EAGER);
+        portField.setWidth(8, Unit.EM);
 
-        Select<TransportProtocol> protocol = new Select<>();
+        protocol = new Select<>();
         protocol.setItems(TransportProtocol.values());
         protocol.setLabel("Protocol");
         protocol.setWidth(8, Unit.EM);
 
-        HorizontalLayout listenLayout = new HorizontalLayout();
-        listenLayout.add(ipAddresse, port, protocol);
-        listenLayout.setFlexGrow(1, ipAddresse);
+        FormLayout.FormRow listenRow = new FormLayout.FormRow();
+        listenRow.add(ipAddresse, 2);
+        listenRow.add(portField);
+        listenRow.add(protocol);
 
-        TextField connectToHost = new TextField("Connect to host");
-        connectToHost.setValueChangeMode(ValueChangeMode.EAGER);
+        EditVpnRemoteList vpnRemoteField = new EditVpnRemoteList("VPN Remotes");
+        vpnRemoteField.setDefaultValuesSupplier(
+                "Guess from local and public IPs",
+                () -> getDefaultVpnRemotes()
+        );
+        vpnRemoteField.setEnableReorder(true);
 
         Select<String> interfaceType = new Select<>();
         interfaceType.setItems("tun", "tap");
@@ -313,9 +320,9 @@ public class OpenVpnUserView extends VerticalLayout {
         TextField interfaceName = new TextField("Interface Name");
         interfaceName.setValueChangeMode(ValueChangeMode.EAGER);
 
-        HorizontalLayout interfaceLayout = new HorizontalLayout();
-        interfaceLayout.add(interfaceType, interfaceName);
-        interfaceLayout.setFlexGrow(1, interfaceName);
+        FormLayout.FormRow interfaceRow = new FormLayout.FormRow();
+        interfaceRow.add(interfaceType);
+        interfaceRow.add(interfaceName, 3);
 
         TextField clientNetwork = new TextField("Client Network");
         clientNetwork.setValueChangeMode(ValueChangeMode.EAGER);
@@ -330,58 +337,32 @@ public class OpenVpnUserView extends VerticalLayout {
         );
         clientMask.setLabel("Subnet Mask");
 
-        HorizontalLayout clientNetLayout = new HorizontalLayout();
-        clientNetLayout.add(clientNetwork, clientMask);
-        clientNetLayout.setFlexGrow(1, clientNetwork, clientMask);
+        FormLayout.FormRow clientNetRow = new FormLayout.FormRow();
+        clientNetRow.add(clientNetwork, 2);
+        clientNetRow.add(clientMask, 2);
 
-        IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
-        Div suffix;
-        suffix = new Div();
-        suffix.setText("seconds");
-        keepaliveInterval.setSuffixComponent(suffix);
-        keepaliveInterval.setMin(1);
-        keepaliveInterval.setStepButtonsVisible(true);
-        keepaliveInterval.setWidth(12, Unit.EM);
-        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+        IntegerField connectionTimeoutField = new IntegerField("Connection Timeout");
+        connectionTimeoutField.setMin(0);
+        connectionTimeoutField.setMax(60 * 60);
+        connectionTimeoutField.setSuffixComponent(new Div("seconds"));
+        connectionTimeoutField.setStepButtonsVisible(true);
 
-        IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
-        suffix = new Div();
-        suffix.setText("seconds");
-        keepaliveTimeout.setSuffixComponent(suffix);
-        keepaliveTimeout.setMin(1);
-        keepaliveTimeout.setStepButtonsVisible(true);
-        keepaliveTimeout.setWidth(12, Unit.EM);
-        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+        IntegerField connectionRetryCount = new IntegerField("Retry count");
+        connectionRetryCount.setMin(1);
+        connectionRetryCount.setMax(9999);
+        connectionRetryCount.setClearButtonVisible(true);
+        connectionRetryCount.setPlaceholder("Unlimited");
+        connectionRetryCount.setStepButtonsVisible(true);
+        connectionRetryCount.setRequired(false);
 
-        HorizontalLayout keepaliveLayout = new HorizontalLayout();
-        keepaliveLayout.add(keepaliveInterval, keepaliveTimeout);
+        FormLayout.FormRow retryRow = new FormLayout.FormRow();
+        retryRow.add(connectionTimeoutField, 2);
+        retryRow.add(connectionRetryCount, 2);
+        ComboBox< Integer> statusUpdateIntervalField = new ComboBox<>("User Status Update Interval (secs)");
 
-        Checkbox mtuTestField = new Checkbox("MTU Test");
-        ComboBox<Integer> statusUpdateIntervalField = new ComboBox<>("Status Update Interval (secs)");
         statusUpdateIntervalField.setItems(
                 10, 20, 30, 45, 60, 120
         );
-
-        ComboBox<String> runAsUserField = new ComboBox<>("Run as User");
-        Set<String> runAsUserValues = new TreeSet<>();
-        List.of("arachne", "openvpn", "open-vpn").forEach((userName) -> {
-            if (SystemUsers.getUser(userName) != null) {
-                runAsUserValues.add(userName);
-            }
-        });
-        String myUserName = new UnixSystem().getUsername();
-        var runAsUserValidator = new SystemUserValidator(myUserName);
-        runAsUserValues.add(myUserName);
-        runAsUserField.setItems(runAsUserValues);
-        runAsUserField.setAllowCustomValue(true);
-        runAsUserField.addCustomValueSetListener((event) -> {
-            String newValue = event.getDetail();
-            if (runAsUserValidator.apply(newValue, null).equals(ValidationResult.ok())) {
-                runAsUserValues.add(newValue);
-                runAsUserField.setItems(runAsUserValues);
-            }
-            runAsUserField.setValue(newValue);
-        });
 
         binder.forField(name)
                 .asRequired("Value required")
@@ -395,15 +376,20 @@ public class OpenVpnUserView extends VerticalLayout {
                         (s, v) -> {
                             s.setListenIp(v.getIpAddress());
                         });
-        binder.forField(port)
+        binder.forField(portField)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getListenPort, OpenVpnUserSettings::setListenPort);
         binder.forField(protocol)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getListenProtocol, OpenVpnUserSettings::setListenProtocol);
-        binder.forField(connectToHost)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getRemote, OpenVpnUserSettings::setRemote);
+        binder.forField(vpnRemoteField)
+                .asRequired((List<VpnRemote> value, ValueContext vc) -> {
+                    if (value.isEmpty()) {
+                        return ValidationResult.error("List of remotes cannot be empty");
+                    }
+                    return ValidationResult.ok();
+                })
+                .bind(OpenVpnUserSettings::getRemoteList, OpenVpnUserSettings::setRemoteList);
         binder.forField(interfaceType)
                 .asRequired("Value required")
                 .bind(OpenVpnUserSettings::getDeviceType, OpenVpnUserSettings::setDeviceType);
@@ -432,42 +418,43 @@ public class OpenVpnUserView extends VerticalLayout {
                             s.setClientMask(v.getBits());
                         }
                 );
-        binder.forField(keepaliveInterval)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
-        binder.forField(keepaliveTimeout)
-                .asRequired("Value required")
-                .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
-        binder.bind(
-                mtuTestField,
-                OpenVpnUserSettings::getMtuTest,
-                OpenVpnUserSettings::setMtuTest
-        );
+        binder.forField(connectionTimeoutField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getConnectionTimeout, OpenVpnUserSettings::setConnectionTimeout);
+        binder.forField(connectionRetryCount)
+                .bind(OpenVpnUserSettings::getConnectRetryMax, OpenVpnUserSettings::setConnectRetryMax);
         binder.bind(statusUpdateIntervalField,
                 OpenVpnUserSettings::getStatusUpdateSecs,
                 OpenVpnUserSettings::setStatusUpdateSecs
         );
-        binder.forField(runAsUserField)
-                .withValidator(runAsUserValidator)
-                .bind(OpenVpnUserSettings::getRunAsUser, OpenVpnUserSettings::setRunAsUser);
 
-        clientMask.addValueChangeListener((e) -> binder.validate());
         protocol.addValueChangeListener((e) -> {
-            mtuTestField.setEnabled(e.getValue() == TransportProtocol.UDP);
+            vpnRemoteField.setAllowedProtocols(List.of(e.getValue()));
         });
+        clientMask.addValueChangeListener((e) -> binder.validate());
 
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(name);
-        formLayout.add(listenLayout);
-        formLayout.add(connectToHost);
-        formLayout.add(interfaceLayout);
-        formLayout.add(clientNetLayout);
-        formLayout.add(keepaliveLayout);
-        formLayout.add(mtuTestField);
-        formLayout.add(statusUpdateIntervalField);
-        formLayout.add(runAsUserField);
+        FormLayout formLayout = new FormLayout(
+                listenRow,
+                interfaceRow,
+                clientNetRow,
+                retryRow,
+                statusUpdateIntervalField);
+        formLayout.setAutoResponsive(true);
+        formLayout.setExpandFields(true);
+        formLayout.setMinColumns(4);
 
-        return formLayout;
+        HorizontalLayout detailsLayout = new HorizontalLayout(
+                formLayout,
+                vpnRemoteField
+        );
+        detailsLayout.setFlexGrow(1, formLayout, vpnRemoteField);
+
+        VerticalLayout layout = new VerticalLayout(
+                name,
+                detailsLayout
+        );
+
+        return layout;
     }
 
     private Component createDnsPage() {
@@ -548,6 +535,168 @@ public class OpenVpnUserView extends VerticalLayout {
         layout.add(
                 pushRoutesField,
                 routeInternetThroughVpn
+        );
+
+        return layout;
+    }
+
+    private List<VpnRemote> getDefaultVpnRemotes() {
+        int port = portField.getValue();
+        TransportProtocol prot = protocol.getValue();
+        var privateStream = NicUtils.findAllNics()
+                .stream()
+                .filter(nic -> !nic.getIpAddress().equals("0.0.0.0"))
+                .filter(nic -> !nic.getIpAddress().startsWith("127.0"))
+                .map((nic)
+                        -> new VpnRemote(
+                        nic.getIpAddress(),
+                        port,
+                        prot
+                )
+                );
+        var publicStream = Stream
+                .of(
+                        new VpnRemote(NetUtils.myPublicIpAddress(), port, prot),
+                        new VpnRemote(NetUtils.myPublicHostname(), port, prot),
+                        new VpnRemote(NetUtils.myHostname(), port, prot)
+                )
+                .filter(rem -> rem != null);
+        var l = Stream.concat(privateStream, publicStream)
+                .sorted((vr1, vr2) -> {
+                    int compHostNames = vr1.getRemoteHost().compareTo(vr2.getRemoteHost());
+                    if (compHostNames != 0) {
+                        return compHostNames;
+                    }
+                    if (vr1.getPort() < vr2.getPort()) {
+                        return -1;
+                    }
+                    if (vr1.getPort() > vr2.getPort()) {
+                        return 1;
+                    }
+                    return vr1.getTransportProtocol().name().compareTo(
+                            vr2.getTransportProtocol().name()
+                    );
+                })
+                .distinct()
+                .toList();
+        return l;
+    }
+
+    private Component createConnectionDetailsPage() {
+        Select<OpenVpnUserSettings.MtuMode> mtuModeSelect = new Select<>();
+        mtuModeSelect.setLabel("MTU Mode");
+        mtuModeSelect.setItems(OpenVpnUserSettings.MtuMode.values());
+
+        IntegerField mtuField = new IntegerField("MTU");
+        mtuField.setStepButtonsVisible(true);
+
+        IntegerField fragmentField = new IntegerField("Fragment");
+        fragmentField.setStepButtonsVisible(true);
+        fragmentField.setClearButtonVisible(true);
+        fragmentField.setPlaceholder("Default Value");
+
+        HorizontalLayout mtuLayout = new HorizontalLayout(
+                mtuField,
+                fragmentField
+        );
+        mtuLayout.setMargin(false);
+        mtuLayout.setPadding(false);
+
+        IntegerField keepaliveInterval = new IntegerField("Keepalive Interval");
+        Div suffix;
+        suffix = new Div();
+        suffix.setText("seconds");
+        keepaliveInterval.setSuffixComponent(suffix);
+        keepaliveInterval.setMin(1);
+        keepaliveInterval.setStepButtonsVisible(true);
+        keepaliveInterval.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+
+        IntegerField keepaliveTimeout = new IntegerField("Keepalive timeout");
+        suffix = new Div();
+        suffix.setText("seconds");
+        keepaliveTimeout.setSuffixComponent(suffix);
+        keepaliveTimeout.setMin(1);
+        keepaliveTimeout.setStepButtonsVisible(true);
+        keepaliveTimeout.setWidth(12, Unit.EM);
+        keepaliveInterval.setValueChangeMode(ValueChangeMode.EAGER);
+
+        Select<OpenVpnUserSettings.TlsVersion> tlsVersionMinField = new Select<>();
+        tlsVersionMinField.setLabel("Minimum TLS version");
+        tlsVersionMinField.setItems(
+                OpenVpnUserSettings.TlsVersion.V_1_0,
+                OpenVpnUserSettings.TlsVersion.V_1_1,
+                OpenVpnUserSettings.TlsVersion.V_1_2
+        );
+
+        Select<OpenVpnUserSettings.TlsVersion> tlsVersionMaxField = new Select<>();
+        tlsVersionMaxField.setLabel("Maximum TLS version");
+        tlsVersionMaxField.setItems(OpenVpnUserSettings.TlsVersion.values());
+
+        binder.forField(mtuModeSelect)
+                .bind(OpenVpnUserSettings::getMtuMode, OpenVpnUserSettings::setMtuMode);
+        binder.forField(mtuField)
+                .bind(OpenVpnUserSettings::getTunMtu, OpenVpnUserSettings::setTunMtu);
+        binder.forField(fragmentField)
+                .bind(OpenVpnUserSettings::getFragment, OpenVpnUserSettings::setFragment);
+        binder.forField(keepaliveInterval)
+                .asRequired("Value required")
+                .bind(OpenVpnUserSettings::getKeepaliveInterval, OpenVpnUserSettings::setKeepaliveInterval);
+        binder.forField(keepaliveTimeout)
+                .asRequired("Value required")
+                .bind(OpenVpnUserSettings::getKeepaliveTimeout, OpenVpnUserSettings::setKeepaliveTimeout);
+        binder.forField(tlsVersionMinField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getTlsVersionMin, OpenVpnUserSettings::setTlsVersionMin);
+        binder.forField(tlsVersionMaxField)
+                .asRequired()
+                .bind(OpenVpnUserSettings::getTlsVersionMax, OpenVpnUserSettings::setTlsVersionMax);
+
+        mtuModeSelect.setItemEnabledProvider((item) -> {
+            if (item == OpenVpnUserSettings.MtuMode.AUTO) {
+                return protocol.getValue() == TransportProtocol.UDP;
+            }
+            return true;
+        });
+
+        mtuModeSelect.addValueChangeListener((e) -> {
+            if (e.getValue() == OpenVpnUserSettings.MtuMode.MANUAL) {
+                mtuField.setEnabled(true);
+                fragmentField.setEnabled(protocol.getValue() != TransportProtocol.TCP);
+            } else {
+                mtuField.setEnabled(false);
+                fragmentField.setEnabled(false);
+            }
+        });
+
+        protocol.addValueChangeListener((e) -> {
+            var v = mtuModeSelect.getValue();
+            mtuModeSelect.getDataProvider().refreshAll();
+            mtuModeSelect.setValue(v);
+        });
+
+        FormLayout layout = new FormLayout();
+        layout.setAutoResponsive(true);
+        layout.setExpandFields(true);
+
+        FormLayout.FormRow mtuModeRow = new FormLayout.FormRow();
+        mtuModeRow.add(mtuModeSelect, 2);
+        layout.addFormRow(mtuModeRow);
+
+        FormLayout.FormRow mtuRow = new FormLayout.FormRow();
+        mtuRow.add(mtuField, fragmentField);
+
+        FormLayout.FormRow keepaliveRow = new FormLayout.FormRow();
+        keepaliveRow.add(keepaliveInterval, keepaliveTimeout);
+
+        FormLayout.FormRow tlsVersionRow = new FormLayout.FormRow();
+        tlsVersionRow.add(tlsVersionMinField, tlsVersionMaxField);
+
+        layout.add(
+                mtuModeRow,
+                mtuRow,
+                keepaliveRow,
+                tlsVersionRow
         );
 
         return layout;

@@ -23,6 +23,7 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
+import at.nieslony.arachne.utils.net.UrlParseException;
 import at.nieslony.arachne.utils.net.SrvRecord;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -131,18 +132,20 @@ public class LdapController {
         }
     }
 
-    public static List<String> findLdapUrls() {
-        List<String> ldapServers = new LinkedList<>();
+    public static List<LdapUrl> findLdapUrls() {
+        List<LdapUrl> ldapServers = new LinkedList<>();
 
         try {
             for (SrvRecord r : NetUtils.srvLookup("ldap")) {
-                ldapServers.add(
-                        "%s://%s:%d".formatted(
-                                r.getPort() == 636 ? "ldaps" : "ldap",
-                                r.getHostname(),
-                                r.getPort()
-                        )
-                );
+                try {
+                    ldapServers.add(new LdapUrl(
+                            r.getPort() == 636 ? "ldaps" : "ldap",
+                            r.getHostname(),
+                            r.getPort()
+                    ));
+                } catch (UrlParseException ex) {
+                    log.warn(ex.getMessage());
+                }
             }
         } catch (NamingException ex) {
             log.error("Cannot find ldap SRV record: " + ex.getMessage());

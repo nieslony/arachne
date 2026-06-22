@@ -23,11 +23,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
+@Slf4j
 public class HostnameValidator implements Validator<String> {
 
     private boolean emptyAllowed;
@@ -57,12 +59,19 @@ public class HostnameValidator implements Validator<String> {
 
     @Override
     public ValidationResult apply(String hostname, ValueContext vc) {
-        if (emptyAllowed && (hostname == null || hostname.equals(""))) {
-            return ValidationResult.ok();
+        if (hostname == null || hostname.equals("")) {
+            if (emptyAllowed) {
+                log.debug("Empty value allowed");
+                return ValidationResult.ok();
+            } else {
+                log.debug("Empty value not allowed");
+                return ValidationResult.error("Hostname expected");
+            }
         }
 
+        log.debug("Validating " + hostname);
         Pattern pattern = Pattern.compile(
-                "^[a-z][a-z0-9\\-]*(\\.[a-z][a-z0-9\\-]*)*$"
+                "(?=^.{1,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\\.)+[a-zA-Z]{2,63}$)"
         );
         Matcher matcher = pattern.matcher(hostname);
         if (matcher.find()) {
@@ -73,6 +82,7 @@ public class HostnameValidator implements Validator<String> {
                     return ValidationResult.error("Cannot resolve hostname ");
                 }
             }
+            log.debug(hostname + " is a valid hostname");
             return ValidationResult.ok();
         }
         if (ipAllowed) {
@@ -90,6 +100,7 @@ public class HostnameValidator implements Validator<String> {
             } catch (NumberFormatException ex) {
                 return ValidationResult.error(getErrorMsg());
             }
+            log.debug(hostname + " is a valid IP address");
             return ValidationResult.ok();
         }
 

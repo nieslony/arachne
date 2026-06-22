@@ -17,10 +17,8 @@
 package at.nieslony.arachne.ldap;
 
 import at.nieslony.arachne.apiindex.ShowApiType;
-import java.io.Serializable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import lombok.EqualsAndHashCode;
+import at.nieslony.arachne.utils.net.MutableUrl;
+import at.nieslony.arachne.utils.net.UrlParseException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,34 +29,24 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ShowApiType(String.class)
 @Slf4j
-public class LdapUrl implements Serializable {
+public class LdapUrl extends MutableUrl {
 
-    private LdapProtocol protocol;
-    private String host;
-    private int port;
+    static final private SchemaDescr[] LDAP_SCHEMATA = {
+        new SchemaDescr("ldap", 389),
+        new SchemaDescr("ldaps", 636)
+    };
 
-    public LdapUrl(String url) {
-        Pattern pattetn = Pattern.compile(
-                "(ldap|ldaps)://([a-z0-9][a-z0-9.\\-]*):([0-9]+)"
-        );
-        Matcher matcher = pattetn.matcher(url);
-        matcher.find();
-        protocol = LdapProtocol.valueOf(matcher.group(1).toUpperCase());
-        host = matcher.group(2);
-        port = Integer.parseInt(matcher.group(3));
+    public LdapUrl() {
+        super(LDAP_SCHEMATA);
     }
 
-    public LdapUrl(LdapProtocol protocol, String host, int port) {
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
+    public LdapUrl(String url) throws UrlParseException {
+        super(LDAP_SCHEMATA, url);
     }
 
-    @Override
-    public String toString() {
-        return "%s://%s:%d".formatted(protocol.toString(), host, port);
+    public LdapUrl(String protocol, String host, int port) throws UrlParseException {
+        super(LDAP_SCHEMATA, protocol, host, port);
     }
 }

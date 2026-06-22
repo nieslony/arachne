@@ -61,10 +61,7 @@ public class LdapSettings extends AbstractSettingsGroup {
     }
 
     public void guessDefaultsFromDns(Settings settings) {
-        ldapUrls = LdapController.findLdapUrls()
-                .stream()
-                .map(urlStr -> new LdapUrl(urlStr))
-                .toList();
+        ldapUrls = LdapController.findLdapUrls();
         bindDn = NetUtils.defaultBaseDn();
     }
 

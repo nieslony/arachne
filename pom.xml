@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.nieslony</groupId>
     <artifactId>Arachne</artifactId>
-    <version>1.4.14</version>
+    <version>1.4.15</version>
     <packaging>jar</packaging>
     <name>Arachne</name>
     <description>A Web Application for OpenVPN</description>
@@ -138,7 +138,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20251224</version>
+            <version>20260522</version>
         </dependency>
 
         <dependency>
@@ -185,7 +185,7 @@
         <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <version>2.28.0</version>
+            <version>2.28.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.hypfvieh</groupId>

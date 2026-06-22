@@ -45,16 +45,22 @@ import org.springframework.util.ObjectUtils;
  * @author claas
  */
 @Slf4j
-public class GenericEditableListBox<T extends Object, TE extends Component & HasValue<?, T>>
+public class GenericEditableListBox<
+        T extends Object, TE extends Component & HasValue<?, T>>
         extends AbstractCompositeField<VerticalLayout, GenericEditableListBox<T, TE>, List<T>>
         implements HasSize {
 
-    private ListBox<T> itemsField;
+    protected ListBox<T> itemsField;
+    private Binder<T> binder;
     private Button clearButton;
 
     private Button loadDefaultsButton;
     private Supplier<List<T>> defaultsSupplier = null;
-    private final TE editField;
+    protected final TE editField;
+
+    private boolean enableReorder = false;
+    private Button upButton;
+    private Button downButton;
 
     public GenericEditableListBox(
             String label,
@@ -144,15 +150,55 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         );
         loadDefaultsButton.setVisible(false);
 
+        upButton = new Button(
+                VaadinIcon.ANGLE_UP.create(),
+                e -> {
+                    List<T> items = new LinkedList<>(getValue());
+                    var item = itemsField.getValue();
+                    int pos = items.indexOf(item);
+                    items.remove(pos);
+                    items.add(pos - 1, item);
+                    itemsField.setItems(items);
+                    itemsField.setValue(item);
+                    setModelValue(new LinkedList<>(items), true);
+                    if (pos == 1) {
+                        upButton.setEnabled(false);
+                    }
+                }
+        );
+        upButton.setVisible(false);
+        upButton.setEnabled(false);
+
+        downButton = new Button(
+                VaadinIcon.ANGLE_DOWN.create(),
+                e -> {
+                    List<T> items = new LinkedList<>(getValue());
+                    var item = itemsField.getValue();
+                    int pos = items.indexOf(item);
+                    items.remove(pos);
+                    items.add(pos + 1, item);
+                    itemsField.setItems(items);
+                    itemsField.setValue(item);
+                    setModelValue(new LinkedList<>(items), true);
+                    if (pos == items.size() - 2) {
+                        downButton.setEnabled(false);
+                    }
+                }
+        );
+        downButton.setVisible(false);
+        downButton.setEnabled(false);
+
         getContent().add(
                 label,
                 itemsField,
                 editField,
                 new HorizontalLayout(
                         addButton,
+                        updateButton,
                         removeButton,
                         clearButton,
-                        updateButton,
+                        upButton,
+                        downButton,
                         loadDefaultsButton
                 )
         );
@@ -181,7 +227,11 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         AtomicReference<T> edit = new AtomicReference<>();
         binder.forField(editField)
                 .withValidator(getValidator())
-                .asRequired()
+                .withValidationStatusHandler((bvs) -> {
+                    log.debug("Value of editField is valid: " + !bvs.isError());
+                    addButton.setEnabled(!bvs.isError());
+                    updateButton.setEnabled(!bvs.isError() && itemsField.getValue() != null);
+                })
                 .bind(
                         ip -> {
                             return edit.get();
@@ -191,20 +241,41 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
                         }
                 );
 
-        binder.addStatusChangeListener((sce) -> {
-            addButton.setEnabled(!sce.hasValidationErrors());
-            updateButton.setEnabled(
-                    !sce.hasValidationErrors() && itemsField.getValue() != null
-            );
+        itemsField.addValueChangeListener((e) -> {
+            if (e.getValue() != null) {
+                editField.setValue(e.getValue());
+                updateButton.setEnabled(true);
+                removeButton.setEnabled(true);
+                addButton.setEnabled(true);
+                if (getValue() != null && e.getValue() != null && !getValue().isEmpty()) {
+                    upButton.setEnabled(e.getValue() != getValue().getFirst());
+                    downButton.setEnabled(e.getValue() != getValue().getLast());
+                } else {
+                    upButton.setEnabled(false);
+                    downButton.setEnabled(false);
+                }
+            } else {
+                editField.clear();
+                updateButton.setEnabled(false);
+                removeButton.setEnabled(false);
+                upButton.setEnabled(false);
+                downButton.setEnabled(false);
+            }
         });
+
+        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<T> getValidator() {
         if (editField instanceof HasValidation ef) {
-            return (t, vc) -> ef.isInvalid()
-                    ? ValidationResult.error(ef.getErrorMessage())
-                    : ValidationResult.ok();
+            return (t, vc) -> {
+                log.debug("editField implements HasValidation => check isInvalid");
+                return ef.isInvalid()
+                        ? ValidationResult.error(ef.getErrorMessage())
+                        : ValidationResult.ok();
+            };
         } else {
+            log.debug("editField doesn't implement HasValidation => empty validator");
             return (t, vc) -> ObjectUtils.isEmpty(t)
                     ? ValidationResult.error("Empty value not allowed")
                     : ValidationResult.ok();
@@ -232,5 +303,15 @@ public class GenericEditableListBox<T extends Object, TE extends Component & Has
         } else {
             loadDefaultsButton.setTooltipText(toolTipText);
         }
+    }
+
+    public void setEnableReorder(boolean enable) {
+        upButton.setVisible(enable);
+        downButton.setVisible(enable);
+        enableReorder = enable;
+    }
+
+    public boolean getEnableReorder() {
+        return enableReorder;
     }
 }

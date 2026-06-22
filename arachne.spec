@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.14
+Version:        1.4.15
 
 Release:        1
 License:        GPLv3
@@ -99,6 +99,12 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/arachne.pp
 
 %changelog
+* Sun Jun 14 2026 Claas Nieslony <github@nieslony.at> 1.4.15-1
+- Bump dependency versions (github@nieslony.at)
+- Add test (github@nieslony.at)
+- Bump vaadin version (github@nieslony.at)
+- Bump Vaadin version (github@nieslony.at)
+
 * Fri May 01 2026 Claas Nieslony <github@nieslony.at> 1.4.14-1
 - Fix: syntax in spec (github@nieslony.at)
 
