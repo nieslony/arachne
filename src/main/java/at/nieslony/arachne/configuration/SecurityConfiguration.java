@@ -5,6 +5,7 @@
 package at.nieslony.arachne.configuration;
 
 // https://vaadin.com/docs/latest/flow/security/vaadin-security-configurer
+import at.nieslony.arachne.apiindex.ApiIndexBean;
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
@@ -27,9 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
@@ -59,6 +62,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(jsr250Enabled = true)
 @Slf4j
 public class SecurityConfiguration {
 
@@ -73,6 +77,9 @@ public class SecurityConfiguration {
 
     @Autowired
     BearerTokenAuthFilter bearerTokenAuthFilter;
+
+    @Autowired
+    ApiIndexBean apiIndexBean;
 
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
@@ -90,16 +97,17 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         http
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PathRequest.toStaticResources()
                             .atCommonLocations()).permitAll();
-                    auth.requestMatchers("/icons/**").permitAll();
+                    auth.requestMatchers("/ui/icons/**").permitAll();
                 })
-                .exceptionHandling((t) -> {
-                    t.accessDeniedPage("/");
+                .csrf((t) -> {
+                    t.ignoringRequestMatchers("/api/**");
                 })
                 .userDetailsService(internalUserDetailsService)
                 .userDetailsService(ldapUserDetailsService)
@@ -119,15 +127,48 @@ public class SecurityConfiguration {
                         (exceptions) -> {
                             if (kerberosSettings.isEnableKrbAuth()) {
                                 exceptions.authenticationEntryPoint(
-                                        spnegoEntryPoint()
+                                        uiSpnegoEntryPoint()
                                 );
                             }
                         }
                 );
 
         return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginOrSetupView.class, "/arachne/login");
+            configurer.loginView(LoginOrSetupView.class, "/arachne/ui/login");
+            configurer.enableCsrfConfiguration(true);
         }).build();
+    }
+
+    @Bean
+    @Order(0)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        AuthenticationManager authenticationManager = authManager(http);
+        http.securityMatcher("/api/**")
+                .userDetailsService(internalUserDetailsService)
+                .userDetailsService(ldapUserDetailsService)
+                .addFilterBefore(
+                        bearerTokenAuthFilter,
+                        BasicAuthenticationFilter.class
+                )
+                .httpBasic((b) -> b.realmName("Arachne"))
+                .addFilterAfter(
+                        spnegoAuthenticationProcessingFilter(authenticationManager),
+                        BasicAuthenticationFilter.class)
+                .addFilterAfter(
+                        requestAttributeAuthenticationFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .exceptionHandling(
+                        (exceptions) -> {
+                            if (kerberosSettings.isEnableKrbAuth()) {
+                                exceptions.authenticationEntryPoint(
+                                        uiSpnegoEntryPoint()
+                                );
+                            }
+                        }
+                );
+
+        return http.build();
     }
 
     @Bean
@@ -168,8 +209,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SpnegoEntryPoint spnegoEntryPoint() {
-        return new SpnegoEntryPoint("/login");
+    public SpnegoEntryPoint uiSpnegoEntryPoint() {
+        return new SpnegoEntryPoint("/ui/login");
     }
 
     @Bean

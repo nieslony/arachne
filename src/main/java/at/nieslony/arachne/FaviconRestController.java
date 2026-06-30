@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class FaviconRestController {
 
-    @GetMapping("/icons/arachne.png")
+    @GetMapping("/ui/icons/arachne.png")
     @ResponseBody
     @AnonymousAllowed
     public ResponseEntity<InputStreamResource> getFaviconAsPng(@RequestParam int size) {
@@ -54,7 +54,7 @@ public class FaviconRestController {
         }
     }
 
-    @GetMapping("/icons/arachne_dark.png")
+    @GetMapping("/ui/icons/arachne_dark.png")
     @ResponseBody
     @AnonymousAllowed
     public ResponseEntity<InputStreamResource> getDarkFaviconAsPng(@RequestParam int size) {
