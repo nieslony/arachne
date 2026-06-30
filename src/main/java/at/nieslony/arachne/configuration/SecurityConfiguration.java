@@ -104,7 +104,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PathRequest.toStaticResources()
                             .atCommonLocations()).permitAll();
-                    auth.requestMatchers("/ui/icons/**").permitAll();
+                    auth.requestMatchers("/icons/**").permitAll();
                 })
                 .csrf((t) -> {
                     t.ignoringRequestMatchers("/api/**");
@@ -134,7 +134,7 @@ public class SecurityConfiguration {
                 );
 
         return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginOrSetupView.class, "/arachne/ui/login");
+            configurer.loginView(LoginOrSetupView.class, "/arachne/login");
             configurer.enableCsrfConfiguration(true);
         }).build();
     }
@@ -210,7 +210,7 @@ public class SecurityConfiguration {
 
     @Bean
     public SpnegoEntryPoint uiSpnegoEntryPoint() {
-        return new SpnegoEntryPoint("/ui/login");
+        return new SpnegoEntryPoint("/login");
     }
 
     @Bean
