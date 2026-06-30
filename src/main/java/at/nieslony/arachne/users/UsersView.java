@@ -28,6 +28,7 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.clipboard.Clipboard;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -71,7 +72,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.vaadin.olli.ClipboardHelper;
 
 /**
  *
@@ -351,13 +351,8 @@ public class UsersView extends VerticalLayout {
         Dialog dlg = new Dialog("View %s's Configuration".formatted(user.getDisplayName()));
         TabSheet tabSheet = new TabSheet();
 
-        var configShellCopy = new ClipboardHelper(
-                configShell,
-                new Button(
-                        "Copy to clipboard",
-                        VaadinIcon.COPY.create()
-                )
-        );
+        Button configShellCopy = new Button("Copy to Clipboard", VaadinIcon.COPY.create());
+        Clipboard.onClick(configShellCopy).writeText(configShell);
 
         Scroller configShellScroller = new Scroller(new Pre(configShell));
         configShellScroller.setWidth(41, Unit.EM);
@@ -370,13 +365,8 @@ public class UsersView extends VerticalLayout {
         configShellLayout.setMargin(false);
         configShellLayout.setPadding(false);
 
-        var configOvpnCopy = new ClipboardHelper(
-                configOvpn,
-                new Button(
-                        "Copy to clipboard",
-                        VaadinIcon.COPY.create()
-                )
-        );
+        Button configOvpnCopy = new Button("Copy to Clipboard", VaadinIcon.COPY.create());
+        Clipboard.onClick(configOvpnCopy).writeText(configOvpn);
 
         Scroller configOvpnScroller = new Scroller(new Pre(configOvpn));
         configOvpnScroller.setWidth(41, Unit.EM);

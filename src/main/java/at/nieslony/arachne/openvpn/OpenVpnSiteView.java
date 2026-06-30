@@ -42,6 +42,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.clipboard.Clipboard;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
@@ -85,7 +86,6 @@ import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.exceptions.DBusExecutionException;
-import org.vaadin.olli.ClipboardHelper;
 
 /**
  *
@@ -176,7 +176,7 @@ public class OpenVpnSiteView extends VerticalLayout {
     private ComboBox<SshKeyEntity> sshKeys;
     private TextArea sshPrivateKey;
     private TextField sshPublicKey;
-    ClipboardHelper copySshPrivateKey;
+    Button copySshPrivateKey;
 
     private final SiteConfigUploader siteConfigUploader;
     private final VpnSiteController vpnSiteController;
@@ -1001,10 +1001,12 @@ public class OpenVpnSiteView extends VerticalLayout {
         sshPublicKey = new TextField("Public Key");
         sshPublicKey.setWidthFull();
         sshPublicKey.setReadOnly(true);
-        copySshPrivateKey = new ClipboardHelper(
-                "",
-                new Button(VaadinIcon.COPY.create())
+        copySshPrivateKey = new Button(
+                "Copy to clipboard",
+                VaadinIcon.COPY.create()
         );
+        Clipboard.onClick(copySshPrivateKey).writeText(sshPrivateKey);
+
         HorizontalLayout pubKeylayout = new HorizontalLayout(
                 sshPublicKey,
                 copySshPrivateKey

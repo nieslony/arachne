@@ -155,16 +155,11 @@
             <version>3.4</version>
         </dependency>
 
+        <!-- Parse HTML to plain text -->
         <dependency>
             <groupId>org.vaadin.pekka</groupId>
             <artifactId>wysiwyg_e-java</artifactId>
             <version>2.0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.vaadin.olli</groupId>
-            <artifactId>clipboardhelper</artifactId>
-            <version>2.1.0</version>
         </dependency>
 
         <!-- qrcode -->
@@ -179,16 +174,21 @@
             <version>3.5.4</version>
         </dependency>
 
+        <!-- SSH client -->
         <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
             <version>2.28.3</version>
         </dependency>
+
+        <!-- DBus for Java -->
         <dependency>
             <groupId>com.github.hypfvieh</groupId>
             <artifactId>dbus-java</artifactId>
             <version>3.3.2</version>
         </dependency>
+
+        <!-- Browser user agent parser -->
         <dependency>
             <groupId>com.github.ua-parser</groupId>
             <artifactId>uap-java</artifactId>
