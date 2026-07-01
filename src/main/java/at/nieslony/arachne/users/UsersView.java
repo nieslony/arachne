@@ -35,12 +35,11 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Pre;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -53,7 +52,6 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -108,6 +106,7 @@ public class UsersView extends VerticalLayout {
     Grid.Column<UserModel> usernameColumn;
     Grid.Column<UserModel> displayNameColumn;
     Grid.Column<UserModel> emailColumn;
+    MasterDetailLayout masterDetailLayout;
 
     UserSettings userSettings;
 
@@ -217,9 +216,12 @@ public class UsersView extends VerticalLayout {
                             yield new Text("");
                         }
                     };
-                }));
-
-        editUsersGridBuffered();
+                }))
+                .setAutoWidth(true)
+                .setHeader("OTP");
+        usersGrid.addColumn(new ComponentRenderer<>(
+                (UserModel user) -> getUserMenu(user))
+        );
 
         GridPaginationControls<UserModel> paginationControl = new GridPaginationControls<>(
                 usersGrid,
@@ -236,13 +238,61 @@ public class UsersView extends VerticalLayout {
             );
         });
 
+        masterDetailLayout = new MasterDetailLayout();
+        masterDetailLayout.setMaster(usersGrid);
+        masterDetailLayout.setMasterSize("50em", true);
+        masterDetailLayout.setWidthFull();
+
         add(
                 buttons,
                 findUsersLayout,
-                usersGrid,
+                masterDetailLayout,
                 paginationControl
         );
         setPadding(false);
+    }
+
+    private Component getUserDetails(UserModel user) {
+        Binder<UserModel> binder = new Binder<>();
+
+        VerticalLayout vbox = new VerticalLayout();
+
+        TextField usernameField = new TextField("Username");
+        binder.forField(usernameField)
+                .asRequired()
+                .bind(UserModel::getUsername, UserModel::setUsername);
+
+        TextField displayNameField = new TextField("Display Name");
+        binder.forField(displayNameField)
+                .asRequired()
+                .bind(UserModel::getDisplayName, UserModel::setDisplayName);
+
+        EmailField emailField = new EmailField("E-Mail Address");
+        binder.forField(emailField)
+                .bind(UserModel::getEmail, UserModel::setEmail);
+
+        Button closeButton = new Button("Close", e -> masterDetailLayout.setDetail(null));
+        Button saveButton = new Button(
+                "Save",
+                e -> {
+                    userRepository.save(binder.getBean());
+                    usersGrid.getDataProvider().refreshItem(user);
+                }
+        );
+
+        HorizontalLayout buttonLayout = new HorizontalLayout();
+        buttonLayout.addToStart(saveButton);
+        buttonLayout.addToEnd(closeButton);
+
+        binder.setBean(user);
+
+        vbox.add(
+                usernameField,
+                displayNameField,
+                emailField,
+                buttonLayout
+        );
+        return vbox;
     }
 
     public static Specification<UserModel> findByUsernameSpec(String value) {
@@ -261,21 +311,18 @@ public class UsersView extends VerticalLayout {
         };
     }
 
-    private Component getUserEditMenu(UserModel user, Editor<UserModel> editor) {
+    private Component getUserMenu(UserModel user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String myUsername = authentication.getName();
 
         MenuBar menuBar = new MenuBar();
         menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
-        MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+        MenuItem menuItem = menuBar.addItem("");
         SubMenu userMenu = menuItem.getSubMenu();
 
         if (user.getExternalProvider() == null) {
             userMenu.addItem("Edit", e -> {
-                if (editor.isOpen()) {
-                    editor.cancel();
-                }
-                editor.editItem(user);
+                masterDetailLayout.setDetail(getUserDetails(user));
             });
 
             if (!user.getUsername().equals(myUsername)) {
@@ -389,86 +436,6 @@ public class UsersView extends VerticalLayout {
 
         dlg.setResizable(true);
         dlg.open();
-    }
-
-    final void editUsersGridBuffered() {
-        Editor<UserModel> editor = usersGrid.getEditor();
-        Binder<UserModel> binder = new Binder<>(UserModel.class);
-        editor.setBinder(binder);
-        editor.setBuffered(true);
-
-        UsernameValidator usernameValidator = new UsernameValidator();
-        UsernameUniqueValidator usernameUniqueValidator
-                = new UsernameUniqueValidator(userRepository);
-
-        Grid.Column<UserModel> editColumn = usersGrid
-                .addComponentColumn((UserModel user) -> getUserEditMenu(user, editor))
-                .setWidth("15em")
-                .setFlexGrow(0);
-
-        TextField usernameField = new TextField();
-        usernameField.setValueChangeMode(ValueChangeMode.EAGER);
-
-        usernameField.setWidthFull();
-
-        binder.forField(usernameField)
-                .withValidator(usernameValidator)
-                .withValidator(usernameUniqueValidator)
-                .bind(UserModel::getUsername, UserModel::setUsername);
-        usernameColumn.setEditorComponent(usernameField);
-
-        TextField displayNameField = new TextField();
-
-        displayNameField.setWidthFull();
-
-        binder.forField(displayNameField)
-                .asRequired("Value required")
-                .bind(UserModel::getDisplayName, UserModel::setDisplayName);
-        displayNameColumn.setEditorComponent(displayNameField);
-
-        EmailField emailField = new EmailField();
-
-        emailField.setWidthFull();
-
-        binder.forField(emailField)
-                .withValidator(new EmailValidator(
-                        "This doesn't look like a valid email address",
-                        true)
-                )
-                .bind(UserModel::getEmail, UserModel::setEmail);
-        emailColumn.setEditorComponent(emailField);
-
-        editor.addSaveListener(
-                (event) -> {
-                    UserModel user = event.getItem();
-                    userRepository.save(user);
-                }
-        );
-
-        Button saveButton = new Button(
-                "Save",
-                e -> {
-                    editor.save();
-                }
-        );
-        Button cancelButton = new Button(
-                VaadinIcon.CLOSE.create(),
-                e -> editor.cancel());
-
-        cancelButton.addThemeVariants(ButtonVariant.ERROR);
-        HorizontalLayout actions = new HorizontalLayout(
-                saveButton,
-                cancelButton
-        );
-
-        actions.setPadding(false);
-        editColumn.setEditorComponent(actions);
-
-        binder.addStatusChangeListener(
-                (event) -> {
-                    saveButton.setEnabled(!event.hasValidationErrors());
-                }
-        );
     }
 
     void addUser() {
