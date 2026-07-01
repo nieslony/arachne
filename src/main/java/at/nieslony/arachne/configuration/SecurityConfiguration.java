@@ -5,14 +5,18 @@
 package at.nieslony.arachne.configuration;
 
 // https://vaadin.com/docs/latest/flow/security/vaadin-security-configurer
-import at.nieslony.arachne.apiindex.ApiIndexBean;
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
+import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.InternalUserDetailsService;
 import at.nieslony.arachne.users.LdapUserDetailsService;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
@@ -30,7 +34,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,6 +54,7 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosT
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
@@ -79,7 +86,13 @@ public class SecurityConfiguration {
     BearerTokenAuthFilter bearerTokenAuthFilter;
 
     @Autowired
-    ApiIndexBean apiIndexBean;
+    OpenVpnController openVpnController;
+
+    @Autowired
+    TotpController totpController;
+
+    @Autowired
+    UserRepository userRepository;
 
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
@@ -111,10 +124,6 @@ public class SecurityConfiguration {
                 })
                 .userDetailsService(internalUserDetailsService)
                 .userDetailsService(ldapUserDetailsService)
-                .addFilterBefore(
-                        bearerTokenAuthFilter,
-                        BasicAuthenticationFilter.class
-                )
                 .httpBasic((b) -> b.realmName("Arachne"))
                 .addFilterAfter(
                         spnegoAuthenticationProcessingFilter(authenticationManager),
@@ -143,7 +152,7 @@ public class SecurityConfiguration {
     @Order(0)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
-        http.securityMatcher("/api/**")
+        return http.securityMatcher("/api/**")
                 .userDetailsService(internalUserDetailsService)
                 .userDetailsService(ldapUserDetailsService)
                 .addFilterBefore(
@@ -151,9 +160,14 @@ public class SecurityConfiguration {
                         BasicAuthenticationFilter.class
                 )
                 .httpBasic((b) -> b.realmName("Arachne"))
+                .addFilterBefore(
+                        otpAuthenticationFilter(),
+                        AuthorizationFilter.class
+                )
                 .addFilterAfter(
                         spnegoAuthenticationProcessingFilter(authenticationManager),
-                        BasicAuthenticationFilter.class)
+                        BasicAuthenticationFilter.class
+                )
                 .addFilterAfter(
                         requestAttributeAuthenticationFilter(authenticationManager),
                         BasicAuthenticationFilter.class
@@ -162,16 +176,14 @@ public class SecurityConfiguration {
                         (exceptions) -> {
                             if (kerberosSettings.isEnableKrbAuth()) {
                                 exceptions.authenticationEntryPoint(
-                                        uiSpnegoEntryPoint()
+                                        apiSpnegoEntryPoint()
                                 );
                             }
                         }
-                );
-
-        return http.build();
+                )
+                .build();
     }
 
-    @Bean
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager) {
         if (kerberosSettings.isEnableKrbAuth()) {
@@ -179,7 +191,10 @@ public class SecurityConfiguration {
             filter.setAuthenticationManager(authenticationManager);
             filter.setFailureHandler((request, response, exception) -> {
                 log.error("Access to %s failed: %s"
-                        .formatted(request.getPathInfo(), exception.getMessage())
+                        .formatted(
+                                request.getPathTranslated(),
+                                exception.getMessage()
+                        )
                 );
             });
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
@@ -193,7 +208,9 @@ public class SecurityConfiguration {
                         final HttpServletResponse response,
                         final Authentication authentication
                 ) throws IOException, ServletException {
-                    log.info("Access to %s granted".formatted(request.getContextPath()));
+                    log.info("Access to %s granted".formatted(
+                            request.getPathTranslated())
+                    );
                     SecurityContext context = securityContextHolderStrategy.createEmptyContext();
                     context.setAuthentication(authentication);
                     securityContextHolderStrategy.setContext(context);
@@ -211,6 +228,11 @@ public class SecurityConfiguration {
     @Bean
     public SpnegoEntryPoint uiSpnegoEntryPoint() {
         return new SpnegoEntryPoint("/login");
+    }
+
+    @Bean
+    public SpnegoEntryPoint apiSpnegoEntryPoint() {
+        return new SpnegoEntryPoint("/api/error/401");
     }
 
     @Bean
@@ -305,5 +327,51 @@ public class SecurityConfiguration {
                 fc.doFilter(sr, sr1);
             };
         }
+    }
+
+    public Filter otpAuthenticationFilter() {
+        return (ServletRequest sreq, ServletResponse sresp, FilterChain fc) -> {
+            HttpServletRequest httpRequest = (HttpServletRequest) sreq;
+            HttpServletResponse httpResponse = (HttpServletResponse) sresp;
+
+            if (httpRequest.getUserPrincipal() instanceof UsernamePasswordAuthenticationToken authToken) {
+                ArachneUserDetails userDetails
+                        = (ArachneUserDetails) authToken.getPrincipal();
+                UserModel user = userRepository.findByUsername(
+                        userDetails.getUsername()
+                );
+                String username = user.getUsername();
+                if (openVpnController.isOtpRequired(user)) {
+                    String otp = httpRequest.getHeader("X-OTP");
+                    if (otp == null) {
+                        log.error(
+                                "OTP for user %s required but not supplied in header X-OTP"
+                                        .formatted(username)
+                        );
+                        createUnauthorized(httpResponse);
+                        return;
+                    } else {
+                        if (!totpController.validateTotp(otp, user)) {
+                            log.error("User %s supplied invalid TOTP".formatted(username));
+                            createUnauthorized(httpResponse);
+                            return;
+                        }
+                        log.info("OTP for user %s is valid".formatted(username));
+                    }
+                } else {
+                    log.info("OTP not required for user " + username);
+                }
+            }
+            fc.doFilter(sreq, sresp);
+        };
+    }
+
+    private void createUnauthorized(HttpServletResponse resp) throws IOException {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        resp.getOutputStream().println("%d %s\n".formatted(
+                status.value(),
+                status.getReasonPhrase()
+        ));
+        resp.setStatus(status.value());
     }
 }
