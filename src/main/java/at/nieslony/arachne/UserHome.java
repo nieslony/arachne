@@ -13,6 +13,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.clipboard.Clipboard;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -43,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.vaadin.olli.ClipboardHelper;
 import ua_parser.Parser;
 
 /**
@@ -202,6 +202,13 @@ public class UserHome extends VerticalLayout implements RouterLayout {
 
         OrderedList steps = new OrderedList();
         steps.setType(OrderedList.NumberingType.NUMBER);
+        Button copyToCipboardButton = new Button(
+                "Copy to clipboard",
+                VaadinIcon.COPY.create()
+        );
+        Clipboard
+                .onClick(copyToCipboardButton)
+                .writeText(nmInstructions.get());
         steps.add(
                 new ListItem(
                         """
@@ -209,12 +216,7 @@ public class UserHome extends VerticalLayout implements RouterLayout {
                 konsole, …)
                 """),
                 new ListItem(new Details("execute the following commands",
-                        new ClipboardHelper(
-                                nmInstructions.get(),
-                                new Button(
-                                        "Copy to clipboard",
-                                        VaadinIcon.COPY.create())
-                        ),
+                        copyToCipboardButton,
                         new Pre(nmInstructions.get())
                 )),
                 new ListItem(

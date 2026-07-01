@@ -11,6 +11,7 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.clipboard.Clipboard;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.DescriptionList;
 import com.vaadin.flow.component.html.Div;
@@ -45,7 +46,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.vaadin.olli.ClipboardHelper;
 
 /**
  *
@@ -140,13 +140,11 @@ public class ApiIndexView extends VerticalLayout {
 
                     String url = urlPrefix + pattern;
                     Text copyText = new Text("Full URL: " + url);
-                    ClipboardHelper clipboardHelper = new ClipboardHelper(
-                            url,
-                            new Button(
-                                    "Copy to clipboard",
-                                    VaadinIcon.COPY.create()
-                            )
+                    Button clipboardHelper = new Button(
+                            "Copy to clipboard",
+                            VaadinIcon.COPY.create()
                     );
+                    Clipboard.onClick(clipboardHelper).writeText(url);
                     HorizontalLayout copyUrl = new HorizontalLayout(
                             clipboardHelper,
                             copyText

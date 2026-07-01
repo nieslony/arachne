@@ -539,7 +539,7 @@ public class SetupView extends VerticalLayout {
                 setupController.restore(data);
             });
             Upload upload = new Upload(uploadHandler);
-            upload.setAcceptedFileTypes("application/json", ".json");
+            upload.setAcceptedMimeTypes("application/json");
             upload.addFileRejectedListener(event -> {
                 String errorMessage = event.getErrorMessage();
                 log.error(errorMessage);
