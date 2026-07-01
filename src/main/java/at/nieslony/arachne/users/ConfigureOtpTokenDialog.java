@@ -33,6 +33,7 @@ public class ConfigureOtpTokenDialog extends Dialog {
             UserRepository userRepository,
             TotpController totpController
     ) {
+        setHeaderTitle("Configure %s's TOTP".formatted(user.getDisplayName()));
         add(totpController.create2FAView(
                 user,
                 () -> UI.getCurrent().getPage().reload()
