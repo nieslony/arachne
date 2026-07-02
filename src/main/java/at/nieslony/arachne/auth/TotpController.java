@@ -157,7 +157,7 @@ public class TotpController {
         H4 installHeader = new H4("Step 1: Authenticator App");
         Text installInstructions = new Text(
                 """
-                Install and open an autrhenticatir app (eg. Microsoft
+                Install and open an authenticator app (eg. Microsoft
                 Authenticator or Google Authenticatoir) on your mobile phone.
                 """
         );
