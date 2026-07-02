@@ -165,7 +165,7 @@ public class OpenVpnUserSettings
     private List<String> pushRoutes = NetUtils.getDefaultPushRoutes();
     private Boolean internetThrouphVpn = false;
 
-    // Page Aiuthentication
+    // Page Authentication
     private AuthType authType = AuthType.USERNAME_PASSWORD_CERTIFICATE;
     private String authPamService = "arachne";
     private String authHttpUrl = null;
