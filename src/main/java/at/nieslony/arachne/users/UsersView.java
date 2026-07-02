@@ -5,6 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
@@ -101,6 +102,9 @@ public class UsersView extends VerticalLayout {
 
     @Autowired
     private RolesCollector rolesCollestor;
+
+    @Autowired
+    private TotpController totpController;
 
     Grid<UserModel> usersGrid;
     Grid.Column<UserModel> usernameColumn;
@@ -368,6 +372,16 @@ public class UsersView extends VerticalLayout {
             });
             if (!userMenu.getItems().isEmpty()) {
                 userMenu.addSeparator();
+            }
+            if (openVpnUserSettings.getAuthOtpRequired() != OpenVpnUserSettings.OtpRequired.NEVER) {
+                userMenu.addItem("Configure OTP Token…", (e) -> {
+                    ConfigureOtpTokenDialog dlg = new ConfigureOtpTokenDialog(
+                            user,
+                            userRepository,
+                            totpController
+                    );
+                    dlg.open();
+                });
             }
             userMenu.addItem(new Anchor(dlh, "Download Config"));
             userMenu.addItem("Send Config as E-Mail…", (e) -> sendVpnConfig(user));
