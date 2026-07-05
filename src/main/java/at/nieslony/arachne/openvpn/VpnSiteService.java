@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @Slf4j
-public class VpnSiteController {
+public class VpnSiteService {
 
     public class VpnSiteNotFound extends Exception {
 

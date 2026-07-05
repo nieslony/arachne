@@ -43,16 +43,16 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @PropertySource("classpath:arachne.properties")
 @Slf4j
-public class OpenVpnController {
+public class OpenVpnService {
 
     @Autowired
     private Settings settings;
@@ -67,7 +67,7 @@ public class OpenVpnController {
     private CertificateRepository certificateRepository;
 
     @Autowired
-    private VpnSiteController vpnSiteController;
+    private VpnSiteService vpnSiteSiter;
 
     @Value("${plugin_path}")
     String pluginPath;
@@ -573,7 +573,7 @@ public class OpenVpnController {
     }
 
     public void writeOpenVpnSiteServerSitesPluginConfig() {
-        for (VpnSite site : vpnSiteController.getAll()) {
+        for (VpnSite site : vpnSiteSiter.getAll()) {
             if (site.isDefaultSite()) {
                 continue;
             }
@@ -613,11 +613,11 @@ public class OpenVpnController {
     }
 
     public void writeOpenVpnSiteServerSitesConfig() {
-        VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        VpnSite defaultSite = vpnSiteSiter.getDefaultSite();
         OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
 
-        for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
+        for (VpnSite site : vpnSiteSiter.getNonDefaultSites()) {
             String fileName
                     = "%s/%s".formatted(
                             clientConfDirName,
@@ -769,7 +769,7 @@ public class OpenVpnController {
     public void writeOpenVpnSiteRemoteConfig(long siteId, Writer writer) {
         OpenVpnSiteSettings openVpnSiteSettings
                 = settings.getSettings(OpenVpnSiteSettings.class);
-        Optional<VpnSite> site = vpnSiteController.getById(siteId);
+        Optional<VpnSite> site = vpnSiteSiter.getById(siteId);
         if (site.isEmpty()) {
             log.error("Site %i not found".formatted(siteId));
             return;

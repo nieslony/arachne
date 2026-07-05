@@ -5,7 +5,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSettings> {
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private UserRepository userRepository;
@@ -40,8 +40,8 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -49,8 +49,8 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor outgoingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
@@ -101,7 +101,7 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
 
     @Override
     protected void applyBasicSettings(SiteFirewallBasicsSettings basicSettings) throws DBusException {
-        openVpnController.writeOpenVpnPluginSiteConfig(
+        openVpnService.writeOpenVpnPluginSiteConfig(
                 null,
                 firewallBasicSettings);
         arachneDbus.restartServer(ArachneDbus.ServerType.SITE);

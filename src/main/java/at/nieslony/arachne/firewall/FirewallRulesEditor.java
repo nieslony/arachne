@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne.firewall;
 
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -52,7 +52,7 @@ class FirewallRulesEditor extends VerticalLayout {
 
     private final FirewallRuleRepository firewallRuleRepository;
     private final UserMatcherCollector userMatcherCollector;
-    private final LdapController ldapController;
+    private final LdapService ldapService;
     private final UserRepository userRepository;
 
     private Grid<FirewallRuleModel> grid;
@@ -60,15 +60,15 @@ class FirewallRulesEditor extends VerticalLayout {
     public FirewallRulesEditor(
             FirewallRuleRepository firewallRuleRepository,
             UserMatcherCollector userMatcherCollector,
-            LdapController ldapController,
-            FirewallController firewallController,
+            LdapService ldapService,
+            FirewallService firewallService,
             UserRepository userRepository,
             FirewallRuleModel.VpnType vpnType,
             FirewallRuleModel.RuleDirection direction
     ) {
         this.firewallRuleRepository = firewallRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.ldapController = ldapController;
+        this.ldapService = ldapService;
         this.userRepository = userRepository;
 
         ListDataProvider<FirewallRuleModel> dataProvider = new ListDataProvider<>(firewallRuleRepository
@@ -81,7 +81,7 @@ class FirewallRulesEditor extends VerticalLayout {
         filterByUser.setMinWidth(30, Unit.REM);
         filterByUser.setClearButtonVisible(true);
 
-        LdapAutoComplete findUser = new LdapAutoComplete(filterByUser, ldapController);
+        LdapAutoComplete findUser = new LdapAutoComplete(filterByUser, ldapService);
         findUser.setCompleteMode(LdapAutoComplete.CompleteMode.USERS);
 
         Button filterByUserButton = new Button(
@@ -225,7 +225,7 @@ class FirewallRulesEditor extends VerticalLayout {
                     vpnType.name().toLowerCase()
             );
             try {
-                firewallController.writeRules(vpnType);
+                firewallService.writeRules(vpnType);
                 ShowNotification.info("Configuration written to " + fileName);
             } catch (IOException | JSONException ex) {
                 String msg = "Cannot write firewall rules to %s: %s"
@@ -353,7 +353,7 @@ class FirewallRulesEditor extends VerticalLayout {
             who = new MagicEditableListBox<>(
                     FirewallWho.class,
                     "Who",
-                    () -> new EditFirewallWho(userMatcherCollector, ldapController)
+                    () -> new EditFirewallWho(userMatcherCollector, ldapService)
             );
             binder.forField(who)
                     .bind(FirewallRuleModel::getWho, FirewallRuleModel::setWho);

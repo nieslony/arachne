@@ -4,7 +4,7 @@
  */
 package at.nieslony.arachne;
 
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
@@ -55,14 +55,14 @@ import org.vaadin.olli.ClipboardHelper;
 @Slf4j
 public class UserHome extends VerticalLayout implements RouterLayout {
 
-    private final OpenVpnController openVpnRestController;
+    private final OpenVpnService openVpnRestController;
     private final Settings settings;
     private final OpenVpnUserSettings openVpnUserSettings;
     private final int ICON_SIZE_SMALL = 32;
     private final int ICON_SIZE_LARGE = 96;
 
     public UserHome(
-            OpenVpnController openVpnRestController,
+            OpenVpnService openVpnRestController,
             Settings settings
     ) {
         this.settings = settings;

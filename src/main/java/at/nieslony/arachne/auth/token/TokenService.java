@@ -43,7 +43,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 @Slf4j
-public class TokenController {
+public class TokenService {
 
     @Autowired
     Pki pki;

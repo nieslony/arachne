@@ -17,7 +17,7 @@
 package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.apiindex.ShowApiDetails;
-import at.nieslony.arachne.auth.token.TokenController;
+import at.nieslony.arachne.auth.token.TokenService;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.Calendar;
@@ -44,7 +44,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthRestController {
 
     @Autowired
-    TokenController tokenController;
+    TokenService tokenService;
 
     @Getter
     @Setter
@@ -130,7 +130,7 @@ public class AuthRestController {
         Date validUntil = createValidUntilDate(validTime);
         String apiAuthToken;
         if (userDetails instanceof ArachneUserDetails arachneUserDetails) {
-            apiAuthToken = tokenController.createToken(
+            apiAuthToken = tokenService.createToken(
                     arachneUserDetails.getUser(),
                     validUntil
             );

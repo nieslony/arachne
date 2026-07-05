@@ -41,7 +41,7 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
     private final String HEADER_PREFIX = "Bearer ";
 
     @Autowired
-    private TokenController tokenController;
+    private TokenService tokenService;
 
     private String getTokenFromRequest(HttpServletRequest request) {
         String header = request.getHeader(HEADER);
@@ -61,7 +61,7 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         final String tokenStr = getTokenFromRequest(request);
         if (tokenStr != null) {
-            UserModel user = tokenController.verifyToken(tokenStr);
+            UserModel user = tokenService.verifyToken(tokenStr);
             if (user == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;

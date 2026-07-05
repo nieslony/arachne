@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.tasks.scheduled;
 
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.pki.Pki;
@@ -64,8 +64,8 @@ public class UpdateVpnServerCert extends Task {
         log.info("Renew after: " + cal.getTime().toString());
         if (cal.before(Calendar.getInstance())) {
             pki.createServerCert();
-            OpenVpnController openVpnRestController
-                    = beanFactory.getBean(OpenVpnController.class);
+            OpenVpnService openVpnRestController
+                    = beanFactory.getBean(OpenVpnService.class);
             openVpnRestController.writeOpenVpnUserServerConfig(openVpnUserSettings);
 
             ArachneDbus arachneDbus = beanFactory.getBean(ArachneDbus.class);

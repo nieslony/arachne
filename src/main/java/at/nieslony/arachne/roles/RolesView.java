@@ -5,7 +5,7 @@
 package at.nieslony.arachne.roles;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.usermatcher.LdapGroupUserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -51,7 +51,7 @@ public class RolesView extends VerticalLayout {
 
     final private RoleRuleRepository roleRuleRepository;
     final private UserMatcherCollector userMatcherCollector;
-    final private LdapController ldapController;
+    final private LdapService ldapService;
 
     final Grid<RoleRuleModel> roleRules;
     Grid.Column<RoleRuleModel> ruleColumn;
@@ -63,11 +63,11 @@ public class RolesView extends VerticalLayout {
             RoleRuleRepository roleRuleRepository,
             UserMatcherCollector userMatcherCollector,
             Settings settings,
-            LdapController ldapController
+            LdapService ldapService
     ) {
         this.roleRuleRepository = roleRuleRepository;
         this.userMatcherCollector = userMatcherCollector;
-        this.ldapController = ldapController;
+        this.ldapService = ldapService;
 
         Button addRole = new Button("Add...", e -> {
             addRule();
@@ -185,7 +185,7 @@ public class RolesView extends VerticalLayout {
                 .bind(RoleRuleModel::getParameter, RoleRuleModel::setParameter);
         LdapAutoComplete parameterFieldComplete = new LdapAutoComplete(
                 parameterField,
-                ldapController
+                ldapService
         );
         parameterColumn.setEditorComponent(new HorizontalLayout(
                 parameterField,
@@ -284,7 +284,7 @@ public class RolesView extends VerticalLayout {
         TextField parameter = new TextField();
         parameter.setClearButtonVisible(true);
         LdapAutoComplete parameterComplete = new LdapAutoComplete(
-                parameter, ldapController
+                parameter, ldapService
         );
         parameterComplete.setValueConverter((value) -> value.name());
 

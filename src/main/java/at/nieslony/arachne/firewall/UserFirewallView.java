@@ -17,7 +17,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSettings> {
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private UserRepository userRepository;
@@ -56,8 +56,8 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.add("Incoming Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -65,8 +65,8 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.add("Outgoing Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.OUTGOING
@@ -112,7 +112,7 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
     @Override
     protected void applyBasicSettings(UserFirewallBasicsSettings basicSettings) throws DBusException {
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-        openVpnController.writeOpenVpnPluginUserConfig(
+        openVpnService.writeOpenVpnPluginUserConfig(
                 openVpnUserSettings,
                 firewallBasicSettings
         );

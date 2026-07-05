@@ -17,7 +17,7 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.utils.ByteArrayHolder;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.UI;
@@ -39,7 +39,7 @@ import org.springframework.ldap.CommunicationException;
 @Slf4j
 public class EditYourselfDialog extends Dialog {
 
-    public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapController ldapController) {
+    public EditYourselfDialog(UserModel user, UserRepository userRepository, LdapService ldapService) {
         ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
 
@@ -92,7 +92,7 @@ public class EditYourselfDialog extends Dialog {
             avatarLayout.setEnabled(e.getValue() == UserModel.AvatarSource.Custom);
             if (e.getValue() == UserModel.AvatarSource.LDAP) {
                 try {
-                    var ldapUser = ldapController.getUser(user.getUsername());
+                    var ldapUser = ldapService.getUser(user.getUsername());
                     byte[] newAvatar = ldapUser.getAvatar();
                     if (newAvatar != null) {
                         log.debug("Got avatar fot user %s with %d bytes".formatted(user.getUsername(), newAvatar.length));

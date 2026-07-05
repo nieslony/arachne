@@ -63,7 +63,7 @@ public class ApiIndexView extends VerticalLayout {
         READ, WRITE
     }
 
-    public ApiIndexView(ApiIndexBean apiIndexBean) {
+    public ApiIndexView(ApiIndexService apiIndexBean) {
         String urlPath = RouteConfiguration.forApplicationScope()
                 .getUrl(getClass());
 

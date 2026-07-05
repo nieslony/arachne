@@ -46,7 +46,7 @@ public class LdapUserSource implements ExternalUserSource {
     private RolesCollector rolesCollector;
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     static public String getName() {
         return "Ldap";
@@ -65,7 +65,7 @@ public class LdapUserSource implements ExternalUserSource {
             log.info("User %s not found in database, getting from LDAP"
                     .formatted(username)
             );
-            user = ldapController.getUser(username);
+            user = ldapService.getUser(username);
             if (user == null) {
                 log.info("User %s neither found in database nor in LDAP"
                         .formatted(username)
@@ -80,7 +80,7 @@ public class LdapUserSource implements ExternalUserSource {
         } else if (user.isExpired(ldapCacheMaxMins)) {
             log.info("User is expired. Updating from LDAP");
 
-            UserModel ldapUser = ldapController.getUser(username);
+            UserModel ldapUser = ldapService.getUser(username);
             if (ldapUser != null) {
                 user.update(ldapUser);
                 Set<String> roles = rolesCollector.findRolesForUser(user);

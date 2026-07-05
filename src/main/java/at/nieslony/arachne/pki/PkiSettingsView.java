@@ -17,7 +17,7 @@
 package at.nieslony.arachne.pki;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.utils.components.ShowNotification;
@@ -53,7 +53,7 @@ public class PkiSettingsView extends VerticalLayout {
 
     public PkiSettingsView(
             Settings settings,
-            OpenVpnController openVpnRestController
+            OpenVpnService openVpnRestController
     ) {
         PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
         binder = new Binder<>();
