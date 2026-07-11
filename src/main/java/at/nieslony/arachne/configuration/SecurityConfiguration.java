@@ -27,6 +27,9 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
@@ -37,6 +40,9 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -55,6 +61,7 @@ import org.springframework.security.kerberos.web.authentication.SpnegoAuthentica
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.RequestAttributeAuthenticationFilter;
@@ -68,7 +75,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
  * @author claas
  */
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = false)
 @EnableMethodSecurity(jsr250Enabled = true)
 @Slf4j
 public class SecurityConfiguration {
@@ -97,6 +104,11 @@ public class SecurityConfiguration {
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
 
+    private static final Pattern otvLandingPattern
+            = Pattern.compile("/otv/(?<id>[0-9]+)");
+    private static final Pattern otvPagePattern
+            = Pattern.compile("/otv/(?<id>[0-9]+)/(?<page>[a-z0-9\\-]+)");
+
     @PostConstruct
     public void init() {
         log.info("Initializing...");
@@ -110,7 +122,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order(1)
+    @Order(10)
     public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         http
@@ -118,10 +130,45 @@ public class SecurityConfiguration {
                     auth.requestMatchers(PathRequest.toStaticResources()
                             .atCommonLocations()).permitAll();
                     auth.requestMatchers("/icons/**").permitAll();
+                    auth.requestMatchers("/otv/**").access(otvAuthManager());
+                    /*                            (Supplier<? extends Authentication> authentication, RequestAuthorizationContext object) -> {
+                                HttpServletRequest req = object.getRequest();
+                                Pattern otvLandingPattern
+                                = Pattern.compile("/otv/(?<id>[0-9]+)");
+                                Pattern otvPagePattern
+                                = Pattern.compile("/otv/(?<id>[0-9]+)/(?<page>[a-z0-9\\-]+)");
+
+                                String path = req.getServletPath();
+
+                                Matcher otvLandingMatcher = otvLandingPattern.matcher(
+                                        path
+                                );
+                                if (otvLandingMatcher.matches()) {
+                                    log.info("Access to landing page %s is granted".formatted(path));
+                                    return new AuthorizationDecision(true);
+                                }
+
+                                Matcher otvPageMatcher = otvPagePattern.matcher(
+                                        path
+                                );
+                                if (otvPageMatcher.matches()) {
+                                    boolean granted = true;
+                                    log.info("Access to page %s: %b: ".formatted(
+                                            otvPageMatcher.group("page"),
+                                            granted
+                                    ));
+                                    return new AuthorizationDecision(granted);
+                                }
+                                log.info("Path %s does not match".formatted(path));
+                                return new AuthorizationDecision(true);
+                            });*/
                 })
-                .csrf((t) -> {
-                    t.ignoringRequestMatchers("/api/**");
-                })
+                .csrf(
+                        (t) -> {
+                            t.ignoringRequestMatchers("/api/**");
+
+                        }
+                )
                 .userDetailsService(internalUserDetailsService)
                 .userDetailsService(ldapUserDetailsService)
                 .httpBasic((b) -> b.realmName("Arachne"))
@@ -132,6 +179,10 @@ public class SecurityConfiguration {
                         requestAttributeAuthenticationFilter(authenticationManager),
                         BasicAuthenticationFilter.class
                 )
+                /*                .addFilterBefore(
+                        otvAuthorizationFilter(),
+                        AuthorizationFilter.class
+                )*/
                 .exceptionHandling(
                         (exceptions) -> {
                             if (kerberosSettings.isEnableKrbAuth()) {
@@ -149,7 +200,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order(0)
+    @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         return http.securityMatcher("/api/**")
@@ -373,5 +424,41 @@ public class SecurityConfiguration {
                 status.getReasonPhrase()
         ));
         resp.setStatus(status.value());
+    }
+
+    AuthorizationManager<RequestAuthorizationContext> otvAuthManager() {
+        return new AuthorizationManager<RequestAuthorizationContext>() {
+            @Override
+            public AuthorizationResult authorize(
+                    Supplier authentication,
+                    RequestAuthorizationContext rac
+            ) {
+                HttpServletRequest req = rac.getRequest();
+                String path = req.getServletPath();
+
+                Matcher otvLandingMatcher = otvLandingPattern.matcher(
+                        path
+                );
+                if (otvLandingMatcher.matches()) {
+                    log.info("Access to landing page %s is granted".formatted(path));
+                    return new AuthorizationDecision(true);
+                }
+
+                Matcher otvPageMatcher = otvPagePattern.matcher(
+                        path
+                );
+                if (otvPageMatcher.matches()) {
+                    boolean granted = true;
+                    log.info("Access to page %s: %b: ".formatted(
+                            otvPageMatcher.group("page"),
+                            granted
+                    ));
+                    return new AuthorizationDecision(granted);
+                }
+
+                log.info("Path %s does not match".formatted(path));
+                return new AuthorizationDecision(true);
+            }
+        };
     }
 }
