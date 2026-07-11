@@ -134,6 +134,7 @@ public class UserModel implements Serializable {
 
     @Column
     @Lob
+    @ToString.Exclude
     private byte[] avatar;
 
     @Column
@@ -151,6 +152,7 @@ public class UserModel implements Serializable {
 
     @Column
     @Lob
+    @ToString.Exclude
     private byte[] otpSecret;
 
     @JsonIgnore
