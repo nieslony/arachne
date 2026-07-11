@@ -26,13 +26,13 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -145,12 +145,12 @@ public class TotpController {
         }
     }
 
-    public Component create2FAView(UserModel user) {
+    public VerticalLayout create2FAView(UserModel user) {
         return create2FAView(user, () -> {
         });
     }
 
-    public Component create2FAView(UserModel user, Runnable onAttachAuthenticator) {
+    public VerticalLayout create2FAView(UserModel user, Runnable onAttachAuthenticator) {
         byte[] secret = generateSecret(32);
         VerticalLayout layout = new VerticalLayout();
 
@@ -219,6 +219,9 @@ public class TotpController {
         verifyOtpButton.addClickListener(e -> {
             if (verifyOtpField.getValue().equals(generateTOTP(secret))) {
                 attachAuthenticatorButton.setEnabled(true);
+                verifyOtpLayout.add(
+                        VaadinIcon.CHECK.create()
+                );
             } else {
                 ShowNotification.error("Error", "OTP does not match");
             }
