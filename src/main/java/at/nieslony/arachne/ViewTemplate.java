@@ -12,6 +12,7 @@ import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
+import at.nieslony.arachne.onetimeview.OneTimeViewOverview;
 import at.nieslony.arachne.openvpn.OpenVpnSiteView;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserView;
@@ -270,9 +271,10 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         SideNavItem apiItem = new SideNavItem("API Index", ApiIndexView.class,
                 VaadinIcon.LIST.create());
         apiItem.setOpenInNewBrowserTab(true);
-        servicesNav.addItem(
-                new SideNavItem("Mail Settings", MailSettingsView.class,
+        servicesNav.addItem(new SideNavItem("Mail Settings", MailSettingsView.class,
                         VaadinIcon.MAILBOX.create()),
+                new SideNavItem("One Time Views", OneTimeViewOverview.class,
+                        VaadinIcon.CLOCK.create()),
                 new SideNavItem("Integrated Tomcat", TomcatView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
