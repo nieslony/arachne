@@ -79,7 +79,6 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.vaadin.pekka.WysiwygE;
 
 /**
  *
@@ -365,12 +364,12 @@ public class MailSettingsView extends VerticalLayout {
                 MailSettings::setTemplateConfigType
         );
 
-        WysiwygE templateContentHtmlField = new WysiwygE();
-        templateContentHtmlField.setHeight(64, Unit.EX);
-        templateContentHtmlField.setToolsInvisible(
-                WysiwygE.Tool.AUDIO,
-                WysiwygE.Tool.VIDEO
-        );
+        VaadinCKEditor templateContentHtmlField = VaadinCKEditor.create()
+                .withPreset(CKEditorPreset.STANDARD)
+                .withType(CKEditorType.CLASSIC)
+                .withTheme(CKEditorTheme.AUTO)
+                .build();
+
         templateContentHtmlField.setWidthFull();
         templateContentHtmlField.addClassNames(
                 LumoUtility.Background.CONTRAST_10
