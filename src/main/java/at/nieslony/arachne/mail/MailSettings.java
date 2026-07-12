@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import javax.naming.NamingException;
 import lombok.Getter;
@@ -66,9 +67,20 @@ public class MailSettings extends AbstractSettingsGroup {
     private String smtpPassword = "";
     private String senderDisplayname = "Arachne openVPN Administrator";
     private String senderEmailAddress = "no-reply@" + NetUtils.myDomain();
+
     private String templateConfigHtml = getDefaultTemplateConfigHtml();
     private String templateConfigPlain = getDefaultTemplateConfigPlain();
     private TemplateConfigType templateConfigType = TemplateConfigType.HTML;
+
+    private String templateOtpAuthUrl = "https://%s/arachne".formatted(
+            Objects.requireNonNullElse(
+                    NetUtils.myPublicHostname(),
+                    NetUtils.myHostname()
+            )
+    );
+    private String templateOtpAuthHtml = getDefaultTemplateOtpAuthHtml();
+    private String templateOtpAuthPlain = getDefaultTemplateOtpAuthPlain();
+    private TemplateConfigType templateOtpAuthType = TemplateConfigType.HTML;
 
     @JsonIgnore
     private String getDefaultSmtpServer() {
@@ -136,6 +148,31 @@ public class MailSettings extends AbstractSettingsGroup {
     }
 
     @JsonIgnore
+    final public String getDefaultTemplateOtpAuthHtml() {
+        final String RN = "MailTemplates/openvpn-setup-otp.html";
+        try {
+            InputStream is = new ClassPathResource(RN).getInputStream();
+            return new String(is.readAllBytes());
+        } catch (IOException ex) {
+            log.error("Cannot load resource %s: %s"
+                    .formatted(RN, ex.getMessage())
+            );
+            return "";
+        }
+    }
+
+    @JsonIgnore
+    final public String getDefaultTemplateOtpAuthPlain() {
+        Source htmlSource = new Source(getDefaultTemplateOtpAuthHtml());
+        Segment segment = new Segment(htmlSource, 0, htmlSource.length());
+        Renderer htmlRender = new Renderer(segment)
+                .setMaxLineLength(80)
+                .setIncludeHyperlinkURLs(true)
+                .setListIndentSize(4);
+        return htmlRender.toString();
+    }
+
+    @JsonIgnore
     public String getVarRcptName() {
         return "{rcpt-displayname}";
     }
@@ -158,5 +195,15 @@ public class MailSettings extends AbstractSettingsGroup {
     @JsonIgnore
     public String getVarAttachnement() {
         return "{attachment}";
+    }
+
+    @JsonIgnore
+    public String getVarOtpAuthUrl() {
+        return "{url}";
+    }
+
+    @JsonIgnore
+    public String getVarOtpAuthEolUrl() {
+        return "{url-eol}";
     }
 }

@@ -26,6 +26,7 @@ import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.components.ShowNotification;
+import at.nieslony.arachne.utils.net.NetUtils;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.Text;
@@ -35,6 +36,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
@@ -58,10 +60,15 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.wontlost.ckeditor.CKEditorPreset;
+import com.wontlost.ckeditor.CKEditorTheme;
+import com.wontlost.ckeditor.CKEditorType;
+import com.wontlost.ckeditor.VaadinCKEditor;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,6 +101,8 @@ public class MailSettingsView extends VerticalLayout {
     private Button sendTestMailButton;
     private Button sendTestConfigButton;
     private Button resetConfigTemplatesButton;
+    private Button sendTestOtpAuthButton;
+    private Button resetOtpAuthTemplatesButton;
     private final HorizontalLayout buttons;
 
     public MailSettingsView(
@@ -124,8 +133,10 @@ public class MailSettingsView extends VerticalLayout {
         TabSheet tabs = new TabSheet();
         Tab basicsTab = new Tab("Basics");
         Tab templateConfigTab = new Tab("Template: Send Config");
+        Tab templateOtpTab = new Tab("Template: Setup OTP Authenticator");
         tabs.add(basicsTab, createBasicsPage());
         tabs.add(templateConfigTab, createTemplateConfigPage());
+        tabs.add(templateOtpTab, createTemplateOtpPage());
         tabs.setWidthFull();
         add(
                 tabs,
@@ -136,14 +147,19 @@ public class MailSettingsView extends VerticalLayout {
 
         tabs.setSelectedTab(null);
         tabs.addSelectedChangeListener((t) -> {
-            sendTestConfigButton.setVisible(false);
             sendTestMailButton.setVisible(false);
+            sendTestConfigButton.setVisible(false);
             resetConfigTemplatesButton.setVisible(false);
+            sendTestOtpAuthButton.setVisible(false);
+            resetOtpAuthTemplatesButton.setVisible(false);
             if (t.getSelectedTab().equals(basicsTab)) {
                 sendTestMailButton.setVisible(true);
             } else if (t.getSelectedTab().equals(templateConfigTab)) {
                 sendTestConfigButton.setVisible(true);
                 resetConfigTemplatesButton.setVisible(true);
+            } else if (t.getSelectedTab().equals(templateOtpTab)) {
+                sendTestOtpAuthButton.setVisible(true);
+                resetOtpAuthTemplatesButton.setVisible(true);
             }
         });
         tabs.setSelectedTab(basicsTab);
@@ -405,11 +421,11 @@ public class MailSettingsView extends VerticalLayout {
                         .formatted(mailSettings.getVarLinuxInstructions())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Network Manager Configuration Name"
+                "<span><i>%s</i> Network Manager Configuration Name</span>"
                         .formatted(mailSettings.getVarNmConnection())
         )));
         helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Attachment Name"
+                "<span><i>%s</i> Attachment Name</span>"
                         .formatted(mailSettings.getVarAttachnement())
         )));
 
@@ -546,5 +562,132 @@ public class MailSettingsView extends VerticalLayout {
             }
             return ValidationResult.ok();
         };
+    }
+
+    private Component createTemplateOtpPage() {
+        VerticalLayout layout = new VerticalLayout();
+
+        ComboBox<String> urlSetupOtpAuth = new ComboBox<>("URL to Authenticator Setup");
+        urlSetupOtpAuth.setAllowCustomValue(true);
+        List<String> items = List.of(
+                Objects.requireNonNullElse(NetUtils.myHostname(), ""),
+                Objects.requireNonNullElse(NetUtils.myPublicIpAddress(), ""),
+                Objects.requireNonNullElse(NetUtils.myPublicHostname(), "")
+        );
+        urlSetupOtpAuth.setItems(items.stream()
+                .filter(v -> !v.isEmpty())
+                .sorted()
+                .map(v -> "https://%s/arachne".formatted(v))
+                .toList()
+        );
+        HorizontalLayout urlLayout = new HorizontalLayout(
+                urlSetupOtpAuth,
+                new Text("/otv")
+        );
+        urlLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+        urlLayout.setFlexGrow(1, urlSetupOtpAuth);
+        urlLayout.setWidthFull();
+
+        RadioButtonGroup<MailSettings.TemplateConfigType> otpAuthTemplateType
+                = new RadioButtonGroup<>();
+        otpAuthTemplateType.setItems(MailSettings.TemplateConfigType.values());
+
+        VaadinCKEditor editorHtml = VaadinCKEditor.create()
+                .withPreset(CKEditorPreset.STANDARD)
+                .withType(CKEditorType.CLASSIC)
+                .withTheme(CKEditorTheme.AUTO)
+                .build();
+        editorHtml.setHeight(64, Unit.EX);
+
+        TextArea editorPlain = new TextArea();
+        editorPlain.setHeight(64, Unit.EX);
+        editorPlain.getStyle().set("font-family", "monospace");
+
+        Div help = new Div(
+                new Text("Add the following placeholders:"),
+                new UnorderedList(
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Recipient's display name</span>"
+                                        .formatted(mailSettings.getVarRcptName())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Sender's display name</span>"
+                                        .formatted(mailSettings.getVarSenderName())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Link to one time URL</span>"
+                                        .formatted(mailSettings.getVarOtpAuthUrl())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> URL's End of Life</span>"
+                                        .formatted(mailSettings.getVarOtpAuthEolUrl())
+                        ))
+                )
+        );
+
+        HorizontalLayout editorLayout = new HorizontalLayout(
+                editorHtml,
+                editorPlain,
+                help
+        );
+        editorLayout.setFlexGrow(4, editorHtml);
+        editorLayout.setFlexGrow(4, editorPlain);
+        editorLayout.setFlexGrow(1, help);
+        editorLayout.setWidthFull();
+
+        binder.forField(urlSetupOtpAuth)
+                .asRequired()
+                .bind(MailSettings::getTemplateOtpAuthUrl, MailSettings::setTemplateOtpAuthUrl);
+        binder.forField(otpAuthTemplateType)
+                .bind(MailSettings::getTemplateOtpAuthType, MailSettings::setTemplateOtpAuthType);
+        binder.forField(editorHtml)
+                .asRequired()
+                .bind(
+                        MailSettings::getTemplateOtpAuthHtml,
+                        MailSettings::setTemplateOtpAuthHtml
+                );
+
+        sendTestOtpAuthButton = new Button("Send Test Link");
+        resetOtpAuthTemplatesButton = new Button("Load default text", e -> {
+            switch (otpAuthTemplateType.getValue()) {
+                case HTML ->
+                    editorHtml.setValue(
+                            mailSettings.getDefaultTemplateOtpAuthHtml()
+                    );
+                case PLAIN ->
+                    editorPlain.setValue(
+                            mailSettings.getDefaultTemplateOtpAuthPlain()
+                    );
+            }
+        });
+        buttons.add(sendTestOtpAuthButton, resetOtpAuthTemplatesButton);
+
+        otpAuthTemplateType.addValueChangeListener(
+                (e) -> {
+                    switch (e.getValue()) {
+                        case HTML -> {
+                            editorHtml.setVisible(true);
+                            editorPlain.setVisible(false);
+                        }
+                        case PLAIN -> {
+                            editorHtml.setVisible(false);
+                            editorPlain.setVisible(true);
+                        }
+                    }
+                }
+        );
+
+        layout.add(
+                urlLayout,
+                otpAuthTemplateType,
+                editorLayout
+        );
+
+        layout.setMargin(
+                false);
+        layout.setPadding(
+                false);
+
+        return layout;
     }
 }
