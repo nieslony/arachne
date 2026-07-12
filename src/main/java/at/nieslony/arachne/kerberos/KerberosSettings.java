@@ -37,6 +37,7 @@ public class KerberosSettings extends AbstractSettingsGroup {
     private boolean enableKrbAuth = false;
     private String keytabPath = "";
     private String servicePrincipal = "HTTP/" + NetUtils.myHostname();
+    private String realm = NetUtils.myDomain().toUpperCase();
 
     public void setDefaultKeytabPath() {
         keytabPath = FolderFactory.getInstance().getDefaultKeytabPath();

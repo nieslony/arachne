@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ExternalUserSource;
@@ -55,7 +56,11 @@ public class LdapUserSource implements ExternalUserSource {
     @Override
     public UserModel findUser(String username) {
         UserSettings userSettings = settings.getSettings(UserSettings.class);
+        KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
+        if (!username.endsWith(kerberosSettings.getRealm())) {
+            username = "%s@%s".formatted(username, kerberosSettings.getRealm());
+        }
 
         UserModel user = userRepository.findByUsernameAndExternalProvider(
                 username,
