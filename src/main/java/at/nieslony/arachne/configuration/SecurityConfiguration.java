@@ -104,10 +104,10 @@ public class SecurityConfiguration {
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
 
-    private static final Pattern otvLandingPattern
-            = Pattern.compile("/otv/(?<id>[0-9]+)");
-    private static final Pattern otvPagePattern
-            = Pattern.compile("/otv/(?<id>[0-9]+)/(?<page>[a-z0-9\\-]+)");
+    private static final Pattern OTV_LANDING_PATTERN
+            = Pattern.compile("/otv/(?<id>[0-9a-fA-F]+)");
+    private static final Pattern OTV_PAGE_PATTERN
+            = Pattern.compile("/otv/(?<id>[0-9a-fA-F]+)/(?<page>[a-z0-9\\-]+)");
 
     @PostConstruct
     public void init() {
@@ -131,37 +131,6 @@ public class SecurityConfiguration {
                             .atCommonLocations()).permitAll();
                     auth.requestMatchers("/icons/**").permitAll();
                     auth.requestMatchers("/otv/**").access(otvAuthManager());
-                    /*                            (Supplier<? extends Authentication> authentication, RequestAuthorizationContext object) -> {
-                                HttpServletRequest req = object.getRequest();
-                                Pattern otvLandingPattern
-                                = Pattern.compile("/otv/(?<id>[0-9]+)");
-                                Pattern otvPagePattern
-                                = Pattern.compile("/otv/(?<id>[0-9]+)/(?<page>[a-z0-9\\-]+)");
-
-                                String path = req.getServletPath();
-
-                                Matcher otvLandingMatcher = otvLandingPattern.matcher(
-                                        path
-                                );
-                                if (otvLandingMatcher.matches()) {
-                                    log.info("Access to landing page %s is granted".formatted(path));
-                                    return new AuthorizationDecision(true);
-                                }
-
-                                Matcher otvPageMatcher = otvPagePattern.matcher(
-                                        path
-                                );
-                                if (otvPageMatcher.matches()) {
-                                    boolean granted = true;
-                                    log.info("Access to page %s: %b: ".formatted(
-                                            otvPageMatcher.group("page"),
-                                            granted
-                                    ));
-                                    return new AuthorizationDecision(granted);
-                                }
-                                log.info("Path %s does not match".formatted(path));
-                                return new AuthorizationDecision(true);
-                            });*/
                 })
                 .csrf(
                         (t) -> {
@@ -436,7 +405,7 @@ public class SecurityConfiguration {
                 HttpServletRequest req = rac.getRequest();
                 String path = req.getServletPath();
 
-                Matcher otvLandingMatcher = otvLandingPattern.matcher(
+                Matcher otvLandingMatcher = OTV_LANDING_PATTERN.matcher(
                         path
                 );
                 if (otvLandingMatcher.matches()) {
@@ -444,7 +413,7 @@ public class SecurityConfiguration {
                     return new AuthorizationDecision(true);
                 }
 
-                Matcher otvPageMatcher = otvPagePattern.matcher(
+                Matcher otvPageMatcher = OTV_PAGE_PATTERN.matcher(
                         path
                 );
                 if (otvPageMatcher.matches()) {

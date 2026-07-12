@@ -17,16 +17,24 @@
  */
 package at.nieslony.arachne.onetimeview;
 
+import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.UserModel;
+import com.vaadin.flow.component.Component;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -42,6 +50,16 @@ public class OneTimeViewService {
 
     @Autowired
     Settings settings;
+
+    Map<Class<? extends Component>, String> otvRoutes;
+
+    public OneTimeViewService() {
+        otvRoutes = Map.of(SetOtpView.class, "set-otp-token");
+    }
+
+    public String getRouteFor(Class<? extends Component> view) {
+        return otvRoutes.get(view);
+    }
 
     public OneTimeViewModel createOneTimeView(String username, String view) {
         OneTimeViewSettings oneTimeViewSettings = settings.getSettings(OneTimeViewSettings.class);
@@ -68,8 +86,53 @@ public class OneTimeViewService {
         return oneTimeViewRepository.save(model);
     }
 
-    public static LocalDate createValidUntil(int days, boolean ignoreWeekends) {
-        LocalDate result = LocalDate.now();
+    public void sendEmail(UserModel user, Class<? extends Component> view)
+            throws MessagingException {
+        MailSettings mailSettings = settings.getSettings(MailSettings.class);
+
+        String viewRoute = otvRoutes.get(view);
+        OneTimeViewModel model = createOneTimeView(user.getUsername(), viewRoute);
+        String url = "%s/otv/%s/%s".formatted(
+                mailSettings.getTemplateOtpAuthUrl(),
+                model.getId(),
+                viewRoute
+        );
+
+        JavaMailSender sender = mailSettings.getMailSender();
+        MimeMessage message = sender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(
+                message,
+                true,
+                "UTF-8"
+        );
+        helper.setFrom(mailSettings.getPrettySenderMailAddress());
+        helper.setTo(user.getEmail());
+        helper.setSubject("Attach OTP Authenticator");
+        helper.setText("", true);
+        switch (mailSettings.getTemplateOtpAuthType()) {
+            case HTML -> {
+                String msg = mailSettings.getTemplateOtpAuthHtml()
+                        .replace(mailSettings.getVarRcptName(), user.getDisplayName())
+                        .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname())
+                        .replace(mailSettings.getVarOtpAuthUrl(), url)
+                        .replace(mailSettings.getVarOtpAuthEolUrl(), model.getValidUntilString());
+                helper.setText(msg, true);
+            }
+            case PLAIN -> {
+                String msg = mailSettings.getTemplateOtpAuthHtml()
+                        .replace(mailSettings.getVarRcptName(), user.getDisplayName())
+                        .replace(mailSettings.getVarSenderName(), mailSettings.getSenderDisplayname())
+                        .replace(mailSettings.getVarOtpAuthUrl(), url)
+                        .replace(mailSettings.getVarOtpAuthEolUrl(), model.getValidUntilString());
+                helper.setText(msg, false);
+            }
+        }
+
+        sender.send(message);
+    }
+
+    public static LocalDateTime createValidUntil(int days, boolean ignoreWeekends) {
+        LocalDateTime result = LocalDateTime.now();
 
         if (ignoreWeekends) {
             int addedDays = 0;

@@ -17,12 +17,16 @@
  */
 package at.nieslony.arachne.onetimeview;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -50,5 +54,18 @@ public class OneTimeViewModel implements Serializable {
     private String username;
 
     @NotNull
-    private LocalDate validUntil;
+    private LocalDateTime validUntil;
+
+    @JsonIgnore
+    public String getValidUntilString() {
+        try {
+            return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(validUntil);
+        } catch (DateTimeException ex) {
+            log.warn("Invalid date/time: %s: %s".formatted(
+                    validUntil.toString(),
+                    ex.getMessage()
+            ));
+            return "???";
+        }
+    }
 }

@@ -73,7 +73,7 @@ public class OneTimeViewOverview extends TabSheet {
         otvList.addColumn(OneTimeViewModel::getView)
                 .setHeader("View")
                 .setSortable(true);
-        otvList.addColumn(OneTimeViewModel::getView)
+        otvList.addColumn(OneTimeViewModel::getValidUntilString)
                 .setHeader("Valid until")
                 .setSortable(true);
         otvList.setItems(oneTimeViewRepository.findAll());

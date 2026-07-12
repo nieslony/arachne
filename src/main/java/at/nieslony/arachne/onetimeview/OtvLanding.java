@@ -22,11 +22,14 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteConfiguration;
-import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -40,22 +43,32 @@ public class OtvLanding
         extends Component
         implements HasUrlParameter<String> {
 
-    private String otvId;
+    @Autowired
+    OneTimeViewRepository oneTimeViewRepository;
 
     public OtvLanding() {
     }
 
     @Override
     public void setParameter(BeforeEvent be, String otvId) {
-        this.otvId = otvId;
         log.info("Setting otvId: " + otvId);
+        Optional<OneTimeViewModel> model = oneTimeViewRepository.findById(otvId);
 
-        VaadinSession session = VaadinSession.getCurrent();
-        session.setAttribute("otvId", otvId);
-        session.setAttribute("otvUser", "claas@NIESLONY.INTERNAL");
+        if (!model.isPresent()) {
+            log.error("ID %s not found".formatted(otvId));
+            throw new NotFoundException();
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(model.get().getValidUntil())) {
+            log.error("One Time View is expired: " + model.get().toString());
+            throw new NotFoundException();
+        }
 
-        String redirect = "/otv/%s/set-otp-token".formatted(otvId);
-        //String redirect = "/otv/%s/login".formatted(otvId);
+        String redirect = "/otv/%s/%s"
+                .formatted(
+                        otvId,
+                        model.get().getView()
+                );
         log.info("Redirecting from %s to %s".formatted(otvId, redirect));
 
         if (!RouteConfiguration.forSessionScope().isRouteRegistered(SetOtpView.class)) {

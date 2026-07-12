@@ -19,6 +19,8 @@ package at.nieslony.arachne.mail;
 import at.nieslony.arachne.ViewTemplate;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
+import at.nieslony.arachne.onetimeview.OneTimeViewService;
+import at.nieslony.arachne.onetimeview.SetOtpView;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.settings.Settings;
@@ -64,6 +66,7 @@ import com.wontlost.ckeditor.CKEditorPreset;
 import com.wontlost.ckeditor.CKEditorTheme;
 import com.wontlost.ckeditor.CKEditorType;
 import com.wontlost.ckeditor.VaadinCKEditor;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.IOException;
@@ -74,6 +77,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -90,28 +94,32 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @Slf4j
 public class MailSettingsView extends VerticalLayout {
 
-    private final UserRepository userRepository;
-    private final MailSettingsRestController mailSettingsRestController;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private MailSettingsRestController mailSettingsRestController;
+
+    @Autowired
+    private Settings settings;
+
+    @Autowired
+    OneTimeViewService oneTimeViewService;
 
     private MailSettings mailSettings = null;
-    private final Dialog sendTestMailDialog;
-    private final Dialog sendTestConfigDialog;
-    private final Binder<MailSettings> binder;
+
+    private Dialog sendTestMailDialog;
+    private Dialog sendTestConfigDialog;
+    private Binder<MailSettings> binder;
     private Button sendTestMailButton;
     private Button sendTestConfigButton;
     private Button resetConfigTemplatesButton;
     private Button sendTestOtpAuthButton;
     private Button resetOtpAuthTemplatesButton;
-    private final HorizontalLayout buttons;
+    private HorizontalLayout buttons;
 
-    public MailSettingsView(
-            Settings settings,
-            UserRepository userRepository,
-            MailSettingsRestController mailSettingsRestController
-    ) {
-        this.userRepository = userRepository;
-        this.mailSettingsRestController = mailSettingsRestController;
-
+    @PostConstruct
+    public void init() {
         mailSettings = settings.getSettings(MailSettings.class);
         binder = new Binder<>();
         sendTestMailDialog = createSendTestMailDialog();
@@ -238,6 +246,56 @@ public class MailSettingsView extends VerticalLayout {
         layout.setWidthFull();
 
         return layout;
+    }
+
+    private Dialog createSendTestOtpAuthDialog() {
+        Dialog dlg = new Dialog();
+        dlg.setHeaderTitle("Send Test OTH Auth Mail");
+
+        EmailField recipiend = new EmailField("Recipient");
+        recipiend.setWidth(20, Unit.EM);
+        recipiend.setRequired(true);
+        recipiend.setValueChangeMode(ValueChangeMode.EAGER);
+        recipiend.setErrorMessage("Not a valid E-Mail Address");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserModel you = userRepository.findByUsername(authentication.getName());
+        if (you != null && you.getEmail() != null) {
+            recipiend.setValue(you.getEmail());
+        }
+
+        dlg.add(recipiend);
+
+        Button cancelButton = new Button("Cancel", (be) -> dlg.close());
+        Button sendButton = new Button("Send", (be) -> {
+            try {
+                oneTimeViewService.sendEmail(you, SetOtpView.class);
+            } catch (MessagingException ex) {
+                log.error("Cannot send email: " + ex.getMessage());
+                ShowNotification.error("Cannot send e-mail", ex.getMessage());
+            }
+            dlg.close();
+        });
+        sendButton.addThemeVariants(ButtonVariant.PRIMARY);
+        sendButton.setAutofocus(true);
+        sendButton.setDisableOnClick(true);
+        sendButton.setEnabled(false);
+
+        dlg.getFooter().add(cancelButton, sendButton);
+
+        recipiend.addValueChangeListener((var vce) -> {
+            sendButton.setEnabled(
+                    !vce.getValue().isEmpty()
+                    && !recipiend.isInvalid()
+            );
+        });
+
+        dlg.addOpenedChangeListener((t) -> {
+            if (t.isOpened() && !recipiend.isEmpty() && !recipiend.isInvalid()) {
+                sendButton.setEnabled(true);
+            }
+        });
+
+        return dlg;
     }
 
     private Dialog createSendTestMailDialog() {
@@ -646,7 +704,10 @@ public class MailSettingsView extends VerticalLayout {
                         MailSettings::setTemplateOtpAuthHtml
                 );
 
-        sendTestOtpAuthButton = new Button("Send Test Link");
+        sendTestOtpAuthButton = new Button("Send Test Link", e -> {
+            Dialog dlg = createSendTestOtpAuthDialog();
+            dlg.open();
+        });
         resetOtpAuthTemplatesButton = new Button("Load default text", e -> {
             switch (otpAuthTemplateType.getValue()) {
                 case HTML ->
@@ -682,10 +743,8 @@ public class MailSettingsView extends VerticalLayout {
                 editorLayout
         );
 
-        layout.setMargin(
-                false);
-        layout.setPadding(
-                false);
+        layout.setMargin(false);
+        layout.setPadding(false);
 
         return layout;
     }
