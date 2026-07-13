@@ -10,6 +10,8 @@ import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.onetimeview.OneTimeViewModel;
+import at.nieslony.arachne.onetimeview.OneTimeViewRepository;
 import at.nieslony.arachne.openvpn.OpenVpnController;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetails;
@@ -17,6 +19,7 @@ import at.nieslony.arachne.users.InternalUserDetailsService;
 import at.nieslony.arachne.users.LdapUserDetailsService;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
+import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.Filter;
@@ -27,6 +30,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -101,6 +106,9 @@ public class SecurityConfiguration {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    OneTimeViewRepository oneTimeViewRepository;
+
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
 
@@ -148,10 +156,6 @@ public class SecurityConfiguration {
                         requestAttributeAuthenticationFilter(authenticationManager),
                         BasicAuthenticationFilter.class
                 )
-                /*                .addFilterBefore(
-                        otvAuthorizationFilter(),
-                        AuthorizationFilter.class
-                )*/
                 .exceptionHandling(
                         (exceptions) -> {
                             if (kerberosSettings.isEnableKrbAuth()) {
@@ -399,7 +403,7 @@ public class SecurityConfiguration {
         return new AuthorizationManager<RequestAuthorizationContext>() {
             @Override
             public AuthorizationResult authorize(
-                    Supplier authentication,
+                    Supplier authSupplier,
                     RequestAuthorizationContext rac
             ) {
                 HttpServletRequest req = rac.getRequest();
@@ -417,7 +421,30 @@ public class SecurityConfiguration {
                         path
                 );
                 if (otvPageMatcher.matches()) {
-                    boolean granted = true;
+                    Optional<OneTimeViewModel> modelOpt
+                            = oneTimeViewRepository.findById(otvPageMatcher.group("id"));
+                    OneTimeViewModel model = modelOpt.orElseThrow(
+                            NotFoundException::new
+                    );
+
+                    boolean granted;
+                    if (authSupplier.get() instanceof AbstractAuthenticationToken user) {
+                        granted = user.getName().equals(model.getUsername());
+                        log.info(
+                                "Required username: %s authenticated as %s: access granted: %b"
+                                        .formatted(
+                                                model.getUsername(),
+                                                user.getName(),
+                                                granted
+                                        )
+                        );
+                    } else {
+                        log.info(
+                                "Unexpected Authentication class: "
+                                + authSupplier.get().getClass().getName()
+                        );
+                        granted = false;
+                    }
                     log.info("Access to page %s: %b: ".formatted(
                             otvPageMatcher.group("page"),
                             granted
