@@ -92,10 +92,9 @@ public class OneTimeViewService {
 
         String viewRoute = otvRoutes.get(view);
         OneTimeViewModel model = createOneTimeView(user.getUsername(), viewRoute);
-        String url = "%s/otv/%s/%s".formatted(
+        String url = "%s/otv/%s".formatted(
                 mailSettings.getTemplateOtpAuthUrl(),
-                model.getId(),
-                viewRoute
+                model.getId()
         );
 
         JavaMailSender sender = mailSettings.getMailSender();
