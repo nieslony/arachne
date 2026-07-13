@@ -42,10 +42,10 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -61,7 +61,6 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.wontlost.ckeditor.CKEditorPreset;
 import com.wontlost.ckeditor.CKEditorTheme;
 import com.wontlost.ckeditor.CKEditorType;
@@ -70,6 +69,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.MatchResult;
@@ -174,6 +174,8 @@ public class MailSettingsView extends VerticalLayout {
         setMargin(false);
         setSpacing(false);
         setWidthFull();
+        setHeightFull();
+        setFlexGrow(1, tabs);
 
         binder.setBean(mailSettings);
         binder.validate();
@@ -422,76 +424,58 @@ public class MailSettingsView extends VerticalLayout {
                 MailSettings::setTemplateConfigType
         );
 
-        VaadinCKEditor templateContentHtmlField = VaadinCKEditor.create()
+        VaadinCKEditor editorHtml = VaadinCKEditor.create()
                 .withPreset(CKEditorPreset.STANDARD)
                 .withType(CKEditorType.CLASSIC)
                 .withTheme(CKEditorTheme.AUTO)
                 .build();
 
-        templateContentHtmlField.setWidthFull();
-        templateContentHtmlField.addClassNames(
-                LumoUtility.Background.CONTRAST_10
-        );
-        templateContentHtmlField.setVisible(false);
-        binder.forField(templateContentHtmlField)
+        editorHtml.setWidthFull();
+        editorHtml.setVisible(false);
+        binder.forField(editorHtml)
                 .withValidator(contentValidator())
                 .bind(
                         MailSettings::getTemplateConfigHtml,
                         MailSettings::setTemplateConfigHtml
                 );
 
-        TextArea templateContentPlainField = new TextArea();
-        templateContentPlainField.setHeight(64, Unit.EX);
-        templateContentPlainField.setWidthFull();
-        binder.forField(templateContentPlainField)
+        TextArea editorPlain = new TextArea();
+        editorPlain.setHeight(64, Unit.EX);
+        editorPlain.setWidthFull();
+        binder.forField(editorPlain)
                 .withValidator(contentValidator())
                 .bind(
                         MailSettings::getTemplateConfigPlain,
                         MailSettings::setTemplateConfigPlain
                 );
-        templateContentPlainField.setVisible(false);
-        templateContentPlainField.getStyle().set("font-family", "monospace");
+        editorPlain.setVisible(false);
+        editorPlain.getStyle().set("font-family", "monospace");
 
-        VerticalLayout templateLayout = new VerticalLayout(
-                templateType,
-                templateContentHtmlField,
-                templateContentPlainField
-        );
-        templateLayout.setDefaultHorizontalComponentAlignment(
-                FlexComponent.Alignment.STRETCH
-        );
-
-        templateLayout.setWidthFull();
-        templateLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-
-        UnorderedList helper = new UnorderedList();
-        helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Recipient's display name</span>"
-                        .formatted(mailSettings.getVarRcptName())
-        )));
-        helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Sender's display name</span>"
-                        .formatted(mailSettings.getVarSenderName())
-        )));
-        helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Linux instructions</span>"
-                        .formatted(mailSettings.getVarLinuxInstructions())
-        )));
-        helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Network Manager Configuration Name</span>"
-                        .formatted(mailSettings.getVarNmConnection())
-        )));
-        helper.add(new ListItem(new Html(
-                "<span><i>%s</i> Attachment Name</span>"
-                        .formatted(mailSettings.getVarAttachnement())
-        )));
-
-        VerticalLayout helperLayout = new VerticalLayout(
+        Div help = new Div(
                 new Text("Add the following place holders"),
-                helper
+                new UnorderedList(
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Recipient's display name</span>"
+                                        .formatted(mailSettings.getVarRcptName())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Sender's display name</span>"
+                                        .formatted(mailSettings.getVarSenderName())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Linux instructions</span>"
+                                        .formatted(mailSettings.getVarLinuxInstructions())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Network Manager Configuration Name</span>"
+                                        .formatted(mailSettings.getVarNmConnection())
+                        )),
+                        new ListItem(new Html(
+                                "<span><i>%s</i> Attachment Name</span>"
+                                        .formatted(mailSettings.getVarAttachnement())
+                        ))
+                )
         );
-        helperLayout.setMargin(false);
-        helperLayout.setSpacing(false);
 
         sendTestConfigButton = new Button("Send Test Configuration", (e) -> {
             sendTestConfigDialog.open();
@@ -499,11 +483,11 @@ public class MailSettingsView extends VerticalLayout {
         resetConfigTemplatesButton = new Button("Load default Text", (e) -> {
             switch (templateType.getValue()) {
                 case HTML ->
-                    templateContentHtmlField.setValue(
+                    editorHtml.setValue(
                             mailSettings.getDefaultTemplateConfigHtml()
                     );
                 case PLAIN ->
-                    templateContentPlainField.setValue(
+                    editorPlain.setValue(
                             mailSettings.getDefaultTemplateConfigPlain()
                     );
             }
@@ -513,27 +497,38 @@ public class MailSettingsView extends VerticalLayout {
         templateType.addValueChangeListener((e) -> {
             (switch (e.getValue()) {
                 case HTML:
-                    yield templateContentHtmlField;
+                    yield editorHtml;
                 case PLAIN:
-                    yield templateContentPlainField;
+                    yield editorPlain;
             }).setVisible(true);
             if (e.getOldValue() != null) {
                 (switch (e.getOldValue()) {
                     case HTML:
-                        yield templateContentHtmlField;
+                        yield editorHtml;
                     case PLAIN:
-                        yield templateContentPlainField;
+                        yield editorPlain;
                 }).setVisible(false);
             }
         });
 
-        HorizontalLayout layout = new HorizontalLayout(
-                templateLayout,
-                helperLayout
+        HorizontalLayout editorLayout = new HorizontalLayout(
+                editorPlain,
+                editorHtml,
+                help
         );
-        layout.setWidthFull();
-        layout.setFlexShrink(1, templateLayout);
-        layout.setFlexShrink(3, helperLayout);
+        editorLayout.setFlexGrow(4, editorHtml, editorPlain);
+        editorLayout.setFlexGrow(1, help);
+        editorLayout.setVerticalComponentAlignment(Alignment.STRETCH, editorHtml, editorPlain);
+        editorLayout.setWidthFull();
+
+        VerticalLayout layout = new VerticalLayout(
+                templateType,
+                editorLayout
+        );
+        layout.setFlexGrow(1, editorLayout);
+        layout.setMargin(false);
+        layout.setPadding(false);
+        layout.setHeightFull();
 
         return layout;
     }
@@ -626,17 +621,23 @@ public class MailSettingsView extends VerticalLayout {
 
         ComboBox<String> urlSetupOtpAuth = new ComboBox<>("URL to Authenticator Setup");
         urlSetupOtpAuth.setAllowCustomValue(true);
-        List<String> items = List.of(
+        List<String> items = new LinkedList<>(List.of(
                 Objects.requireNonNullElse(NetUtils.myHostname(), ""),
                 Objects.requireNonNullElse(NetUtils.myPublicIpAddress(), ""),
                 Objects.requireNonNullElse(NetUtils.myPublicHostname(), "")
-        );
+        ));
         urlSetupOtpAuth.setItems(items.stream()
                 .filter(v -> !v.isEmpty())
                 .sorted()
                 .map(v -> "https://%s/arachne".formatted(v))
                 .toList()
         );
+        urlSetupOtpAuth.addCustomValueSetListener(e -> {
+            String customValue = e.getDetail();
+            items.add(customValue);
+            urlSetupOtpAuth.setItems(items);
+            urlSetupOtpAuth.setValue(customValue);
+        });
         HorizontalLayout urlLayout = new HorizontalLayout(
                 urlSetupOtpAuth,
                 new Text("/otv")
@@ -648,16 +649,15 @@ public class MailSettingsView extends VerticalLayout {
         RadioButtonGroup<MailSettings.TemplateConfigType> otpAuthTemplateType
                 = new RadioButtonGroup<>();
         otpAuthTemplateType.setItems(MailSettings.TemplateConfigType.values());
+        otpAuthTemplateType.addThemeVariants(RadioGroupVariant.AURA_HORIZONTAL);
 
         VaadinCKEditor editorHtml = VaadinCKEditor.create()
                 .withPreset(CKEditorPreset.STANDARD)
                 .withType(CKEditorType.CLASSIC)
                 .withTheme(CKEditorTheme.AUTO)
                 .build();
-        editorHtml.setHeight(64, Unit.EX);
 
         TextArea editorPlain = new TextArea();
-        editorPlain.setHeight(64, Unit.EX);
         editorPlain.getStyle().set("font-family", "monospace");
 
         Div help = new Div(
@@ -683,13 +683,13 @@ public class MailSettingsView extends VerticalLayout {
         );
 
         HorizontalLayout editorLayout = new HorizontalLayout(
-                editorHtml,
                 editorPlain,
+                editorHtml,
                 help
         );
-        editorLayout.setFlexGrow(4, editorHtml);
-        editorLayout.setFlexGrow(4, editorPlain);
+        editorLayout.setFlexGrow(4, editorHtml, editorPlain);
         editorLayout.setFlexGrow(1, help);
+        editorLayout.setVerticalComponentAlignment(Alignment.STRETCH, editorHtml, editorPlain);
         editorLayout.setWidthFull();
 
         binder.forField(urlSetupOtpAuth)
@@ -742,9 +742,10 @@ public class MailSettingsView extends VerticalLayout {
                 otpAuthTemplateType,
                 editorLayout
         );
-
+        layout.setFlexGrow(1, editorLayout);
         layout.setMargin(false);
         layout.setPadding(false);
+        layout.setHeightFull();
 
         return layout;
     }
