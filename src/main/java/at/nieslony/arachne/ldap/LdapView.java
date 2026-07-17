@@ -54,7 +54,6 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.IOException;
 import java.util.HashMap;
@@ -187,12 +186,10 @@ public class LdapView extends VerticalLayout {
         );
         usersFormLayout.setColspan(usersOuField, 2);
         NativeLabel usersFormLabel = new NativeLabel("Users");
-        usersFormLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout usersLayout = new VerticalLayout(
                 usersFormLabel,
                 usersFormLayout
         );
-        usersLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         TextField groupsOu = new TextField("Groups OU");
         binder.forField(groupsOu)
@@ -247,12 +244,10 @@ public class LdapView extends VerticalLayout {
         );
         groupsFormLayout.setColspan(groupsOu, 2);
         NativeLabel groupsLabel = new NativeLabel("Groups");
-        groupsLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout groupsLayout = new VerticalLayout(
                 groupsLabel,
                 groupsFormLayout
         );
-        groupsLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         MenuBar loadDefaultsMenu = new MenuBar();
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");

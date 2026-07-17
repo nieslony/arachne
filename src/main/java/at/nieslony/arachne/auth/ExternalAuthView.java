@@ -48,7 +48,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
 import java.io.IOException;
@@ -98,19 +97,8 @@ public class ExternalAuthView extends VerticalLayout {
         if (!ldapSettings.isEnableLdapUserSource()) {
 
             Div warning = new Div();
-            warning.addClassNames(
-                    LumoUtility.Background.WARNING_10,
-                    LumoUtility.TextColor.WARNING,
-                    LumoUtility.Padding.MEDIUM,
-                    LumoUtility.BorderColor.WARNING,
-                    LumoUtility.Border.ALL
-            );
             Icon icon = VaadinIcon.WARNING.create();
             Span warningLbl = new Span("Warning:");
-            warningLbl.addClassNames(
-                    LumoUtility.FontWeight.BOLD,
-                    LumoUtility.Padding.SMALL
-            );
             Text warningTxt = new Text(
                     """
                     LDAP user source not enabled.
@@ -118,7 +106,6 @@ public class ExternalAuthView extends VerticalLayout {
                     """
             );
             warning.add(icon, warningLbl, warningTxt);
-            warning.addClassNames(LumoUtility.TextColor.WARNING);
             add(warning);
         }
 

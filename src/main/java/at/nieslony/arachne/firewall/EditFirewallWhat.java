@@ -11,15 +11,10 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.popover.Popover;
-import com.vaadin.flow.component.popover.PopoverPosition;
-import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.Binder;
@@ -32,7 +27,6 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.shared.Registration;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -209,48 +203,6 @@ class EditFirewallWhat extends AbstractCompositeField<VerticalLayout, EditFirewa
             ValidationStatusChangeListener<FirewallWhat> listener) {
         validationStatusListeners.add(listener);
         return () -> validationStatusListeners.remove(listener);
-    }
-
-    private Component createServiceInfo(FirewalldService service, Component parent) {
-        Popover popover = new Popover();
-        popover.setTarget(parent);
-        popover.setPosition(PopoverPosition.END);
-        popover.addThemeVariants(PopoverVariant.ARROW);
-        popover.setOpenOnClick(false);
-        popover.setOpenOnHover(true);
-        popover.setWidth("32em");
-
-        Div poTitle = new Div(service.getShortDescription());
-        poTitle.addClassNames(LumoUtility.FontWeight.BOLD);
-
-        UnorderedList poPorts = new UnorderedList();
-        if (service.getProtocolPorts() != null) {
-            service.getProtocolPorts().forEach((port) -> {
-                poPorts.add(new ListItem(port.toString()));
-            });
-        }
-        service.getIncludes().forEach(include -> {
-            FirewalldService incSrv = FirewalldService.getService(include);
-            incSrv.getProtocolPorts().forEach(port -> {
-                String label = "%s (%s)".formatted(
-                        port.toString(),
-                        incSrv.getShortDescription()
-                );
-                poPorts.add(new ListItem(label));
-            });
-        });
-
-        Div poDescription = new Div(service.getLongDescription());
-        poDescription.addClassNames(LumoUtility.FontSize.SMALL);
-        poDescription.addClassNames(LumoUtility.TextAlignment.JUSTIFY);
-
-        popover.add(
-                poTitle,
-                new Text("Ports:"), poPorts,
-                poDescription
-        );
-
-        return popover;
     }
 
     private Renderer<FirewalldService> createFirewalldServiceRenderer() {

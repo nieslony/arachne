@@ -28,7 +28,6 @@ import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.ConfigureOtpTokenDialog;
 import at.nieslony.arachne.users.EditYourselfDialog;
-import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
 import com.vaadin.flow.component.Component;
@@ -53,7 +52,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
-import com.vaadin.flow.theme.lumo.Lumo;
 import jakarta.annotation.security.PermitAll;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -152,14 +150,6 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 });
             } else {
                 log.info("User %s has no avatar".formatted(user.getUsername()));
-            }
-
-            if (user.getThemeVariant() != UserModel.ThemeVariant.Auto) {
-                var js = "document.documentElement.setAttribute('theme', $0)";
-                getElement().executeJs(
-                        js,
-                        user.getThemeVariant() == UserModel.ThemeVariant.Dark ? Lumo.DARK : Lumo.LIGHT
-                );
             }
         } else {
             log.warn("Cannot find user %s in user repository".formatted(username));
@@ -272,7 +262,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 VaadinIcon.LIST.create());
         apiItem.setOpenInNewBrowserTab(true);
         servicesNav.addItem(new SideNavItem("Mail Settings", MailSettingsView.class,
-                        VaadinIcon.MAILBOX.create()),
+                VaadinIcon.MAILBOX.create()),
                 new SideNavItem("One Time Views", OneTimeViewOverview.class,
                         VaadinIcon.CLOCK.create()),
                 new SideNavItem("Integrated Tomcat", TomcatView.class,

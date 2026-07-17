@@ -202,7 +202,7 @@ public class TotpController {
         H4 attachAuthenticatorHeader = new H4("Step 4: Attach Authenticator");
         Button attachAuthenticatorButton = new Button("Attach Authenticator");
         attachAuthenticatorButton.setEnabled(false);
-        attachAuthenticatorButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        attachAuthenticatorButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         layout.add(
                 installHeader, installInstructions,

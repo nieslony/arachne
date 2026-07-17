@@ -35,7 +35,6 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.function.SerializablePredicate;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -286,10 +285,6 @@ class FirewallRulesEditor extends VerticalLayout {
         items.forEach((w) -> {
             detailItems.add(new ListItem(w.toString()));
         });
-        detailItems.addClassNames(
-                LumoUtility.Padding.NONE,
-                LumoUtility.Margin.NONE
-        );
 
         String summaryText = "%s...(%d)".formatted(
                 items.toArray()[0].toString(),

@@ -266,7 +266,6 @@ public abstract class ConfigUploadThread extends Thread {
                     ui.access(() -> {
                         var curIcon = cmd.layout.getComponentAt(0);
                         var newIcon = VaadinIcon.ARROWS_LONG_RIGHT.create();
-                        newIcon.addClassName("--lumo-primary-color");
                         cmd.layout.replace(curIcon, newIcon);
                     });
                     var ret = cmd.command.call();
@@ -279,7 +278,7 @@ public abstract class ConfigUploadThread extends Thread {
                     ui.access(() -> {
                         var curIcon = cmd.layout.getComponentAt(0);
                         var newIcon = VaadinIcon.CHECK.create();
-                        newIcon.addClassName("--lumo-success-color");
+                        newIcon.addClassName("aura-accent-green");
                         cmd.layout.replace(curIcon, newIcon);
                     });
                 }

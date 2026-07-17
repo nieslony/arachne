@@ -142,7 +142,7 @@ public class UserModel implements Serializable {
     @Column
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private ThemeVariant themeVariant = ThemeVariant.Auto;
+    private ThemeVariant themeVariant = ThemeVariant.Mixed;
 
     @JsonIgnore
     public boolean hasAvatar() {
