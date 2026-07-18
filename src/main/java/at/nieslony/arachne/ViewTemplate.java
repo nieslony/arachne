@@ -36,7 +36,6 @@ import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
-import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -62,7 +61,6 @@ import org.springframework.security.core.userdetails.UserDetails;
  *
  * @author claas
  */
-@JsModule("./os-theme-switcher.js")
 @PermitAll
 @Slf4j
 public class ViewTemplate extends AppLayout implements HasDynamicTitle {
