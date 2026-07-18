@@ -18,14 +18,10 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.utils.FolderFactory;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.popover.PopoverVariant;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -274,21 +270,13 @@ public class FirewalldService {
     }
 
     public Component createInfoPopover(Component parent) {
-        Popover popover = new Popover();
-        popover.setTarget(parent);
-        popover.setPosition(PopoverPosition.END);
-        popover.addThemeVariants(PopoverVariant.ARROW);
-        popover.setOpenOnClick(false);
-        popover.setOpenOnHover(true);
-        popover.setWidth("32em");
+        StringBuilder sb = new StringBuilder();
+        sb.append("##### %s\n\n".formatted(getShortDescription()));
+        sb.append("Ports\n");
 
-        Div poTitle = new Div(getShortDescription());
-        poTitle.addClassNames(LumoUtility.FontWeight.BOLD);
-
-        UnorderedList poPorts = new UnorderedList();
         if (getProtocolPorts() != null) {
             getProtocolPorts().forEach((port) -> {
-                poPorts.add(new ListItem(port.toString()));
+                sb.append("* %s\n".formatted(port.toString()));
             });
         }
         getIncludes().forEach(include -> {
@@ -298,19 +286,20 @@ public class FirewalldService {
                         port.toString(),
                         incSrv.getShortDescription()
                 );
-                poPorts.add(new ListItem(label));
+                sb.append("* %s\n".formatted(label));
             });
         });
+        sb.append("\n");
+        sb.append(getLongDescription());
 
-        Div poDescription = new Div(getLongDescription());
-        poDescription.addClassNames(LumoUtility.FontSize.SMALL);
-        poDescription.addClassNames(LumoUtility.TextAlignment.JUSTIFY);
-
-        popover.add(
-                poTitle,
-                new Text("Ports:"), poPorts,
-                poDescription
-        );
+        Popover popover = new Popover();
+        popover.setTarget(parent);
+        popover.setPosition(PopoverPosition.END);
+        popover.addThemeVariants(PopoverVariant.ARROW);
+        popover.setOpenOnClick(false);
+        popover.setOpenOnHover(true);
+        popover.setWidth("32em");
+        popover.add(new Markdown(sb.toString()));
 
         return popover;
     }

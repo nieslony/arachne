@@ -30,10 +30,8 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -49,7 +47,6 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinServletRequest;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -440,16 +437,6 @@ public class OpenVpnUserView extends VerticalLayout {
     private Component createDnsPage() {
         HorizontalLayout layout = new HorizontalLayout();
 
-        ListBox<String> pushDnsServersField = new ListBox<>();
-        pushDnsServersField.setHeight(30, Unit.EX);
-        pushDnsServersField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
-        NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
-        pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-
         EditableListBox editDnsServerField = new EditableListBox("Push DNS Servers") {
             @Override
             protected Validator<String> getValidator() {
@@ -542,6 +529,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 )
                 .filter(rem -> rem != null);
         var l = Stream.concat(privateStream, publicStream)
+                .filter(v -> v.getRemoteHost() != null)
                 .sorted((vr1, vr2) -> {
                     int compHostNames = vr1.getRemoteHost().compareTo(vr2.getRemoteHost());
                     if (compHostNames != 0) {

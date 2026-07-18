@@ -42,7 +42,6 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.text.DateFormat;
 import java.time.LocalDate;
@@ -95,10 +94,7 @@ public class TaskView
         buttonBar.addToStart(menuBar);
 
         Button autoRefresh = new Button("Autorefresh");
-        autoRefresh.addClassNames(
-                LumoUtility.Background.PRIMARY,
-                LumoUtility.TextColor.PRIMARY_CONTRAST
-        );
+        autoRefresh.addThemeVariants(ButtonVariant.PRIMARY);
         buttonBar.addToEnd(autoRefresh);
 
         refreshInterval = new ComboBox<>();
@@ -207,16 +203,10 @@ public class TaskView
         autoRefresh.addClickListener(e -> {
             if (refreshInterval.isEnabled()) {
                 refreshInterval.setEnabled(false);
-                autoRefresh.removeClassNames(
-                        LumoUtility.Background.PRIMARY,
-                        LumoUtility.TextColor.PRIMARY_CONTRAST
-                );
+                autoRefresh.removeThemeVariants(ButtonVariant.PRIMARY);
             } else {
                 refreshInterval.setEnabled(true);
-                autoRefresh.addClassNames(
-                        LumoUtility.Background.PRIMARY,
-                        LumoUtility.TextColor.PRIMARY_CONTRAST
-                );
+                autoRefresh.addThemeVariants(ButtonVariant.PRIMARY);
             }
             scheduleRefresh();
         });

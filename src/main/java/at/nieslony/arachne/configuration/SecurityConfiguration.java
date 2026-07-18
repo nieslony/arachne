@@ -138,6 +138,7 @@ public class SecurityConfiguration {
                     auth.requestMatchers(PathRequest.toStaticResources()
                             .atCommonLocations()).permitAll();
                     auth.requestMatchers("/icons/**").permitAll();
+                    auth.requestMatchers("/theme/**").permitAll();
                     auth.requestMatchers("/otv/**").access(otvAuthManager());
                 })
                 .csrf(

@@ -49,7 +49,7 @@ public class ShowNotification {
         Notification notification = createNotification(
                 VaadinIcon.CHECK_CIRCLE,
                 headerText,
-                "var(--lumo-success-text-color)",
+                "var(--aura-green-text)",
                 msg);
         notification.setDuration(10000);
 
@@ -72,7 +72,7 @@ public class ShowNotification {
         Notification notification = createNotification(
                 VaadinIcon.WARNING,
                 headerText,
-                "var(--lumo-base-text-color)",
+                "var(--aura-red-text)",
                 msg);
         notification.addThemeVariants(NotificationVariant.ERROR);
 

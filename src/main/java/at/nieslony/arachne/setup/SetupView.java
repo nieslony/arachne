@@ -35,7 +35,6 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.server.streams.UploadHandler;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -462,7 +461,7 @@ public class SetupView extends Main {
                 """);
 
         finishError = new NativeLabel("There are errors validating input. Please check");
-        finishError.addClassName(LumoUtility.TextColor.ERROR);
+        finishError.addClassName("aura-accent-red");
 
         finish = new Button("Finish");
         finish.setDisableOnClick(true);

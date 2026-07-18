@@ -4,10 +4,6 @@
  */
 package at.nieslony.arachne.firewall;
 
-import static at.nieslony.arachne.firewall.FirewallWhere.Type.Hostname;
-import static at.nieslony.arachne.firewall.FirewallWhere.Type.MxRecord;
-import static at.nieslony.arachne.firewall.FirewallWhere.Type.ServiceRecord;
-import static at.nieslony.arachne.firewall.FirewallWhere.Type.Subnet;
 import at.nieslony.arachne.utils.net.DnsServiceName;
 import at.nieslony.arachne.utils.net.NetMask;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -137,13 +133,14 @@ class EditFirewallWhere extends AbstractCompositeField<VerticalLayout, EditFirew
         serviceRecNameField.setWidth(10, Unit.EM);
         serviceRecNameField.setItemLabelGenerator(srv -> srv.name());
         serviceRecNameField.setVisible(false);
+
         serviceRecNameField.setRenderer(
                 LitRenderer.<DnsServiceName>of(
                         """
                         <div>
                             ${item.name}
-                            <div style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">
-                                ${item.description}
+                            <div style=\"font-size: var(--aura-font-size-ss); color: var(--aura-secondary-text-color);\">
+                                <i>${item.description}</i>
                             </div>
                         </div>
                     """)
@@ -275,6 +272,7 @@ class EditFirewallWhere extends AbstractCompositeField<VerticalLayout, EditFirew
     }
 
     @Override
+
     protected void setPresentationValue(FirewallWhere value) {
         if (value.getServiceRecName() == null || value.getServiceRecName().isEmpty()) {
             value.setServiceRecName(

@@ -76,9 +76,6 @@ public class GenericEditableListBox<
 
         itemsField = new ListBox<>();
         itemsField.setHeight(16, Unit.EM);
-        itemsField.getStyle()
-                .setBorder("1px solid var(--vaadin-border-color)")
-                .setBackground("var(--vaadin-background-color)");
         itemsField.setWidthFull();
 
         if (editField instanceof HasValueChangeMode hvm) {
@@ -262,8 +259,6 @@ public class GenericEditableListBox<
                 downButton.setEnabled(false);
             }
         });
-
-        getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
     }
 
     protected Validator<T> getValidator() {

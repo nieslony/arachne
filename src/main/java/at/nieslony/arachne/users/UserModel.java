@@ -11,6 +11,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,7 +54,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class UserModel implements Serializable {
 
     public enum ThemeVariant {
-        Dark("Dark"), Light("Light"), Auto("Auto detect");
+        Dark("Dark"), Light("Light"), Auto("Auto detect"), Mixed("Mixed");
 
         ThemeVariant(String descr) {
             this.descr = descr;
@@ -139,7 +141,8 @@ public class UserModel implements Serializable {
 
     @Column
     @Builder.Default
-    private ThemeVariant themeVariant = ThemeVariant.Auto;
+    @Enumerated(EnumType.STRING)
+    private ThemeVariant themeVariant = ThemeVariant.Mixed;
 
     @JsonIgnore
     public boolean hasAvatar() {
@@ -205,6 +208,7 @@ public class UserModel implements Serializable {
             this.avatar = user.avatar;
             this.avatarSource = user.getAvatarSource();
         }
+        this.themeVariant = user.themeVariant;
     }
 
     @JsonIgnore
