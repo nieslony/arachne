@@ -12,7 +12,7 @@ import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.onetimeview.OneTimeViewModel;
 import at.nieslony.arachne.onetimeview.OneTimeViewRepository;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.InternalUserDetailsService;
@@ -98,7 +98,7 @@ public class SecurityConfiguration {
     BearerTokenAuthFilter bearerTokenAuthFilter;
 
     @Autowired
-    OpenVpnController openVpnController;
+    OpenVpnService openVpnController;
 
     @Autowired
     TotpController totpController;

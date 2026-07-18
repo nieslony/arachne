@@ -41,15 +41,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @Slf4j
-public class FirewallController {
+public class FirewallService {
 
     @Autowired
     FirewallRuleRepository firewallRuleRepository;
@@ -66,7 +66,7 @@ public class FirewallController {
     MessageDigest sha256Digest;
     private byte[] userConfigChecksum = new byte[]{};
 
-    public FirewallController() throws NoSuchAlgorithmException {
+    public FirewallService() throws NoSuchAlgorithmException {
         sha256Digest = MessageDigest.getInstance("SHA-256");
     }
 

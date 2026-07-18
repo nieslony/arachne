@@ -72,6 +72,7 @@ public class ExternalAuthView extends VerticalLayout {
     private final Button saveButton;
 
     private Checkbox enableKerberosAuthField;
+    private TextField realm;
     private TextField keytabPathField;
     private ComboBox<String> servicePrincipalField;
     private Button readKeytabButton;
@@ -95,7 +96,6 @@ public class ExternalAuthView extends VerticalLayout {
 
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         if (!ldapSettings.isEnableLdapUserSource()) {
-
             Div warning = new Div();
             Icon icon = VaadinIcon.WARNING.create();
             Span warningLbl = new Span("Warning:");
@@ -136,6 +136,11 @@ public class ExternalAuthView extends VerticalLayout {
         enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
         kerberosBinder.forField(enableKerberosAuthField)
                 .bind(KerberosSettings::isEnableKrbAuth, KerberosSettings::setEnableKrbAuth);
+
+        realm = new TextField("Realm");
+        realm.setWidthFull();
+        kerberosBinder.forField(realm)
+                .bind(KerberosSettings::getRealm, KerberosSettings::setRealm);
 
         keytabPathField = new TextField("Keytab Path");
         keytabPathField.setWidthFull();
@@ -206,6 +211,7 @@ public class ExternalAuthView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 enableKerberosAuthField,
+                realm,
                 keytabPathField,
                 servicePrincipalLayout
         );

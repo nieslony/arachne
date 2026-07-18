@@ -4,8 +4,8 @@
  */
 package at.nieslony.arachne.usermatcher;
 
-import at.nieslony.arachne.ldap.LdapController;
 import at.nieslony.arachne.ldap.LdapGroup;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.settings.Settings;
@@ -25,11 +25,11 @@ import org.springframework.beans.factory.BeanFactory;
 @Slf4j
 public class LdapGroupUserMatcher extends UserMatcher {
 
-    private final LdapController ldapController;
+    private final LdapService ldapService;
 
     public LdapGroupUserMatcher(BeanFactory beanFactory, String groupname) {
         super(beanFactory, groupname);
-        ldapController = beanFactory.getBean(LdapController.class);
+        ldapService = beanFactory.getBean(LdapService.class);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class LdapGroupUserMatcher extends UserMatcher {
             return false;
         }
         try {
-            LdapGroup ldapGroup = ldapController
+            LdapGroup ldapGroup = ldapService
                     .getGroup(this.parameter);
             if (ldapGroup == null) {
                 log.info("Group %s not found".formatted(parameter));

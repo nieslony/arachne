@@ -73,7 +73,7 @@ public class FirewallRestController {
     private Settings settings;
 
     @Autowired
-    private FirewallController firewallController;
+    private FirewallService firewallService;
 
     @Getter
     @Setter
@@ -159,7 +159,7 @@ public class FirewallRestController {
         }
 
         try {
-            firewallController.writeRules(FirewallRuleModel.VpnType.USER);
+            firewallService.writeRules(FirewallRuleModel.VpnType.USER);
         } catch (IOException | JSONException ex) {
             log.error("Cannot write firewall rules: " + ex.getMessage());
             throw new HttpResponseException(

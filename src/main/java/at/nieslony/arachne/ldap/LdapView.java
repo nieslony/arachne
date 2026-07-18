@@ -82,12 +82,14 @@ import org.springframework.security.core.AuthenticationException;
 public class LdapView extends VerticalLayout {
 
     private final LdapSettings ldapSettings;
-    private final LdapController ldapController;
+    private final LdapService ldapService;
+    private final Settings settings;
     private Binder<LdapSettings> binder;
     Button saveButton;
 
-    public LdapView(Settings settings, LdapController ldapController) {
-        this.ldapController = ldapController;
+    public LdapView(Settings settings, LdapService ldapService) {
+        this.settings = settings;
+        this.ldapService = ldapService;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
 
@@ -514,7 +516,7 @@ public class LdapView extends VerticalLayout {
 
     void testLdapConnection(LdapSettings ldapSettings) {
         try {
-            LdapTemplate templ = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate templ = ldapService.getLdapTemplate(ldapSettings);
             templ.lookup(ldapSettings.getBaseDn());
             ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
@@ -535,7 +537,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindGroup(String groupname) {
         try {
-            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate ldap = ldapService.getLdapTemplate(ldapSettings);
 
             String filter = ldapSettings.getGroupsFilter(groupname);
             var result = ldap.search(
@@ -592,7 +594,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindUser(String username) {
         try {
-            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate ldap = ldapService.getLdapTemplate(ldapSettings);
             String filter = ldapSettings.getUsersFilter(username);
             log.debug("LDAP search: " + filter);
             var result = ldap.search(

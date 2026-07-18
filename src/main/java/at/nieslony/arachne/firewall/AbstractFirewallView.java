@@ -20,7 +20,7 @@ package at.nieslony.arachne.firewall;
 import at.nieslony.arachne.firewall.settings.AbstractFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.settings.EnableRoutingMode;
 import at.nieslony.arachne.firewall.settings.IcmpRules;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -50,7 +50,7 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
     protected BasicSettings firewallBasicSettings;
 
     @Autowired
-    protected OpenVpnController openVpnController;
+    protected OpenVpnService openVpnService;
 
     @Autowired
     protected ArachneDbus arachneDbus;
@@ -65,7 +65,7 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
     protected UserMatcherCollector userMatcherCollector;
 
     @Autowired
-    protected FirewallController firewallController;
+    protected FirewallService firewallService;
 
     protected Component createBasicsTab(Class<BasicSettings> basicSettingsClass) {
         firewallBasicSettings = settings.getSettings(basicSettingsClass);

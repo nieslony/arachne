@@ -9,7 +9,7 @@ import at.nieslony.arachne.auth.ExternalAuthView;
 import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapView;
 import at.nieslony.arachne.mail.MailSettingsView;
 import at.nieslony.arachne.onetimeview.OneTimeViewOverview;
@@ -68,24 +68,25 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
-    private final LdapController ldapController;
     private final TotpController toptController;
     private final Settings settings;
+    private final LdapService ldapService;
     private String pageTitleStr = null;
 
     public ViewTemplate(
             UserRepository userRepository,
             AuthenticationContext authContext,
             ArachneVersion arachneVersion,
-            LdapController ldapController,
+            LdapService ldapService,
             TotpController totpController,
-            Settings settings) {
+            Settings settings
+    ) {
         this.authContext = authContext;
         this.userRepository = userRepository;
         this.arachneVersion = arachneVersion;
-        this.ldapController = ldapController;
         this.toptController = totpController;
         this.settings = settings;
+        this.ldapService = ldapService;
 
         createHeader();
         createDrawer();
@@ -126,7 +127,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 EditYourselfDialog dlg = new EditYourselfDialog(
                         user,
                         userRepository,
-                        ldapController
+                        ldapService
                 );
                 dlg.open();
             });

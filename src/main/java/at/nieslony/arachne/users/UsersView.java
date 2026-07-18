@@ -6,11 +6,11 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.auth.TotpController;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
@@ -89,7 +89,7 @@ public class UsersView extends VerticalLayout {
     private RoleRuleRepository roleRuleRepository;
 
     @Autowired
-    private OpenVpnController openVpnRestController;
+    private OpenVpnService openVpnRestController;
 
     @Autowired
     private Settings settings;
@@ -98,7 +98,7 @@ public class UsersView extends VerticalLayout {
     private MailSettingsRestController mailSettingsRestController;
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private RolesCollector rolesCollestor;
@@ -337,7 +337,7 @@ public class UsersView extends VerticalLayout {
             if (user.getExternalProvider().equals(LdapUserSource.getName())) {
                 userMenu.addItem("Refresh now", e -> {
                     log.info("Refreshing user %s…".formatted(user.getUsername()));
-                    var ldapUser = ldapController.findUsers(myUsername, 1).getFirst();
+                    var ldapUser = ldapService.findUsers(myUsername, 1).getFirst();
                     var roles = rolesCollestor.findRolesForUser(ldapUser);
                     user.update(ldapUser);
                     user.setRoles(roles);

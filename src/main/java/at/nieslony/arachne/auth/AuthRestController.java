@@ -17,10 +17,8 @@
 package at.nieslony.arachne.auth;
 
 import at.nieslony.arachne.apiindex.ShowApiDetails;
-import at.nieslony.arachne.auth.token.TokenController;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.auth.token.TokenService;
 import at.nieslony.arachne.users.ArachneUserDetails;
-import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.Calendar;
@@ -49,16 +47,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthRestController {
 
     @Autowired
-    TokenController tokenController;
-
-    @Autowired
-    OpenVpnController openVpnController;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    TotpController totpController;
+    TokenService tokenService;
 
     @Getter
     @Setter
@@ -159,7 +148,7 @@ public class AuthRestController {
         Date validUntil = createValidUntilDate(validTime);
         String apiAuthToken;
         if (userDetails instanceof ArachneUserDetails arachneUserDetails) {
-            apiAuthToken = tokenController.createToken(
+            apiAuthToken = tokenService.createToken(
                     arachneUserDetails.getUser(),
                     validUntil
             );

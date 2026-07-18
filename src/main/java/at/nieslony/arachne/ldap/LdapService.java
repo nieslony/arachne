@@ -23,8 +23,8 @@ import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
-import at.nieslony.arachne.utils.net.UrlParseException;
 import at.nieslony.arachne.utils.net.SrvRecord;
+import at.nieslony.arachne.utils.net.UrlParseException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,17 +42,17 @@ import org.springframework.ldap.core.support.AbstractContextMapper;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.kerberos.client.config.SunJaasKrb5LoginConfig;
 import org.springframework.security.kerberos.client.ldap.KerberosLdapContextSource;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @Eager
 @Log4j2
-public class LdapController {
+public class LdapService {
 
     @Autowired
     private Settings settings;
