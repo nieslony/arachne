@@ -47,55 +47,42 @@ public class ThemeRestController {
 
     private static final String LIGHT_STYLE
             = """
-            html {
-              --aura-accent-color-dark: #34D399;
-              --aura-accent-color-light: #009966;
-              --aura-background-color-dark: #171717;
-              --aura-base-font-size: 15;
-              --aura-contrast-level: 2;
-            }
             """;
 
     private static final String DARK_STYLE
             = """
-            html {
-              --aura-accent-color-dark: #34D399;
-              --aura-accent-color-light: #009966;
-              --aura-background-color-dark: #171717;
-              --aura-base-font-size: 15;
-              --aura-contrast-level: 2;
-
-              --aura-content-color-scheme: dark;
-              --aura-notification-color-scheme: dark;
-              color-scheme: dark;
-            }
+                --aura-content-color-scheme: dark;
+                --aura-notification-color-scheme: dark;
+                color-scheme: dark;
             """;
     private static final String MIXED_STYLE
             = """
-            html {
-              --aura-accent-color-dark: #34D399;
-              --aura-accent-color-light: #009966;
-              --aura-background-color-dark: #171717;
-              --aura-base-font-size: 15;
-              --aura-contrast-level: 2;
-
-              --aura-content-color-scheme: light dark;
-              --aura-notification-color-scheme: dark;
-              color-scheme: dark;
-            }
+                --aura-content-color-scheme: light dark;
+                --aura-notification-color-scheme: dark;
+                color-scheme: dark;
             """;
     private static final String AUTO_STYLE
             = """
+                --aura-content-color-scheme: light dark;
+                --aura-notification-color-scheme: light dark;
+                color-scheme: light dark;
+            """;
+    private static final String STYLE
+            = """
             html {
-              --aura-accent-color-dark: #34D399;
-              --aura-accent-color-light: #009966;
-              --aura-background-color-dark: #171717;
-              --aura-base-font-size: 15;
-              --aura-contrast-level: 2;
+                --aura-accent-color-dark: #34D399;
+                --aura-accent-color-light: #009966;
+                --aura-background-color-dark: #171717;
+                --aura-base-font-size: 15;
+                --aura-contrast-level: 2;
 
-              --aura-content-color-scheme: light dark;
-              --aura-notification-color-scheme: light dark;
-              color-scheme: light dark;
+            %s
+            }
+            vaadin-list-box {
+                background: var(--aura-surface-color);
+                border: 1px solid var(--aura-accent-border-color);
+                border-radius: var(--vaadin-radius-l);
+                //padding: var(--vaadin-padding-l);
             }
             """;
 
@@ -113,7 +100,7 @@ public class ThemeRestController {
             }
         }
 
-        return switch (themeVariant) {
+        return STYLE.formatted(switch (themeVariant) {
             case Auto ->
                 AUTO_STYLE;
             case Dark ->
@@ -122,7 +109,7 @@ public class ThemeRestController {
                 LIGHT_STYLE;
             case Mixed ->
                 MIXED_STYLE;
-        };
+        });
     }
 
     @GetMapping("/icons/arachne.png")
