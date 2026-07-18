@@ -529,6 +529,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 )
                 .filter(rem -> rem != null);
         var l = Stream.concat(privateStream, publicStream)
+                .filter(v -> v.getRemoteHost() != null)
                 .sorted((vr1, vr2) -> {
                     int compHostNames = vr1.getRemoteHost().compareTo(vr2.getRemoteHost());
                     if (compHostNames != 0) {
