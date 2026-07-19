@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package at.nieslony.arachne.openvpnmanagement;
+package at.nieslony.arachne.openvpn.management;
 
 import at.nieslony.arachne.utils.FolderFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
  * @author claas
  */
 @Service
-public class OpenVpnManagement {
+public class OpenVpnManagementService {
 
     @Autowired
     private FolderFactory folderFactory;

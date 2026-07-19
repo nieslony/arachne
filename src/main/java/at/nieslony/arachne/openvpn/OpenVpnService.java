@@ -8,7 +8,7 @@ import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
-import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -76,7 +76,7 @@ public class OpenVpnService {
     private VpnSiteService vpnSiteSiter;
 
     @Autowired
-    private OpenVpnManagement openVpnManagement;
+    private OpenVpnManagementService openVpnManagement;
 
     @Value("${plugin_path}")
     String pluginPath;
