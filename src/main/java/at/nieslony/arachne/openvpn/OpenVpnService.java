@@ -83,8 +83,6 @@ public class OpenVpnService {
 
     private static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
     private static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
-    private static final String FN_OPENVPN_USER_MGMT_SOCKET = "openvpn-user-mgmt.sock";
-    private static final String FN_OPENVPN_SITE_MGMT_SOCKET = "openvpn-site-mgmt.sock";
     private static final String FN_OPENVPN_PLUGIN_USER_CONF = "openvpn-plugin-arachne-user.conf";
     private static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
 
@@ -97,26 +95,42 @@ public class OpenVpnService {
         Shell
     }
 
+    public enum ServerType {
+        USER,
+        SITE
+    }
+
     @PostConstruct
     public void init() {
         writeCrl();
-        writeDummySiteConfig(FN_OPENVPN_USER_SERVER_CONF, "user", 1);
-        writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, "site", 2);
+        writeDummySiteConfig(ServerType.USER);
+        writeDummySiteConfig(ServerType.SITE);
     }
 
-    public void writeDummySiteConfig(String fn, String serverType, int lastOctett) {
-        String fileName = folderFactory.getVpnConfigDir(fn);
+    public void writeDummySiteConfig(ServerType serverType) {
+        String fileName = folderFactory.getVpnConfigDir(switch (serverType) {
+            case USER ->
+                FN_OPENVPN_USER_SERVER_CONF;
+            case SITE ->
+                FN_OPENVPN_SITE_SERVER_CONF;
+        });
         File f = new File(fileName);
         if (!f.exists() || f.length() == 0) {
             log.info("Creating dummy configuration " + fileName);
+            String socketFilename = switch (serverType) {
+                case USER ->
+                    openVpnManagement.getUserManagemnetSocket();
+                case SITE ->
+                    openVpnManagement.getSiteManagemnetSocket();
+            };
             try (PrintWriter pw = new PrintWriter(f)) {
                 pw.println(
                         """
                         dev tun
-                        local 127.11.94.%d
                         tls-client
                         management-hold
-                        management %s
+                        management %s unix
+                        management-client-user %s
                         <ca>
                         %s
                         </ca>
@@ -127,25 +141,12 @@ public class OpenVpnService {
                         %s
                         </key>
                         """.formatted(
-                                lastOctett,
-                                switch (serverType) {
-                            case "user" ->
-                                openVpnManagement.getUserManagemnetSocket();
-                            case "site" ->
-                                openVpnManagement.getSiteManagemnetSocket();
-                            default ->
-                                "";
-                        },
+                                socketFilename,
+                                System.getProperty("user.name"),
                                 pki.getRootCertAsBase64(),
                                 pki.getServerCertAsBase64(),
                                 pki.getServerKeyAsBase64()
                         )
-                );
-
-                pw.println("dev tun");
-                pw.println("local 127.11.94.%d".formatted(lastOctett));
-                pw.println(
-                        "writepid " + folderFactory.getOpenVpnPidPath(serverType)
                 );
             } catch (IOException | PkiException | SettingsException ex) {
                 log.error("Cannot create dummy configuration %s: %s"
