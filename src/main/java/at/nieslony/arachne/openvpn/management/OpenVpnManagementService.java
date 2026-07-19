@@ -18,6 +18,8 @@
 package at.nieslony.arachne.openvpn.management;
 
 import at.nieslony.arachne.utils.FolderFactory;
+import jakarta.annotation.PostConstruct;
+import java.nio.file.Path;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,15 @@ public class OpenVpnManagementService {
     @Autowired
     private FolderFactory folderFactory;
 
+    OpenVpnManagement userManagementIf;
+    OpenVpnManagement siteManagementIf;
+
+    @PostConstruct
+    public void init() {
+        userManagementIf = new OpenVpnManagement(Path.of(getUserManagemnetSocket()));
+        siteManagementIf = new OpenVpnManagement(Path.of(getSiteManagemnetSocket()));
+    }
+
     public String getSiteManagemnetSocket() {
         return "%s/openvpn-site-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
@@ -41,5 +52,13 @@ public class OpenVpnManagementService {
         return "%s/openvpn-user-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
         );
+    }
+
+    public OpenVpnManagement getUserManagement() {
+        return userManagementIf;
+    }
+
+    public OpenVpnManagement getSiteManagement() {
+        return siteManagementIf;
     }
 }
