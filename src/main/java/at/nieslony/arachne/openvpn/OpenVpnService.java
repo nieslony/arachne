@@ -8,6 +8,7 @@ import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
+import at.nieslony.arachne.openvpnmanagement.OpenVpnManagement;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -74,15 +75,21 @@ public class OpenVpnService {
     @Autowired
     private VpnSiteService vpnSiteSiter;
 
+    @Autowired
+    private OpenVpnManagement openVpnManagement;
+
     @Value("${plugin_path}")
     String pluginPath;
 
-    static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
-    static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
-    static final String FN_OPENVPN_PLUGIN_USER_CONF = "openvpn-plugin-arachne-user.conf";
-    static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
-    static final String FN_OPENVPN_CRL = "crl.pem";
-    static final String FN_OPENVPN_CLIENT_CONF_DIR = "site-client-conf.d";
+    private static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
+    private static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
+    private static final String FN_OPENVPN_USER_MGMT_SOCKET = "openvpn-user-mgmt.sock";
+    private static final String FN_OPENVPN_SITE_MGMT_SOCKET = "openvpn-site-mgmt.sock";
+    private static final String FN_OPENVPN_PLUGIN_USER_CONF = "openvpn-plugin-arachne-user.conf";
+    private static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
+
+    private static final String FN_OPENVPN_CRL = "crl.pem";
+    private static final String FN_OPENVPN_CLIENT_CONF_DIR = "site-client-conf.d";
 
     private enum UserVpnSettingsDataType {
         OvpnFile,
@@ -97,19 +104,51 @@ public class OpenVpnService {
         writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, "site", 2);
     }
 
-    public void writeDummySiteConfig(String fn, String serverType, int lasrOctett) {
+    public void writeDummySiteConfig(String fn, String serverType, int lastOctett) {
         String fileName = folderFactory.getVpnConfigDir(fn);
         File f = new File(fileName);
         if (!f.exists() || f.length() == 0) {
             log.info("Creating dummy configuration " + fileName);
             try (PrintWriter pw = new PrintWriter(f)) {
+                pw.println(
+                        """
+                        dev tun
+                        local 127.11.94.%d
+                        tls-client
+                        management-hold
+                        management %s
+                        <ca>
+                        %s
+                        </ca>
+                        <cert>
+                        %s
+                        </cert>
+                        <key>
+                        %s
+                        </key>
+                        """.formatted(
+                                lastOctett,
+                                switch (serverType) {
+                            case "user" ->
+                                openVpnManagement.getUserManagemnetSocket();
+                            case "site" ->
+                                openVpnManagement.getSiteManagemnetSocket();
+                            default ->
+                                "";
+                        },
+                                pki.getRootCertAsBase64(),
+                                pki.getServerCertAsBase64(),
+                                pki.getServerKeyAsBase64()
+                        )
+                );
+
                 pw.println("dev tun");
-                pw.println("local 127.11.94.%d".formatted(lasrOctett));
+                pw.println("local 127.11.94.%d".formatted(lastOctett));
                 pw.println(
                         "writepid " + folderFactory.getOpenVpnPidPath(serverType)
                 );
-            } catch (IOException ex) {
-                log.error("Cannot create dummy confoigirattion %s: %s"
+            } catch (IOException | PkiException | SettingsException ex) {
+                log.error("Cannot create dummy configuration %s: %s"
                         .formatted(fileName, ex.getMessage())
                 );
             }
@@ -123,7 +162,7 @@ public class OpenVpnService {
             });
 
             String crlString = Pki.asBase64(crl);
-            String fn = folderFactory.getVpnConfigDir("crl.pem");
+            String fn = folderFactory.getVpnConfigDir(FN_OPENVPN_CRL);
             try (FileWriter fw = new FileWriter(fn)) {
                 fw.write(crlString);
             } catch (IOException ex) {
