@@ -100,6 +100,7 @@ public class OpenVpnUserView extends VerticalLayout {
                     );
                     openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
                     openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
+                    openVpnManagementService.getUserManagement().hold(Hold.HoldParam.OFF);
                     openVpnManagementService.getUserManagement().restartServer();
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {

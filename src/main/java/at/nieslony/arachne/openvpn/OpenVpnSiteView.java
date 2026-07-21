@@ -1051,6 +1051,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             );
             openVpnRestController.writeCrl();
             openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.RELEASE);
+            openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.OFF);
             openVpnManagementService.getSiteManagement().restartServer();
             ShowNotification.info("OpenVpn restarted with new configuration");
         } catch (SettingsException ex) {
