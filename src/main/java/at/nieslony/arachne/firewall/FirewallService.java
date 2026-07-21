@@ -19,7 +19,8 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.net.NetUtils;
@@ -35,8 +36,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,7 +60,7 @@ public class FirewallService {
     Settings settings;
 
     @Autowired
-    ArachneDbus arachneDbus;
+    OpenVpnManagementService openVpnManagementService;
 
     MessageDigest sha256Digest;
     private byte[] userConfigChecksum = new byte[]{};
@@ -202,8 +201,8 @@ public class FirewallService {
                 userConfigChecksum = checkSum;
             }
             try {
-                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
-            } catch (DBusException | DBusExecutionException ex) {
+                openVpnManagementService.getUserManagement().restartServer();
+            } catch (ManagementException ex) {
                 log.warn("Cannot restart openVPN user server: " + ex.getMessage());
             }
         } else {

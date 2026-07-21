@@ -19,8 +19,8 @@ abstract public class MultiLineCommand<T> extends Command<T> {
     }
 
     @Override
-    public boolean processResultLine(String line) throws ManagementException {
-        if (line.startsWith("ERROR: ")) {
+    final public boolean processResultLine(String line) throws ManagementException {
+        if (line.startsWith(">ERROR: ")) {
             log.error("Got error: " + line);
             throw new ManagementException(line);
         }

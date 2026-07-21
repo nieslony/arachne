@@ -18,7 +18,9 @@ package at.nieslony.arachne.tasks.scheduled;
 
 import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Hold;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.pki.PkiSettings;
@@ -31,8 +33,6 @@ import at.nieslony.arachne.utils.ArachneTimeUnit;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -68,12 +68,16 @@ public class UpdateVpnServerCert extends Task {
                     = beanFactory.getBean(OpenVpnService.class);
             openVpnRestController.writeOpenVpnUserServerConfig(openVpnUserSettings);
 
-            ArachneDbus arachneDbus = beanFactory.getBean(ArachneDbus.class);
+            OpenVpnManagementService openVpnManagementService
+                    = beanFactory.getBean(OpenVpnManagementService.class);
             try {
-                arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+                openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
+                openVpnManagementService.getUserManagement().restartServer();
+                openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.RELEASE);
+                openVpnManagementService.getSiteManagement().restartServer();
                 pki.updateWebServerCertificate();
                 return "Server Certitificate renewed, openVPN server restarted";
-            } catch (DBusException | DBusExecutionException ex) {
+            } catch (ManagementException ex) {
                 return "Server Certificate renewed but openVPN Server restart failed: "
                         + ex.getMessage();
             } catch (PkiException | SettingsException ex) {

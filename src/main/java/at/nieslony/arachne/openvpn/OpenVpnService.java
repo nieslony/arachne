@@ -7,8 +7,8 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
-import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
@@ -301,6 +301,12 @@ public class OpenVpnService {
                             )
             );
             writer.println("status-version 2");
+            writer.println("management %s unix".formatted(
+                    folderFactory.getVpnConfigDir(FN_OPENVPN_USER_SERVER_CONF)
+            ));
+            writer.println("management-client-user %s".formatted(
+                    System.getProperty("user.name")
+            ));
             writer.println("writepid " + folderFactory.getOpenVpnPidPath("user"));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");

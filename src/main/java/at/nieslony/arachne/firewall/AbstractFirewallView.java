@@ -21,7 +21,7 @@ import at.nieslony.arachne.firewall.settings.AbstractFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.settings.EnableRoutingMode;
 import at.nieslony.arachne.firewall.settings.IcmpRules;
 import at.nieslony.arachne.openvpn.OpenVpnService;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
@@ -36,8 +36,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -51,9 +49,6 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
 
     @Autowired
     protected OpenVpnService openVpnService;
-
-    @Autowired
-    protected ArachneDbus arachneDbus;
 
     @Autowired
     protected Settings settings;
@@ -116,7 +111,7 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
                 ShowNotification.info("OpenVpn restarted with new configuration");
             } catch (SettingsException ex) {
                 log.error("Cannot save firewall settings: " + ex.getMessage());
-            } catch (DBusException | DBusExecutionException ex) {
+            } catch (ManagementException ex) {
                 log.error("Cannot restart openVPN: " + ex.getMessage());
                 ShowNotification.error("Cannot restart openVPN", ex.getMessage());
             }
@@ -145,5 +140,6 @@ abstract public class AbstractFirewallView<BasicSettings extends AbstractFirewal
         return layout;
     }
 
-    abstract protected void applyBasicSettings(BasicSettings basicSettings) throws DBusException;
+    abstract protected void applyBasicSettings(BasicSettings basicSettings)
+            throws ManagementException;
 }

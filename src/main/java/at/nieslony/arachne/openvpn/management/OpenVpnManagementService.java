@@ -20,14 +20,18 @@ package at.nieslony.arachne.openvpn.management;
 import at.nieslony.arachne.utils.FolderFactory;
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Path;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.ApplicationScope;
 
 /**
  *
  * @author claas
  */
 @Service
+@ApplicationScope
+@Slf4j
 public class OpenVpnManagementService {
 
     @Autowired
@@ -38,8 +42,9 @@ public class OpenVpnManagementService {
 
     @PostConstruct
     public void init() {
-        userManagementIf = new OpenVpnManagement(Path.of(getUserManagemnetSocket()));
-        siteManagementIf = new OpenVpnManagement(Path.of(getSiteManagemnetSocket()));
+        log.info("Initializing Management Interface");
+        userManagementIf = new OpenVpnManagement("user", Path.of(getUserManagemnetSocket()));
+        siteManagementIf = new OpenVpnManagement("site", Path.of(getSiteManagemnetSocket()));
     }
 
     public String getSiteManagemnetSocket() {

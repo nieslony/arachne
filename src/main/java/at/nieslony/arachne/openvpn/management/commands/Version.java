@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Version extends MultiLineCommand<Version.VersionInfo> {
 
     public record VersionInfo(
+            String longVersion,
             String programName,
             String versionStr,
             int versionMajor,
@@ -41,8 +42,9 @@ public class Version extends MultiLineCommand<Version.VersionInfo> {
         if (lines.size() != 2) {
             throw new ManagementException("Cannot parse output (too many lines): " + lines.toString());
         }
-        log.debug("Parsing: " + lines.get(0));
-        String[] split = lines.get(0).split(" ");
+        String longVersion = lines.get(0);
+        log.debug("Parsing: " + longVersion);
+        String[] split = longVersion.split(" ");
         String progName = split[2];
         String versionStr = split[3];
         log.debug("VersionStr: " + versionStr);
@@ -61,6 +63,7 @@ public class Version extends MultiLineCommand<Version.VersionInfo> {
 
         int managementVersion = Integer.parseInt(lines.get(1).split(": ")[1]);
         VersionInfo versionInfo = new VersionInfo(
+                longVersion,
                 progName,
                 versionStr,
                 versionMajor, versionMinor, versionPatch,

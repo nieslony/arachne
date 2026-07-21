@@ -8,12 +8,15 @@ import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
 import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -172,6 +175,7 @@ public class AdminHome
         }
     }
 
+    private final OpenVpnManagementService openVpnManagementService;
     private final VpnSiteRepository vpnSiteRepository;
     private final ArachneDbus arachneDbus;
     private final OpenVpnUserSettings openVpnUserSettings;
@@ -183,21 +187,30 @@ public class AdminHome
     private final Consumer<IFaceOpenVpnStatus> updateConnectedUserListener;
     private final Consumer<IFaceOpenVpnStatus> updateConnectedSitesListener;
 
+    Text serverVersion;
+
     public AdminHome(
             ArachneDbus arachneDbus,
             VpnSiteRepository vpnSiteRepository,
-            Settings settings
+            Settings settings,
+            OpenVpnManagementService openVpnManagementService
     ) {
+        this.openVpnManagementService = openVpnManagementService;
         this.arachneDbus = arachneDbus;
         this.vpnSiteRepository = vpnSiteRepository;
         this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
         this.openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
 
+        serverVersion = new Text("");
+
         Accordion content = new Accordion();
         content.add("Connected Users", createConnectedUsersView());
         content.add("Connected Sites", createConnectedSitesView());
         content.setWidthFull();
-        add(content);
+        add(
+                serverVersion,
+                content
+        );
 
         this.updateConnectedUserListener = new ConnectedUsersListener(
                 () -> getUI().orElseThrow(),
@@ -209,6 +222,7 @@ public class AdminHome
         );
         setPadding(false);
 
+        onUpdateServerVersion();
         onRefreshConnectedUsers();
         onRefreshConnectedSites();
     }
@@ -230,13 +244,28 @@ public class AdminHome
         });
     }
 
+    private void onUpdateServerVersion() {
+        String versionStr;
+        try {
+            versionStr = openVpnManagementService
+                    .getUserManagement()
+                    .version()
+                    .longVersion();
+        } catch (ManagementException ex) {
+            log.error("Cannot connect to management interface: " + ex.getMessage());
+            versionStr = "unknown version";
+        }
+
+        serverVersion.setText("Running " + versionStr);
+    }
+
     private static String createMsgConnectedUsers(int count) {
         return "%d users connected".formatted(count);
     }
 
     private void onRefreshConnectedUsers() {
         try {
-            if (openVpnUserSettings.isAlreadyConfigured()) {
+            if (false && openVpnUserSettings.isAlreadyConfigured()) {
                 var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
                 updateConnectedUserListener.accept(status);
             } else {

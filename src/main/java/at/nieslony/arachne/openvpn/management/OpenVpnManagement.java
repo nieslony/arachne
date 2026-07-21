@@ -2,6 +2,7 @@ package at.nieslony.arachne.openvpn.management;
 
 import at.nieslony.arachne.openvpn.management.commands.Command;
 import at.nieslony.arachne.openvpn.management.commands.DropUser;
+import at.nieslony.arachne.openvpn.management.commands.Hold;
 import at.nieslony.arachne.openvpn.management.commands.Pid;
 import at.nieslony.arachne.openvpn.management.commands.RestartServer;
 import at.nieslony.arachne.openvpn.management.commands.Status;
@@ -29,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OpenVpnManagement {
 
-    final Path socketPath;
+    private final Path socketPath;
+    private final String name;
 
     private final BlockingQueue<Command> commandQueue = new LinkedBlockingQueue<>();
     private final BlockingQueue<String> managementMsgQueue = new LinkedBlockingQueue<>();
@@ -38,9 +40,12 @@ public class OpenVpnManagement {
     private final Thread managementMsgProcessor;
     private volatile Command currentCommand = null;
 
+    private boolean isInHoldStatus;
+
     private volatile SocketChannel clientChannel = null;
 
-    public OpenVpnManagement(Path managementSocketPath) {
+    public OpenVpnManagement(String name, Path managementSocketPath) {
+        this.name = name;
         this.socketPath = managementSocketPath;
 
         commandProcessor = new Thread(() -> {
@@ -48,8 +53,7 @@ public class OpenVpnManagement {
             try {
                 for (;;) {
                     Command cmd = commandQueue.take();
-                    log.info("Took command from queue: " + cmd.toString());
-
+                    log.info("Took command from queue: %s " + cmd.toString());
                     try {
                         if (clientChannel == null || !clientChannel.isConnected()) {
                             commandQueue.remove(cmd);
@@ -68,7 +72,7 @@ public class OpenVpnManagement {
             } catch (InterruptedException | ExecutionException ex) {
                 log.error("Interrupted");
             }
-        }, "CommandProcessor");
+        }, "OvMgmtCmdProc-" + Character.toUpperCase(name.charAt(0)));
 
         managementMsgReader = new Thread(() -> {
             log.info("Starting management message reader");
@@ -99,7 +103,7 @@ public class OpenVpnManagement {
                         case '\n' -> {
                             try {
                                 String l = currentLine.toString();
-                                log.debug("Putting >%s< to queue".formatted(l));
+                                log.debug("Putting »%s« to queue".formatted(l));
                                 managementMsgQueue.put(l);
                                 currentLine = new StringBuilder();
                             } catch (InterruptedException ex) {
@@ -112,19 +116,28 @@ public class OpenVpnManagement {
                     }
                 }
             }
-        }, "ManagementMsgReader");
+        }, "OvMgmtMsgRead-" + Character.toUpperCase(name.charAt(0)));
 
         managementMsgProcessor = new Thread(() -> {
             for (;;) {
                 try {
                     String curLine = managementMsgQueue.take();
-                    log.debug("Processing line: >%s<".formatted(curLine));
+                    log.debug("Processing line: »%s«".formatted(curLine));
                     if (curLine.startsWith(">INFO:")) {
                         log.debug("Got log line: " + curLine);
+                    } else if (curLine.startsWith(">HOLD:")) {
+                        log.info("Management interface is in hold status");
+                        isInHoldStatus = true;
                     } else if (currentCommand != null) {
                         try {
                             if (currentCommand.processResultLine(curLine)) {
+                                log.debug("Last line of %s added".formatted(
+                                        currentCommand.toString()
+                                ));
                                 currentCommand.processResult();
+                                log.info("Result of %s processed, removing command".formatted(
+                                        currentCommand.toString()
+                                ));
                                 currentCommand = null;
                             }
                         } catch (ManagementException ex) {
@@ -138,11 +151,9 @@ public class OpenVpnManagement {
                     log.error("Interrupted");
                 }
             }
-        }, "ManagementMsgProcessor");
-    }
+        }, "OvMgmtMsgProc-" + Character.toUpperCase(name.charAt(0)));
 
-    public void init() {
-        log.info("Starting threads");
+        log.info("Starting %s threads".formatted(name));
         commandProcessor.start();
         managementMsgReader.start();
         managementMsgProcessor.start();
@@ -150,11 +161,12 @@ public class OpenVpnManagement {
 
     private void connectToManagementInterface() {
         try {
-            log.info("Connecting to management Socket");
+            log.info("Connecting to %s management Socket".formatted(name));
             clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
             UnixDomainSocketAddress address = UnixDomainSocketAddress.of(socketPath);
             clientChannel.connect(address);
             clientChannel.configureBlocking(true);
+            isInHoldStatus = false;
         } catch (IOException ex) {
             log.error("IO Exception: " + ex);
         }
@@ -194,6 +206,10 @@ public class OpenVpnManagement {
         }
     }
 
+    public boolean getIsInHoldStatus() {
+        return isInHoldStatus;
+    }
+
     public int pid() throws ManagementException {
         Pid p = new Pid(commandQueue);
         return p.waitForResult();
@@ -217,5 +233,10 @@ public class OpenVpnManagement {
     public Status.StatusInfo status() throws ManagementException {
         Status st = new Status(commandQueue);
         return st.waitForResult();
+    }
+
+    public String hold(Hold.HoldParam holdParam) throws ManagementException {
+        Hold h = new Hold(commandQueue, holdParam);
+        return h.waitForResult();
     }
 }

@@ -6,7 +6,9 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Hold;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -53,8 +55,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 
 /**
@@ -76,7 +76,7 @@ public class OpenVpnUserView extends VerticalLayout {
     public OpenVpnUserView(
             Settings settings,
             OpenVpnService openvpnRestController,
-            ArachneDbus arachneDbus,
+            OpenVpnManagementService openVpnManagementService,
             Pki pki
     ) {
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
@@ -99,11 +99,12 @@ public class OpenVpnUserView extends VerticalLayout {
                             firewallBasicsSettings
                     );
                     openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-                    arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+                    openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
+                    openVpnManagementService.getUserManagement().restartServer();
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
                     log.error("Cannot save openvpn user settings: " + ex.getMessage());
-                } catch (DBusException | DBusExecutionException ex) {
+                } catch (ManagementException ex) {
                     String header = "Cannot restart openVpn";
                     log.error(header + ": " + ex.getMessage());
                     ShowNotification.error(header, ex.getMessage());

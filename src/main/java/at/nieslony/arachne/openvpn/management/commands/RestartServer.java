@@ -11,15 +11,10 @@ import java.util.concurrent.BlockingQueue;
  *
  * @author claas
  */
-public class RestartServer extends Command<Void> {
+public class RestartServer extends SingleLineCommand<Void> {
 
     public RestartServer(BlockingQueue<Command> queue) {
         super(queue, "signal SIGHUP");
-    }
-
-    @Override
-    public boolean processResultLine(String line) throws ManagementException {
-        return true;
     }
 
     @Override

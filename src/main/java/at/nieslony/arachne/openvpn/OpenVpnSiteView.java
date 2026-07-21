@@ -7,11 +7,13 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Hold;
 import at.nieslony.arachne.openvpn.sitevpnupload.SiteConfigUploader;
 import at.nieslony.arachne.openvpn.vpnsite.EditRemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.RemoteNetwork;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.ssh.AddSshKeyDialog;
@@ -84,8 +86,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 
 /**
  *
@@ -180,14 +180,14 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private final SiteConfigUploader siteConfigUploader;
     private final VpnSiteService vpnSiteSitervice;
-    private final ArachneDbus arachneDbus;
+    private final OpenVpnManagementService openVpnManagementService;
 
     public OpenVpnSiteView(
             Settings settings,
             OpenVpnService openVpnRestController,
             SiteConfigUploader siteConfigUploader,
             SshKeyRepository sshKeyRepository,
-            ArachneDbus arachneDbus,
+            OpenVpnManagementService openVpnManagementService,
             VpnSiteService vpnSiteSiter
     ) {
         this.settings = settings;
@@ -200,7 +200,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             sshKeys.setValue(keyEntity);
         });
         this.vpnSiteSitervice = vpnSiteSiter;
-        this.arachneDbus = arachneDbus;
+        this.openVpnManagementService = openVpnManagementService;
 
         binder = new Binder<>(OpenVpnSiteSettings.class);
         siteBinder = new Binder<>(VpnSite.class);
@@ -1050,11 +1050,12 @@ public class OpenVpnSiteView extends VerticalLayout {
                     firewallBasicSettings
             );
             openVpnRestController.writeCrl();
-            arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
+            openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.RELEASE);
+            openVpnManagementService.getSiteManagement().restartServer();
             ShowNotification.info("OpenVpn restarted with new configuration");
         } catch (SettingsException ex) {
             log.error("Cannot save openvpn site vpn: " + ex.getMessage());
-        } catch (DBusException | DBusExecutionException ex) {
+        } catch (ManagementException ex) {
             String header = "Cannot restart openVpn";
             log.error(header + ": " + ex.getMessage());
             ShowNotification.error(header, ex.getMessage());
