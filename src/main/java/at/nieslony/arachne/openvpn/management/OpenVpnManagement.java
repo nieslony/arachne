@@ -53,7 +53,7 @@ public class OpenVpnManagement {
             try {
                 for (;;) {
                     Command cmd = commandQueue.take();
-                    log.info("Took command from queue: %s " + cmd.toString());
+                    log.info("Took command from queue: " + cmd.toString());
                     try {
                         if (clientChannel == null || !clientChannel.isConnected()) {
                             commandQueue.remove(cmd);
