@@ -55,7 +55,9 @@ abstract public class Command<T> {
             return value.get();
         } catch (ExecutionException | InterruptedException ex) {
             throw new ManagementException(
-                    "Error executing command %s: %s".formatted(command, ex.getMessage())
+                    "Error executing command %s: %s"
+                            .formatted(command, ex.getMessage()),
+                    ex
             );
         }
     }
