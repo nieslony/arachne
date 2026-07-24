@@ -293,21 +293,12 @@ public class OpenVpnService {
                     }
                 }
             }
-            writer.println(
-                    "status %s %d"
-                            .formatted(
-                                    folderFactory.getOpenVpnStatusPath("user"),
-                                    settings.getStatusUpdateSecs()
-                            )
-            );
-            writer.println("status-version 2");
             writer.println("management %s unix".formatted(
-                    folderFactory.getVpnConfigDir(FN_OPENVPN_USER_SERVER_CONF)
+                    openVpnManagement.getUserManagemnetSocket()
             ));
             writer.println("management-client-user %s".formatted(
                     System.getProperty("user.name")
             ));
-            writer.println("writepid " + folderFactory.getOpenVpnPidPath("user"));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }
@@ -791,21 +782,19 @@ public class OpenVpnService {
                             )
             );
             pw.println("topology subnet");
-            if (!openVpnSiteSettings.getRunAsUser().isEmpty()) {
+            /*            if (!openVpnSiteSettings.getRunAsUser().isEmpty()) {
+
                 pw.println("user " + openVpnSiteSettings.getRunAsUser());
                 pw.println("persist-tun");
                 pw.println("persist-key");
             }
-
-            pw.println(
-                    "status %s %d"
-                            .formatted(
-                                    folderFactory.getOpenVpnStatusPath("site"),
-                                    60
-                            )
-            );
-            pw.println("status-version 2");
-            pw.println("writepid " + folderFactory.getOpenVpnPidPath("site"));
+             */
+            pw.println("management %s unix".formatted(
+                    openVpnManagement.getSiteManagemnetSocket()
+            ));
+            pw.println("management-client-user %s".formatted(
+                    System.getProperty("user.name")
+            ));
 
             if (openVpnSiteSettings.getListenProtocol() == TransportProtocol.UDP
                     && openVpnSiteSettings.getMtuTest()) {
