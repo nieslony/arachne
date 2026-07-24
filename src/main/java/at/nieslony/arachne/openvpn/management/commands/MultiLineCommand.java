@@ -20,7 +20,7 @@ abstract public class MultiLineCommand<T> extends Command<T> {
 
     @Override
     final public boolean processResultLine(String line) throws ManagementException {
-        if (line.startsWith(">ERROR: ")) {
+        if (line.startsWith("ERROR: ")) {
             log.error("Got error: " + line);
             throw new ManagementException(line);
         }
