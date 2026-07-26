@@ -21,6 +21,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -29,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class OpenVpnManagement {
+
+    public enum ManagementConnectionStatus {
+        Connected, Hold, Disconnected
+    }
 
     private final Path socketPath;
     private final String name;
@@ -40,13 +45,15 @@ public class OpenVpnManagement {
     private final Thread managementMsgProcessor;
     private volatile Command currentCommand = null;
 
-    private boolean isInHoldStatus;
+    @Getter
+    private volatile ManagementConnectionStatus managementConnectionStatus;
 
     private volatile SocketChannel clientChannel = null;
 
     public OpenVpnManagement(String name, Path managementSocketPath) {
         this.name = name;
         this.socketPath = managementSocketPath;
+        this.managementConnectionStatus = ManagementConnectionStatus.Disconnected;
 
         commandProcessor = new Thread(() -> {
             log.info("Starting command processor");
@@ -90,6 +97,7 @@ public class OpenVpnManagement {
                     log.debug("%d bytes read".formatted(len));
                     if (len < 0) {
                         clientChannel.close();
+                        managementConnectionStatus = ManagementConnectionStatus.Disconnected;
                     }
                 } catch (IOException ex) {
                     log.error("Error reading from socket: " + ex.getMessage());
@@ -127,7 +135,7 @@ public class OpenVpnManagement {
                         log.debug("Got log line: " + curLine);
                     } else if (curLine.startsWith(">HOLD:")) {
                         log.info("Management interface is in hold status");
-                        isInHoldStatus = true;
+                        managementConnectionStatus = ManagementConnectionStatus.Hold;
                     } else if (currentCommand != null) {
                         try {
                             if (currentCommand.processResultLine(curLine)) {
@@ -166,7 +174,7 @@ public class OpenVpnManagement {
             UnixDomainSocketAddress address = UnixDomainSocketAddress.of(socketPath);
             clientChannel.connect(address);
             clientChannel.configureBlocking(true);
-            isInHoldStatus = false;
+            managementConnectionStatus = ManagementConnectionStatus.Connected;
         } catch (IOException ex) {
             log.error("IO Exception: " + ex);
         }
@@ -204,10 +212,6 @@ public class OpenVpnManagement {
         } catch (IOException | InterruptedException ex) {
             log.error("Error waiting for socket: " + ex.getMessage());
         }
-    }
-
-    public boolean getIsInHoldStatus() {
-        return isInHoldStatus;
     }
 
     public int pid() throws ManagementException {

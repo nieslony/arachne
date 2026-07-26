@@ -6,10 +6,13 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagement;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -19,6 +22,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeLeaveEvent;
@@ -29,6 +33,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -46,6 +52,9 @@ public class AdminHome
 
     @Autowired
     private OpenVpnManagementService openVpnManagementService;
+
+    @Autowired
+    VpnSiteRepository vpnSiteRepository;
 
     @Autowired
     Settings settings;
@@ -68,7 +77,7 @@ public class AdminHome
 
         Accordion content = new Accordion();
         content.add("Connected Users", createConnectedUsersView());
-        //content.add("Connected Sites", createConnectedSitesView());
+        content.add("Connected Sites", createConnectedSitesView());
         content.setWidthFull();
         add(
                 serverVersion,
@@ -79,7 +88,7 @@ public class AdminHome
 
         onUpdateServerVersion();
         onRefreshConnectedUsers();
-        //onRefreshConnectedSites();
+        onRefreshConnectedSites();
     }
 
     private void onUpdateServerVersion() {
@@ -102,33 +111,85 @@ public class AdminHome
     }
 
     private void onRefreshConnectedUsers() {
-        try {
-            if (openVpnUserSettings.isAlreadyConfigured()) {
-                var status = openVpnManagementService.getUserManagement().status();
-                connectedUsersGrid.setItems(status.connectionStatus());
-                msgConnectedUsers.setText(
-                        "%d Users connected".formatted(status.connectionStatus().size())
-                );
-            } else {
-                msgConnectedUsers.setText("User VPN not yet configured");
+        if (openVpnUserSettings.isAlreadyConfigured()) {
+            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            switch (mgmt.getManagementConnectionStatus()) {
+                case Disconnected -> {
+                    msgConnectedSites.setText("No connection to Management Interface");
+                    connectedSitesGrid.setItems();
+                }
+                case Hold -> {
+                    msgConnectedSites.setText("OpenVpn is in Hold Status");
+                    connectedSitesGrid.setItems();
+                }
+                case Connected -> {
+                    try {
+                        var status = openVpnManagementService.getUserManagement().status();
+                        connectedUsersGrid.setItems(status.connectionStatus());
+                        msgConnectedUsers.setText(
+                                "%d Users connected".formatted(status.connectionStatus().size())
+                        );
+                    } catch (ManagementException ex) {
+                        log.error("Error getting connected users: " + ex.getMessage());
+                        msgConnectedUsers.setText("Cannot get connected users: " + ex.getMessage());
+                    }
+                }
             }
-        } catch (ManagementException ex) {
-            log.error("Error getting connected users: " + ex.getMessage());
-            msgConnectedUsers.setText("Cannot get connected users: " + ex.getMessage());
+        } else {
+            msgConnectedUsers.setText("User VPN not yet configured");
         }
     }
 
     private void onRefreshConnectedSites() {
-        try {
-            if (openVpnSiteSettings.isAlreadyConfigured()) {
-                var status = openVpnManagementService.getSiteManagement().status();
-            } else {
-                msgConnectedSites.setText("Site VPN not yet configured");
+        if (openVpnSiteSettings.isAlreadyConfigured()) {
+            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            switch (mgmt.getManagementConnectionStatus()) {
+                case Disconnected -> {
+                    msgConnectedSites.setText("No connection to Management Interface");
+                    connectedSitesGrid.setItems();
+                }
+                case Hold -> {
+                    msgConnectedSites.setText("OpenVpn is in Hold Status");
+                    connectedSitesGrid.setItems();
+                }
+                case Connected -> {
+                    try {
+                        log.info("Gettings all configured sites");
+                        var status = mgmt.status();
+                        msgConnectedSites.setText("%d of %d sites connected".formatted(
+                                status.connectionStatus().size(),
+                                vpnSiteRepository.count() - 1
+                        ));
+                        Set<String> siteNames = new HashSet<>();
+                        status.connectionStatus().forEach(
+                                site -> siteNames.add(site.username())
+                        );
+                        vpnSiteRepository.findAll()
+                                .forEach(site -> {
+                                    String siteName = site.getSiteHostname();
+                                    if (!siteNames.contains(siteName)
+                                            && !site.isDefaultSite()) {
+                                        log.debug("Site %s is not connected".formatted(siteName));
+                                        status
+                                                .connectionStatus()
+                                                .add(
+                                                        Status.ConnectionStatus
+                                                                .notConnected(siteName)
+                                                );
+                                    }
+                                });
+                        log.debug("Connextion status: " + status.connectionStatus().toString());
+                        connectedSitesGrid.setItems(status.connectionStatus());
+                    } catch (ManagementException ex) {
+                        log.error("Error getting connected sites: " + ex.getMessage());
+                        msgConnectedSites.setText("Error: " + ex.getMessage());
+                    }
+                }
             }
-        } catch (ManagementException ex) {
-            log.error("DBus Error: " + ex.getMessage());
-            msgConnectedSites.setText("DBusError: " + ex.getMessage());
+        } else {
+            msgConnectedSites.setText("Site VPN not yet configured");
         }
+        log.info("Gettings all configured sites (Done)");
     }
 
     private Component createConnectedUsersView() {
@@ -179,7 +240,7 @@ public class AdminHome
         return layout;
     }
 
-    /*    private Component createConnectedSitesView() {
+    private Component createConnectedSitesView() {
         VerticalLayout layout = new VerticalLayout();
 
         Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedSites());
@@ -194,54 +255,50 @@ public class AdminHome
         headerLayout.setAlignItems(Alignment.BASELINE);
 
         connectedSitesGrid = new Grid<>();
-        connectedSitesGrid.addColumn(site -> site.getVpnSite().getName())
+        connectedSitesGrid.addColumn(Status.ConnectionStatus::username)
                 .setHeader("Site Name");
         connectedSitesGrid.addColumn(new ComponentRenderer<>(
                 (var site) -> {
                     YesNoIcon icon = new YesNoIcon();
-                    icon.setValue(site.isConnected());
+                    icon.setValue(site.connectedSince() != null);
                     return icon;
                 }))
                 .setHeader("Connected")
                 .setAutoWidth(true)
                 .setFlexGrow(0);
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DecimalFormat
                         .getInstance()
-                        .format(site.getConnectedClient().getBytesReceived())
+                        .format(site.byteReceived())
                 : "")
                 .setHeader("Bytes Received");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DecimalFormat
                         .getInstance()
-                        .format(site.getConnectedClient().getBytesSent())
+                        .format(site.bytesSent())
                 : "")
                 .setHeader("Bytes Sent");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DateFormat
                         .getDateTimeInstance(
                                 DateFormat.SHORT,
                                 DateFormat.MEDIUM
                         )
-                        .format(site
-                                .getConnectedClient()
-                                .getConnectedSinceAsDate()
+                        .format(site.connectedSince()
                         )
                 : "")
                 .setHeader("Connected since");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
-                ? site.getConnectedClient()
-                        .getRealAddress()
-                        .split(":")[0]
+                site -> site.connectedSince() != null
+                ? site.realAddress().getHostAddress()
                 : "")
                 .setHeader("Real Address");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
-                ? site.getConnectedClient().getVirtualAddress()
+                site -> site.connectedSince() != null
+                ? site.virtualAddress().getHostAddress()
                 : "")
                 .setHeader("Virtual Address");
 
@@ -252,7 +309,8 @@ public class AdminHome
         layout.setPadding(false);
 
         return layout;
-    }*/
+    }
+
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         log.info("About to leave, removing status change listener");

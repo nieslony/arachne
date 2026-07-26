@@ -20,14 +20,24 @@ public class Status extends MultiLineCommand<Status.StatusInfo> {
             String username,
             InetAddress realAddress,
             InetAddress virtualAddress,
-            long byteReceived,
-            long bytesSent,
+            Long byteReceived,
+            Long bytesSent,
             Date connectedSince,
-            int clientId,
-            int peerId,
+            Integer clientId,
+            Integer peerId,
             String dataChannelCipher
             ) {
 
+        public static ConnectionStatus notConnected(String username) {
+            return new ConnectionStatus(
+                    username,
+                    null, null,
+                    null, null,
+                    null,
+                    null, null,
+                    null
+            );
+        }
     }
 
     public record StatusInfo(
