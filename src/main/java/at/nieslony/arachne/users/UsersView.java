@@ -336,12 +336,12 @@ public class UsersView extends VerticalLayout {
             if (user.getExternalProvider().equals(LdapUserSource.getName())) {
                 menuBar.addItem("Refresh now", e -> {
                     log.info("Refreshing user %s…".formatted(user.getUsername()));
-                    var ldapUser = ldapService.findUsers(myUsername, 1).getFirst();
+                    var ldapUser = ldapService.findUsers(user.getUsername(), 1).getFirst();
+                    log.debug("Found LdapUser: " + ldapUser.toString());
                     var roles = rolesCollestor.findRolesForUser(ldapUser);
                     user.update(ldapUser);
                     user.setRoles(roles);
                     userRepository.save(user);
-                    log.debug("Parent class: " + getParent().get().getClass().getName());
                 });
                 usersGrid.getDataProvider().refreshItem(user);
             } else {
