@@ -28,7 +28,6 @@ BuildRequires:  pkgconfig(systemd)
 Requires:       java-%{jdk_version}-openjdk-headless
 Requires:       openvpn
 Requires:       openvpn-plugin-arachne >= 1.5, openvpn-plugin-arachne < 1.6
-Requires:       arachne-dbus >= 1.5.1, arachne-dbus < 1.6
 
 Recommends:     httpd
 
