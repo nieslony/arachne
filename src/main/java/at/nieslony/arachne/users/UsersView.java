@@ -287,13 +287,14 @@ public class UsersView extends VerticalLayout {
                 e -> {
                     userRepository.save(binder.getBean());
                     usersGrid.getDataProvider().refreshItem(user);
+                    masterDetailLayout.setDetail(null);
                 }
         );
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.addToStart(saveButton);
-        buttonLayout.addToEnd(closeButton);
+        buttonLayout.setWidthFull();
+        buttonLayout.addToEnd(closeButton, saveButton);
 
         binder.setBean(user);
 
