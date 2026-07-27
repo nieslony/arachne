@@ -12,20 +12,14 @@ import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.usermatcher.UserMatcherInfo;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
 import at.nieslony.arachne.utils.components.LdapAutoComplete;
-import com.vaadin.flow.component.HasText;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.editor.Editor;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -57,6 +51,7 @@ public class RolesView extends VerticalLayout {
     Grid.Column<RoleRuleModel> parameterColumn;
     Grid.Column<RoleRuleModel> roleColumn;
     Grid.Column<RoleRuleModel> descriptionColumn;
+    MasterDetailLayout masterDetailLayout;
 
     public RolesView(
             RoleRuleRepository roleRuleRepository,
@@ -71,6 +66,7 @@ public class RolesView extends VerticalLayout {
         Button addRole = new Button("Add...", e -> {
             addRule();
         });
+        addRole.addThemeVariants(ButtonVariant.PRIMARY);
 
         HorizontalLayout topButtons = new HorizontalLayout();
         topButtons.add(addRole);
@@ -95,65 +91,46 @@ public class RolesView extends VerticalLayout {
                 .addColumn(RoleRuleModel::getDescription)
                 .setHeader("Description")
                 .setFlexGrow(1);
-
-        roleRules.setItems(roleRuleRepository.findAll());
-
-        editRoleBuffered();
-
-        add(topButtons, roleRules);
-        setPadding(false);
-    }
-
-    private void editRoleBuffered() {
-        Editor<RoleRuleModel> editor = roleRules.getEditor();
-        Binder<RoleRuleModel> binder = new Binder<>(RoleRuleModel.class);
-        editor.setBinder(binder);
-        editor.setBuffered(true);
-
-        Grid.Column<RoleRuleModel> editColumn = roleRules
-                .addComponentColumn(roleRule -> {
+        roleRules
+                .addComponentColumn(ruleRule -> {
                     MenuBar menuBar = new MenuBar();
-
                     menuBar.addItem("Edit", e -> {
-                        if (editor.isOpen()) {
-                            editor.cancel();
-                        }
-                        editor.editItem(roleRule);
+                        masterDetailLayout.setDetail(createEditRuleRule(ruleRule));
                     });
 
-                    MenuItem moreItem = menuBar.addItem("");
-                    SubMenu moreMenu = moreItem.getSubMenu();
-                    moreMenu.addItem("Delete...", e -> {
-                        Div ruleTxt = new Div(roleRule.toString());
-                        ruleTxt.setWhiteSpace(HasText.WhiteSpace.NOWRAP);
-                        Div msg = new Div(
-                                new Text("Really remove role rule "),
-                                ruleTxt,
-                                new Text("now? This can't be undone.")
-                        );
-                        ConfirmDialog confirm = new ConfirmDialog();
-                        confirm.setHeader("Remove rule");
-                        confirm.setText(msg);
-                        confirm.setConfirmButton("Delete",
-                                ce -> {
-                                    roleRuleRepository.delete(roleRule);
-                                    roleRules.setItems(roleRuleRepository.findAll());
-                                }
-                        );
-                        confirm.setCancelable(true);
-                        confirm.setWidth(32, Unit.EM);
-                        confirm.open();
+                    SubMenu subMenu = menuBar.addItem("").getSubMenu();
+                    subMenu.addItem("Delete…", e -> {
                     });
-
-                    return menuBar;
+                    HorizontalLayout layout = new HorizontalLayout();
+                    layout.addToEnd(menuBar);
+                    layout.setPadding(false);
+                    layout.setMargin(false);
+                    return layout;
                 })
                 .setWidth("10em")
                 .setFlexGrow(0);
+        roleRules.setSizeFull();
+        roleRules.setItems(roleRuleRepository.findAll());
+
+        //editRoleBuffered();
+        masterDetailLayout = new MasterDetailLayout();
+        masterDetailLayout.setMaster(roleRules);
+        masterDetailLayout.setMasterSize("50em", true);
+        masterDetailLayout.setSizeFull();
+
+        add(topButtons, masterDetailLayout);
+        setPadding(false);
+    }
+
+    private Component createEditRuleRule(RoleRuleModel model) {
+        Binder<RoleRuleModel> binder = new Binder<>();
 
         Select<UserMatcherInfo> userMatchersField = new Select<>();
         List<UserMatcherInfo> allUserMatchers = userMatcherCollector.getAllUserMatcherInfo();
         userMatchersField.setItems(allUserMatchers);
         userMatchersField.setEmptySelectionAllowed(false);
+        userMatchersField.setLabel("Role Rule Type");
+        userMatchersField.setWidthFull();
         binder.forField(userMatchersField)
                 .bind(
                         rr -> {
@@ -163,9 +140,10 @@ public class RolesView extends VerticalLayout {
                             rr.setUserMatcherClassName(v.getClassName());
                         }
                 );
-        ruleColumn.setEditorComponent(userMatchersField);
 
-        TextField parameterField = new TextField();
+        TextField parameterField = new TextField("Parameter");
+        parameterField.setWidthFull();
+        parameterField.setEnabled(false);
         binder.forField(parameterField)
                 .withValidator(
                         text -> {
@@ -181,55 +159,50 @@ public class RolesView extends VerticalLayout {
                 parameterField,
                 ldapService
         );
-        parameterColumn.setEditorComponent(new HorizontalLayout(
-                parameterField,
-                parameterFieldComplete
-        ));
 
-        Select<Role> roles = new Select<>();
-        roles.setItems(Role.values());
-        roles.setEmptySelectionAllowed(false);
-        binder.forField(roles)
+        Select<Role> roleSelect = new Select<>();
+        roleSelect.setLabel("Role");
+        roleSelect.setItems(Role.values());
+        roleSelect.setWidthFull();
+        binder.forField(roleSelect)
                 .bind(RoleRuleModel::getRole, RoleRuleModel::setRole);
-        roleColumn.setEditorComponent(roles);
 
-        TextField descriptionField = new TextField();
+        TextField descriptionField = new TextField("Description");
+        descriptionField.setWidthFull();
         binder.forField(descriptionField)
                 .bind(RoleRuleModel::getDescription, RoleRuleModel::setDescription);
-        descriptionColumn.setEditorComponent(descriptionField);
 
-        editor.addSaveListener((event) -> {
-            RoleRuleModel roleRule = event.getItem();
-            roleRuleRepository.save(roleRule);
-        });
-
+        Button closeButton = new Button("Close", e -> masterDetailLayout.setDetail(null));
         Button saveButton = new Button(
                 "Save",
                 e -> {
-                    editor.save();
+                    roleRuleRepository.save(binder.getBean());
+                    roleRules.setItems(roleRuleRepository.findAll());
+                    masterDetailLayout.setDetail(null);
                 }
         );
-        Button cancelButton = new Button(
-                VaadinIcon.CLOSE.create(),
-                e -> editor.cancel());
-        cancelButton.addThemeVariants(ButtonVariant.ERROR);
-        HorizontalLayout actions = new HorizontalLayout(
-                saveButton,
-                cancelButton
-        );
-        actions.setPadding(false);
-        editColumn.setEditorComponent(actions);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
-        binder.addStatusChangeListener((event) -> {
-            saveButton.setEnabled(!event.hasValidationErrors());
-        });
+        HorizontalLayout buttonLayout = new HorizontalLayout();
+        buttonLayout.setWidthFull();
+        buttonLayout.addToEnd(closeButton, saveButton);
+
+        VerticalLayout layout = new VerticalLayout(
+                userMatchersField,
+                new HorizontalLayout(parameterField, parameterFieldComplete),
+                roleSelect,
+                descriptionField,
+                buttonLayout
+        );
 
         userMatchersField.addValueChangeListener(event -> {
             UserMatcherInfo umi = event.getValue();
-            if (umi.getParameterLabel().isEmpty()) {
+            if (umi.getParameterLabel() == null || umi.getParameterLabel().isEmpty()) {
                 parameterField.setEnabled(false);
+                parameterField.setLabel("Without parameter");
             } else {
                 parameterField.setEnabled(true);
+                parameterField.setLabel(umi.getParameterLabel());
             }
             String className = umi.getClassName();
             if (className.equals(UsernameMatcher.class.getName())) {
@@ -239,8 +212,13 @@ public class RolesView extends VerticalLayout {
             } else {
                 parameterFieldComplete.setCompleteMode(LdapAutoComplete.CompleteMode.NULL);
             }
+
             binder.validate();
         });
+
+        binder.setBean(model);
+
+        return layout;
     }
 
     void addRule() {
@@ -271,7 +249,7 @@ public class RolesView extends VerticalLayout {
         List<UserMatcherInfo> allUserMatchers = userMatcherCollector.getAllUserMatcherInfo();
         userMatchers.setItems(allUserMatchers);
         userMatchers.setEmptySelectionAllowed(false);
-        userMatchers.setLabel("Role Rules");
+        userMatchers.setLabel("Role Rule Type");
 
         TextField parameter = new TextField();
         parameter.setClearButtonVisible(true);
