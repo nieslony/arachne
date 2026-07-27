@@ -42,7 +42,6 @@ import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -158,14 +157,17 @@ public class UsersView extends VerticalLayout {
                     }
                     return avatar;
                 })
+                .setFlexGrow(0)
                 .setAutoWidth(true);
         usernameColumn = usersGrid
                 .addColumn(UserModel::getUsername)
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Username");
         displayNameColumn = usersGrid
                 .addColumn(UserModel::getDisplayName)
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Displayname");
         emailColumn = usersGrid
                 .addColumn(UserModel::getEmail)
@@ -181,6 +183,7 @@ public class UsersView extends VerticalLayout {
                     }
                 }))
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("User Source");
         usersGrid
                 .addComponentColumn((user) -> {
@@ -190,6 +193,7 @@ public class UsersView extends VerticalLayout {
                     return new Text(roles);
                 })
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Roles");
         usersGrid
                 .addColumn(new ComponentRenderer<>((UserModel user) -> {
@@ -221,11 +225,13 @@ public class UsersView extends VerticalLayout {
                         }
                     };
                 }))
-                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("OTP");
-        usersGrid.addColumn(new ComponentRenderer<>(
-                (UserModel user) -> getUserMenu(user))
-        );
+        usersGrid
+                .addComponentColumn(user -> createUserMenu(user))
+                .setWidth("12em")
+                .setFlexGrow(0);
+        usersGrid.setSizeFull();
 
         GridPaginationControls<UserModel> paginationControl = new GridPaginationControls<>(
                 usersGrid,
@@ -256,7 +262,7 @@ public class UsersView extends VerticalLayout {
         setPadding(false);
     }
 
-    private Component getUserDetails(UserModel user) {
+    private Component createEditUser(UserModel user) {
         Binder<UserModel> binder = new Binder<>();
 
         VerticalLayout vbox = new VerticalLayout();
@@ -283,6 +289,7 @@ public class UsersView extends VerticalLayout {
                     usersGrid.getDataProvider().refreshItem(user);
                 }
         );
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.addToStart(saveButton);
@@ -315,27 +322,18 @@ public class UsersView extends VerticalLayout {
         };
     }
 
-    private Component getUserMenu(UserModel user) {
+    private Component createUserMenu(UserModel user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String myUsername = authentication.getName();
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
-        MenuItem menuItem = menuBar.addItem("");
-        SubMenu userMenu = menuItem.getSubMenu();
-
         if (user.getExternalProvider() == null) {
-            userMenu.addItem("Edit", e -> {
-                masterDetailLayout.setDetail(getUserDetails(user));
+            MenuItem item = menuBar.addItem("Edit", e -> {
+                masterDetailLayout.setDetail(createEditUser(user));
             });
-
-            if (!user.getUsername().equals(myUsername)) {
-                userMenu.addItem("Change Password...", event -> changePassword(user));
-                userMenu.addItem("Delete...", event -> deleteUser(user));
-            }
         } else {
             if (user.getExternalProvider().equals(LdapUserSource.getName())) {
-                userMenu.addItem("Refresh now", e -> {
+                menuBar.addItem("Refresh now", e -> {
                     log.info("Refreshing user %s…".formatted(user.getUsername()));
                     var ldapUser = ldapService.findUsers(myUsername, 1).getFirst();
                     var roles = rolesCollestor.findRolesForUser(ldapUser);
@@ -350,6 +348,12 @@ public class UsersView extends VerticalLayout {
             }
         }
 
+        MenuItem menuItem = menuBar.addItem("");
+        SubMenu userMenu = menuItem.getSubMenu();
+        if (!user.getUsername().equals(myUsername) && user.getExternalProvider() == null) {
+            userMenu.addItem("Change Password...", event -> changePassword(user));
+            userMenu.addItem("Delete...", event -> deleteUser(user));
+        }
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);
@@ -387,12 +391,18 @@ public class UsersView extends VerticalLayout {
             userMenu.addItem("Send Config as E-Mail…", (e) -> sendVpnConfig(user));
             userMenu.addItem("View Config…", (e) -> viewConfig(user));
         }
-        if (!userMenu.getItems().isEmpty()) {
-            menuBar.addItem(menuItem);
+        if (userMenu.getItems().isEmpty()) {
+            log.debug("Removing empty submenu");
+            menuBar.remove(menuItem);
         }
         if (menuBar.getItems().size() > 1) {
-            return menuBar;
+            log.debug("Returning menu with %d items".formatted(menuBar.getItems().size()));
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.addToEnd(menuBar);
+            layout.setWidthFull();
+            return layout;
         } else {
+            log.debug("Menu is empty, returning empty text");
             return new Text("");
         }
     }
