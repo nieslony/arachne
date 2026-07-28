@@ -281,13 +281,17 @@ public class UsersView extends VerticalLayout {
         binder.forField(emailField)
                 .bind(UserModel::getEmail, UserModel::setEmail);
 
-        Button closeButton = new Button("Close", e -> masterDetailLayout.setDetail(null));
+        Button closeButton = new Button("Close", e -> {
+            usersGrid.select(null);
+            masterDetailLayout.setDetail(null);
+        });
         Button saveButton = new Button(
                 "Save",
                 e -> {
                     userRepository.save(binder.getBean());
                     usersGrid.getDataProvider().refreshItem(user);
                     masterDetailLayout.setDetail(null);
+                    usersGrid.select(null);
                 }
         );
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
@@ -330,6 +334,7 @@ public class UsersView extends VerticalLayout {
         MenuBar menuBar = new MenuBar();
         if (user.getExternalProvider() == null) {
             MenuItem item = menuBar.addItem("Edit", e -> {
+                usersGrid.select(user);
                 masterDetailLayout.setDetail(createEditUser(user));
             });
         } else {

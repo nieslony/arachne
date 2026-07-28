@@ -92,10 +92,11 @@ public class RolesView extends VerticalLayout {
                 .setHeader("Description")
                 .setFlexGrow(1);
         roleRules
-                .addComponentColumn(ruleRule -> {
+                .addComponentColumn(roleRule -> {
                     MenuBar menuBar = new MenuBar();
                     menuBar.addItem("Edit", e -> {
-                        masterDetailLayout.setDetail(createEditRuleRule(ruleRule));
+                        roleRules.select(roleRule);
+                        masterDetailLayout.setDetail(createEditRuleRule(roleRule));
                     });
 
                     SubMenu subMenu = menuBar.addItem("").getSubMenu();
@@ -172,13 +173,17 @@ public class RolesView extends VerticalLayout {
         binder.forField(descriptionField)
                 .bind(RoleRuleModel::getDescription, RoleRuleModel::setDescription);
 
-        Button closeButton = new Button("Close", e -> masterDetailLayout.setDetail(null));
+        Button closeButton = new Button("Close", e -> {
+            masterDetailLayout.setDetail(null);
+            roleRules.select(null);
+        });
         Button saveButton = new Button(
                 "Save",
                 e -> {
                     roleRuleRepository.save(binder.getBean());
                     roleRules.setItems(roleRuleRepository.findAll());
                     masterDetailLayout.setDetail(null);
+                    roleRules.select(null);
                 }
         );
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
