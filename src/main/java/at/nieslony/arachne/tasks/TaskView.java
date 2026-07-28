@@ -19,8 +19,6 @@ package at.nieslony.arachne.tasks;
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.utils.components.GridPaginationControls;
 import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.UIDetachedException;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -42,6 +40,7 @@ import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.text.DateFormat;
 import java.time.LocalDate;
@@ -49,9 +48,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -65,12 +67,21 @@ public class TaskView
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
 
-    Grid<TaskModel> tasksGrid;
-    ComboBox<Integer> refreshInterval;
-    Timer timer;
+    @Autowired
+    private TaskRepository taskRepository;
 
-    public TaskView(TaskRepository taskRepository, TaskScheduler taskScheduler) {
-        timer = new Timer();
+    @Autowired
+    TaskScheduler taskScheduler;
+
+    private Grid<TaskModel> tasksGrid;
+    private ComboBox<Integer> refreshInterval;
+
+    private ScheduledExecutorService taskExecutor;
+    ScheduledFuture<?> refreshTask;
+
+    @PostConstruct
+    public void init() {
+        taskExecutor = Executors.newScheduledThreadPool(1);
         tasksGrid = new Grid<>();
 
         HorizontalLayout buttonBar = new HorizontalLayout();
@@ -84,11 +95,26 @@ public class TaskView
         taskScheduler.getTaskTypes().forEach((task) -> {
             taskTypeMenu.addItem(getTaskName(task), (e) -> {
                 taskScheduler.runTask(task,
-                        () -> tasksGrid.getDataProvider().refreshAll(),
-                        () -> tasksGrid.getDataProvider().refreshAll()
+                        () -> {
+                            tasksGrid.getUI().ifPresent(
+                                    ui -> ui.access(
+                                            () -> tasksGrid
+                                                    .getDataProvider()
+                                                    .refreshAll()
+                                    )
+                            );
+                        },
+                        () -> {
+                            tasksGrid.getUI().ifPresent(
+                                    ui -> ui.access(
+                                            () -> tasksGrid
+                                                    .getDataProvider()
+                                                    .refreshAll()
+                                    )
+                            );
+                        }
                 );
                 tasksGrid.getDataProvider().refreshAll();
-                scheduleRefresh();
             });
         });
         buttonBar.addToStart(menuBar);
@@ -100,8 +126,10 @@ public class TaskView
         refreshInterval = new ComboBox<>();
         refreshInterval.setItems(1, 2, 5, 10, 20);
         refreshInterval.setItemLabelGenerator((l) -> l.toString() + " min");
-        refreshInterval.addValueChangeListener((e) -> scheduleRefresh());
         refreshInterval.setValue(1);
+        refreshInterval.addValueChangeListener((e) -> {
+            scheduleRefresh();
+        });
         buttonBar.addToEnd(refreshInterval);
 
         tasksGrid
@@ -201,14 +229,16 @@ public class TaskView
         setPadding(false);
 
         autoRefresh.addClickListener(e -> {
+            log.debug("Toogling status of Autoreload");
             if (refreshInterval.isEnabled()) {
                 refreshInterval.setEnabled(false);
                 autoRefresh.removeThemeVariants(ButtonVariant.PRIMARY);
+                scheduleRefresh();
             } else {
                 refreshInterval.setEnabled(true);
                 autoRefresh.addThemeVariants(ButtonVariant.PRIMARY);
+                refreshTask.cancel(false);
             }
-            scheduleRefresh();
         });
     }
 
@@ -307,49 +337,40 @@ public class TaskView
     }
 
     private void scheduleRefresh() {
-        try {
-            timer.cancel();
-        } catch (IllegalStateException ex) {
+        int interval = refreshInterval.getValue();
+        log.info("Scheduling refresh task with period: %d mins".formatted(interval));
+        if (refreshTask != null && !refreshTask.isCancelled()) {
+            refreshTask.cancel(false);
         }
-        if (refreshInterval.isEnabled()) {
-            timer = new Timer();
-            int delay = 1000;
-            int interval = refreshInterval.getValue() * 1000 * 60;
-            UI ui = UI.getCurrent();
 
-            timer.scheduleAtFixedRate(
-                    new TimerTask() {
-                @Override
-                public void run() {
+        refreshTask = taskExecutor.scheduleAtFixedRate(
+                () -> {
                     try {
-                        ui.access(() -> {
-                            tasksGrid.getDataProvider().refreshAll();
-                        });
-                    } catch (UIDetachedException ex) {
-                        log.debug("UI detached → don't refresh");
+                        log.debug("Refreshing task list");
+                        tasksGrid.getUI().ifPresentOrElse(
+                                ui -> ui.access(() -> {
+                                    tasksGrid.getDataProvider().refreshAll();
+                                }),
+                                () -> log.debug("No UI present")
+                        );
+                    } catch (Exception ex) {
+                        log.error("Cannot refresh tasks: " + ex.getMessage());
                     }
-                }
-            },
-                    delay,
-                    interval
-            );
-        }
+                },
+                0, interval,
+                TimeUnit.MINUTES
+        );
     }
 
     @Override
     public void beforeLeave(BeforeLeaveEvent ble) {
-        try {
-            if (timer != null) {
-                timer.cancel();
-            }
-        } catch (IllegalStateException ex) {
-        }
+        log.info("Leaving Task view");
+        refreshTask.cancel(true);
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
-        if (timer != null) {
-            scheduleRefresh();
-        }
+        log.info("Entering Task view");
+        scheduleRefresh();
     }
 }
