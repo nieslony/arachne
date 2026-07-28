@@ -16,7 +16,7 @@
  */
 package at.nieslony.arachne.utils.components;
 
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import com.vaadin.flow.component.textfield.TextField;
 import java.util.List;
 
@@ -24,9 +24,9 @@ import java.util.List;
  *
  * @author claas
  */
-public class LdapAutoComplete extends AutoComplete<LdapController.PrettyResult> {
+public class LdapAutoComplete extends AutoComplete<LdapService.PrettyResult> {
 
-    final private LdapController ldapController;
+    final private LdapService ldapService;
 
     public enum CompleteMode {
         NULL, USERS, GROUPS
@@ -35,21 +35,21 @@ public class LdapAutoComplete extends AutoComplete<LdapController.PrettyResult> 
     //private final LdapSettings ldapSettings;
     private CompleteMode completeMode = CompleteMode.NULL;
 
-    public LdapAutoComplete(TextField parent, LdapController ldapController) {
+    public LdapAutoComplete(TextField parent, LdapService ldapService) {
         super(parent);
-        this.ldapController = ldapController;
+        this.ldapService = ldapService;
         setValueConverter((value) -> value.name());
         setValueCompleter((v) -> onComplete(v));
     }
 
-    private List<LdapController.PrettyResult> onComplete(String value) {
+    private List<LdapService.PrettyResult> onComplete(String value) {
         return switch (completeMode) {
             case GROUPS ->
-                ldapController.findGroupsPretty(
+                ldapService.findGroupsPretty(
                 "*" + value + "*",
                 5);
             case USERS ->
-                ldapController.findUsersPretty(
+                ldapService.findUsersPretty(
                 "*" + value + "*",
                 5);
             default ->

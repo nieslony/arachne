@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -18,9 +18,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  *
  * @author claas
  */
-@Controller
+@Service
 @Slf4j
-public class ApiIndexBean {
+public class ApiIndexService {
 
     private Map<RequestMappingInfo, HandlerMethod> apiMap;
 

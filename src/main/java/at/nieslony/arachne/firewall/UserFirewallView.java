@@ -17,9 +17,10 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
@@ -29,7 +30,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -43,10 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSettings> {
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private OpenVpnManagementService openVpnManagementService;
 
     @PostConstruct
     public void init() {
@@ -56,8 +59,8 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.add("Incoming Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -65,8 +68,8 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.add("Outgoing Rules", new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.OUTGOING
@@ -110,12 +113,13 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
     }
 
     @Override
-    protected void applyBasicSettings(UserFirewallBasicsSettings basicSettings) throws DBusException {
+    protected void applyBasicSettings(UserFirewallBasicsSettings basicSettings)
+            throws ManagementException {
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-        openVpnController.writeOpenVpnPluginUserConfig(
+        openVpnService.writeOpenVpnPluginUserConfig(
                 openVpnUserSettings,
                 firewallBasicSettings
         );
-        arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+        openVpnManagementService.getUserManagement().restartServer();
     }
 }

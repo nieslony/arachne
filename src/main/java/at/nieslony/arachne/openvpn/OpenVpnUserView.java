@@ -6,7 +6,9 @@ package at.nieslony.arachne.openvpn;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Hold;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
@@ -30,10 +32,8 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -49,15 +49,12 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinServletRequest;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 
 /**
@@ -78,8 +75,8 @@ public class OpenVpnUserView extends VerticalLayout {
 
     public OpenVpnUserView(
             Settings settings,
-            OpenVpnController openvpnRestController,
-            ArachneDbus arachneDbus,
+            OpenVpnService openvpnRestController,
+            OpenVpnManagementService openVpnManagementService,
             Pki pki
     ) {
         vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
@@ -102,11 +99,13 @@ public class OpenVpnUserView extends VerticalLayout {
                             firewallBasicsSettings
                     );
                     openvpnRestController.writeOpenVpnUserServerConfig(vpnSettings);
-                    arachneDbus.restartServer(ArachneDbus.ServerType.USER);
+                    openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
+                    openVpnManagementService.getUserManagement().hold(Hold.HoldParam.OFF);
+                    openVpnManagementService.getUserManagement().restartServer();
                     ShowNotification.info("OpenVpn restarted with new configuration");
                 } catch (SettingsException ex) {
                     log.error("Cannot save openvpn user settings: " + ex.getMessage());
-                } catch (DBusException | DBusExecutionException ex) {
+                } catch (ManagementException ex) {
                     String header = "Cannot restart openVpn";
                     log.error(header + ": " + ex.getMessage());
                     ShowNotification.error(header, ex.getMessage());
@@ -440,16 +439,6 @@ public class OpenVpnUserView extends VerticalLayout {
     private Component createDnsPage() {
         HorizontalLayout layout = new HorizontalLayout();
 
-        ListBox<String> pushDnsServersField = new ListBox<>();
-        pushDnsServersField.setHeight(30, Unit.EX);
-        pushDnsServersField.addClassNames(
-                LumoUtility.Border.ALL,
-                LumoUtility.BorderColor.PRIMARY,
-                LumoUtility.Background.PRIMARY_10
-        );
-        NativeLabel pushDnsServersLabel = new NativeLabel("Push DNS Servers");
-        pushDnsServersLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
-
         EditableListBox editDnsServerField = new EditableListBox("Push DNS Servers") {
             @Override
             protected Validator<String> getValidator() {
@@ -542,6 +531,7 @@ public class OpenVpnUserView extends VerticalLayout {
                 )
                 .filter(rem -> rem != null);
         var l = Stream.concat(privateStream, publicStream)
+                .filter(v -> v.getRemoteHost() != null)
                 .sorted((vr1, vr2) -> {
                     int compHostNames = vr1.getRemoteHost().compareTo(vr2.getRemoteHost());
                     if (compHostNames != 0) {

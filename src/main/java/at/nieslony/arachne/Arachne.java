@@ -25,6 +25,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories("at.nieslony.arachne")
 @EntityScan("at.nieslony.arachne")
 @StyleSheet(Aura.STYLESHEET)
+@StyleSheet("/arachne/theme/styles.css")
 @SpringBootApplication
 @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC)
 public class Arachne implements AppShellConfigurator {

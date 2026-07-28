@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.ldap;
 
+import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ExternalUserSource;
@@ -46,7 +47,7 @@ public class LdapUserSource implements ExternalUserSource {
     private RolesCollector rolesCollector;
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     static public String getName() {
         return "Ldap";
@@ -55,7 +56,11 @@ public class LdapUserSource implements ExternalUserSource {
     @Override
     public UserModel findUser(String username) {
         UserSettings userSettings = settings.getSettings(UserSettings.class);
+        KerberosSettings kerberosSettings = settings.getSettings(KerberosSettings.class);
         int ldapCacheMaxMins = userSettings.getExpirationTimeout();
+        if (!username.endsWith(kerberosSettings.getRealm())) {
+            username = "%s@%s".formatted(username, kerberosSettings.getRealm());
+        }
 
         UserModel user = userRepository.findByUsernameAndExternalProvider(
                 username,
@@ -65,7 +70,7 @@ public class LdapUserSource implements ExternalUserSource {
             log.info("User %s not found in database, getting from LDAP"
                     .formatted(username)
             );
-            user = ldapController.getUser(username);
+            user = ldapService.getUser(username);
             if (user == null) {
                 log.info("User %s neither found in database nor in LDAP"
                         .formatted(username)
@@ -80,7 +85,7 @@ public class LdapUserSource implements ExternalUserSource {
         } else if (user.isExpired(ldapCacheMaxMins)) {
             log.info("User is expired. Updating from LDAP");
 
-            UserModel ldapUser = ldapController.getUser(username);
+            UserModel ldapUser = ldapService.getUser(username);
             if (ldapUser != null) {
                 user.update(ldapUser);
                 Set<String> roles = rolesCollector.findRolesForUser(user);

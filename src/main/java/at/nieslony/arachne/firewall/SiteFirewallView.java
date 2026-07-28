@@ -5,8 +5,9 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapController;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
+import at.nieslony.arachne.ldap.LdapService;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
@@ -14,7 +15,6 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
-import org.freedesktop.dbus.exceptions.DBusException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -27,10 +27,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSettings> {
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private OpenVpnManagementService openVpnManagementService;
 
     @PostConstruct
     public void init() {
@@ -40,8 +43,8 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
@@ -49,8 +52,8 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         FirewallRulesEditor outgoingRulesEditor = new FirewallRulesEditor(
                 firewallRuleRepository,
                 userMatcherCollector,
-                ldapController,
-                firewallController,
+                ldapService,
+                firewallService,
                 userRepository,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
@@ -100,10 +103,11 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
     }
 
     @Override
-    protected void applyBasicSettings(SiteFirewallBasicsSettings basicSettings) throws DBusException {
-        openVpnController.writeOpenVpnPluginSiteConfig(
+    protected void applyBasicSettings(SiteFirewallBasicsSettings basicSettings)
+            throws ManagementException {
+        openVpnService.writeOpenVpnPluginSiteConfig(
                 null,
                 firewallBasicSettings);
-        arachneDbus.restartServer(ArachneDbus.ServerType.SITE);
+        openVpnManagementService.getSiteManagement().restartServer();
     }
 }

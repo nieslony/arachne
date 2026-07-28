@@ -108,7 +108,7 @@ public class FolderFactory {
         return Path.of(workDir + "/backup.json").toAbsolutePath().toString();
     }
 
-    private String getOpenVpnRunDir() {
+    public String getOpenVpnRunDir() {
         log.info("Creating " + openVpnRunDir);
         try {
             Files.createDirectories(Path.of(openVpnRunDir));

@@ -27,7 +27,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.VaadinServletRequest;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.Entity;
 import java.lang.reflect.Method;
@@ -63,21 +62,18 @@ public class ApiIndexView extends VerticalLayout {
         READ, WRITE
     }
 
-    public ApiIndexView(ApiIndexBean apiIndexBean) {
+    public ApiIndexView(ApiIndexService apiIndexBean) {
         String urlPath = RouteConfiguration.forApplicationScope()
                 .getUrl(getClass());
         H1 header = new H1("API Index");
-        header.addClassName(LumoUtility.TextColor.PRIMARY);
         add(header);
         H2 tocHeader = new H2("Table of Contents");
-        tocHeader.addClassName(LumoUtility.TextColor.PRIMARY);
         tocHeader.setId("toc");
         add(tocHeader);
 
         UnorderedList toc = new UnorderedList();
         add(toc);
         H2 apiCallsHeader = new H2("API Calls");
-        apiCallsHeader.addClassName(LumoUtility.TextColor.PRIMARY);
         add(apiCallsHeader);
 
         var request = VaadinServletRequest.getCurrent();

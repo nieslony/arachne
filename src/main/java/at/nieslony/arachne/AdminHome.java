@@ -6,16 +6,15 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
-import at.nieslony.arachne.openvpn.VpnSite;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
-import at.nieslony.arachne.openvpnmanagement.ArachneDbus;
-import at.nieslony.arachne.openvpnmanagement.IFaceConnectedClient;
-import at.nieslony.arachne.openvpnmanagement.IFaceOpenVpnStatus;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagement;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.UIDetachedException;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
@@ -23,6 +22,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -34,13 +34,17 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
-import org.freedesktop.dbus.exceptions.DBusException;
-import org.freedesktop.dbus.exceptions.DBusExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -54,332 +58,368 @@ public class AdminHome
         extends VerticalLayout
         implements BeforeEnterObserver, BeforeLeaveObserver {
 
-    class ConnectedUsersListener implements Consumer<IFaceOpenVpnStatus> {
+    @Autowired
+    private OpenVpnManagementService openVpnManagementService;
 
-        private final Supplier<UI> uiSupplier;
-        private final Grid<IFaceConnectedClient> grid;
+    @Autowired
+    VpnSiteRepository vpnSiteRepository;
 
-        ConnectedUsersListener(Supplier<UI> uiSupplier, Grid<IFaceConnectedClient> grid) {
-            this.uiSupplier = uiSupplier;
-            this.grid = grid;
-        }
+    @Autowired
+    Settings settings;
 
-        @Override
-        public void accept(IFaceOpenVpnStatus status) {
-            try {
-                UI ui = uiSupplier.get();
-                ui.access(() -> {
-                    var connectedUsers = status.getConnectedClients();
-                    log.debug(
-                            "Connected users on %s: %s"
-                                    .formatted(
-                                            status.getTimeAsDate().toString(),
-                                            connectedUsers.toString()
-                                    )
-                    );
-                    grid.setItems(connectedUsers);
-                    msgConnectedUsers.setText(createMsgConnectedUsers(
-                            status.getConnectedClients().size()
-                    ));
-                });
-            } catch (UIDetachedException ex) {
-                log.warn("Cannot update users grid: UI is detached");
-                removeListeners();
-            } catch (Exception ex) {
-                log.warn("Cannot update ui: " + ex.getMessage());
-            }
-        }
-    };
+    private OpenVpnUserSettings openVpnUserSettings;
+    private OpenVpnSiteSettings openVpnSiteSettings;
 
-    class SiteStatus {
-
-        private final VpnSite vpnSite;
-        private final IFaceConnectedClient connectedClient;
-
-        SiteStatus(VpnSite vpnSite, IFaceConnectedClient connectedClient) {
-            this.vpnSite = vpnSite;
-            this.connectedClient = connectedClient;
-        }
-
-        public VpnSite getVpnSite() {
-            return vpnSite;
-        }
-
-        public IFaceConnectedClient getConnectedClient() {
-            return connectedClient;
-        }
-
-        public boolean isConnected() {
-            return connectedClient != null;
-        }
-    }
-
-    class ConnectedSitesListener implements Consumer<IFaceOpenVpnStatus> {
-
-        private final Supplier<UI> uiSupplier;
-        private final Grid<SiteStatus> grid;
-
-        ConnectedSitesListener(Supplier<UI> uiSupplier, Grid<SiteStatus> grid) {
-            this.uiSupplier = uiSupplier;
-            this.grid = grid;
-        }
-
-        @Override
-        public void accept(IFaceOpenVpnStatus status) {
-            var knownSites = vpnSiteRepository.findAll();
-            var connectedSites = status.getConnectedClients();
-            log.debug(
-                    "Connected sites on %s: %s"
-                            .formatted(
-                                    status.getTimeAsDate().toString(),
-                                    connectedSites.toString()
-                            )
-            );
-
-            List<SiteStatus> statusList = new LinkedList<>();
-            for (var site : knownSites) {
-                if (!site.isDefaultSite()) {
-                    var client = connectedSites.stream()
-                            .filter((s)
-                                    -> s
-                                    .getCommonName()
-                                    .equals(site.getSiteHostname())
-                            )
-                            .findFirst()
-                            .orElse(null);
-                    var siteStatus = new SiteStatus(site, client);
-                    log.debug("Site is connected: %b %s"
-                            .formatted(siteStatus.isConnected(), site.toString())
-                    );
-                    statusList.add(siteStatus);
-                }
-            }
-            try {
-                UI ui = uiSupplier.get();
-                ui.access(() -> {
-                    grid.setItems(statusList);
-                    msgConnectedSites.setText("%d/%d sites connected"
-                            .formatted(status.getConnectedClients().size(),
-                                    vpnSiteRepository.count() - 1
-                            ));
-                });
-            } catch (UIDetachedException ex) {
-                log.warn("Cannot update sites grid: UI is detached");
-                removeListeners();
-            } catch (Exception ex) {
-                log.warn("Cannot update ui: " + ex.getMessage());
-            }
-        }
-    }
-
-    private final VpnSiteRepository vpnSiteRepository;
-    private final ArachneDbus arachneDbus;
-    private final OpenVpnUserSettings openVpnUserSettings;
-    private final OpenVpnSiteSettings openVpnSiteSettings;
-    private Grid<IFaceConnectedClient> connectedUsersGrid;
-    private Grid<SiteStatus> connectedSitesGrid;
+    private Select<Integer> userUpdateIntervalField;
+    private Select<Integer> siteUpdateIntervalField;
+    private Grid<Status.ConnectionStatus> connectedSitesGrid;
+    private Grid<Status.ConnectionStatus> connectedUsersGrid;
     private Span msgConnectedUsers;
     private Span msgConnectedSites;
-    private final Consumer<IFaceOpenVpnStatus> updateConnectedUserListener;
-    private final Consumer<IFaceOpenVpnStatus> updateConnectedSitesListener;
 
-    public AdminHome(
-            ArachneDbus arachneDbus,
-            VpnSiteRepository vpnSiteRepository,
-            Settings settings
-    ) {
-        this.arachneDbus = arachneDbus;
-        this.vpnSiteRepository = vpnSiteRepository;
-        this.openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-        this.openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
+    private ScheduledExecutorService scheduledExecutor;
+    private AtomicReference<ScheduledFuture<?>> updateUsers;
+    private AtomicReference<ScheduledFuture<?>> updateSites;
+
+    Text serverVersion;
+
+    @PostConstruct
+    public void init() {
+        openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+        openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
+
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        updateUsers = new AtomicReference<>();
+        updateSites = new AtomicReference<>();
+
+        serverVersion = new Text("");
 
         Accordion content = new Accordion();
         content.add("Connected Users", createConnectedUsersView());
         content.add("Connected Sites", createConnectedSitesView());
         content.setWidthFull();
-        add(content);
+        add(
+                serverVersion,
+                content
+        );
+        content.setSizeFull();
 
-        this.updateConnectedUserListener = new ConnectedUsersListener(
-                () -> getUI().orElseThrow(),
-                connectedUsersGrid
-        );
-        this.updateConnectedSitesListener = new ConnectedSitesListener(
-                () -> getUI().orElseThrow(),
-                connectedSitesGrid
-        );
         setPadding(false);
 
-        onRefreshConnectedUsers();
-        onRefreshConnectedSites();
+        onUpdateServerVersion();
     }
 
-    @PostConstruct
-    public void init() {
-        addDetachListener(l -> {
-            log.debug("Detaching from AdminHome");
-            removeListeners();
-            log.debug("Detached");
-        });
-        addAttachListener(l -> {
-            log.debug("Attaching to AdminHome");
-            addListeners();
-            log.debug("Attached.");
-        });
-        addAttachListener((t) -> {
-            addListeners();
-        });
-    }
+    private void onUpdateServerVersion() {
+        String versionStr;
+        try {
+            versionStr = openVpnManagementService
+                    .getUserManagement()
+                    .version()
+                    .longVersion();
+        } catch (ManagementException ex) {
+            log.error("Cannot connect to management interface: " + ex.getMessage());
+            versionStr = "unknown version";
+        }
 
-    private static String createMsgConnectedUsers(int count) {
-        return "%d users connected".formatted(count);
+        serverVersion.setText("Running " + versionStr);
     }
 
     private void onRefreshConnectedUsers() {
-        try {
-            if (openVpnUserSettings.isAlreadyConfigured()) {
-                var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.USER);
-                updateConnectedUserListener.accept(status);
-            } else {
-                msgConnectedUsers.setText("User VPN not yet configured");
+        List<Status.ConnectionStatus> items = new LinkedList<>();
+        StringBuilder msg = new StringBuilder();
+
+        if (openVpnUserSettings.isAlreadyConfigured()) {
+            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            switch (mgmt.getManagementConnectionStatus()) {
+                case Disconnected -> {
+                    msg.append("No connection to Management Interface");
+                }
+                case Hold -> {
+                    msg.append("OpenVpn is in Hold Status");
+                }
+                case Connected -> {
+                    try {
+                        var status = openVpnManagementService.getUserManagement().status();
+                        log.debug("User onnection status: " + status.connectionStatus().toString());
+                        items.addAll(status.connectionStatus());
+                        msg.append("%d Users connected".formatted(
+                                status.connectionStatus().size()
+                        ));
+                    } catch (ManagementException ex) {
+                        log.error("Error getting connected users: " + ex.getMessage());
+                        msg
+                                .append("Cannot get connected users: ")
+                                .append(ex.getMessage());
+                    }
+                }
             }
-        } catch (DBusException | DBusExecutionException ex) {
-            log.error("Error getting connected users: " + ex.getMessage());
-            msgConnectedUsers.setText("DBusError: " + ex.getMessage());
+        } else {
+            msgConnectedUsers.setText("User VPN not yet configured");
         }
+        log.debug("Updating UI");
+        connectedUsersGrid.getUI().ifPresent(ui -> ui.access(() -> {
+            connectedUsersGrid.setItems(items);
+        }));
+        msgConnectedUsers.getUI().ifPresent(ui -> ui.access(() -> {
+            msgConnectedUsers.setText(msg.toString());
+        }));
+        log.debug("List of Users refreshed.");
     }
 
     private void onRefreshConnectedSites() {
-        try {
-            if (openVpnSiteSettings.isAlreadyConfigured()) {
-                var status = arachneDbus.getServerStatus(ArachneDbus.ServerType.SITE);
-                updateConnectedSitesListener.accept(status);
-            } else {
-                msgConnectedSites.setText("Site VPN not yet configured");
+        List<Status.ConnectionStatus> items = new LinkedList<>();
+        StringBuilder msg = new StringBuilder();
+
+        if (openVpnSiteSettings.isAlreadyConfigured()) {
+            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            switch (mgmt.getManagementConnectionStatus()) {
+                case Disconnected -> {
+                    msg.append("No connection to Management Interface");
+                }
+                case Hold -> {
+                    msg.append("OpenVpn is in Hold Status");
+                }
+                case Connected -> {
+                    try {
+                        log.info("Gettings all configured sites");
+                        var status = mgmt.status();
+                        msg.append("%d of %d sites connected".formatted(
+                                status.connectionStatus().size(),
+                                vpnSiteRepository.count() - 1
+                        ));
+                        Set<String> siteNames = new HashSet<>();
+                        status.connectionStatus().forEach(
+                                site -> siteNames.add(site.username())
+                        );
+                        vpnSiteRepository.findAll()
+                                .forEach(site -> {
+                                    String siteName = site.getSiteHostname();
+                                    if (!siteNames.contains(siteName)
+                                            && !site.isDefaultSite()) {
+                                        log.debug("Site %s is not connected".formatted(siteName));
+                                        status
+                                                .connectionStatus()
+                                                .add(
+                                                        Status.ConnectionStatus
+                                                                .notConnected(siteName)
+                                                );
+                                    }
+                                });
+                        log.debug("Connextion status: " + status.connectionStatus().toString());
+                        items.addAll(
+                                status
+                                        .connectionStatus()
+                                        .stream()
+                                        .sorted(
+                                                (t1, t2) -> t1.username()
+                                                        .compareTo(t2.username())
+                                        )
+                                        .toList()
+                        );
+                    } catch (ManagementException ex) {
+                        log.error("Error getting connected sites: " + ex.getMessage());
+                        msg.append("Error: ").append(ex.getMessage());
+                    }
+                }
             }
-        } catch (DBusException | DBusExecutionException ex) {
-            log.error("DBus Error: " + ex.getMessage());
-            msgConnectedSites.setText("DBusError: " + ex.getMessage());
+        } else {
+            msgConnectedSites.setText("Site VPN not yet configured");
+        }
+        connectedSitesGrid.getUI().ifPresent(ui -> ui.access(() -> {
+            connectedSitesGrid.setItems(items);
+        }));
+        msgConnectedSites.getUI().ifPresent(ui -> ui.access(() -> {
+            msgConnectedSites.setText(msg.toString());
+        }));
+        log.info("Gettings all configured sites (Done)");
+    }
+
+    private void scheduleTimer(
+            Select<Integer> select,
+            Runnable func,
+            AtomicReference<ScheduledFuture<?>> scheduledFuture) {
+        Integer seconds = select.getValue();
+        if (scheduledFuture.get() != null && !scheduledFuture.get().isCancelled()) {
+            scheduledFuture.get().cancel(false);
+            scheduledFuture.set(null);
+        }
+        if (seconds > 0) {
+            scheduledFuture.set(
+                    scheduledExecutor.scheduleWithFixedDelay(
+                            () -> {
+                                log.debug("Starting task");
+                                func.run();
+                                log.debug("Task done,");
+                            },
+                            seconds,
+                            seconds,
+                            TimeUnit.SECONDS
+                    )
+            );
         }
     }
 
-    private Component createConnectedUsersView() {
-        VerticalLayout layout = new VerticalLayout();
+    private Select<Integer> createUpdateIntervalSelect(
+            Runnable func,
+            AtomicReference<ScheduledFuture<?>> scheduledFuture) {
+        Select<Integer> select = new Select<>("Auto Refresh Interval");
+        select.setItems(
+                -1,
+                15, 30,
+                60, 2 * 60, 5 * 60, 10 * 10
+        );
+        select.setItemLabelGenerator(interval -> {
+            if (interval < 0) {
+                return "Never";
+            }
+            if (interval <= 60) {
+                return "%d seconds".formatted(interval);
+            }
+            return "%d minutes".formatted(interval / 60);
+        });
+        select.setValue(15);
+        select.addValueChangeListener(v -> {
+            scheduleTimer(select, func, scheduledFuture);
+        });
 
+        return select;
+    }
+
+    private Component createConnectedUsersView() {
         Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedUsers());
         msgConnectedUsers = new Span("");
+        userUpdateIntervalField = createUpdateIntervalSelect(
+                this::onRefreshConnectedUsers,
+                updateUsers
+        );
 
-        HorizontalLayout headerLayout = new HorizontalLayout(
+        HorizontalLayout headerLayout = new HorizontalLayout();
+        headerLayout.addToStart(
                 refreshButton,
                 msgConnectedUsers
         );
+        headerLayout.addToEnd(userUpdateIntervalField);
         headerLayout.setPadding(false);
         headerLayout.setMargin(false);
         headerLayout.setAlignItems(Alignment.BASELINE);
+        headerLayout.setWidthFull();
 
         connectedUsersGrid = new Grid<>();
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getCommonName)
+        connectedUsersGrid.addColumn(Status.ConnectionStatus::username)
+                .setSortable(true)
                 .setHeader("Common Name");
         connectedUsersGrid.addColumn(
                 source -> DecimalFormat
                         .getInstance()
-                        .format(source.getBytesReceived()))
-                .setHeader("Bytes Received")
-                .setTextAlign(ColumnTextAlign.END);
+                        .format(source.byteReceived()))
+                .setSortable(true)
+                .setTextAlign(ColumnTextAlign.END)
+                .setHeader("Bytes Received");
         connectedUsersGrid.addColumn(
                 source -> DecimalFormat
                         .getInstance()
-                        .format(source.getBytesSent()))
-                .setHeader("Bytes Sent")
-                .setTextAlign(ColumnTextAlign.END);
-        connectedUsersGrid.addColumn((source) -> DateFormat
-                .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
-                .format(source.getConnectedSinceAsDate())
-        );
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getRealAddress)
+                        .format(source.bytesSent()))
+                .setSortable(true)
+                .setTextAlign(ColumnTextAlign.END)
+                .setHeader("Bytes Sent");
+        connectedUsersGrid.addColumn(
+                source -> DateFormat
+                        .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
+                        .format(source.connectedSince()))
+                .setSortable(true)
+                .setHeader("Connected since");
+        connectedUsersGrid.addColumn(source -> source.realAddress().getHostAddress())
+                .setSortable(true)
                 .setHeader("Real Address");
-        connectedUsersGrid.addColumn(IFaceConnectedClient::getVirtualAddress)
+        connectedUsersGrid.addColumn(source -> source.virtualAddress().getHostAddress())
+                .setSortable(true)
                 .setHeader("Virtual Address");
 
+        VerticalLayout layout = new VerticalLayout();
         layout.add(
                 headerLayout,
                 connectedUsersGrid
         );
         layout.setPadding(false);
+        layout.setSizeFull();
 
         return layout;
     }
 
     private Component createConnectedSitesView() {
-        VerticalLayout layout = new VerticalLayout();
-
         Button refreshButton = new Button("Refresh", (e) -> onRefreshConnectedSites());
         msgConnectedSites = new Span("");
+        siteUpdateIntervalField = createUpdateIntervalSelect(
+                this::onRefreshConnectedSites,
+                updateSites
+        );
 
         HorizontalLayout headerLayout = new HorizontalLayout(
                 refreshButton,
                 msgConnectedSites
         );
+        headerLayout.addToEnd(siteUpdateIntervalField);
+
         headerLayout.setPadding(false);
         headerLayout.setMargin(false);
         headerLayout.setAlignItems(Alignment.BASELINE);
+        headerLayout.setWidthFull();
 
         connectedSitesGrid = new Grid<>();
-        connectedSitesGrid.addColumn(site -> site.getVpnSite().getName())
+        connectedSitesGrid.addColumn(Status.ConnectionStatus::username)
                 .setHeader("Site Name");
         connectedSitesGrid.addColumn(new ComponentRenderer<>(
                 (var site) -> {
                     YesNoIcon icon = new YesNoIcon();
-                    icon.setValue(site.isConnected());
+                    icon.setValue(site.connectedSince() != null);
                     return icon;
                 }))
                 .setHeader("Connected")
                 .setAutoWidth(true)
                 .setFlexGrow(0);
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DecimalFormat
                         .getInstance()
-                        .format(site.getConnectedClient().getBytesReceived())
+                        .format(site.byteReceived())
                 : "")
                 .setHeader("Bytes Received");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DecimalFormat
                         .getInstance()
-                        .format(site.getConnectedClient().getBytesSent())
+                        .format(site.bytesSent())
                 : "")
                 .setHeader("Bytes Sent");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
+                site -> site.connectedSince() != null
                 ? DateFormat
                         .getDateTimeInstance(
                                 DateFormat.SHORT,
                                 DateFormat.MEDIUM
                         )
-                        .format(site
-                                .getConnectedClient()
-                                .getConnectedSinceAsDate()
+                        .format(site.connectedSince()
                         )
                 : "")
                 .setHeader("Connected since");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
-                ? site.getConnectedClient()
-                        .getRealAddress()
-                        .split(":")[0]
+                site -> site.connectedSince() != null
+                ? site.realAddress().getHostAddress()
                 : "")
                 .setHeader("Real Address");
         connectedSitesGrid.addColumn(
-                site -> site.isConnected()
-                ? site.getConnectedClient().getVirtualAddress()
+                site -> site.connectedSince() != null
+                ? site.virtualAddress().getHostAddress()
                 : "")
                 .setHeader("Virtual Address");
 
+        VerticalLayout layout = new VerticalLayout();
         layout.add(
                 headerLayout,
                 connectedSitesGrid
         );
         layout.setPadding(false);
+        layout.setSizeFull();
 
         return layout;
     }
@@ -387,46 +427,21 @@ public class AdminHome
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
         log.info("About to leave, removing status change listener");
-        removeListeners();
-        log.info("All listeners removed");
+        if (updateUsers.get() != null) {
+            updateUsers.get().cancel(false);
+        }
+        if (updateSites.get() != null) {
+            updateSites.get().cancel(false);
+        }
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
-        addListeners();
-    }
+        onRefreshConnectedUsers();
+        onRefreshConnectedSites();
 
-    private void removeListeners() {
-        if (openVpnUserSettings.isAlreadyConfigured()) {
-            log.debug("Removing connected users listener");
-            arachneDbus.removeServerStatusChangedListener(
-                    ArachneDbus.ServerType.USER,
-                    updateConnectedUserListener
-            );
-        }
-        if (openVpnSiteSettings.isAlreadyConfigured()) {
-            log.debug("Removing connected sites listener");
-            arachneDbus.removeServerStatusChangedListener(
-                    ArachneDbus.ServerType.SITE,
-                    updateConnectedSitesListener
-            );
-        }
-    }
-
-    private void addListeners() {
-        if (openVpnUserSettings.isAlreadyConfigured()) {
-            log.debug("About to enter admin-home, adding connected users listener");
-            arachneDbus.addServerStatusChangedListener(
-                    ArachneDbus.ServerType.USER,
-                    updateConnectedUserListener
-            );
-        }
-        if (openVpnSiteSettings.isAlreadyConfigured()) {
-            log.debug("About to enter admin-home, adding connected sites listener");
-            arachneDbus.addServerStatusChangedListener(
-                    ArachneDbus.ServerType.SITE,
-                    updateConnectedSitesListener
-            );
-        }
+        log.info("Scheduling timers");
+        scheduleTimer(userUpdateIntervalField, this::onRefreshConnectedUsers, updateUsers);
+        scheduleTimer(siteUpdateIntervalField, this::onRefreshConnectedSites, updateSites);
     }
 }

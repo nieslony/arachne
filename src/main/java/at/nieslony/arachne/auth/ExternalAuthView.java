@@ -48,7 +48,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +72,7 @@ public class ExternalAuthView extends VerticalLayout {
     private final Button saveButton;
 
     private Checkbox enableKerberosAuthField;
+    private TextField realm;
     private TextField keytabPathField;
     private ComboBox<String> servicePrincipalField;
     private Button readKeytabButton;
@@ -96,21 +96,9 @@ public class ExternalAuthView extends VerticalLayout {
 
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         if (!ldapSettings.isEnableLdapUserSource()) {
-
             Div warning = new Div();
-            warning.addClassNames(
-                    LumoUtility.Background.WARNING_10,
-                    LumoUtility.TextColor.WARNING,
-                    LumoUtility.Padding.MEDIUM,
-                    LumoUtility.BorderColor.WARNING,
-                    LumoUtility.Border.ALL
-            );
             Icon icon = VaadinIcon.WARNING.create();
             Span warningLbl = new Span("Warning:");
-            warningLbl.addClassNames(
-                    LumoUtility.FontWeight.BOLD,
-                    LumoUtility.Padding.SMALL
-            );
             Text warningTxt = new Text(
                     """
                     LDAP user source not enabled.
@@ -118,7 +106,6 @@ public class ExternalAuthView extends VerticalLayout {
                     """
             );
             warning.add(icon, warningLbl, warningTxt);
-            warning.addClassNames(LumoUtility.TextColor.WARNING);
             add(warning);
         }
 
@@ -149,6 +136,11 @@ public class ExternalAuthView extends VerticalLayout {
         enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
         kerberosBinder.forField(enableKerberosAuthField)
                 .bind(KerberosSettings::isEnableKrbAuth, KerberosSettings::setEnableKrbAuth);
+
+        realm = new TextField("Realm");
+        realm.setWidthFull();
+        kerberosBinder.forField(realm)
+                .bind(KerberosSettings::getRealm, KerberosSettings::setRealm);
 
         keytabPathField = new TextField("Keytab Path");
         keytabPathField.setWidthFull();
@@ -219,6 +211,7 @@ public class ExternalAuthView extends VerticalLayout {
 
         VerticalLayout layout = new VerticalLayout(
                 enableKerberosAuthField,
+                realm,
                 keytabPathField,
                 servicePrincipalLayout
         );

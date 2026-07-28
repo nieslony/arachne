@@ -43,7 +43,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Service
 @Slf4j
-public class TokenController {
+public class TokenService {
 
     @Autowired
     Pki pki;

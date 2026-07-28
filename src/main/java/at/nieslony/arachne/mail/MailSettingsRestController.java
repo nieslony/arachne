@@ -18,7 +18,7 @@ package at.nieslony.arachne.mail;
 
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.HTML;
 import static at.nieslony.arachne.mail.MailSettings.TemplateConfigType.PLAIN;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.settings.Settings;
@@ -53,7 +53,7 @@ public class MailSettingsRestController {
     Settings settings;
 
     @Autowired
-    OpenVpnController openVpnRestController;
+    OpenVpnService openVpnRestController;
 
     public MailSettingsRestController() {
     }

@@ -6,13 +6,13 @@ package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.auth.TotpController;
-import at.nieslony.arachne.ldap.LdapController;
+import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
 import at.nieslony.arachne.onetimeview.OneTimeViewService;
 import at.nieslony.arachne.onetimeview.SetOtpView;
-import at.nieslony.arachne.openvpn.OpenVpnController;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
@@ -45,7 +45,6 @@ import com.vaadin.flow.component.html.Pre;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.menubar.MenuBar;
-import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -92,7 +91,7 @@ public class UsersView extends VerticalLayout {
     private RoleRuleRepository roleRuleRepository;
 
     @Autowired
-    private OpenVpnController openVpnRestController;
+    private OpenVpnService openVpnRestController;
 
     @Autowired
     private Settings settings;
@@ -101,7 +100,7 @@ public class UsersView extends VerticalLayout {
     private MailSettingsRestController mailSettingsRestController;
 
     @Autowired
-    private LdapController ldapController;
+    private LdapService ldapService;
 
     @Autowired
     private RolesCollector rolesCollestor;
@@ -164,14 +163,17 @@ public class UsersView extends VerticalLayout {
                     }
                     return avatar;
                 })
+                .setFlexGrow(0)
                 .setAutoWidth(true);
         usernameColumn = usersGrid
                 .addColumn(UserModel::getUsername)
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Username");
         displayNameColumn = usersGrid
                 .addColumn(UserModel::getDisplayName)
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Displayname");
         emailColumn = usersGrid
                 .addColumn(UserModel::getEmail)
@@ -187,6 +189,7 @@ public class UsersView extends VerticalLayout {
                     }
                 }))
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("User Source");
         usersGrid
                 .addComponentColumn((user) -> {
@@ -196,6 +199,7 @@ public class UsersView extends VerticalLayout {
                     return new Text(roles);
                 })
                 .setAutoWidth(true)
+                .setFlexGrow(1)
                 .setHeader("Roles");
         usersGrid
                 .addColumn(new ComponentRenderer<>((UserModel user) -> {
@@ -227,11 +231,13 @@ public class UsersView extends VerticalLayout {
                         }
                     };
                 }))
-                .setAutoWidth(true)
+                .setFlexGrow(0)
                 .setHeader("OTP");
-        usersGrid.addColumn(new ComponentRenderer<>(
-                (UserModel user) -> getUserMenu(user))
-        );
+        usersGrid
+                .addComponentColumn(user -> createUserMenu(user))
+                .setWidth("12em")
+                .setFlexGrow(0);
+        usersGrid.setSizeFull();
 
         GridPaginationControls<UserModel> paginationControl = new GridPaginationControls<>(
                 usersGrid,
@@ -262,7 +268,7 @@ public class UsersView extends VerticalLayout {
         setPadding(false);
     }
 
-    private Component getUserDetails(UserModel user) {
+    private Component createEditUser(UserModel user) {
         Binder<UserModel> binder = new Binder<>();
 
         VerticalLayout vbox = new VerticalLayout();
@@ -281,18 +287,24 @@ public class UsersView extends VerticalLayout {
         binder.forField(emailField)
                 .bind(UserModel::getEmail, UserModel::setEmail);
 
-        Button closeButton = new Button("Close", e -> masterDetailLayout.setDetail(null));
+        Button closeButton = new Button("Close", e -> {
+            usersGrid.select(null);
+            masterDetailLayout.setDetail(null);
+        });
         Button saveButton = new Button(
                 "Save",
                 e -> {
                     userRepository.save(binder.getBean());
                     usersGrid.getDataProvider().refreshItem(user);
+                    masterDetailLayout.setDetail(null);
+                    usersGrid.select(null);
                 }
         );
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.addToStart(saveButton);
-        buttonLayout.addToEnd(closeButton);
+        buttonLayout.setWidthFull();
+        buttonLayout.addToEnd(closeButton, saveButton);
 
         binder.setBean(user);
 
@@ -321,34 +333,26 @@ public class UsersView extends VerticalLayout {
         };
     }
 
-    private Component getUserMenu(UserModel user) {
+    private Component createUserMenu(UserModel user) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String myUsername = authentication.getName();
 
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
-        MenuItem menuItem = menuBar.addItem("");
-        SubMenu userMenu = menuItem.getSubMenu();
-
         if (user.getExternalProvider() == null) {
-            userMenu.addItem("Edit", e -> {
-                masterDetailLayout.setDetail(getUserDetails(user));
+            MenuItem item = menuBar.addItem("Edit", e -> {
+                usersGrid.select(user);
+                masterDetailLayout.setDetail(createEditUser(user));
             });
-
-            if (!user.getUsername().equals(myUsername)) {
-                userMenu.addItem("Change Password...", event -> changePassword(user));
-                userMenu.addItem("Delete...", event -> deleteUser(user));
-            }
         } else {
             if (user.getExternalProvider().equals(LdapUserSource.getName())) {
-                userMenu.addItem("Refresh now", e -> {
+                menuBar.addItem("Refresh now", e -> {
                     log.info("Refreshing user %s…".formatted(user.getUsername()));
-                    var ldapUser = ldapController.findUsers(myUsername, 1).getFirst();
+                    var ldapUser = ldapService.findUsers(user.getUsername(), 1).getFirst();
+                    log.debug("Found LdapUser: " + ldapUser.toString());
                     var roles = rolesCollestor.findRolesForUser(ldapUser);
                     user.update(ldapUser);
                     user.setRoles(roles);
                     userRepository.save(user);
-                    log.debug("Parent class: " + getParent().get().getClass().getName());
                 });
                 usersGrid.getDataProvider().refreshItem(user);
             } else {
@@ -356,6 +360,12 @@ public class UsersView extends VerticalLayout {
             }
         }
 
+        MenuItem menuItem = menuBar.addItem("");
+        SubMenu userMenu = menuItem.getSubMenu();
+        if (!user.getUsername().equals(myUsername) && user.getExternalProvider() == null) {
+            userMenu.addItem("Change Password...", event -> changePassword(user));
+            userMenu.addItem("Delete...", event -> deleteUser(user));
+        }
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
                     = settings.getSettings(OpenVpnUserSettings.class);
@@ -396,12 +406,18 @@ public class UsersView extends VerticalLayout {
             userMenu.addItem("Send Config as E-Mail…", (e) -> sendVpnConfig(user));
             userMenu.addItem("View Config…", (e) -> viewConfig(user));
         }
-        if (!userMenu.getItems().isEmpty()) {
-            menuBar.addItem(menuItem);
+        if (userMenu.getItems().isEmpty()) {
+            log.debug("Removing empty submenu");
+            menuBar.remove(menuItem);
         }
         if (menuBar.getItems().size() > 1) {
-            return menuBar;
+            log.debug("Returning menu with %d items".formatted(menuBar.getItems().size()));
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.addToEnd(menuBar);
+            layout.setWidthFull();
+            return layout;
         } else {
+            log.debug("Menu is empty, returning empty text");
             return new Text("");
         }
     }
@@ -626,7 +642,7 @@ public class UsersView extends VerticalLayout {
         dlg.setEMail(user.getEmail());
         dlg.open();
     }
-    
+
     void sendVpnConfig(UserModel user) {
         MailSettings mailSettings = settings.getSettings(MailSettings.class);
 

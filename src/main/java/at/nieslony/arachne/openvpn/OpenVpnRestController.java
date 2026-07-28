@@ -47,7 +47,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class OpenVpnRestController {
 
     @Autowired
-    OpenVpnController openVpnController;
+    OpenVpnService openVpnService;
 
     @Autowired
     Settings settings;
@@ -63,7 +63,7 @@ public class OpenVpnRestController {
 
     @GetMapping("/user_settings")
     @RolesAllowed(value = {"ADMIN"})
-    public OpenVpnUserSettings getUserSettings(OpenVpnController openVpnController) {
+    public OpenVpnUserSettings getUserSettings(OpenVpnService openVpnService) {
         return settings.getSettings(OpenVpnUserSettings.class);
     }
 
@@ -74,7 +74,7 @@ public class OpenVpnRestController {
     ) throws SettingsException {
         log.info("Set new openVPN user server config: " + settings.toString());
         vpnSettings.save(settings);
-        openVpnController.writeOpenVpnUserServerConfig(vpnSettings);
+        openVpnService.writeOpenVpnUserServerConfig(vpnSettings);
         return vpnSettings;
     }
 
@@ -86,14 +86,14 @@ public class OpenVpnRestController {
     ) throws SettingsException {
         try {
             if (format == null) {
-                return openVpnController.openVpnUserConfig(username);
+                return openVpnService.openVpnUserConfig(username);
             }
             log.info("Return format: " + format);
             return switch (format) {
                 case "json" ->
-                    openVpnController.openVpnUserConfigJson(username);
+                    openVpnService.openVpnUserConfigJson(username);
                 case "shell" ->
-                    openVpnController.openVpnUserConfigShell(username);
+                    openVpnService.openVpnUserConfigShell(username);
                 default ->
                     throw new ResponseStatusException(
                             HttpStatus.UNPROCESSABLE_CONTENT,

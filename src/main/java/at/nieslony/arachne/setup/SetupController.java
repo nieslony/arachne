@@ -8,6 +8,7 @@ import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.apiindex.ApiDescription;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.FirewallRuleRepository;
+import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.pki.CertSpecsValidationException;
 import at.nieslony.arachne.pki.CertificateModel;
 import at.nieslony.arachne.pki.CertificateRepository;
@@ -105,6 +106,9 @@ public class SetupController {
     private RolesCollector rolesCollector;
 
     @Autowired
+    private OpenVpnService openVpnServive;
+
+    @Autowired
     private TaskScheduler taskScheduler;
 
     public boolean setupAlreadyDone() {
@@ -175,6 +179,8 @@ public class SetupController {
         } else {
             taskScheduler.runTask(UpdateDhParams.class, null, null);
         }
+        openVpnServive.writeDummySiteConfig(OpenVpnService.ServerType.USER);
+        openVpnServive.writeDummySiteConfig(OpenVpnService.ServerType.SITE);
 
         settings.put(SETUP_STATUS_KEY, SetupStatus.FINISHED);
 

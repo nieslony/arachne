@@ -18,6 +18,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
@@ -34,7 +35,6 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.server.streams.UploadHandler;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -51,7 +51,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @author claas
  */
 @Slf4j
-public class SetupView extends VerticalLayout {
+public class SetupView extends Main {
 
     private TextField caCommonName;
     private TextField caOrganizationalUnit;
@@ -103,7 +103,6 @@ public class SetupView extends VerticalLayout {
         H1 header = new H1("Arachne Setup Wizard");
 
         TabSheet tabSheet = new TabSheet();
-
         tabSheet.add("Welcome", createRestoreTab());
         tabSheet.add("CA Certificate", createCaCertificateTab());
         tabSheet.add("Server Certificate", createServerCertificateTab());
@@ -115,6 +114,8 @@ public class SetupView extends VerticalLayout {
             next.setEnabled(curTab < noTabs - 1);
             prev.setEnabled(curTab > 0);
         });
+        tabSheet.setSizeFull();
+
         HorizontalLayout buttons = new HorizontalLayout();
         next = new Button("Next", new Icon(VaadinIcon.ARROW_RIGHT));
         next.setIconAfterText(true);
@@ -144,10 +145,21 @@ public class SetupView extends VerticalLayout {
             finish.setEnabled(!sce.hasValidationErrors());
             finishError.setVisible(sce.hasValidationErrors());
         });
-
-        add(header, tabSheet, buttons);
-        setJustifyContentMode(JustifyContentMode.CENTER);
         binder.validate();
+
+        var layout = new VerticalLayout(
+                header,
+                tabSheet,
+                buttons
+        );
+        layout.setFlexGrow(2, tabSheet);
+        layout.setSizeFull();
+
+        this.
+                add(layout);
+
+        setSizeFull();
+        //setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
     private void updateCaSubject() {
@@ -449,7 +461,7 @@ public class SetupView extends VerticalLayout {
                 """);
 
         finishError = new NativeLabel("There are errors validating input. Please check");
-        finishError.addClassName(LumoUtility.TextColor.ERROR);
+        finishError.addClassName("aura-accent-red");
 
         finish = new Button("Finish");
         finish.setDisableOnClick(true);

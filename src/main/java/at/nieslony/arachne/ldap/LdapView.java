@@ -54,7 +54,6 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.IOException;
 import java.util.HashMap;
@@ -83,12 +82,14 @@ import org.springframework.security.core.AuthenticationException;
 public class LdapView extends VerticalLayout {
 
     private final LdapSettings ldapSettings;
-    private final LdapController ldapController;
+    private final LdapService ldapService;
+    private final Settings settings;
     private Binder<LdapSettings> binder;
     Button saveButton;
 
-    public LdapView(Settings settings, LdapController ldapController) {
-        this.ldapController = ldapController;
+    public LdapView(Settings settings, LdapService ldapService) {
+        this.settings = settings;
+        this.ldapService = ldapService;
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
 
@@ -187,12 +188,10 @@ public class LdapView extends VerticalLayout {
         );
         usersFormLayout.setColspan(usersOuField, 2);
         NativeLabel usersFormLabel = new NativeLabel("Users");
-        usersFormLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout usersLayout = new VerticalLayout(
                 usersFormLabel,
                 usersFormLayout
         );
-        usersLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         TextField groupsOu = new TextField("Groups OU");
         binder.forField(groupsOu)
@@ -247,12 +246,10 @@ public class LdapView extends VerticalLayout {
         );
         groupsFormLayout.setColspan(groupsOu, 2);
         NativeLabel groupsLabel = new NativeLabel("Groups");
-        groupsLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.FontWeight.BOLD, LumoUtility.TextColor.BODY);
         VerticalLayout groupsLayout = new VerticalLayout(
                 groupsLabel,
                 groupsFormLayout
         );
-        groupsLayout.getStyle().setBorder("1px solid var(--lumo-contrast-10pct)");
 
         MenuBar loadDefaultsMenu = new MenuBar();
         MenuItem menuItem = loadDefaultsMenu.addItem("Load Defaults for...");
@@ -519,7 +516,7 @@ public class LdapView extends VerticalLayout {
 
     void testLdapConnection(LdapSettings ldapSettings) {
         try {
-            LdapTemplate templ = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate templ = ldapService.getLdapTemplate(ldapSettings);
             templ.lookup(ldapSettings.getBaseDn());
             ShowNotification.info("Successfully connected");
         } catch (AuthenticationException ex) {
@@ -540,7 +537,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindGroup(String groupname) {
         try {
-            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate ldap = ldapService.getLdapTemplate(ldapSettings);
 
             String filter = ldapSettings.getGroupsFilter(groupname);
             var result = ldap.search(
@@ -597,7 +594,7 @@ public class LdapView extends VerticalLayout {
 
     void testFindUser(String username) {
         try {
-            LdapTemplate ldap = ldapController.getLdapTemplate(ldapSettings);
+            LdapTemplate ldap = ldapService.getLdapTemplate(ldapSettings);
             String filter = ldapSettings.getUsersFilter(username);
             log.debug("LDAP search: " + filter);
             var result = ldap.search(

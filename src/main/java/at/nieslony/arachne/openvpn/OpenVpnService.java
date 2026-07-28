@@ -7,6 +7,7 @@ package at.nieslony.arachne.openvpn;
 import at.nieslony.arachne.firewall.FirewallRuleModel;
 import at.nieslony.arachne.firewall.SiteFirewallBasicsSettings;
 import at.nieslony.arachne.firewall.UserFirewallBasicsSettings;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpn.vpnsite.SiteVerification;
 import at.nieslony.arachne.pki.CertificateRepository;
 import at.nieslony.arachne.pki.Pki;
@@ -45,16 +46,16 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @PropertySource("classpath:arachne.properties")
 @Slf4j
-public class OpenVpnController {
+public class OpenVpnService {
 
     @Autowired
     private Settings settings;
@@ -72,17 +73,21 @@ public class OpenVpnController {
     private UserRepository userRepository;
 
     @Autowired
-    private VpnSiteController vpnSiteController;
+    private VpnSiteService vpnSiteSiter;
+
+    @Autowired
+    private OpenVpnManagementService openVpnManagement;
 
     @Value("${plugin_path}")
     String pluginPath;
 
-    static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
-    static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
-    static final String FN_OPENVPN_PLUGIN_USER_CONF = "openvpn-plugin-arachne-user.conf";
-    static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
-    static final String FN_OPENVPN_CRL = "crl.pem";
-    static final String FN_OPENVPN_CLIENT_CONF_DIR = "site-client-conf.d";
+    private static final String FN_OPENVPN_USER_SERVER_CONF = "openvpn-user-server.conf";
+    private static final String FN_OPENVPN_SITE_SERVER_CONF = "openvpn-site-server.conf";
+    private static final String FN_OPENVPN_PLUGIN_USER_CONF = "openvpn-plugin-arachne-user.conf";
+    private static final String FN_OPENVPN_PLUGIN_SITE_CONF = "openvpn-plugin-arachne-site.conf";
+
+    private static final String FN_OPENVPN_CRL = "crl.pem";
+    private static final String FN_OPENVPN_CLIENT_CONF_DIR = "site-client-conf.d";
 
     private enum UserVpnSettingsDataType {
         OvpnFile,
@@ -90,26 +95,61 @@ public class OpenVpnController {
         Shell
     }
 
+    public enum ServerType {
+        USER,
+        SITE
+    }
+
     @PostConstruct
     public void init() {
         writeCrl();
-        writeDummySiteConfig(FN_OPENVPN_USER_SERVER_CONF, "user", 1);
-        writeDummySiteConfig(FN_OPENVPN_SITE_SERVER_CONF, "site", 2);
+        writeDummySiteConfig(ServerType.USER);
+        writeDummySiteConfig(ServerType.SITE);
     }
 
-    public void writeDummySiteConfig(String fn, String serverType, int lasrOctett) {
-        String fileName = folderFactory.getVpnConfigDir(fn);
+    public void writeDummySiteConfig(ServerType serverType) {
+        String fileName = folderFactory.getVpnConfigDir(switch (serverType) {
+            case USER ->
+                FN_OPENVPN_USER_SERVER_CONF;
+            case SITE ->
+                FN_OPENVPN_SITE_SERVER_CONF;
+        });
         File f = new File(fileName);
         if (!f.exists() || f.length() == 0) {
             log.info("Creating dummy configuration " + fileName);
+            String socketFilename = switch (serverType) {
+                case USER ->
+                    openVpnManagement.getUserManagemnetSocket();
+                case SITE ->
+                    openVpnManagement.getSiteManagemnetSocket();
+            };
             try (PrintWriter pw = new PrintWriter(f)) {
-                pw.println("dev tun");
-                pw.println("local 127.11.94.%d".formatted(lasrOctett));
                 pw.println(
-                        "writepid " + folderFactory.getOpenVpnPidPath(serverType)
+                        """
+                        dev tun
+                        tls-client
+                        management-hold
+                        management %s unix
+                        management-client-user %s
+                        <ca>
+                        %s
+                        </ca>
+                        <cert>
+                        %s
+                        </cert>
+                        <key>
+                        %s
+                        </key>
+                        """.formatted(
+                                socketFilename,
+                                System.getProperty("user.name"),
+                                pki.getRootCertAsBase64(),
+                                pki.getServerCertAsBase64(),
+                                pki.getServerKeyAsBase64()
+                        )
                 );
-            } catch (IOException ex) {
-                log.error("Cannot create dummy confoigirattion %s: %s"
+            } catch (IOException | PkiException | SettingsException ex) {
+                log.error("Cannot create dummy configuration %s: %s"
                         .formatted(fileName, ex.getMessage())
                 );
             }
@@ -123,7 +163,7 @@ public class OpenVpnController {
             });
 
             String crlString = Pki.asBase64(crl);
-            String fn = folderFactory.getVpnConfigDir("crl.pem");
+            String fn = folderFactory.getVpnConfigDir(FN_OPENVPN_CRL);
             try (FileWriter fw = new FileWriter(fn)) {
                 fw.write(crlString);
             } catch (IOException ex) {
@@ -253,15 +293,12 @@ public class OpenVpnController {
                     }
                 }
             }
-            writer.println(
-                    "status %s %d"
-                            .formatted(
-                                    folderFactory.getOpenVpnStatusPath("user"),
-                                    settings.getStatusUpdateSecs()
-                            )
-            );
-            writer.println("status-version 2");
-            writer.println("writepid " + folderFactory.getOpenVpnPidPath("user"));
+            writer.println("management %s unix".formatted(
+                    openVpnManagement.getUserManagemnetSocket()
+            ));
+            writer.println("management-client-user %s".formatted(
+                    System.getProperty("user.name")
+            ));
             for (String dnsServer : settings.getPushDnsServers()) {
                 writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
             }
@@ -588,7 +625,7 @@ public class OpenVpnController {
     }
 
     public void writeOpenVpnSiteServerSitesPluginConfig() {
-        for (VpnSite site : vpnSiteController.getAll()) {
+        for (VpnSite site : vpnSiteSiter.getAll()) {
             if (site.isDefaultSite()) {
                 continue;
             }
@@ -628,11 +665,11 @@ public class OpenVpnController {
     }
 
     public void writeOpenVpnSiteServerSitesConfig() {
-        VpnSite defaultSite = vpnSiteController.getDefaultSite();
+        VpnSite defaultSite = vpnSiteSiter.getDefaultSite();
         OpenVpnSiteSettings openVpnSiteSettings = settings.getSettings(OpenVpnSiteSettings.class);
         String clientConfDirName = folderFactory.getVpnConfigDir(FN_OPENVPN_CLIENT_CONF_DIR);
 
-        for (VpnSite site : vpnSiteController.getNonDefaultSites()) {
+        for (VpnSite site : vpnSiteSiter.getNonDefaultSites()) {
             String fileName
                     = "%s/%s".formatted(
                             clientConfDirName,
@@ -745,21 +782,19 @@ public class OpenVpnController {
                             )
             );
             pw.println("topology subnet");
-            if (!openVpnSiteSettings.getRunAsUser().isEmpty()) {
+            /*            if (!openVpnSiteSettings.getRunAsUser().isEmpty()) {
+
                 pw.println("user " + openVpnSiteSettings.getRunAsUser());
                 pw.println("persist-tun");
                 pw.println("persist-key");
             }
-
-            pw.println(
-                    "status %s %d"
-                            .formatted(
-                                    folderFactory.getOpenVpnStatusPath("site"),
-                                    60
-                            )
-            );
-            pw.println("status-version 2");
-            pw.println("writepid " + folderFactory.getOpenVpnPidPath("site"));
+             */
+            pw.println("management %s unix".formatted(
+                    openVpnManagement.getSiteManagemnetSocket()
+            ));
+            pw.println("management-client-user %s".formatted(
+                    System.getProperty("user.name")
+            ));
 
             if (openVpnSiteSettings.getListenProtocol() == TransportProtocol.UDP
                     && openVpnSiteSettings.getMtuTest()) {
@@ -789,7 +824,7 @@ public class OpenVpnController {
     public void writeOpenVpnSiteRemoteConfig(long siteId, Writer writer) {
         OpenVpnSiteSettings openVpnSiteSettings
                 = settings.getSettings(OpenVpnSiteSettings.class);
-        Optional<VpnSite> site = vpnSiteController.getById(siteId);
+        Optional<VpnSite> site = vpnSiteSiter.getById(siteId);
         if (site.isEmpty()) {
             log.error("Site %i not found".formatted(siteId));
             return;
