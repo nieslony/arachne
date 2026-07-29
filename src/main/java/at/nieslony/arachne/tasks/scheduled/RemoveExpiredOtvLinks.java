@@ -49,6 +49,7 @@ public class RemoveExpiredOtvLinks extends Task {
                 = settings.getSettings(OneTimeViewSettings.class);
         int validDays = oneTimeViewSettings.getValidDays();
         int graceDays = oneTimeViewSettings.getRemovalGraceTime();
+        long count = oneTimeViewRepository.count();
 
         LocalDateTime expirationDate = LocalDateTime
                 .now()
@@ -60,6 +61,9 @@ public class RemoveExpiredOtvLinks extends Task {
         log.info("Removing expired OTVs: " + expiredItems.toString());
         oneTimeViewRepository.deleteAll(expiredItems);
 
-        return "%d OTV entries deleted".formatted(expiredItems.size());
+        return "%d of %d OTV entries deleted".formatted(
+                expiredItems.size(),
+                count
+        );
     }
 }
