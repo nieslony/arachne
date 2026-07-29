@@ -36,6 +36,7 @@ public class AboutDialog extends Dialog {
 
     public AboutDialog(ArachneVersion arachneVersion) {
         super("About Arachne");
+        setDraggable(true);
 
         String iconPath = "/icons/arachne.svg";
         Image arachneImage = new Image(

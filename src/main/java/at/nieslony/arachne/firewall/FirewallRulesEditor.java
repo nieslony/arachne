@@ -327,6 +327,7 @@ class FirewallRulesEditor extends VerticalLayout {
         final String TUPEL_WIDTH = "25em";
 
         Dialog dlg = new Dialog();
+        dlg.setDraggable(true);
         if (rule.getId() == null) {
             dlg.setHeaderTitle("New rule");
         } else {

@@ -565,6 +565,7 @@ public class LdapView extends VerticalLayout {
 
             Dialog dlg = new Dialog();
             dlg.setHeaderTitle("Search Result");
+            dlg.setDraggable(true);
 
             String html = """
                         <dl>
@@ -622,6 +623,7 @@ public class LdapView extends VerticalLayout {
 
             Dialog dlg = new Dialog();
             dlg.setHeaderTitle("Search Result");
+            dlg.setDraggable(true);
 
             String html = """
                         <dl>

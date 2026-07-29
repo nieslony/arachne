@@ -426,6 +426,7 @@ public class UsersView extends VerticalLayout {
         }
 
         Dialog dlg = new Dialog("View %s's Configuration".formatted(user.getDisplayName()));
+        dlg.setDraggable(true);
         TabSheet tabSheet = new TabSheet();
 
         Button configShellCopy = new Button("Copy to Clipboard", VaadinIcon.COPY.create());
@@ -470,6 +471,7 @@ public class UsersView extends VerticalLayout {
 
     void addUser() {
         Dialog dialog = new Dialog();
+        dialog.setDraggable(true);
         dialog.setHeaderTitle("Add User");
         Binder<UserModel> binder = new Binder<>(UserModel.class
         );
@@ -588,6 +590,7 @@ public class UsersView extends VerticalLayout {
 
     private void openUserSettings() {
         Dialog dlg = new Dialog();
+        dlg.setDraggable(true);
         dlg.setHeaderTitle("User Settings");
 
         IntegerField expirationTimeoutField = new IntegerField("Expiration Timeout");
@@ -624,6 +627,7 @@ public class UsersView extends VerticalLayout {
         MailSettings mailSettings = settings.getSettings(MailSettings.class);
 
         Dialog dlg = new Dialog();
+        dlg.setDraggable(true);
         dlg.setHeaderTitle("Send %s' Config as E-Mail".formatted(user.getDisplayName()));
 
         EmailField emailField = new EmailField("Destination E-Mail Address");

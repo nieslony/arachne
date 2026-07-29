@@ -67,6 +67,7 @@ public class ChangePasswordDialog extends Dialog {
     }
 
     final void createDialog() {
+        setDraggable(true);
         Binder<PasswordChanger> binder = new Binder<>(PasswordChanger.class);
 
         PasswordField currentPasswordField = null;

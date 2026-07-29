@@ -140,6 +140,7 @@ public class PkiSettingsView extends VerticalLayout {
 
     private Dialog createWriteDhParamsDialog() {
         Dialog dlg = new Dialog("Create DH Parameters");
+        dlg.setDraggable(true);
         Text msg = new Text("Create DH parameters in background");
 
         Checkbox restartOpenVpnServerField

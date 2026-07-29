@@ -119,6 +119,7 @@ public class RecurringTasksView extends VerticalLayout {
             Consumer<RecurringTaskModel> onSave) {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Edit Task");
+        dlg.setDraggable(true);
 
         Binder<RecurringTaskModel> binder = new Binder<>();
 

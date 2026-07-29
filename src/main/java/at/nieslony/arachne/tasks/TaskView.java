@@ -271,6 +271,7 @@ public class TaskView
 
     private Dialog createRescheduleDialog(TaskModel taskModel, Runnable onOk) {
         Dialog dlg = new Dialog();
+        dlg.setDraggable(true);
         try {
             Class<? extends Task> taskClass = taskModel.getTaskClass();
             dlg.setHeaderTitle(
