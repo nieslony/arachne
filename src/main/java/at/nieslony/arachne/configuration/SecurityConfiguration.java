@@ -30,7 +30,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -422,11 +422,24 @@ public class SecurityConfiguration {
                         path
                 );
                 if (otvPageMatcher.matches()) {
-                    Optional<OneTimeViewModel> modelOpt
-                            = oneTimeViewRepository.findById(otvPageMatcher.group("id"));
-                    OneTimeViewModel model = modelOpt.orElseThrow(
-                            NotFoundException::new
-                    );
+                    OneTimeViewModel model
+                            = oneTimeViewRepository
+                                    .findById(otvPageMatcher.group("id"))
+                                    .orElseThrow(NotFoundException::new);
+                    if (model.getVisited() != null) {
+                        log.error("OTV %s already visited at %s ".formatted(
+                                model.getId(),
+                                model.getVisitedString()
+                        ));
+                        return new AuthorizationDecision(false);
+                    }
+                    if (LocalDateTime.now().isAfter(model.getValidUntil())) {
+                        log.error("OTV %s is expired since ".formatted(
+                                model.getId(),
+                                model.getValidUntilString()
+                        ));
+                        return new AuthorizationDecision(false);
+                    }
 
                     boolean granted;
                     if (authSupplier.get() instanceof AbstractAuthenticationToken user) {

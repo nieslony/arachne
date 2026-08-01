@@ -10,6 +10,8 @@ import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
 import at.nieslony.arachne.mail.MailSettingsRestController;
+import at.nieslony.arachne.onetimeview.OneTimeViewService;
+import at.nieslony.arachne.onetimeview.SetOtpView;
 import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.pki.PkiException;
@@ -20,6 +22,7 @@ import at.nieslony.arachne.roles.RolesCollector;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.usermatcher.UsernameMatcher;
+import at.nieslony.arachne.utils.components.EnterEMailAddressDialog;
 import at.nieslony.arachne.utils.components.GridPaginationControls;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import com.vaadin.flow.component.Component;
@@ -104,6 +107,9 @@ public class UsersView extends VerticalLayout {
 
     @Autowired
     private TotpController totpController;
+
+    @Autowired
+    OneTimeViewService oneTimeViewService;
 
     Grid<UserModel> usersGrid;
     Grid.Column<UserModel> usernameColumn;
@@ -392,6 +398,9 @@ public class UsersView extends VerticalLayout {
                     );
                     dlg.open();
                 });
+                userMenu.addItem("Send E-Mail to configure OTP…", e -> {
+                    sendLinkOtpAuth(user);
+                });
             }
             userMenu.addItem(new Anchor(dlh, "Download Config"));
             userMenu.addItem("Send Config as E-Mail…", (e) -> sendVpnConfig(user));
@@ -620,6 +629,20 @@ public class UsersView extends VerticalLayout {
 
         dlg.getFooter().add(cancelButton, okButton);
 
+        dlg.open();
+    }
+
+    void sendLinkOtpAuth(UserModel user) {
+        EnterEMailAddressDialog dlg = new EnterEMailAddressDialog("Send link", addr -> {
+            try {
+                log.info("Send E-Mail to " + addr);
+                oneTimeViewService.sendEmail(user, SetOtpView.class);
+                ShowNotification.info("E-Mail sent", "E-Mail with link successsfully sent");
+            } catch (MessagingException ex) {
+                ShowNotification.error("Cannot send emal", ex.getMessage());
+            }
+        });
+        dlg.setEMail(user.getEmail());
         dlg.open();
     }
 

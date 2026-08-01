@@ -56,10 +56,28 @@ public class OneTimeViewModel implements Serializable {
     @NotNull
     private LocalDateTime validUntil;
 
+    private LocalDateTime visited = null;
+
     @JsonIgnore
     public String getValidUntilString() {
         try {
             return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(validUntil);
+        } catch (DateTimeException ex) {
+            log.warn("Invalid date/time: %s: %s".formatted(
+                    validUntil.toString(),
+                    ex.getMessage()
+            ));
+            return "???";
+        }
+    }
+
+    @JsonIgnore
+    public String getVisitedString() {
+        if (visited == null) {
+            return "never";
+        }
+        try {
+            return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(visited);
         } catch (DateTimeException ex) {
             log.warn("Invalid date/time: %s: %s".formatted(
                     validUntil.toString(),
