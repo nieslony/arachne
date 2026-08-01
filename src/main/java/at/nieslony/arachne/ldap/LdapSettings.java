@@ -82,6 +82,8 @@ public class LdapSettings extends AbstractSettingsGroup {
     private String keytabPath = FolderFactory.getInstance().getDefaultKeytabPath();
     private String kerberosBindPricipal = "";
 
+    private boolean ldapAuthenticationEnabled = false;
+
     private String usersOu = "";
     private String usersAttrUsername = "";
     private String usersAttrDisplayName = "";

@@ -78,13 +78,14 @@ public class ExternalAuthView extends VerticalLayout {
     private Button readKeytabButton;
     private Binder<KerberosSettings> kerberosBinder;
 
+    private Binder<LdapSettings> ldapBinder;
+
     private Checkbox preAuthEnabled;
     private RadioButtonGroup<PreAuthSettings.PreAuthSource> preAuthSource;
     private TextField preAuthEnvVar;
     private TextField preAuthHttpHeader;
     private Checkbox createApacheConfig;
     private TextField apacheKeytabFile;
-
     private Binder<PreAuthSettings> preAuthBinder;
 
     public ExternalAuthView(
@@ -118,11 +119,28 @@ public class ExternalAuthView extends VerticalLayout {
 
         TabSheet tabs = new TabSheet();
         tabs.add("Kerberos", createKerberosView(settings));
+        tabs.add("LDAP", createLdapView(settings));
         tabs.add("Pre Authentication", createPreAuthView(settings));
         tabs.setWidthFull();
 
         add(tabs, saveButton);
         setPadding(false);
+    }
+
+    private Component createLdapView(Settings settings) {
+        LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
+        ldapBinder = new Binder<>();
+
+        Checkbox ldapAuthEnabledField = new Checkbox("Enable LDAP Authentication");
+        ldapBinder.forField(ldapAuthEnabledField)
+                .bind(
+                        LdapSettings::isLdapAuthenticationEnabled,
+                        LdapSettings::setLdapAuthenticationEnabled
+                );
+
+        ldapBinder.setBean(ldapSettings);
+
+        return ldapAuthEnabledField;
     }
 
     private Component createKerberosView(Settings settings) {
@@ -320,9 +338,11 @@ public class ExternalAuthView extends VerticalLayout {
 
     private void onSaveAndRestart() {
         KerberosSettings kerberosSettings = kerberosBinder.getBean();
+        LdapSettings ldapSettings = ldapBinder.getBean();
         PreAuthSettings preAuthSettings = preAuthBinder.getBean();
         try {
             kerberosSettings.save(settings);
+            ldapSettings.save(settings);
             preAuthSettings.save(settings);
             if (preAuthSettings.isWriteApachePreAuthConfig()) {
                 tomcatService.saveApacheConfig();

@@ -10,6 +10,8 @@ import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.auth.TotpController;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
+import at.nieslony.arachne.ldap.LdapService;
+import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.onetimeview.OneTimeViewModel;
 import at.nieslony.arachne.onetimeview.OneTimeViewRepository;
 import at.nieslony.arachne.openvpn.OpenVpnService;
@@ -42,8 +44,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.core.DirContextOperations;
+import org.springframework.ldap.core.support.BaseLdapPathContextSource;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -53,6 +61,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
@@ -64,6 +73,10 @@ import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosC
 import org.springframework.security.kerberos.authentication.sun.SunJaasKerberosTicketValidator;
 import org.springframework.security.kerberos.web.authentication.SpnegoAuthenticationProcessingFilter;
 import org.springframework.security.kerberos.web.authentication.SpnegoEntryPoint;
+import org.springframework.security.ldap.authentication.BindAuthenticator;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
+import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
+import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
@@ -107,10 +120,14 @@ public class SecurityConfiguration {
     UserRepository userRepository;
 
     @Autowired
+    LdapService ldapService;
+
+    @Autowired
     OneTimeViewRepository oneTimeViewRepository;
 
     private KerberosSettings kerberosSettings;
     private PreAuthSettings preAuthSettings;
+    private LdapSettings ldapSettings;
 
     private static final Pattern OTV_LANDING_PATTERN
             = Pattern.compile("/otv/(?<id>[0-9a-fA-F]+)");
@@ -123,7 +140,7 @@ public class SecurityConfiguration {
         try {
             kerberosSettings = settings.getSettings(KerberosSettings.class);
             preAuthSettings = settings.getSettings(PreAuthSettings.class);
-            log.debug(kerberosSettings.toString());
+            ldapSettings = settings.getSettings(LdapSettings.class);
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
@@ -157,6 +174,7 @@ public class SecurityConfiguration {
                         requestAttributeAuthenticationFilter(authenticationManager),
                         BasicAuthenticationFilter.class
                 )
+                .authenticationProvider(ldapAuthenticationProvider())
                 .exceptionHandling(
                         (exceptions) -> {
                             if (kerberosSettings.isEnableKrbAuth()) {
@@ -171,6 +189,65 @@ public class SecurityConfiguration {
             configurer.loginView(LoginOrSetupView.class, "/arachne/login");
             configurer.enableCsrfConfiguration(true);
         }).build();
+    }
+
+    private class DisabledAuthenticationProvider implements AuthenticationProvider {
+
+        private final String disabledType;
+
+        private DisabledAuthenticationProvider(String disabledType) {
+            this.disabledType = disabledType;
+        }
+
+        @Override
+        public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+            throw new AuthenticationServiceException(
+                    "%s authentication is disabled".formatted(disabledType));
+        }
+
+        @Override
+        public boolean supports(Class<?> authentication) {
+            return false;
+        }
+    }
+
+    public AuthenticationProvider ldapAuthenticationProvider() {
+        if (ldapSettings.isLdapAuthenticationEnabled()) {
+            log.info("LDAP Authentication is enabled: creating LdapAuthenticationProvider");
+            try {
+                ContextSource ctxSource = ldapService.getLdapTemplate().getContextSource();
+                log.debug("LDAP usetrs filter: " + ldapSettings.getUsersOu());
+                BindAuthenticator authenticator = new BindAuthenticator((LdapContextSource) ctxSource) {
+                    @Override
+                    public DirContextOperations authenticate(
+                            Authentication authentication
+                    ) {
+                        log.info("Try LDAP authentication for " + authentication.getPrincipal());
+                        var ret = super.authenticate(authentication);
+                        return ret;
+                    }
+                };
+                authenticator.setUserSearch(new FilterBasedLdapUserSearch(
+                        ldapSettings.getUsersOu(),
+                        "(%s={0})".formatted(ldapSettings.getUsersAttrUsername()),
+                        (BaseLdapPathContextSource) ctxSource
+                ));
+                LdapAuthoritiesPopulator authoritiesPopulator
+                        = (DirContextOperations userData, String username) -> ldapUserDetailsService
+                                .loadUserByUsername(username)
+                                .getAuthorities();
+                return new LdapAuthenticationProvider(
+                        authenticator,
+                        authoritiesPopulator
+                );
+            } catch (Exception ex) {
+                log.error("Error creating LDAP authentication " + ex.getMessage());
+                return null;
+            }
+        } else {
+            log.info("LDAP Authentication is disabled: creating empty AuthenticationProvider");
+            return new DisabledAuthenticationProvider("LDAP");
+        }
     }
 
     @Bean
@@ -272,13 +349,17 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public KerberosAuthenticationProvider kerberosAuthenticationProvider() {
-        log.info("Create KerberosAuthenticationProvider");
-        KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
-        SunJaasKerberosClient client = new SunJaasKerberosClient();
-        provider.setKerberosClient(client);
-        provider.setUserDetailsService(ldapUserDetailsService);
-        return provider;
+    public AuthenticationProvider kerberosAuthenticationProvider() {
+        if (kerberosSettings.isEnableKrbAuth()) {
+            log.info("Create KerberosAuthenticationProvider");
+            KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
+            SunJaasKerberosClient client = new SunJaasKerberosClient();
+            provider.setKerberosClient(client);
+            provider.setUserDetailsService(ldapUserDetailsService);
+            return provider;
+        } else {
+            return new DisabledAuthenticationProvider("Kerberos");
+        }
     }
 
     @Bean
