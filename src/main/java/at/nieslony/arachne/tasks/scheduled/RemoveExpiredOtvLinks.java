@@ -58,7 +58,10 @@ public class RemoveExpiredOtvLinks extends Task {
         List<OneTimeViewModel> expiredItems
                 = oneTimeViewRepository.findByValidUntilBefore(expirationDate);
 
-        log.info("Removing expired OTVs: " + expiredItems.toString());
+        log.info("Removing since %s expired OTVs: %s".formatted(
+                expirationDate.toString(),
+                expiredItems.toString()
+        ));
         oneTimeViewRepository.deleteAll(expiredItems);
 
         return "%d of %d OTV entries deleted".formatted(
