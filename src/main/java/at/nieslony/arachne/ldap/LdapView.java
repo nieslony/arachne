@@ -56,6 +56,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -119,7 +120,9 @@ public class LdapView extends VerticalLayout {
             tabSheet.setVisible(e.getValue());
         });
 
+        binder.setChangeDetectionEnabled(true);
         binder.setBean(ldapSettings);
+        binder.refreshFields();
         binder.validate();
 
         add(
@@ -135,19 +138,40 @@ public class LdapView extends VerticalLayout {
         binder.forField(usersOuField)
                 .bind(LdapSettings::getUsersOu, LdapSettings::setUsersOu);
 
-        TextField usersObjectClassField = new TextField("Users Object Class");
-        binder.forField(usersObjectClassField)
-                .bind(LdapSettings::getUsersObjectClass, LdapSettings::setUsersObjectClass);
-
         TextField usersAttrUsernameField = new TextField("Attribute Username");
         binder.forField(usersAttrUsernameField)
                 .bind(LdapSettings::getUsersAttrUsername, LdapSettings::setUsersAttrUsername);
+
+        TextField userAttrAdditionalSearchField = new TextField("Additional search atributes");
+        binder.forField(userAttrAdditionalSearchField)
+                .bind(
+                        v -> String.join(", ", v.getUserAttrAdditionalSearch()),
+                        (v, s) -> v.setUserAttrAdditionalSearch(
+                                Arrays.stream(s.split("[ ,;]+"))
+                                        .filter(v1 -> !v1.isBlank())
+                                        .toList()
+                        )
+                );
+
+        TextField usersObjectClassField = new TextField("Users Object Class");
+        binder.forField(usersObjectClassField)
+                .bind(LdapSettings::getUsersObjectClass, LdapSettings::setUsersObjectClass);
 
         Checkbox usersEnableCustomFilter = new Checkbox("Enable Custom Filter");
         binder.forField(usersEnableCustomFilter)
                 .bind(LdapSettings::isUsersEnableCustomFilter, LdapSettings::setUsersEnableCustomFilter);
 
         TextField usersSearchFilterField = new TextField("Search Filter");
+        usersSearchFilterField.setEnabled(false);
+        binder.forField(usersSearchFilterField)
+                .bind(
+                        v -> v.getUsersFilter(),
+                        (s, v) -> {
+                            if (usersEnableCustomFilter.getValue()) {
+                                s.setUsersCustomFilter(v);
+                            }
+                        }
+                );
 
         TextField displayNameAttrField = new TextField("Attribute Display Name");
         binder.forField(displayNameAttrField)
@@ -164,6 +188,11 @@ public class LdapView extends VerticalLayout {
         TextField testUserField = new TextField("Test and find user");
         testUserField.setWidthFull();
 
+        binder.addValueChangeListener(e -> {
+            LdapSettings ls = binder.getBean();
+            usersSearchFilterField.setValue(ls.getUsersFilter());
+        });
+
         Button testAndFindUserButton = new Button(
                 "Find and Test",
                 e -> testFindUser(testUserField.getValue())
@@ -179,6 +208,7 @@ public class LdapView extends VerticalLayout {
                 usersOuField,
                 usersObjectClassField,
                 usersAttrUsernameField,
+                userAttrAdditionalSearchField,
                 usersEnableCustomFilter,
                 usersSearchFilterField,
                 displayNameAttrField,
@@ -186,6 +216,7 @@ public class LdapView extends VerticalLayout {
                 avatarAttrField,
                 testUserLayout
         );
+        usersFormLayout.setColspan(usersSearchFilterField, 2);
         usersFormLayout.setColspan(usersOuField, 2);
         NativeLabel usersFormLabel = new NativeLabel("Users");
         VerticalLayout usersLayout = new VerticalLayout(
@@ -258,6 +289,7 @@ public class LdapView extends VerticalLayout {
             usersOuField.setValue("cn=users,cn=accounts");
             usersObjectClassField.setValue("posixaccount");
             usersAttrUsernameField.setValue("krbCanonicalName");
+            userAttrAdditionalSearchField.setValue("uid");
             displayNameAttrField.setValue("displayName");
             emailAttrField.setValue("mail");
             avatarAttrField.setValue("jpegPhoto");

@@ -222,20 +222,42 @@ public class SecurityConfiguration {
                     public DirContextOperations authenticate(
                             Authentication authentication
                     ) {
-                        log.info("Try LDAP authentication for " + authentication.getPrincipal());
-                        var ret = super.authenticate(authentication);
-                        return ret;
+                        try {
+                            log.info("Try LDAP authentication for " + authentication.getPrincipal());
+                            var ret = super.authenticate(authentication);
+                            log.debug(
+                                    "LDAP authentication for user %s successful: %s"
+                                            .formatted(
+                                                    authentication.getPrincipal(),
+                                                    ret)
+                            );
+                            return ret;
+                        } catch (Exception ex) {
+                            log.error(
+                                    "Excleption thrown during authentication: "
+                                    + ex.getMessage());
+                            throw ex;
+                        }
                     }
                 };
+                log.debug("Set LDAP search filter: " + ldapSettings.getUsersFilter("0"));
                 authenticator.setUserSearch(new FilterBasedLdapUserSearch(
                         ldapSettings.getUsersOu(),
-                        "(%s={0})".formatted(ldapSettings.getUsersAttrUsername()),
+                        ldapSettings.getUsersFilter("{0}"),
                         (BaseLdapPathContextSource) ctxSource
                 ));
                 LdapAuthoritiesPopulator authoritiesPopulator
-                        = (DirContextOperations userData, String username) -> ldapUserDetailsService
-                                .loadUserByUsername(username)
-                                .getAuthorities();
+                        = (DirContextOperations userData, String username) -> {
+                            log.debug("LdapAuthoritiesPopulator: searching for user " + username);
+                            var user = ldapUserDetailsService
+                                    .loadUserByUsername(username);
+                            log.debug("LdapAuthoritiesPopulator: found user %s: "
+                                    .formatted(username, user.toString())
+                            );
+
+                            var luds = user.getAuthorities();
+                            return luds;
+                        };
                 return new LdapAuthenticationProvider(
                         authenticator,
                         authoritiesPopulator
