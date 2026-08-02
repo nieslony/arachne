@@ -164,14 +164,7 @@ public class LdapView extends VerticalLayout {
         TextField usersSearchFilterField = new TextField("Search Filter");
         usersSearchFilterField.setEnabled(false);
         binder.forField(usersSearchFilterField)
-                .bind(
-                        v -> v.getUsersFilter(),
-                        (s, v) -> {
-                            if (usersEnableCustomFilter.getValue()) {
-                                s.setUsersCustomFilter(v);
-                            }
-                        }
-                );
+                .bind(LdapSettings::getUsersFilter, LdapSettings::setUsersCustomFilter);
 
         TextField displayNameAttrField = new TextField("Attribute Display Name");
         binder.forField(displayNameAttrField)
@@ -241,8 +234,9 @@ public class LdapView extends VerticalLayout {
                 .bind(LdapSettings::isGroupsEnableCustomFilter, LdapSettings::setGroupsEnableCustomFilter);
 
         TextField groupsSearchFilter = new TextField("Custom Search Filter");
+        groupsSearchFilter.setEnabled(false);
         binder.forField(groupsSearchFilter)
-                .bind(LdapSettings::getGroupsCustomFilter, LdapSettings::setGroupsCustomFilter);
+                .bind(LdapSettings::getGroupsFilter, LdapSettings::setGroupsCustomFilter);
 
         TextField groupsAttrDescription = new TextField("Attribute Description");
         binder.forField(groupsAttrDescription)
@@ -264,6 +258,11 @@ public class LdapView extends VerticalLayout {
         testAndFindGroupLayout.setFlexGrow(1, testAndFindGroupField);
         testAndFindGroupLayout.setWidthFull();
         testAndFindGroupLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+
+        binder.addValueChangeListener(e -> {
+            LdapSettings ls = binder.getBean();
+            groupsSearchFilter.setValue(ls.getUsersFilter());
+        });
 
         FormLayout groupsFormLayout = new FormLayout(
                 groupsOu,
