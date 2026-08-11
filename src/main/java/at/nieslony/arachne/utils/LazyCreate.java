@@ -35,7 +35,7 @@ public class LazyCreate<T> {
         this.valueCreater = valueCreater;
     }
 
-    public T get() {
+    synchronized public T get() {
         if (value == null) {
             value = valueCreater.get();
         }
