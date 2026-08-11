@@ -179,8 +179,8 @@ public class SetupController {
         } else {
             taskScheduler.runTask(UpdateDhParams.class, null, null);
         }
-        openVpnServive.writeDummySiteConfig(OpenVpnService.ServerType.USER);
-        openVpnServive.writeDummySiteConfig(OpenVpnService.ServerType.SITE);
+        openVpnServive.writeDummyServerConfig(OpenVpnService.ServerType.USER);
+        openVpnServive.writeDummyServerConfig(OpenVpnService.ServerType.SITE);
 
         settings.put(SETUP_STATUS_KEY, SetupStatus.FINISHED);
 

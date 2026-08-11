@@ -20,7 +20,6 @@ import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.ShellQuote;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
-import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -100,14 +99,7 @@ public class OpenVpnService {
         SITE
     }
 
-    @PostConstruct
-    public void init() {
-        writeCrl();
-        writeDummySiteConfig(ServerType.USER);
-        writeDummySiteConfig(ServerType.SITE);
-    }
-
-    public void writeDummySiteConfig(ServerType serverType) {
+    public void writeDummyServerConfig(ServerType serverType) {
         String fileName = folderFactory.getVpnConfigDir(switch (serverType) {
             case USER ->
                 FN_OPENVPN_USER_SERVER_CONF;
