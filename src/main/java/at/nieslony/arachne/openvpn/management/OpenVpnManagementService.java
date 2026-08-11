@@ -19,8 +19,10 @@ package at.nieslony.arachne.openvpn.management;
 
 import at.nieslony.arachne.utils.FolderFactory;
 import jakarta.annotation.PostConstruct;
-import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.ApplicationScope;
@@ -32,19 +34,24 @@ import org.springframework.web.context.annotation.ApplicationScope;
 @Service
 @ApplicationScope
 @Slf4j
-public class OpenVpnManagementService {
+public class OpenVpnManagementService implements BeanFactoryAware {
 
     @Autowired
     private FolderFactory folderFactory;
 
-    OpenVpnManagement userManagementIf;
-    OpenVpnManagement siteManagementIf;
+    private BeanFactory beanFactory;
+
+    private OpenVpnManagementIf userManagementIf;
+    private OpenVpnManagementIf siteManagementIf;
 
     @PostConstruct
     public void init() {
         log.info("Initializing Management Interface");
-        userManagementIf = new OpenVpnManagement("user", Path.of(getUserManagemnetSocket()));
-        siteManagementIf = new OpenVpnManagement("site", Path.of(getSiteManagemnetSocket()));
+        userManagementIf = new OpenVpnUserManagementIf(beanFactory);
+        siteManagementIf = new OpenVpnSiteManagementIf(beanFactory);
+
+        userManagementIf.run();
+        siteManagementIf.run();
     }
 
     public String getSiteManagemnetSocket() {
@@ -59,11 +66,16 @@ public class OpenVpnManagementService {
         );
     }
 
-    public OpenVpnManagement getUserManagement() {
+    public OpenVpnManagementIf getUserManagement() {
         return userManagementIf;
     }
 
-    public OpenVpnManagement getSiteManagement() {
+    public OpenVpnManagementIf getSiteManagement() {
         return siteManagementIf;
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }

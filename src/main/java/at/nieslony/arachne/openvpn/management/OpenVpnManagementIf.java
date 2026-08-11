@@ -1,5 +1,6 @@
 package at.nieslony.arachne.openvpn.management;
 
+import at.nieslony.arachne.firewall.FirewallService;
 import at.nieslony.arachne.openvpn.management.commands.Command;
 import at.nieslony.arachne.openvpn.management.commands.DropUser;
 import at.nieslony.arachne.openvpn.management.commands.Hold;
@@ -23,20 +24,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 
 /**
  *
  * @author claas
  */
 @Slf4j
-public class OpenVpnManagement {
+abstract public class OpenVpnManagementIf {
 
     public enum ManagementConnectionStatus {
         Connected, Hold, Disconnected
     }
 
-    private final Path socketPath;
-    private final String name;
+    protected final BeanFactory beanFactory;
+    protected FirewallService firewallService;
 
     private final BlockingQueue<Command> commandQueue = new LinkedBlockingQueue<>();
     private final BlockingQueue<String> managementMsgQueue = new LinkedBlockingQueue<>();
@@ -44,18 +46,23 @@ public class OpenVpnManagement {
     private final Thread managementMsgReader;
     private final Thread managementMsgProcessor;
     private volatile Command currentCommand = null;
+    private volatile SocketChannel clientChannel = null;
 
     @Getter
     private volatile ManagementConnectionStatus managementConnectionStatus;
 
-    private volatile SocketChannel clientChannel = null;
-
-    public OpenVpnManagement(String name, Path managementSocketPath) {
-        this.name = name;
-        this.socketPath = managementSocketPath;
+    public OpenVpnManagementIf(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+        this.firewallService = beanFactory.getBean(FirewallService.class);
         this.managementConnectionStatus = ManagementConnectionStatus.Disconnected;
 
-        commandProcessor = new Thread(() -> {
+        commandProcessor = createCommandProcessor();
+        managementMsgReader = createManagementMsgReader();
+        managementMsgProcessor = createManagementMsgProcessor();
+    }
+
+    private Thread createCommandProcessor() {
+        return new Thread(() -> {
             log.info("Starting command processor");
             try {
                 for (;;) {
@@ -79,9 +86,11 @@ public class OpenVpnManagement {
             } catch (InterruptedException | ExecutionException ex) {
                 log.error("Interrupted");
             }
-        }, "OvMgmtCmdProc-" + Character.toUpperCase(name.charAt(0)));
+        }, "OvMgmtCmdProc-" + getVpnTypeShort());
+    }
 
-        managementMsgReader = new Thread(() -> {
+    private Thread createManagementMsgReader() {
+        return new Thread(() -> {
             log.info("Starting management message reader");
             StringBuilder currentLine = new StringBuilder();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
@@ -124,15 +133,18 @@ public class OpenVpnManagement {
                     }
                 }
             }
-        }, "OvMgmtMsgRead-" + Character.toUpperCase(name.charAt(0)));
+        }, "OvMgmtMsgRead-" + getVpnTypeShort());
+    }
 
-        managementMsgProcessor = new Thread(() -> {
+    private Thread createManagementMsgProcessor() {
+        return new Thread(() -> {
             for (;;) {
                 try {
                     String curLine = managementMsgQueue.take();
                     log.debug("Processing line: »%s«".formatted(curLine));
                     if (curLine.startsWith(">INFO:")) {
-                        log.debug("Got log line: " + curLine);
+                        log.info("Connected to management interface, got INFO");
+                        onOpenvpnConnect();
                     } else if (curLine.startsWith(">HOLD:")) {
                         log.info("Management interface is in hold status");
                         managementConnectionStatus = ManagementConnectionStatus.Hold;
@@ -159,9 +171,11 @@ public class OpenVpnManagement {
                     log.error("Interrupted");
                 }
             }
-        }, "OvMgmtMsgProc-" + Character.toUpperCase(name.charAt(0)));
+        }, "OvMgmtMsgProc-" + getVpnTypeShort());
+    }
 
-        log.info("Starting %s threads".formatted(name));
+    public void run() {
+        log.info("Starting threads");
         commandProcessor.start();
         managementMsgReader.start();
         managementMsgProcessor.start();
@@ -169,9 +183,11 @@ public class OpenVpnManagement {
 
     private void connectToManagementInterface() {
         try {
-            log.info("Connecting to %s management Socket".formatted(name));
+            log.info("Connecting to management Socket");
             clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
-            UnixDomainSocketAddress address = UnixDomainSocketAddress.of(socketPath);
+            UnixDomainSocketAddress address = UnixDomainSocketAddress.of(
+                    getSocketPath()
+            );
             clientChannel.connect(address);
             clientChannel.configureBlocking(true);
             managementConnectionStatus = ManagementConnectionStatus.Connected;
@@ -181,15 +197,17 @@ public class OpenVpnManagement {
     }
 
     private void waitForSocket() {
-        if (Files.exists(socketPath)) {
-            log.info("Socket %s already exists".formatted(socketPath.toString()));
+        if (Files.exists(getSocketPath())) {
+            log.info("Socket %s already exists".formatted(
+                    getSocketPath().toString())
+            );
             return;
         }
         try {
             log.info("Waiting for socket to appear.");
             WatchService watchService = FileSystems.getDefault().newWatchService();
 
-            Path socketDir = socketPath.getParent();
+            Path socketDir = getSocketPath().getParent();
             socketDir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
             WatchKey key;
@@ -197,13 +215,13 @@ public class OpenVpnManagement {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     String filename = event.context().toString();
                     log.debug("File created: " + filename);
-                    if (filename.equals(socketPath.getFileName().toString())) {
+                    if (filename.equals(getSocketPath().getFileName().toString())) {
                         log.debug("Socket appeared");
                         return;
                     } else {
                         log.debug("Not mine. Expected: %s, got: %s".formatted(
                                 filename,
-                                socketPath.getFileName().toString()
+                                getSocketPath().getFileName().toString()
                         ));
                     }
                 }
@@ -213,6 +231,8 @@ public class OpenVpnManagement {
             log.error("Error waiting for socket: " + ex.getMessage());
         }
     }
+
+    abstract protected void onOpenvpnConnect();
 
     public int pid() throws ManagementException {
         Pid p = new Pid(commandQueue);
@@ -243,4 +263,8 @@ public class OpenVpnManagement {
         Hold h = new Hold(commandQueue, holdParam);
         return h.waitForResult();
     }
+
+    abstract protected String getVpnTypeShort();
+
+    abstract protected Path getSocketPath();
 }

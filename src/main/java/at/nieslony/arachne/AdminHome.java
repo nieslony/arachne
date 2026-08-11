@@ -8,7 +8,7 @@ import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpn.management.ManagementException;
-import at.nieslony.arachne.openvpn.management.OpenVpnManagement;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementIf;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
@@ -129,7 +129,7 @@ public class AdminHome
         StringBuilder msg = new StringBuilder();
 
         if (openVpnUserSettings.isAlreadyConfigured()) {
-            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            OpenVpnManagementIf mgmt = openVpnManagementService.getSiteManagement();
             switch (mgmt.getManagementConnectionStatus()) {
                 case Disconnected -> {
                     msg.append("No connection to Management Interface");
@@ -171,7 +171,7 @@ public class AdminHome
         StringBuilder msg = new StringBuilder();
 
         if (openVpnSiteSettings.isAlreadyConfigured()) {
-            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            OpenVpnManagementIf mgmt = openVpnManagementService.getSiteManagement();
             switch (mgmt.getManagementConnectionStatus()) {
                 case Disconnected -> {
                     msg.append("No connection to Management Interface");
