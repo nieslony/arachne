@@ -3,6 +3,7 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
@@ -34,6 +35,7 @@ public class Arachne implements AppShellConfigurator {
 
     public static void main(String[] args) {
         context = SpringApplication.run(Arachne.class, args);
+        context.getBean(OpenVpnManagementService.class).wakeUp();
     }
 
     public static void restart() {
@@ -45,6 +47,7 @@ public class Arachne implements AppShellConfigurator {
                     Arachne.class,
                     args.getSourceArgs()
             );
+            context.getBean(OpenVpnManagementService.class).wakeUp();
         });
 
         thread.setDaemon(false);

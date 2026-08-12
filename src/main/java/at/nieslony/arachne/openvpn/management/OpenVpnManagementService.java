@@ -74,6 +74,9 @@ public class OpenVpnManagementService implements BeanFactoryAware {
         return siteManagementIf;
     }
 
+    public void wakeUp() {
+    }
+
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
