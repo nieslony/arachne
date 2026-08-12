@@ -11,6 +11,8 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  *
@@ -40,8 +42,11 @@ abstract public class Command<T> {
         value.completeExceptionally(ex);
     }
 
-    public void waitForUnlock() throws ExecutionException, InterruptedException {
-        lock.get();
+    public void waitForUnlock() throws
+            ExecutionException,
+            InterruptedException,
+            TimeoutException {
+        lock.get(10, TimeUnit.SECONDS);
     }
 
     public abstract boolean processResultLine(String line) throws ManagementException;

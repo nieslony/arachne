@@ -22,6 +22,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
@@ -69,7 +70,7 @@ abstract public class OpenVpnManagementIf {
                     Command cmd = commandQueue.take();
                     log.info("Took command from queue: " + cmd.toString());
                     try {
-                        if (clientChannel == null || !clientChannel.isConnected()) {
+                        if (clientChannel == null || !clientChannel.isOpen()) {
                             commandQueue.remove(cmd);
                             cmd.cancel(new ManagementException("Cannot connect to management interface"));
                         } else {
@@ -77,7 +78,11 @@ abstract public class OpenVpnManagementIf {
                             log.debug("%s (%d bytes) written".formatted(cmd.toString(), len));
                             currentCommand = cmd;
                             log.debug("Waiting for unlock");
-                            cmd.waitForUnlock();
+                            try {
+                                cmd.waitForUnlock();
+                            } catch (TimeoutException tEx) {
+                                cmd.cancel(new ManagementException("Timeout"));
+                            }
                         }
                     } catch (IOException ex) {
                         log.error("Cannot write Command: " + ex.getMessage());
@@ -96,9 +101,30 @@ abstract public class OpenVpnManagementIf {
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             for (;;) {
                 try {
-                    if (clientChannel == null || !clientChannel.isOpen()) {
-                        waitForSocket();
-                        connectToManagementInterface();
+                    int sleep = 1;
+                    while (clientChannel == null || !clientChannel.isOpen()) {
+                        try {
+                            commandQueue.clear();
+                            waitForSocket();
+                            connectToManagementInterface();
+                        } catch (IOException ex) {
+                            try {
+                                log.error(
+                                        "Error connecting to %s: %s. Try again in %d secs"
+                                                .formatted(
+                                                        getSocketPath(),
+                                                        ex.getMessage(),
+                                                        sleep
+                                                )
+                                );
+                                log.debug("Sleeping %d secs".formatted(sleep));
+                                Thread.sleep(sleep * 1000);
+                            } catch (InterruptedException iEx) {
+                            }
+                            if (sleep < 32) {
+                                sleep *= 2;
+                            }
+                        }
                     }
                     log.debug("Waiting for data");
                     buffer.clear();
@@ -110,6 +136,13 @@ abstract public class OpenVpnManagementIf {
                     }
                 } catch (IOException ex) {
                     log.error("Error reading from socket: " + ex.getMessage());
+                    if (clientChannel != null) {
+                        try {
+                            clientChannel.close();
+                            clientChannel = null;
+                        } catch (IOException ex1) {
+                        }
+                    }
                 }
                 buffer.flip();
                 while (buffer.hasRemaining()) {
@@ -181,19 +214,15 @@ abstract public class OpenVpnManagementIf {
         managementMsgProcessor.start();
     }
 
-    private void connectToManagementInterface() {
-        try {
-            log.info("Connecting to management Socket");
-            clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
-            UnixDomainSocketAddress address = UnixDomainSocketAddress.of(
-                    getSocketPath()
-            );
-            clientChannel.connect(address);
-            clientChannel.configureBlocking(true);
-            managementConnectionStatus = ManagementConnectionStatus.Connected;
-        } catch (IOException ex) {
-            log.error("IO Exception: " + ex);
-        }
+    private void connectToManagementInterface() throws IOException {
+        log.info("Connecting to management Socket");
+        clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
+        UnixDomainSocketAddress address = UnixDomainSocketAddress.of(
+                getSocketPath()
+        );
+        clientChannel.connect(address);
+        clientChannel.configureBlocking(true);
+        managementConnectionStatus = ManagementConnectionStatus.Connected;
     }
 
     private void waitForSocket() {
