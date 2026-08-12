@@ -5,7 +5,7 @@
 package at.nieslony.arachne.users;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.auth.TotpController;
+import at.nieslony.arachne.auth.TotpService;
 import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.ldap.LdapUserSource;
 import at.nieslony.arachne.mail.MailSettings;
@@ -106,7 +106,7 @@ public class UsersView extends VerticalLayout {
     private RolesCollector rolesCollestor;
 
     @Autowired
-    private TotpController totpController;
+    private TotpService totpController;
 
     @Autowired
     OneTimeViewService oneTimeViewService;

@@ -6,7 +6,7 @@ package at.nieslony.arachne;
 
 import at.nieslony.arachne.apiindex.ApiIndexView;
 import at.nieslony.arachne.auth.ExternalAuthView;
-import at.nieslony.arachne.auth.TotpController;
+import at.nieslony.arachne.auth.TotpService;
 import at.nieslony.arachne.firewall.SiteFirewallView;
 import at.nieslony.arachne.firewall.UserFirewallView;
 import at.nieslony.arachne.ldap.LdapService;
@@ -68,7 +68,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
     private final transient AuthenticationContext authContext;
     private final UserRepository userRepository;
     private final ArachneVersion arachneVersion;
-    private final TotpController toptController;
+    private final TotpService toptController;
     private final Settings settings;
     private final LdapService ldapService;
     private String pageTitleStr = null;
@@ -78,7 +78,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
             AuthenticationContext authContext,
             ArachneVersion arachneVersion,
             LdapService ldapService,
-            TotpController totpController,
+            TotpService totpController,
             Settings settings
     ) {
         this.authContext = authContext;

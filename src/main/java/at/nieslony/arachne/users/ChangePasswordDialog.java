@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /*
  * Copyright (C) 2023 claas
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  * @author claas
  */
 @UIScope
-@Component
+@Service
 @Slf4j
 public class ChangePasswordDialog extends Dialog {
 

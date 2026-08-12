@@ -25,13 +25,13 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import java.util.List;
 import java.util.function.Function;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author claas
  */
-@Log4j2
+@Slf4j
 public class AutoComplete<T> extends Popover {
 
     private final TextField parent;

@@ -17,7 +17,7 @@
  */
 package at.nieslony.arachne.onetimeview;
 
-import at.nieslony.arachne.auth.TotpController;
+import at.nieslony.arachne.auth.TotpService;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.UI;
@@ -46,7 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class SetOtpView extends Main {
 
     @Autowired
-    TotpController totpController;
+    TotpService totpController;
 
     @Autowired
     UserRepository userRepository;
