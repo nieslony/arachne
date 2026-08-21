@@ -34,7 +34,7 @@ public class OpenVpnSiteManagementIf extends OpenVpnManagementIf {
         OpenVpnManagementService openVpnManagementService
                 = beanFactory.getBean(OpenVpnManagementService.class);
         socketPath = new LazyCreate<>(
-                () -> Path.of(openVpnManagementService.getSiteManagemnetSocket())
+                () -> Path.of(openVpnManagementService.getSiteManagementSocket())
         );
     }
 
@@ -45,7 +45,7 @@ public class OpenVpnSiteManagementIf extends OpenVpnManagementIf {
 
     @Override
     protected String getVpnTypeShort() {
-        return "U";
+        return "S";
     }
 
     @Override

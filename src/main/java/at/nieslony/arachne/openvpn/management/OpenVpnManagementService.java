@@ -24,17 +24,20 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.ApplicationScope;
 
 /**
  *
  * @author claas
  */
-@Service
+@Component
 @ApplicationScope
 @Slf4j
-public class OpenVpnManagementService implements BeanFactoryAware {
+public class OpenVpnManagementService
+        implements BeanFactoryAware, ApplicationListener<ApplicationContextInitializedEvent> {
 
     @Autowired
     private FolderFactory folderFactory;
@@ -54,13 +57,19 @@ public class OpenVpnManagementService implements BeanFactoryAware {
         siteManagementIf.run();
     }
 
-    public String getSiteManagemnetSocket() {
+    public void done() {
+        log.info("PreDestroy");
+        userManagementIf.stop();
+        siteManagementIf.stop();
+    }
+
+    public String getSiteManagementSocket() {
         return "%s/openvpn-site-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
         );
     }
 
-    public String getUserManagemnetSocket() {
+    public String getUserManagementSocket() {
         return "%s/openvpn-user-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
         );
@@ -80,5 +89,10 @@ public class OpenVpnManagementService implements BeanFactoryAware {
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationContextInitializedEvent event) {
+        log.info("onApplicationEvent");
     }
 }

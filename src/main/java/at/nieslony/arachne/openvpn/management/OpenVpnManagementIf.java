@@ -21,6 +21,9 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 import lombok.Getter;
@@ -43,11 +46,13 @@ abstract public class OpenVpnManagementIf {
 
     private final BlockingQueue<Command> commandQueue = new LinkedBlockingQueue<>();
     private final BlockingQueue<String> managementMsgQueue = new LinkedBlockingQueue<>();
-    private final Thread commandProcessor;
-    private final Thread managementMsgReader;
-    private final Thread managementMsgProcessor;
+    private Future<?> commandProcessor;
+    private Future<?> managementMsgReader;
+    private Future<?> managementMsgProcessor;
     private volatile Command currentCommand = null;
     private volatile SocketChannel clientChannel = null;
+
+    private final ExecutorService executorService;
 
     @Getter
     private volatile ManagementConnectionStatus managementConnectionStatus;
@@ -55,15 +60,13 @@ abstract public class OpenVpnManagementIf {
     public OpenVpnManagementIf(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
         this.firewallService = beanFactory.getBean(FirewallService.class);
-        this.managementConnectionStatus = ManagementConnectionStatus.Disconnected;
+        setManagementConnectionStatus(ManagementConnectionStatus.Disconnected);
 
-        commandProcessor = createCommandProcessor();
-        managementMsgReader = createManagementMsgReader();
-        managementMsgProcessor = createManagementMsgProcessor();
+        executorService = Executors.newFixedThreadPool(5);
     }
 
-    private Thread createCommandProcessor() {
-        return new Thread(() -> {
+    private Runnable createCommandProcessor() {
+        return () -> {
             log.info("Starting command processor");
             try {
                 for (;;) {
@@ -77,25 +80,26 @@ abstract public class OpenVpnManagementIf {
                             int len = cmd.writeCommand(clientChannel);
                             log.debug("%s (%d bytes) written".formatted(cmd.toString(), len));
                             currentCommand = cmd;
-                            log.debug("Waiting for unlock");
+                            log.debug("Waiting for command %s unlock".formatted(cmd.toString()));
                             try {
                                 cmd.waitForUnlock();
                             } catch (TimeoutException tEx) {
                                 cmd.cancel(new ManagementException("Timeout"));
                             }
+                            log.debug("Command %s is unlocked".formatted(cmd.toString()));
                         }
                     } catch (IOException ex) {
                         log.error("Cannot write Command: " + ex.getMessage());
                     }
                 }
             } catch (InterruptedException | ExecutionException ex) {
-                log.error("Interrupted");
+                log.error("CommandProcessor (%s) interrupted".formatted(getVpnTypeShort()));
             }
-        }, "OvMgmtCmdProc-" + getVpnTypeShort());
+        };
     }
 
-    private Thread createManagementMsgReader() {
-        return new Thread(() -> {
+    private Runnable createManagementMsgReader() {
+        return () -> {
             log.info("Starting management message reader");
             StringBuilder currentLine = new StringBuilder();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
@@ -119,6 +123,10 @@ abstract public class OpenVpnManagementIf {
                                 );
                                 log.debug("Sleeping %d secs".formatted(sleep));
                                 Thread.sleep(sleep * 1000);
+                                if (executorService.isShutdown()) {
+                                    log.info("Executor Service is shutdown. Exiting Reader.");
+                                    return;
+                                }
                             } catch (InterruptedException iEx) {
                             }
                             if (sleep < 32) {
@@ -132,7 +140,7 @@ abstract public class OpenVpnManagementIf {
                     log.debug("%d bytes read".formatted(len));
                     if (len < 0) {
                         clientChannel.close();
-                        managementConnectionStatus = ManagementConnectionStatus.Disconnected;
+                        setManagementConnectionStatus(ManagementConnectionStatus.Disconnected);
                     }
                 } catch (IOException ex) {
                     log.error("Error reading from socket: " + ex.getMessage());
@@ -166,21 +174,22 @@ abstract public class OpenVpnManagementIf {
                     }
                 }
             }
-        }, "OvMgmtMsgRead-" + getVpnTypeShort());
+        };
     }
 
-    private Thread createManagementMsgProcessor() {
-        return new Thread(() -> {
-            for (;;) {
-                try {
+    private Runnable createManagementMsgProcessor() {
+        return () -> {
+            try {
+                for (;;) {
                     String curLine = managementMsgQueue.take();
                     log.debug("Processing line: »%s«".formatted(curLine));
                     if (curLine.startsWith(">INFO:")) {
                         log.info("Connected to management interface, got INFO");
+                        setManagementConnectionStatus(ManagementConnectionStatus.Connected);
                         onOpenvpnConnect();
                     } else if (curLine.startsWith(">HOLD:")) {
                         log.info("Management interface is in hold status");
-                        managementConnectionStatus = ManagementConnectionStatus.Hold;
+                        setManagementConnectionStatus(ManagementConnectionStatus.Hold);
                     } else if (currentCommand != null) {
                         try {
                             if (currentCommand.processResultLine(curLine)) {
@@ -200,18 +209,28 @@ abstract public class OpenVpnManagementIf {
                     } else {
                         log.warn("Unexpected line from management interface: " + curLine);
                     }
-                } catch (InterruptedException ex) {
-                    log.error("Interrupted");
                 }
+            } catch (InterruptedException ex) {
+                log.error("ManagementMsgProcesor (%s) interrupted".formatted(getVpnTypeShort()));
             }
-        }, "OvMgmtMsgProc-" + getVpnTypeShort());
+        };
     }
 
     public void run() {
-        log.info("Starting threads");
-        commandProcessor.start();
-        managementMsgReader.start();
-        managementMsgProcessor.start();
+        log.info("Starting threads (%s)".formatted(getVpnTypeShort()));
+        commandProcessor = executorService.submit(createCommandProcessor());
+        managementMsgReader = executorService.submit(createManagementMsgReader());
+        managementMsgProcessor = executorService.submit(createManagementMsgProcessor());
+    }
+
+    public void stop() {
+        log.info("Cancelling threads (%s)".formatted(getVpnTypeShort()));
+        commandProcessor.cancel(true);
+        managementMsgProcessor.cancel(true);
+        managementMsgReader.cancel(true);
+
+        log.info("Shutting down executorService (%s)".formatted(getVpnTypeShort()));
+        executorService.shutdownNow();
     }
 
     private void connectToManagementInterface() throws IOException {
@@ -222,7 +241,14 @@ abstract public class OpenVpnManagementIf {
         );
         clientChannel.connect(address);
         clientChannel.configureBlocking(true);
-        managementConnectionStatus = ManagementConnectionStatus.Connected;
+        setManagementConnectionStatus(ManagementConnectionStatus.Connected);
+    }
+
+    private synchronized void setManagementConnectionStatus(ManagementConnectionStatus status) {
+        log.debug("New Connection Status %s: %s"
+                .formatted(getVpnTypeShort(), status.toString())
+        );
+        managementConnectionStatus = status;
     }
 
     private void waitForSocket() {
@@ -249,8 +275,8 @@ abstract public class OpenVpnManagementIf {
                         return;
                     } else {
                         log.debug("Not mine. Expected: %s, got: %s".formatted(
-                                filename,
-                                getSocketPath().getFileName().toString()
+                                getSocketPath().getFileName().toString(),
+                                filename
                         ));
                     }
                 }

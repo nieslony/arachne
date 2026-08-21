@@ -39,7 +39,7 @@ public class OpenVpnUserManagementIf extends OpenVpnManagementIf {
                 = beanFactory.getBean(OpenVpnManagementService.class);
 
         socketPath = new LazyCreate<>(
-                () -> Path.of(openVpnManagementService.getUserManagemnetSocket())
+                () -> Path.of(openVpnManagementService.getUserManagementSocket())
         );
     }
 

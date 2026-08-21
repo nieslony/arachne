@@ -111,9 +111,9 @@ public class OpenVpnService {
             log.info("Creating dummy configuration " + fileName);
             String socketFilename = switch (serverType) {
                 case USER ->
-                    openVpnManagement.getUserManagemnetSocket();
+                    openVpnManagement.getUserManagementSocket();
                 case SITE ->
-                    openVpnManagement.getSiteManagemnetSocket();
+                    openVpnManagement.getSiteManagementSocket();
             };
             try (PrintWriter pw = new PrintWriter(f)) {
                 pw.println(
@@ -286,7 +286,7 @@ public class OpenVpnService {
                 }
             }
             writer.println("management %s unix".formatted(
-                    openVpnManagement.getUserManagemnetSocket()
+                    openVpnManagement.getUserManagementSocket()
             ));
             writer.println("management-client-user %s".formatted(
                     System.getProperty("user.name")
@@ -782,7 +782,7 @@ public class OpenVpnService {
             }
              */
             pw.println("management %s unix".formatted(
-                    openVpnManagement.getSiteManagemnetSocket()
+                    openVpnManagement.getSiteManagementSocket()
             ));
             pw.println("management-client-user %s".formatted(
                     System.getProperty("user.name")

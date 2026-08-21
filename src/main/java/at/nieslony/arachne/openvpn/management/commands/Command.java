@@ -11,7 +11,6 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -23,13 +22,13 @@ abstract public class Command<T> {
     private final String command;
     private final BlockingQueue<Command> queue;
     protected final CompletableFuture<T> value;
-    protected final CompletableFuture<Void> lock;
+    //protected final CompletableFuture<Void> lock;
 
     protected Command(BlockingQueue<Command> queue, String command) {
         this.command = command;
         this.queue = queue;
         this.value = new CompletableFuture<>();
-        this.lock = new CompletableFuture<>();
+        //this.lock = new CompletableFuture<>();
     }
 
     public int writeCommand(SocketChannel channel) throws IOException {
@@ -46,7 +45,7 @@ abstract public class Command<T> {
             ExecutionException,
             InterruptedException,
             TimeoutException {
-        lock.get(10, TimeUnit.SECONDS);
+        //lock.get(10, TimeUnit.SECONDS);
     }
 
     public abstract boolean processResultLine(String line) throws ManagementException;
@@ -56,7 +55,7 @@ abstract public class Command<T> {
     public T waitForResult() throws ManagementException {
         try {
             this.queue.put(this);
-            lock.complete(null);
+            //lock.complete(null);
             return value.get();
         } catch (ExecutionException | InterruptedException ex) {
             throw new ManagementException(
