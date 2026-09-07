@@ -67,6 +67,7 @@ abstract public class OpenVpnManagementIf {
 
     private Runnable createCommandProcessor() {
         return () -> {
+
             log.info("Starting command processor");
             try {
                 for (;;) {
@@ -75,8 +76,11 @@ abstract public class OpenVpnManagementIf {
                     try {
                         if (clientChannel == null || !clientChannel.isOpen()) {
                             commandQueue.remove(cmd);
-                            cmd.cancel(new ManagementException("Cannot connect to management interface"));
+                            String msg = "Cannot connect to management interface";
+                            log.warn(msg);
+                            cmd.cancel(new ManagementException(msg));
                         } else {
+                            log.debug("Write command");
                             int len = cmd.writeCommand(clientChannel);
                             log.debug("%s (%d bytes) written".formatted(cmd.toString(), len));
                             currentCommand = cmd;
@@ -104,36 +108,36 @@ abstract public class OpenVpnManagementIf {
             StringBuilder currentLine = new StringBuilder();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             for (;;) {
-                try {
-                    int sleep = 1;
-                    while (clientChannel == null || !clientChannel.isOpen()) {
+                int sleep = 1;
+                while (clientChannel == null || !clientChannel.isOpen()) {
+                    try {
+                        commandQueue.clear();
+                        waitForSocket();
+                        connectToManagementInterface();
+                    } catch (IOException ex) {
                         try {
-                            commandQueue.clear();
-                            waitForSocket();
-                            connectToManagementInterface();
-                        } catch (IOException ex) {
-                            try {
-                                log.error(
-                                        "Error connecting to %s: %s. Try again in %d secs"
-                                                .formatted(
-                                                        getSocketPath(),
-                                                        ex.getMessage(),
-                                                        sleep
-                                                )
-                                );
-                                log.debug("Sleeping %d secs".formatted(sleep));
-                                Thread.sleep(sleep * 1000);
-                                if (executorService.isShutdown()) {
-                                    log.info("Executor Service is shutdown. Exiting Reader.");
-                                    return;
-                                }
-                            } catch (InterruptedException iEx) {
+                            log.error(
+                                    "Error connecting to %s: %s. Try again in %d secs"
+                                            .formatted(
+                                                    getSocketPath(),
+                                                    ex.getMessage(),
+                                                    sleep
+                                            )
+                            );
+                            //log.debug("Sleeping %d secs".formatted(sleep));
+                            Thread.sleep(sleep * 1000);
+                            if (executorService.isShutdown()) {
+                                log.info("Executor Service is shutdown. Exiting Reader.");
+                                return;
                             }
-                            if (sleep < 32) {
-                                sleep *= 2;
-                            }
+                        } catch (InterruptedException iEx) {
+                        }
+                        if (sleep < 32) {
+                            sleep *= 2;
                         }
                     }
+                }
+                try {
                     log.debug("Waiting for data");
                     buffer.clear();
                     int len = clientChannel.read(buffer);
@@ -151,6 +155,7 @@ abstract public class OpenVpnManagementIf {
                         } catch (IOException ex1) {
                         }
                     }
+                    continue;
                 }
                 buffer.flip();
                 while (buffer.hasRemaining()) {
@@ -234,7 +239,7 @@ abstract public class OpenVpnManagementIf {
     }
 
     private void connectToManagementInterface() throws IOException {
-        log.info("Connecting to management Socket");
+        //log.info("Connecting to management Socket");
         clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
         UnixDomainSocketAddress address = UnixDomainSocketAddress.of(
                 getSocketPath()
@@ -259,7 +264,7 @@ abstract public class OpenVpnManagementIf {
             return;
         }
         try {
-            log.info("Waiting for socket to appear.");
+            //log.info("Waiting for socket to appear.");
             WatchService watchService = FileSystems.getDefault().newWatchService();
 
             Path socketDir = getSocketPath().getParent();
@@ -269,15 +274,15 @@ abstract public class OpenVpnManagementIf {
             while ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     String filename = event.context().toString();
-                    log.debug("File created: " + filename);
+                    //log.debug("File created: " + filename);
                     if (filename.equals(getSocketPath().getFileName().toString())) {
-                        log.debug("Socket appeared");
+                        // log.debug("Socket appeared");
                         return;
                     } else {
-                        log.debug("Not mine. Expected: %s, got: %s".formatted(
+                        /*log.debug("Not mine. Expected: %s, got: %s".formatted(
                                 getSocketPath().getFileName().toString(),
                                 filename
-                        ));
+                        ));*/
                     }
                 }
                 key.reset();
