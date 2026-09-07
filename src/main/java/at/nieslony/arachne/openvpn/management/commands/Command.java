@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -56,8 +57,8 @@ abstract public class Command<T> {
         try {
             this.queue.put(this);
             //lock.complete(null);
-            return value.get();
-        } catch (ExecutionException | InterruptedException ex) {
+            return value.get(10, TimeUnit.SECONDS);
+        } catch (ExecutionException | InterruptedException | TimeoutException ex) {
             throw new ManagementException(
                     "Error executing command %s: %s"
                             .formatted(command, ex.getMessage()),
