@@ -367,7 +367,7 @@ public class Pki {
                         CertificateModel.CertType.SERVER);
         Date now = new Date();
         for (CertificateModel cm : certModels) {
-            if (cm.getRevocationDate() == null && now.compareTo(cm.getValidTo()) < 0) {
+            if (cm.getRevocationDate() == null && now.before(cm.getValidTo())) {
                 return cm;
             }
         }

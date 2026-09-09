@@ -96,11 +96,6 @@ public class PkiSettingsView extends VerticalLayout {
         NativeLabel lbl = new NativeLabel("Renew Server Certificate before Expiration");
         lbl.setFor(serverCertRenewDaysField);
 
-        VerticalLayout vbox = new VerticalLayout(lbl, serverCertRenewDaysField);
-        vbox.setSpacing(false);
-        vbox.setPadding(false);
-        vbox.setMargin(false);
-
         binder.bind(
                 serverCertRenewDaysField,
                 PkiSettings::getServerCertRenewDays,
@@ -118,6 +113,15 @@ public class PkiSettingsView extends VerticalLayout {
         );
         crlLayout.setAlignItems(Alignment.BASELINE);
 
+        Checkbox restartServerOnRenew = new Checkbox(
+                "Restart OpenVPN Servers after Certificate renewal"
+        );
+        binder.bind(
+                restartServerOnRenew,
+                PkiSettings::isRestartServersOnRenew,
+                PkiSettings::setRestartServersOnRenew
+        );
+
         Button saveButton = new Button("Save", (e) -> {
             try {
                 binder.getBean().save(settings);
@@ -130,7 +134,8 @@ public class PkiSettingsView extends VerticalLayout {
         add(
                 dhParamsLayout,
                 crlLayout,
-                vbox,
+                serverCertRenewDaysField,
+                restartServerOnRenew,
                 saveButton
         );
         setPadding(false);

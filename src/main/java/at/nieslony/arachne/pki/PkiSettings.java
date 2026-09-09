@@ -34,6 +34,7 @@ public class PkiSettings extends AbstractSettingsGroup {
     private int dhParamsBits = 2048;
     private int crlLifeTimeDays = 7;
     private int serverCertRenewDays = 30;
+    private boolean restartServersOnRenew = true;
 
     public PkiSettings() {
     }
