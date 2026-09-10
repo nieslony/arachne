@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import javax.naming.NamingException;
 import javax.naming.directory.SearchControls;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.repository.cdi.Eager;
@@ -51,7 +51,7 @@ import org.springframework.util.ObjectUtils;
  */
 @Service
 @Eager
-@Log4j2
+@Slf4j
 public class LdapService {
 
     @Autowired

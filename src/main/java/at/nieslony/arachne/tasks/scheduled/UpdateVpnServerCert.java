@@ -52,7 +52,6 @@ public class UpdateVpnServerCert extends Task {
     public String run(BeanFactory beanFactory) throws Exception {
         Pki pki = beanFactory.getBean(Pki.class);
         Settings settings = beanFactory.getBean(Settings.class);
-        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
         PkiSettings pkiSettings = settings.getSettings(PkiSettings.class);
 
         X509Certificate serverCert = pki.getServerCert();
@@ -64,25 +63,31 @@ public class UpdateVpnServerCert extends Task {
         log.info("Renew after: " + cal.getTime().toString());
         if (cal.before(Calendar.getInstance())) {
             pki.createServerCert();
-            OpenVpnService openVpnRestController
+            OpenVpnService openVpnService
                     = beanFactory.getBean(OpenVpnService.class);
-            openVpnRestController.writeOpenVpnUserServerConfig(openVpnUserSettings);
+
+            OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+            openVpnService.writeOpenVpnUserServerConfig(openVpnUserSettings);
+            openVpnService.writeOpenVpnSiteServerConfig();
 
             OpenVpnManagementService openVpnManagementService
                     = beanFactory.getBean(OpenVpnManagementService.class);
-            try {
-                openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
-                openVpnManagementService.getUserManagement().restartServer();
-                openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.RELEASE);
-                openVpnManagementService.getSiteManagement().restartServer();
-                pki.updateWebServerCertificate();
-                return "Server Certitificate renewed, openVPN server restarted";
-            } catch (ManagementException ex) {
-                return "Server Certificate renewed but openVPN Server restart failed: "
-                        + ex.getMessage();
-            } catch (PkiException | SettingsException ex) {
-                return "Update of Webserver Certificate failed: " + ex.getMessage();
+            if (pkiSettings.isRestartServersOnRenew()) {
+                try {
+                    openVpnManagementService.getUserManagement().hold(Hold.HoldParam.RELEASE);
+                    openVpnManagementService.getUserManagement().restartServer();
+                    openVpnManagementService.getSiteManagement().hold(Hold.HoldParam.RELEASE);
+                    openVpnManagementService.getSiteManagement().restartServer();
+                    pki.updateWebServerCertificate();
+                    return "Server Certitificate renewed, openVPN server restarted";
+                } catch (ManagementException ex) {
+                    return "Server Certificate renewed but openVPN Server restart failed: "
+                            + ex.getMessage();
+                } catch (PkiException | SettingsException ex) {
+                    return "Update of Webserver Certificate failed: " + ex.getMessage();
+                }
             }
+            return "Server Certificate renewed, restart of OpnVPn Service is required";
         } else {
             return "Server Certificate will be renewed on " + cal.getTime().toString();
         }

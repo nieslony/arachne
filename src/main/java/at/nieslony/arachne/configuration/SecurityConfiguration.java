@@ -7,7 +7,7 @@ package at.nieslony.arachne.configuration;
 // https://vaadin.com/docs/latest/flow/security/vaadin-security-configurer
 import at.nieslony.arachne.auth.LoginOrSetupView;
 import at.nieslony.arachne.auth.PreAuthSettings;
-import at.nieslony.arachne.auth.TotpController;
+import at.nieslony.arachne.auth.TotpService;
 import at.nieslony.arachne.auth.token.BearerTokenAuthFilter;
 import at.nieslony.arachne.kerberos.KerberosSettings;
 import at.nieslony.arachne.ldap.LdapService;
@@ -114,7 +114,7 @@ public class SecurityConfiguration {
     OpenVpnService openVpnController;
 
     @Autowired
-    TotpController totpController;
+    TotpService totpController;
 
     @Autowired
     UserRepository userRepository;

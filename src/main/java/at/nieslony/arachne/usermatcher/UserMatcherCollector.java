@@ -10,13 +10,13 @@ import java.util.List;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author claas
  */
-@Component
+@Service
 public class UserMatcherCollector implements BeanFactoryAware {
 
     private BeanFactory beanFactory;

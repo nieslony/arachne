@@ -88,10 +88,10 @@ import org.bouncycastle.util.io.pem.PemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-@Component
+@Service
 @Slf4j
 public class Pki {
 
@@ -367,7 +367,7 @@ public class Pki {
                         CertificateModel.CertType.SERVER);
         Date now = new Date();
         for (CertificateModel cm : certModels) {
-            if (cm.getRevocationDate() == null && now.compareTo(cm.getValidTo()) < 0) {
+            if (cm.getRevocationDate() == null && now.before(cm.getValidTo())) {
                 return cm;
             }
         }

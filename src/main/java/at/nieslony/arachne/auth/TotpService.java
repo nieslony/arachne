@@ -53,16 +53,16 @@ import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Base32;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 /**
  *
  * @author claas
  */
-@Controller
+@Service
 @Slf4j
-public class TotpController {
+public class TotpService {
 
     @Autowired
     UserRepository userRepository;
