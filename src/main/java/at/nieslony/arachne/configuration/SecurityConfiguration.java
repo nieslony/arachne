@@ -316,7 +316,7 @@ public class SecurityConfiguration {
             filter.setFailureHandler((request, response, exception) -> {
                 log.error("Access to %s failed: %s"
                         .formatted(
-                                request.getPathTranslated(),
+                                request.getRequestURI(),
                                 exception.getMessage()
                         )
                 );
@@ -333,7 +333,7 @@ public class SecurityConfiguration {
                         final Authentication authentication
                 ) throws IOException, ServletException {
                     log.info("Access to %s granted".formatted(
-                            request.getPathTranslated())
+                            request.getRequestURI())
                     );
                     SecurityContext context = securityContextHolderStrategy.createEmptyContext();
                     context.setAuthentication(authentication);
