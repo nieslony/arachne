@@ -58,10 +58,21 @@ abstract public class Command<T> {
             this.queue.put(this);
             //lock.complete(null);
             return value.get(10, TimeUnit.SECONDS);
-        } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+        } catch (ExecutionException ex) {
             throw new ManagementException(
                     "Error executing command %s: %s"
                             .formatted(command, ex.getMessage()),
+                    ex
+            );
+        } catch (TimeoutException ex) {
+            throw new ManagementException(
+                    "Timeout executing command %s" + command,
+                    ex
+            );
+        } catch (InterruptedException ex) {
+            throw new ManagementException(
+                    "Command %s interrupted while execution"
+                            .formatted(command),
                     ex
             );
         }

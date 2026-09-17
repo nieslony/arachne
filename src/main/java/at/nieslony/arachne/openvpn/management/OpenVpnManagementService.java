@@ -17,8 +17,12 @@
  */
 package at.nieslony.arachne.openvpn.management;
 
+import at.nieslony.arachne.firewall.FirewallRuleModel;
+import at.nieslony.arachne.firewall.FirewallService;
 import at.nieslony.arachne.utils.FolderFactory;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -42,16 +46,35 @@ public class OpenVpnManagementService
     @Autowired
     private FolderFactory folderFactory;
 
+    @Autowired
+    private FirewallService firewallService;
+
     private BeanFactory beanFactory;
 
     private OpenVpnManagementIf userManagementIf;
     private OpenVpnManagementIf siteManagementIf;
 
+    private void writeFirewallConfig(FirewallRuleModel.VpnType vpnType) {
+        try {
+            firewallService.writeRules(vpnType);
+        } catch (IOException ex) {
+            log.warn("Cannot write firewall config: " + ex.getMessage());
+        }
+    }
+
     @PostConstruct
     public void init() {
         log.info("Initializing Management Interface");
-        userManagementIf = new OpenVpnUserManagementIf(beanFactory);
-        siteManagementIf = new OpenVpnSiteManagementIf(beanFactory);
+        userManagementIf = new OpenVpnManagementIf(
+                () -> writeFirewallConfig(FirewallRuleModel.VpnType.USER),
+                Path.of(getUserManagementSocket()),
+                "U"
+        );
+        siteManagementIf = new OpenVpnManagementIf(
+                () -> writeFirewallConfig(FirewallRuleModel.VpnType.SITE),
+                Path.of(getUserManagementSocket()),
+                "S"
+        );
 
         userManagementIf.run();
         siteManagementIf.run();
