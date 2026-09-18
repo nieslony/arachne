@@ -17,8 +17,7 @@ import at.nieslony.arachne.onetimeview.OneTimeViewRepository;
 import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetails;
-import at.nieslony.arachne.users.InternalUserDetailsService;
-import at.nieslony.arachne.users.LdapUserDetailsService;
+import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.router.NotFoundException;
@@ -102,10 +101,7 @@ public class SecurityConfiguration {
     private Settings settings;
 
     @Autowired
-    private InternalUserDetailsService internalUserDetailsService;
-
-    @Autowired
-    private LdapUserDetailsService ldapUserDetailsService;
+    private ArachneUserDetailsService arachneUserDetailsService;
 
     @Autowired
     BearerTokenAuthFilter bearerTokenAuthFilter;
@@ -164,8 +160,7 @@ public class SecurityConfiguration {
 
                         }
                 )
-                .userDetailsService(internalUserDetailsService)
-                .userDetailsService(ldapUserDetailsService)
+                .userDetailsService(arachneUserDetailsService)
                 .httpBasic((b) -> b.realmName("Arachne"))
                 .addFilterAfter(
                         spnegoAuthenticationProcessingFilter(authenticationManager),
@@ -249,7 +244,7 @@ public class SecurityConfiguration {
                 LdapAuthoritiesPopulator authoritiesPopulator
                         = (DirContextOperations userData, String username) -> {
                             log.debug("LdapAuthoritiesPopulator: searching for user " + username);
-                            var user = ldapUserDetailsService
+                            var user = arachneUserDetailsService
                                     .loadUserByUsername(username);
                             log.debug("LdapAuthoritiesPopulator: found user %s: "
                                     .formatted(username, user.toString())
@@ -277,8 +272,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         return http.securityMatcher("/api/**")
-                .userDetailsService(internalUserDetailsService)
-                .userDetailsService(ldapUserDetailsService)
+                .userDetailsService(arachneUserDetailsService)
                 .addFilterBefore(
                         bearerTokenAuthFilter,
                         BasicAuthenticationFilter.class
@@ -364,7 +358,6 @@ public class SecurityConfiguration {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(kerberosAuthenticationProvider())
                 .authenticationProvider(kerberosServiceAuthenticationProvider());
-        authBuilder.userDetailsService(internalUserDetailsService);
         authBuilder.parentAuthenticationManager(null);
 
         return authBuilder.build();
@@ -377,7 +370,7 @@ public class SecurityConfiguration {
             KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
             SunJaasKerberosClient client = new SunJaasKerberosClient();
             provider.setKerberosClient(client);
-            provider.setUserDetailsService(ldapUserDetailsService);
+            provider.setUserDetailsService(arachneUserDetailsService);
             return provider;
         } else {
             return new DisabledAuthenticationProvider("Kerberos");
@@ -388,7 +381,7 @@ public class SecurityConfiguration {
     public KerberosServiceAuthenticationProvider kerberosServiceAuthenticationProvider() {
         KerberosServiceAuthenticationProvider provider = new KerberosServiceAuthenticationProvider();
         provider.setTicketValidator(sunJaasKerberosTicketValidator());
-        provider.setUserDetailsService(ldapUserDetailsService);
+        provider.setUserDetailsService(arachneUserDetailsService);
         return provider;
     }
 
@@ -414,7 +407,7 @@ public class SecurityConfiguration {
         PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
         provider.setPreAuthenticatedUserDetailsService((token) -> {
             log.info("Get user details from pre auth token for : " + token.getName());
-            return ldapUserDetailsService.loadUserByUsername(token.getName());
+            return arachneUserDetailsService.loadUserByUsername(token.getName());
         });
 
         return provider;
@@ -447,7 +440,7 @@ public class SecurityConfiguration {
                 log.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
             });
             filter.setAuthenticationDetailsSource((context) -> {
-                return ldapUserDetailsService;
+                return arachneUserDetailsService;
             });
             return filter;
         } else {
