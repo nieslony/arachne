@@ -59,6 +59,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
@@ -93,7 +94,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
  */
 @Configuration
 @EnableWebSecurity(debug = false)
-@EnableMethodSecurity(jsr250Enabled = true)
+@EnableMethodSecurity(jsr250Enabled = true, prePostEnabled = true)
 @Slf4j
 public class SecurityConfiguration {
 
@@ -144,21 +145,21 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(10)
-    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http)
+            throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
-        http
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(PathRequest.toStaticResources()
-                            .atCommonLocations()).permitAll();
-                    auth.requestMatchers("/icons/**").permitAll();
-                    auth.requestMatchers("/theme/**").permitAll();
-                    auth.requestMatchers("/otv/**").access(otvAuthManager());
-                })
-                .csrf(
-                        (t) -> {
-                            t.ignoringRequestMatchers("/api/**");
-
-                        }
+        return http
+                .securityMatcher("/**")
+                .authorizeHttpRequests(
+                        auth -> auth
+                                .requestMatchers(
+                                        PathRequest
+                                                .toStaticResources()
+                                                .atCommonLocations()
+                                ).permitAll()
+                                .requestMatchers("/icons/**").permitAll()
+                                .requestMatchers("/theme/**").permitAll()
+                                .requestMatchers("/otv/**").access(otvAuthManager())
                 )
                 .userDetailsService(arachneUserDetailsService)
                 .httpBasic((b) -> b.realmName("Arachne"))
@@ -178,12 +179,46 @@ public class SecurityConfiguration {
                                 );
                             }
                         }
-                );
+                )
+                .with(
+                        VaadinSecurityConfigurer.vaadin(),
+                        configurer -> configurer
+                                .loginView(LoginOrSetupView.class, "/arachne/login")
+                                .anyRequest((t) -> {
+                                    t.permitAll();
+                                })
+                )
+                .build();
+    }
 
-        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginOrSetupView.class, "/arachne/login");
-            configurer.enableCsrfConfiguration(true);
-        }).build();
+    @Bean
+    @Order(1)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        AuthenticationManager authenticationManager = authManager(http);
+        return http.securityMatcher("/api/**")
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .userDetailsService(arachneUserDetailsService)
+                .authenticationProvider(kerberosAuthenticationProvider())
+                .authenticationProvider(kerberosServiceAuthenticationProvider())
+                .authenticationProvider(ldapAuthenticationProvider())
+                .httpBasic((b) -> b.realmName("Arachne API"))
+                .addFilterBefore(
+                        otpAuthenticationFilter(),
+                        AuthorizationFilter.class
+                )
+                .addFilterBefore(
+                        bearerTokenAuthFilter,
+                        BasicAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        spnegoAuthenticationProcessingFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        requestAttributeAuthenticationFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .build();
     }
 
     private class DisabledAuthenticationProvider implements AuthenticationProvider {
@@ -267,41 +302,6 @@ public class SecurityConfiguration {
         }
     }
 
-    @Bean
-    @Order(1)
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationManager authenticationManager = authManager(http);
-        return http.securityMatcher("/api/**")
-                .userDetailsService(arachneUserDetailsService)
-                .addFilterBefore(
-                        bearerTokenAuthFilter,
-                        BasicAuthenticationFilter.class
-                )
-                .httpBasic((b) -> b.realmName("Arachne"))
-                .addFilterBefore(
-                        otpAuthenticationFilter(),
-                        AuthorizationFilter.class
-                )
-                .addFilterAfter(
-                        spnegoAuthenticationProcessingFilter(authenticationManager),
-                        BasicAuthenticationFilter.class
-                )
-                .addFilterAfter(
-                        requestAttributeAuthenticationFilter(authenticationManager),
-                        BasicAuthenticationFilter.class
-                )
-                .exceptionHandling(
-                        (exceptions) -> {
-                            if (kerberosSettings.isEnableKrbAuth()) {
-                                exceptions.authenticationEntryPoint(
-                                        apiSpnegoEntryPoint()
-                                );
-                            }
-                        }
-                )
-                .build();
-    }
-
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager) {
         if (kerberosSettings.isEnableKrbAuth()) {
@@ -316,9 +316,11 @@ public class SecurityConfiguration {
                 );
             });
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
-                private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+                private final SecurityContextHolderStrategy securityContextHolderStrategy
+                        = SecurityContextHolder.getContextHolderStrategy();
 
-                private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+                private final SecurityContextRepository securityContextRepository
+                        = new HttpSessionSecurityContextRepository();
 
                 @Override
                 public void onAuthenticationSuccess(
@@ -388,9 +390,7 @@ public class SecurityConfiguration {
     @Bean
     public SunJaasKerberosTicketValidator sunJaasKerberosTicketValidator() {
         SunJaasKerberosTicketValidator ticketValidator = new SunJaasKerberosTicketValidator();
-        ticketValidator.setServicePrincipal(
-                kerberosSettings.getServicePrincipal()
-        );
+        ticketValidator.setServicePrincipal(kerberosSettings.getServicePrincipal());
         ticketValidator.setKeyTabLocation(
                 new FileSystemResource(kerberosSettings.getKeytabPath())
         );
