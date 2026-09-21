@@ -64,7 +64,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.kerberos.authentication.KerberosAuthenticationProvider;
@@ -94,7 +93,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
  */
 @Configuration
 @EnableWebSecurity(debug = false)
-@EnableMethodSecurity(jsr250Enabled = true, prePostEnabled = true)
+@EnableMethodSecurity(jsr250Enabled = true)
 @Slf4j
 public class SecurityConfiguration {
 
@@ -196,7 +195,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
         return http.securityMatcher("/api/**")
-                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.NEVER))
                 .userDetailsService(arachneUserDetailsService)
                 .authenticationProvider(kerberosAuthenticationProvider())
                 .authenticationProvider(kerberosServiceAuthenticationProvider())
@@ -302,6 +301,7 @@ public class SecurityConfiguration {
         }
     }
 
+    @Bean
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager) {
         if (kerberosSettings.isEnableKrbAuth()) {
@@ -316,9 +316,6 @@ public class SecurityConfiguration {
                 );
             });
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
-                private final SecurityContextHolderStrategy securityContextHolderStrategy
-                        = SecurityContextHolder.getContextHolderStrategy();
-
                 private final SecurityContextRepository securityContextRepository
                         = new HttpSessionSecurityContextRepository();
 
@@ -331,9 +328,9 @@ public class SecurityConfiguration {
                     log.info("Access to %s granted".formatted(
                             request.getRequestURI())
                     );
-                    SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+                    SecurityContext context = SecurityContextHolder.createEmptyContext();
                     context.setAuthentication(authentication);
-                    securityContextHolderStrategy.setContext(context);
+                    SecurityContextHolder.setContext(context);
                     securityContextRepository.saveContext(context, request, response);
                 }
             });
