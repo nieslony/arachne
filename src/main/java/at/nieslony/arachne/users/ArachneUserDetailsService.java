@@ -71,7 +71,7 @@ public class ArachneUserDetailsService implements UserDetailsService {
             return new ArachneUserDetails(user);
         }
 
-        String msg = "Userser %s not found".formatted(username);
+        String msg = "Users %s not found".formatted(username);
         log.info(msg);
         throw new UsernameNotFoundException(msg);
     }
