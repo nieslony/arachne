@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -133,11 +134,15 @@ public class AuthRestController {
 
     @GetMapping("/api/login")
     @RolesAllowed(value = {"USER", "ADMIN"})
-
     public AuthResult login(
             @RequestParam(required = false, defaultValue = "10min") String validTime,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
+        if (userDetails == null || ObjectUtils.isEmpty(userDetails.getUsername())) {
+            log.error("UserDetails.getUsername cannot be empty");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
         return getToken(validTime, userDetails);
     }
 
