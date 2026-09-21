@@ -17,6 +17,8 @@
  */
 package at.nieslony.arachne.onetimeview;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -25,4 +27,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface OneTimeViewRepository extends JpaRepository<OneTimeViewModel, String> {
 
+    List<OneTimeViewModel> findByValidUntilBefore(LocalDateTime expiryDate);
 }

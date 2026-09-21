@@ -21,10 +21,13 @@ import at.nieslony.arachne.ViewTemplate;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -33,6 +36,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
+import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -64,17 +68,35 @@ public class OneTimeViewOverview extends TabSheet {
 
     private Component createOtvListTab() {
         otvList = new Grid<>();
-        otvList.addColumn(OneTimeViewModel::getId)
-                .setHeader("Id")
-                .setSortable(true);
         otvList.addColumn(OneTimeViewModel::getUsername)
                 .setHeader("Valid for User")
                 .setSortable(true);
+        otvList.addComponentColumn((source) -> {
+            if (source.getVisited() != null) {
+                return VaadinIcon.CHECK.create();
+            }
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(source.getValidUntil())) {
+                return VaadinIcon.CROSSHAIRS.create();
+            }
+            return new Text("");
+        })
+                .setHeader("Status");
+        otvList.addColumn(OneTimeViewModel::getId)
+                .setHeader("Id")
+                .setAutoWidth(true)
+                .setSortable(true);
         otvList.addColumn(OneTimeViewModel::getView)
                 .setHeader("View")
+                .setAutoWidth(true)
                 .setSortable(true);
         otvList.addColumn(OneTimeViewModel::getValidUntilString)
                 .setHeader("Valid until")
+                .setAutoWidth(true)
+                .setSortable(true);
+        otvList.addColumn(OneTimeViewModel::getVisitedString)
+                .setHeader("Visited")
+                .setAutoWidth(true)
                 .setSortable(true);
         otvList.setItems(oneTimeViewRepository.findAll());
         otvList.setHeightFull();
@@ -98,6 +120,18 @@ public class OneTimeViewOverview extends TabSheet {
         binder.forField(ignoreWeekendField)
                 .bind(OneTimeViewSettings::isIgnoreWeekends, OneTimeViewSettings::setIgnoreWeekends);
 
+        IntegerField graceTimeField = new IntegerField("Grace Time before Removal");
+        graceTimeField.setMin(0);
+        graceTimeField.setMax(9999);
+        graceTimeField.setRequired(true);
+        graceTimeField.setStepButtonsVisible(true);
+        graceTimeField.setSuffixComponent(new Div("Days"));
+        binder.forField(graceTimeField)
+                .bind(
+                        OneTimeViewSettings::getRemovalGraceTime,
+                        OneTimeViewSettings::setRemovalGraceTime
+                );
+
         Button saveButton = new Button("Save", e -> {
             try {
                 oneTimeViewSettings.save(settings);
@@ -111,7 +145,9 @@ public class OneTimeViewOverview extends TabSheet {
 
         VerticalLayout layout = new VerticalLayout(
                 validDaysField,
-                ignoreWeekendField
+                ignoreWeekendField,
+                graceTimeField,
+                saveButton
         );
         layout.setMargin(false);
         layout.setPadding(false);

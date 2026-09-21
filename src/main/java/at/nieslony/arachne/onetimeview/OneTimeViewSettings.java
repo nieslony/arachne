@@ -31,5 +31,5 @@ public class OneTimeViewSettings extends AbstractSettingsGroup {
 
     private int validDays = 3;
     private boolean ignoreWeekends = true;
-
+    private int removalGraceTime = 7;
 }

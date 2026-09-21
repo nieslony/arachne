@@ -48,8 +48,9 @@ public class EditYourselfDialog extends Dialog {
             UserRepository userRepository,
             LdapService ldapService
     ) {
-        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         setHeaderTitle(user.getDisplayName() + "'s GUI Settings");
+        setDraggable(true);
+        ByteArrayHolder avatarHolder = new ByteArrayHolder(user.getAvatar());
         this.user = user;
         this.ldapController = ldapService;
         this.userRepository = userRepository;

@@ -8,7 +8,7 @@ import at.nieslony.arachne.openvpn.OpenVpnSiteSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.VpnSiteRepository;
 import at.nieslony.arachne.openvpn.management.ManagementException;
-import at.nieslony.arachne.openvpn.management.OpenVpnManagement;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementIf;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
@@ -129,7 +129,7 @@ public class AdminHome
         StringBuilder msg = new StringBuilder();
 
         if (openVpnUserSettings.isAlreadyConfigured()) {
-            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            OpenVpnManagementIf mgmt = openVpnManagementService.getUserManagement();
             switch (mgmt.getManagementConnectionStatus()) {
                 case Disconnected -> {
                     msg.append("No connection to Management Interface");
@@ -156,7 +156,6 @@ public class AdminHome
         } else {
             msgConnectedUsers.setText("User VPN not yet configured");
         }
-        log.debug("Updating UI");
         connectedUsersGrid.getUI().ifPresent(ui -> ui.access(() -> {
             connectedUsersGrid.setItems(items);
         }));
@@ -171,7 +170,7 @@ public class AdminHome
         StringBuilder msg = new StringBuilder();
 
         if (openVpnSiteSettings.isAlreadyConfigured()) {
-            OpenVpnManagement mgmt = openVpnManagementService.getSiteManagement();
+            OpenVpnManagementIf mgmt = openVpnManagementService.getSiteManagement();
             switch (mgmt.getManagementConnectionStatus()) {
                 case Disconnected -> {
                     msg.append("No connection to Management Interface");
@@ -247,11 +246,9 @@ public class AdminHome
             scheduledFuture.set(
                     scheduledExecutor.scheduleWithFixedDelay(
                             () -> {
-                                log.debug("Starting task");
                                 func.run();
-                                log.debug("Task done,");
                             },
-                            seconds,
+                            1,
                             seconds,
                             TimeUnit.SECONDS
                     )
@@ -437,11 +434,17 @@ public class AdminHome
 
     @Override
     public void beforeEnter(BeforeEnterEvent bee) {
-        onRefreshConnectedUsers();
-        onRefreshConnectedSites();
+        log.info("About to enter");
+        if (updateUsers.get() != null) {
+            updateUsers.get().cancel(false);
+        }
+        if (updateSites.get() != null) {
+            updateSites.get().cancel(false);
+        }
 
         log.info("Scheduling timers");
         scheduleTimer(userUpdateIntervalField, this::onRefreshConnectedUsers, updateUsers);
         scheduleTimer(siteUpdateIntervalField, this::onRefreshConnectedSites, updateSites);
+        log.info("Page is prepared");
     }
 }

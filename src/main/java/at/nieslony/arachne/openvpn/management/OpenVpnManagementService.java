@@ -17,53 +17,105 @@
  */
 package at.nieslony.arachne.openvpn.management;
 
+import at.nieslony.arachne.firewall.FirewallRuleModel;
+import at.nieslony.arachne.firewall.FirewallService;
 import at.nieslony.arachne.utils.FolderFactory;
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.ApplicationScope;
 
 /**
  *
  * @author claas
  */
-@Service
+@Component
 @ApplicationScope
 @Slf4j
-public class OpenVpnManagementService {
+public class OpenVpnManagementService
+        implements BeanFactoryAware, ApplicationListener<ApplicationContextInitializedEvent> {
 
     @Autowired
     private FolderFactory folderFactory;
 
-    OpenVpnManagement userManagementIf;
-    OpenVpnManagement siteManagementIf;
+    @Autowired
+    private FirewallService firewallService;
+
+    private BeanFactory beanFactory;
+
+    private OpenVpnManagementIf userManagementIf;
+    private OpenVpnManagementIf siteManagementIf;
+
+    private void writeFirewallConfig(FirewallRuleModel.VpnType vpnType) {
+        try {
+            firewallService.writeRules(vpnType);
+        } catch (IOException ex) {
+            log.warn("Cannot write firewall config: " + ex.getMessage());
+        }
+    }
 
     @PostConstruct
     public void init() {
         log.info("Initializing Management Interface");
-        userManagementIf = new OpenVpnManagement("user", Path.of(getUserManagemnetSocket()));
-        siteManagementIf = new OpenVpnManagement("site", Path.of(getSiteManagemnetSocket()));
+        userManagementIf = new OpenVpnManagementIf(
+                () -> writeFirewallConfig(FirewallRuleModel.VpnType.USER),
+                Path.of(getUserManagementSocket()),
+                "U"
+        );
+        siteManagementIf = new OpenVpnManagementIf(
+                () -> writeFirewallConfig(FirewallRuleModel.VpnType.SITE),
+                Path.of(getUserManagementSocket()),
+                "S"
+        );
+
+        userManagementIf.run();
+        siteManagementIf.run();
     }
 
-    public String getSiteManagemnetSocket() {
+    public void done() {
+        log.info("PreDestroy");
+        userManagementIf.stop();
+        siteManagementIf.stop();
+    }
+
+    public String getSiteManagementSocket() {
         return "%s/openvpn-site-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
         );
     }
 
-    public String getUserManagemnetSocket() {
+    public String getUserManagementSocket() {
         return "%s/openvpn-user-management.sock".formatted(
                 folderFactory.getOpenVpnRunDir()
         );
     }
 
-    public OpenVpnManagement getUserManagement() {
+    public OpenVpnManagementIf getUserManagement() {
         return userManagementIf;
     }
 
-    public OpenVpnManagement getSiteManagement() {
+    public OpenVpnManagementIf getSiteManagement() {
         return siteManagementIf;
+    }
+
+    public void wakeUp() {
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationContextInitializedEvent event) {
+        log.info("onApplicationEvent");
     }
 }

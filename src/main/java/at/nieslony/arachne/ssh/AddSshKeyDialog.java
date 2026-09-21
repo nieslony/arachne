@@ -24,6 +24,7 @@ public class AddSshKeyDialog extends Dialog {
 
     public AddSshKeyDialog(Consumer<SshKeyEntity> onOk) {
         super("Create SSH Key Pair");
+        setDraggable(true);
         ComboBox<SshKeyType> sshKeyType = new ComboBox<>("Key Type", SshKeyType.values());
         sshKeyType.setWidthFull();
 

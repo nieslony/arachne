@@ -590,6 +590,7 @@ public class OpenVpnSiteView extends VerticalLayout {
             Consumer<VpnSite> onOk
     ) {
         Dialog dlg = new Dialog();
+        dlg.setDraggable(true);
         if (site == null) {
             dlg.setHeaderTitle("Add VPN Site");
         } else {
@@ -1081,6 +1082,7 @@ public class OpenVpnSiteView extends VerticalLayout {
 
     private Dialog createDialogRemoteConfig(String cfg) {
         Dialog dlg = new Dialog("Remote Configuration");
+        dlg.setDraggable(true);
 
         Pre cfgField = new Pre(cfg);
         dlg.add(cfgField);

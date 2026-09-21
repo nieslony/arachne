@@ -20,7 +20,6 @@ import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.ShellQuote;
 import at.nieslony.arachne.utils.net.NetUtils;
 import at.nieslony.arachne.utils.net.TransportProtocol;
-import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -100,14 +99,7 @@ public class OpenVpnService {
         SITE
     }
 
-    @PostConstruct
-    public void init() {
-        writeCrl();
-        writeDummySiteConfig(ServerType.USER);
-        writeDummySiteConfig(ServerType.SITE);
-    }
-
-    public void writeDummySiteConfig(ServerType serverType) {
+    public void writeDummyServerConfig(ServerType serverType) {
         String fileName = folderFactory.getVpnConfigDir(switch (serverType) {
             case USER ->
                 FN_OPENVPN_USER_SERVER_CONF;
@@ -119,9 +111,9 @@ public class OpenVpnService {
             log.info("Creating dummy configuration " + fileName);
             String socketFilename = switch (serverType) {
                 case USER ->
-                    openVpnManagement.getUserManagemnetSocket();
+                    openVpnManagement.getUserManagementSocket();
                 case SITE ->
-                    openVpnManagement.getSiteManagemnetSocket();
+                    openVpnManagement.getSiteManagementSocket();
             };
             try (PrintWriter pw = new PrintWriter(f)) {
                 pw.println(
@@ -294,7 +286,7 @@ public class OpenVpnService {
                 }
             }
             writer.println("management %s unix".formatted(
-                    openVpnManagement.getUserManagemnetSocket()
+                    openVpnManagement.getUserManagementSocket()
             ));
             writer.println("management-client-user %s".formatted(
                     System.getProperty("user.name")
@@ -790,7 +782,7 @@ public class OpenVpnService {
             }
              */
             pw.println("management %s unix".formatted(
-                    openVpnManagement.getSiteManagemnetSocket()
+                    openVpnManagement.getSiteManagementSocket()
             ));
             pw.println("management-client-user %s".formatted(
                     System.getProperty("user.name")

@@ -23,6 +23,7 @@ import at.nieslony.arachne.utils.net.NetUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -82,8 +83,11 @@ public class LdapSettings extends AbstractSettingsGroup {
     private String keytabPath = FolderFactory.getInstance().getDefaultKeytabPath();
     private String kerberosBindPricipal = "";
 
+    private boolean ldapAuthenticationEnabled = false;
+
     private String usersOu = "";
     private String usersAttrUsername = "";
+    private List<String> userAttrAdditionalSearch = List.of();
     private String usersAttrDisplayName = "";
     private String usersAttrEmail = "";
     private String usersAttrAvatar = "";
@@ -110,8 +114,30 @@ public class LdapSettings extends AbstractSettingsGroup {
         } else if (usersObjectClass == null) {
             return null;
         } else {
-            return "(&(objectclass=%s)(%s={username}))"
-                    .formatted(usersObjectClass, usersAttrUsername);
+            if (userAttrAdditionalSearch.isEmpty()) {
+                return "(&(objectclass=%s)(%s={username}))"
+                        .formatted(usersObjectClass, usersAttrUsername);
+            } else {
+                log.debug(
+                        "Creating search filter (empty: %d) for attributes: >>%s<<"
+                                .formatted(
+                                        userAttrAdditionalSearch.size(),
+                                        userAttrAdditionalSearch)
+                );
+                return ("(&(objectclass=%s)"
+                        + "("
+                        + "|"
+                        + "(%s={username})"
+                        + "%s"
+                        + ")"
+                        + ")").formatted(
+                                usersObjectClass,
+                                usersAttrUsername,
+                                userAttrAdditionalSearch.stream()
+                                        .map(a -> "(%s={username})".formatted(a))
+                                        .collect(Collectors.joining())
+                        );
+            }
         }
     }
 

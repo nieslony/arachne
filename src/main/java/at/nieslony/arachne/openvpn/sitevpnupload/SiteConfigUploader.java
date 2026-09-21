@@ -74,6 +74,7 @@ public class SiteConfigUploader implements BeanFactoryAware {
 
     private Dialog createUploadDialog() {
         dlg = new Dialog();
+        dlg.setDraggable(true);
         binder = new Binder<>(SiteUploadSettings.class);
 
         TextField destinationFolderField = new TextField("Destination folder");

@@ -25,9 +25,9 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteConfiguration;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,25 +51,27 @@ public class OtvLanding
 
     @Override
     public void setParameter(BeforeEvent be, String otvId) {
-        log.info("Setting otvId: " + otvId);
-        Optional<OneTimeViewModel> model = oneTimeViewRepository.findById(otvId);
+        log.info("Setting otvId");
+        OneTimeViewModel model = oneTimeViewRepository
+                .findById(otvId)
+                .orElseThrow(() -> {
+                    log.error("ID %s not found".formatted(otvId));
+                    return new NotFoundException();
+                });
 
-        if (!model.isPresent()) {
-            log.error("ID %s not found".formatted(otvId));
-            throw new NotFoundException();
-        }
         LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(model.get().getValidUntil())) {
-            log.error("One Time View is expired: " + model.get().toString());
+        if (now.isAfter(model.getValidUntil())) {
+            log.error("One Time View is expired: " + model.toString());
             throw new NotFoundException();
         }
 
         String redirect = "/otv/%s/%s"
                 .formatted(
                         otvId,
-                        model.get().getView()
+                        model.getView()
                 );
         log.info("Redirecting from %s to %s".formatted(otvId, redirect));
+        VaadinSession.getCurrent().setAttribute("otvId", otvId);
 
         if (!RouteConfiguration.forSessionScope().isRouteRegistered(SetOtpView.class)) {
             RouteConfiguration.forSessionScope()
@@ -77,7 +79,11 @@ public class OtvLanding
                             redirect, //path
                             SetOtpView.class //navigation target
                     );
-
+            RouteConfiguration.forSessionScope()
+                    .setRoute(
+                            "/otv/%s/done".formatted(otvId), //path
+                            OtvDone.class//navigation target
+                    );
         }
 
         UI.getCurrent().navigate(redirect);

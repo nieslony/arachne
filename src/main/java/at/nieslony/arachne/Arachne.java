@@ -3,6 +3,7 @@
  */
 package at.nieslony.arachne;
 
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
@@ -11,11 +12,13 @@ import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.flow.shared.ui.Transport;
 import com.vaadin.flow.theme.aura.Aura;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -28,12 +31,18 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @StyleSheet("/arachne/theme/styles.css")
 @SpringBootApplication
 @Push(transport = Transport.LONG_POLLING, value = PushMode.AUTOMATIC)
+@Slf4j
 public class Arachne implements AppShellConfigurator {
 
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
         context = SpringApplication.run(Arachne.class, args);
+        context.getBean(OpenVpnManagementService.class).wakeUp();
+        context.addApplicationListener((ContextClosedEvent event) -> {
+            log.info("Calling OpenVpnManagementService.done()");
+            context.getBean(OpenVpnManagementService.class).done();
+        });
     }
 
     public static void restart() {
@@ -45,6 +54,7 @@ public class Arachne implements AppShellConfigurator {
                     Arachne.class,
                     args.getSourceArgs()
             );
+            context.getBean(OpenVpnManagementService.class).wakeUp();
         });
 
         thread.setDaemon(false);

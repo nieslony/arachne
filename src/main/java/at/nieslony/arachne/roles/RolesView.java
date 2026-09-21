@@ -229,6 +229,7 @@ public class RolesView extends VerticalLayout {
     void addRule() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Add Role Rule");
+        dialog.setDraggable(true);
         Binder<RoleRuleModel> binder = new Binder<>(RoleRuleModel.class);
 
         Button okButton = new Button("OK", e -> {

@@ -69,7 +69,7 @@ public class LoginOrSetupView
         login.setTitle("Arachne");
         login.setDescription("Administer your openVPN");
         login.setForgotPasswordButtonVisible(false);
-        if (kerberosSettings.isEnableKrbAuth()) {
+        if (kerberosSettings.isEnableKrbAuth() && VaadinSession.getCurrent().getAttribute("otvId") == null) {
             Button toSSoButton = new Button(
                     "Login with Kerberos",
                     e -> {

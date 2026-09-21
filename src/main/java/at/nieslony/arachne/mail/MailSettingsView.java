@@ -253,6 +253,7 @@ public class MailSettingsView extends VerticalLayout {
     private Dialog createSendTestOtpAuthDialog() {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Send Test OTH Auth Mail");
+        dlg.setDraggable(true);
 
         EmailField recipiend = new EmailField("Recipient");
         recipiend.setWidth(20, Unit.EM);
@@ -303,6 +304,7 @@ public class MailSettingsView extends VerticalLayout {
     private Dialog createSendTestMailDialog() {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Send Test Mail");
+        dlg.setDraggable(true);
 
         EmailField recipiend = new EmailField("Recipient");
         recipiend.setWidth(20, Unit.EM);
@@ -348,6 +350,7 @@ public class MailSettingsView extends VerticalLayout {
     private Dialog createSendConfigDialog() {
         Dialog dlg = new Dialog();
         dlg.setHeaderTitle("Send Mail with Configuration");
+        dlg.setDraggable(true);
 
         EmailField recipiend = new EmailField("Recipient");
         recipiend.setWidth(20, Unit.EM);

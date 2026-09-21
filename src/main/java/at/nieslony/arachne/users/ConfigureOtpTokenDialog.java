@@ -17,7 +17,7 @@
  */
 package at.nieslony.arachne.users;
 
-import at.nieslony.arachne.auth.TotpController;
+import at.nieslony.arachne.auth.TotpService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -31,9 +31,10 @@ public class ConfigureOtpTokenDialog extends Dialog {
     public ConfigureOtpTokenDialog(
             UserModel user,
             UserRepository userRepository,
-            TotpController totpController
+            TotpService totpController
     ) {
         setHeaderTitle("Configure %s's TOTP".formatted(user.getDisplayName()));
+        setDraggable(true);
         add(totpController.create2FAView(
                 user,
                 () -> UI.getCurrent().getPage().reload()
