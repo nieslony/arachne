@@ -15,7 +15,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>at.nieslony.arachne.Arachne</exec.mainClass>
-        <vaadin.version>25.2.7</vaadin.version>
+        <vaadin.version>25.2.8</vaadin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <generateGitPropertiesFile>true</generateGitPropertiesFile>
         <skipGenerateGitProperties>false</skipGenerateGitProperties>
@@ -141,12 +141,12 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.85.2</version>
+            <version>1.86</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.85</version>
+            <version>1.86</version>
         </dependency>
 
         <!-- Parse HTML to plain text -->
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>com.wontlost</groupId>
             <artifactId>ckeditor-vaadin</artifactId>
-            <version>5.3.3</version>
+            <version>5.4.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -238,7 +238,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
+                <version>3.16.0</version>
                 <configuration>
                     <compilerArgs>
                         <arg>-Xlint:deprecation</arg>

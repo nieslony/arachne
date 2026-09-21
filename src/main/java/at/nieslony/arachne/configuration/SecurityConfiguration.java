@@ -17,8 +17,7 @@ import at.nieslony.arachne.onetimeview.OneTimeViewRepository;
 import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.users.ArachneUserDetails;
-import at.nieslony.arachne.users.InternalUserDetailsService;
-import at.nieslony.arachne.users.LdapUserDetailsService;
+import at.nieslony.arachne.users.ArachneUserDetailsService;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.router.NotFoundException;
@@ -60,11 +59,11 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.kerberos.authentication.KerberosAuthenticationProvider;
@@ -102,10 +101,7 @@ public class SecurityConfiguration {
     private Settings settings;
 
     @Autowired
-    private InternalUserDetailsService internalUserDetailsService;
-
-    @Autowired
-    private LdapUserDetailsService ldapUserDetailsService;
+    private ArachneUserDetailsService arachneUserDetailsService;
 
     @Autowired
     BearerTokenAuthFilter bearerTokenAuthFilter;
@@ -148,24 +144,23 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(10)
-    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain uiSecurityFilterChain(HttpSecurity http)
+            throws Exception {
         AuthenticationManager authenticationManager = authManager(http);
-        http
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(PathRequest.toStaticResources()
-                            .atCommonLocations()).permitAll();
-                    auth.requestMatchers("/icons/**").permitAll();
-                    auth.requestMatchers("/theme/**").permitAll();
-                    auth.requestMatchers("/otv/**").access(otvAuthManager());
-                })
-                .csrf(
-                        (t) -> {
-                            t.ignoringRequestMatchers("/api/**");
-
-                        }
+        return http
+                .securityMatcher("/**")
+                .authorizeHttpRequests(
+                        auth -> auth
+                                .requestMatchers(
+                                        PathRequest
+                                                .toStaticResources()
+                                                .atCommonLocations()
+                                ).permitAll()
+                                .requestMatchers("/icons/**").permitAll()
+                                .requestMatchers("/theme/**").permitAll()
+                                .requestMatchers("/otv/**").access(otvAuthManager())
                 )
-                .userDetailsService(internalUserDetailsService)
-                .userDetailsService(ldapUserDetailsService)
+                .userDetailsService(arachneUserDetailsService)
                 .httpBasic((b) -> b.realmName("Arachne"))
                 .addFilterAfter(
                         spnegoAuthenticationProcessingFilter(authenticationManager),
@@ -183,12 +178,46 @@ public class SecurityConfiguration {
                                 );
                             }
                         }
-                );
+                )
+                .with(
+                        VaadinSecurityConfigurer.vaadin(),
+                        configurer -> configurer
+                                .loginView(LoginOrSetupView.class, "/arachne/login")
+                                .anyRequest((t) -> {
+                                    t.permitAll();
+                                })
+                )
+                .build();
+    }
 
-        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginOrSetupView.class, "/arachne/login");
-            configurer.enableCsrfConfiguration(true);
-        }).build();
+    @Bean
+    @Order(1)
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        AuthenticationManager authenticationManager = authManager(http);
+        return http.securityMatcher("/api/**")
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.NEVER))
+                .userDetailsService(arachneUserDetailsService)
+                .authenticationProvider(kerberosAuthenticationProvider())
+                .authenticationProvider(kerberosServiceAuthenticationProvider())
+                .authenticationProvider(ldapAuthenticationProvider())
+                .httpBasic((b) -> b.realmName("Arachne API"))
+                .addFilterBefore(
+                        otpAuthenticationFilter(),
+                        AuthorizationFilter.class
+                )
+                .addFilterBefore(
+                        bearerTokenAuthFilter,
+                        BasicAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        spnegoAuthenticationProcessingFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .addFilterBefore(
+                        requestAttributeAuthenticationFilter(authenticationManager),
+                        BasicAuthenticationFilter.class
+                )
+                .build();
     }
 
     private class DisabledAuthenticationProvider implements AuthenticationProvider {
@@ -249,7 +278,7 @@ public class SecurityConfiguration {
                 LdapAuthoritiesPopulator authoritiesPopulator
                         = (DirContextOperations userData, String username) -> {
                             log.debug("LdapAuthoritiesPopulator: searching for user " + username);
-                            var user = ldapUserDetailsService
+                            var user = arachneUserDetailsService
                                     .loadUserByUsername(username);
                             log.debug("LdapAuthoritiesPopulator: found user %s: "
                                     .formatted(username, user.toString())
@@ -273,41 +302,6 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationManager authenticationManager = authManager(http);
-        return http.securityMatcher("/api/**")
-                .userDetailsService(internalUserDetailsService)
-                .userDetailsService(ldapUserDetailsService)
-                .addFilterBefore(
-                        bearerTokenAuthFilter,
-                        BasicAuthenticationFilter.class
-                )
-                .httpBasic((b) -> b.realmName("Arachne"))
-                .addFilterBefore(
-                        otpAuthenticationFilter(),
-                        AuthorizationFilter.class
-                )
-                .addFilterAfter(
-                        spnegoAuthenticationProcessingFilter(authenticationManager),
-                        BasicAuthenticationFilter.class
-                )
-                .addFilterAfter(
-                        requestAttributeAuthenticationFilter(authenticationManager),
-                        BasicAuthenticationFilter.class
-                )
-                .exceptionHandling(
-                        (exceptions) -> {
-                            if (kerberosSettings.isEnableKrbAuth()) {
-                                exceptions.authenticationEntryPoint(
-                                        apiSpnegoEntryPoint()
-                                );
-                            }
-                        }
-                )
-                .build();
-    }
-
     public Filter spnegoAuthenticationProcessingFilter(
             AuthenticationManager authenticationManager) {
         if (kerberosSettings.isEnableKrbAuth()) {
@@ -316,15 +310,14 @@ public class SecurityConfiguration {
             filter.setFailureHandler((request, response, exception) -> {
                 log.error("Access to %s failed: %s"
                         .formatted(
-                                request.getPathTranslated(),
+                                request.getRequestURI(),
                                 exception.getMessage()
                         )
                 );
             });
             filter.setSuccessHandler(new SavedRequestAwareAuthenticationSuccessHandler() {
-                private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
-
-                private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+                private final SecurityContextRepository securityContextRepository
+                        = new HttpSessionSecurityContextRepository();
 
                 @Override
                 public void onAuthenticationSuccess(
@@ -333,11 +326,11 @@ public class SecurityConfiguration {
                         final Authentication authentication
                 ) throws IOException, ServletException {
                     log.info("Access to %s granted".formatted(
-                            request.getPathTranslated())
+                            request.getRequestURI())
                     );
-                    SecurityContext context = securityContextHolderStrategy.createEmptyContext();
+                    SecurityContext context = SecurityContextHolder.createEmptyContext();
                     context.setAuthentication(authentication);
-                    securityContextHolderStrategy.setContext(context);
+                    SecurityContextHolder.setContext(context);
                     securityContextRepository.saveContext(context, request, response);
                 }
             });
@@ -364,7 +357,6 @@ public class SecurityConfiguration {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(kerberosAuthenticationProvider())
                 .authenticationProvider(kerberosServiceAuthenticationProvider());
-        authBuilder.userDetailsService(internalUserDetailsService);
         authBuilder.parentAuthenticationManager(null);
 
         return authBuilder.build();
@@ -377,7 +369,7 @@ public class SecurityConfiguration {
             KerberosAuthenticationProvider provider = new KerberosAuthenticationProvider();
             SunJaasKerberosClient client = new SunJaasKerberosClient();
             provider.setKerberosClient(client);
-            provider.setUserDetailsService(ldapUserDetailsService);
+            provider.setUserDetailsService(arachneUserDetailsService);
             return provider;
         } else {
             return new DisabledAuthenticationProvider("Kerberos");
@@ -388,16 +380,14 @@ public class SecurityConfiguration {
     public KerberosServiceAuthenticationProvider kerberosServiceAuthenticationProvider() {
         KerberosServiceAuthenticationProvider provider = new KerberosServiceAuthenticationProvider();
         provider.setTicketValidator(sunJaasKerberosTicketValidator());
-        provider.setUserDetailsService(ldapUserDetailsService);
+        provider.setUserDetailsService(arachneUserDetailsService);
         return provider;
     }
 
     @Bean
     public SunJaasKerberosTicketValidator sunJaasKerberosTicketValidator() {
         SunJaasKerberosTicketValidator ticketValidator = new SunJaasKerberosTicketValidator();
-        ticketValidator.setServicePrincipal(
-                kerberosSettings.getServicePrincipal()
-        );
+        ticketValidator.setServicePrincipal(kerberosSettings.getServicePrincipal());
         ticketValidator.setKeyTabLocation(
                 new FileSystemResource(kerberosSettings.getKeytabPath())
         );
@@ -414,7 +404,7 @@ public class SecurityConfiguration {
         PreAuthenticatedAuthenticationProvider provider = new PreAuthenticatedAuthenticationProvider();
         provider.setPreAuthenticatedUserDetailsService((token) -> {
             log.info("Get user details from pre auth token for : " + token.getName());
-            return ldapUserDetailsService.loadUserByUsername(token.getName());
+            return arachneUserDetailsService.loadUserByUsername(token.getName());
         });
 
         return provider;
@@ -447,7 +437,7 @@ public class SecurityConfiguration {
                 log.warn("Authentication with REMOTE_USER failed: " + exception.getMessage());
             });
             filter.setAuthenticationDetailsSource((context) -> {
-                return ldapUserDetailsService;
+                return arachneUserDetailsService;
             });
             return filter;
         } else {
