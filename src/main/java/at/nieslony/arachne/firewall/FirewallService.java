@@ -176,10 +176,18 @@ public class FirewallService {
         allRules.put("incoming", incomingRules);
         allRules.put("outgoing", outgoingRules);
 
-        if (vpnType == FirewallRuleModel.VpnType.USER) {
-            UserFirewallBasicsSettings basicSettings
-                    = settings.getSettings(UserFirewallBasicsSettings.class);
-            allRules.put("icmp-rules", basicSettings.getIcmpRules().name());
+        switch (vpnType) {
+            case FirewallRuleModel.VpnType.USER -> {
+                UserFirewallBasicsSettings basicSettings
+                        = settings.getSettings(UserFirewallBasicsSettings.class);
+                allRules.put("icmp-rules", basicSettings.getIcmpRules().name());
+            }
+            case FirewallRuleModel.VpnType.SITE -> {
+                SiteFirewallBasicsSettings basicSettings
+                        = settings.getSettings(SiteFirewallBasicsSettings.class);
+                allRules.put("icmp-rules", basicSettings.getIcmpRules().name());
+            }
+
         }
         String rulesStr = allRules.toString(2) + "\n";
 
