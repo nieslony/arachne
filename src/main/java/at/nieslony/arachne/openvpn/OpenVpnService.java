@@ -196,6 +196,9 @@ public class OpenVpnService {
                 writer.println("firewall-zone = %s".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
+                writer.println("firewall-rules = %s".formatted(
+                        folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.SITE)
+                ));
             }
         } catch (IOException ex) {
             log.error(
