@@ -66,7 +66,7 @@ abstract public class Command<T> {
             );
         } catch (TimeoutException ex) {
             throw new ManagementException(
-                    "Timeout executing command %s" + command,
+                    "Timeout executing command %s: " + command,
                     ex
             );
         } catch (InterruptedException ex) {
