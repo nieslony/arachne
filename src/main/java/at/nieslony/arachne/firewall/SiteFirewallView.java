@@ -5,16 +5,17 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.openvpn.management.ManagementException;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
-import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -24,16 +25,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Route(value = "siteVpn/firewall", layout = ViewTemplate.class)
 @PageTitle("Site 2 Site VPN | Firewall")
 @RolesAllowed("ADMIN")
-public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSettings> {
-
-    @Autowired
-    private LdapService ldapService;
-
-    @Autowired
-    private UserRepository userRepository;
+public class SiteFirewallView
+        extends AbstractFirewallView<SiteFirewallBasicsSettings>
+        implements BeanFactoryAware {
 
     @Autowired
     private OpenVpnManagementService openVpnManagementService;
+
+    private BeanFactory beanFactory;
 
     @PostConstruct
     public void init() {
@@ -41,20 +40,12 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
         tabs.setWidthFull();
 
         FirewallRulesEditor incomingRulesEditor = new FirewallRulesEditor(
-                firewallRuleRepository,
-                userMatcherCollector,
-                ldapService,
-                firewallService,
-                userRepository,
+                beanFactory,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.INCOMING
         );
         FirewallRulesEditor outgoingRulesEditor = new FirewallRulesEditor(
-                firewallRuleRepository,
-                userMatcherCollector,
-                ldapService,
-                firewallService,
-                userRepository,
+                beanFactory,
                 FirewallRuleModel.VpnType.SITE,
                 FirewallRuleModel.RuleDirection.OUTGOING
         );
@@ -109,5 +100,10 @@ public class SiteFirewallView extends AbstractFirewallView<SiteFirewallBasicsSet
                 null,
                 firewallBasicSettings);
         openVpnManagementService.getSiteManagement().restartServer();
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }

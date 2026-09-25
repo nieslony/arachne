@@ -17,12 +17,10 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ViewTemplate;
-import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
 import at.nieslony.arachne.openvpn.management.ManagementException;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
-import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -30,6 +28,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -40,16 +41,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 @PageTitle("User VPN | Firewall")
 @RolesAllowed("ADMIN")
 @Slf4j
-public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSettings> {
-
-    @Autowired
-    private LdapService ldapService;
-
-    @Autowired
-    private UserRepository userRepository;
+public class UserFirewallView
+        extends AbstractFirewallView<UserFirewallBasicsSettings>
+        implements BeanFactoryAware {
 
     @Autowired
     private OpenVpnManagementService openVpnManagementService;
+    private BeanFactory beanFactory;
 
     @PostConstruct
     public void init() {
@@ -57,20 +55,12 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
         tabs.setWidthFull();
         tabs.add("Basics", createBasicsTab(UserFirewallBasicsSettings.class));
         tabs.add("Incoming Rules", new FirewallRulesEditor(
-                firewallRuleRepository,
-                userMatcherCollector,
-                ldapService,
-                firewallService,
-                userRepository,
+                beanFactory,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.INCOMING
         ));
         tabs.add("Outgoing Rules", new FirewallRulesEditor(
-                firewallRuleRepository,
-                userMatcherCollector,
-                ldapService,
-                firewallService,
-                userRepository,
+                beanFactory,
                 FirewallRuleModel.VpnType.USER,
                 FirewallRuleModel.RuleDirection.OUTGOING
         ));
@@ -121,5 +111,10 @@ public class UserFirewallView extends AbstractFirewallView<UserFirewallBasicsSet
                 firewallBasicSettings
         );
         openVpnManagementService.getUserManagement().restartServer();
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }
