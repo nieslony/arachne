@@ -72,7 +72,7 @@ public class OpenVpnManagementService
         );
         siteManagementIf = new OpenVpnManagementIf(
                 () -> writeFirewallConfig(FirewallRuleModel.VpnType.SITE),
-                Path.of(getUserManagementSocket()),
+                Path.of(getSiteManagementSocket()),
                 "S"
         );
 
