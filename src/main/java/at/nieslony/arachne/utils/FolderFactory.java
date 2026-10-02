@@ -142,4 +142,10 @@ public class FolderFactory {
                 .formatted(vpnType.name().toLowerCase())
         );
     }
+
+    public String getFirewallUpdatesPath(FirewallRuleModel.VpnType vpnType) {
+        return getVpnConfigDir("openvpn-%s-firewall-updates.json"
+                .formatted(vpnType.name().toLowerCase())
+        );
+    }
 }
