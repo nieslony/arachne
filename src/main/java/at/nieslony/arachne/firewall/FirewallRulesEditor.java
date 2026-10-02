@@ -8,6 +8,7 @@ import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.FolderFactory;
 import at.nieslony.arachne.utils.components.LdapAutoComplete;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.components.YesNoIcon;
@@ -23,13 +24,15 @@ import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.shared.Tooltip;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.function.SerializablePredicate;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.LinkedList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.beans.factory.BeanFactory;
@@ -46,6 +49,8 @@ class FirewallRulesEditor extends VerticalLayout {
     private final UserMatcherCollector userMatcherCollector;
     private final LdapService ldapService;
     private final UserRepository userRepository;
+    private final FirewallService firewallService;
+    private final FolderFactory folderFactory;
 
     private final Grid<FirewallRuleModel> grid;
     private final Text firewallAction;
@@ -54,7 +59,7 @@ class FirewallRulesEditor extends VerticalLayout {
     private final FirewallRuleModel.VpnType vpnType;
     private final FirewallRuleModel.RuleDirection direction;
 
-    private AtomicBoolean firewallRestartRequired = new AtomicBoolean(false);
+    private EditFirewallRule.Changes changes;
 
     public FirewallRulesEditor(
             BeanFactory beanFactory,
@@ -66,10 +71,11 @@ class FirewallRulesEditor extends VerticalLayout {
         this.userMatcherCollector = beanFactory.getBean(UserMatcherCollector.class);
         this.ldapService = beanFactory.getBean(LdapService.class);
         this.userRepository = beanFactory.getBean(UserRepository.class);
+        this.firewallService = beanFactory.getBean(FirewallService.class);
+        this.folderFactory = beanFactory.getBean(FolderFactory.class);
         this.vpnType = vpnType;
         this.direction = direction;
-
-        FirewallService firewallService = beanFactory.getBean(FirewallService.class);
+        this.changes = new EditFirewallRule.Changes();
 
         dataProvider = new ListDataProvider<>(
                 firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
@@ -188,12 +194,16 @@ class FirewallRulesEditor extends VerticalLayout {
                 (var model) -> {
                     Button editButton = new Button(
                             VaadinIcon.EDIT.create(),
-                            (e) -> editRule(model)
+                            (e) -> onEditRule(model)
                     );
+                    Tooltip.forComponent(editButton)
+                            .withText("Edit");
                     Button deleteButton = new Button(
                             VaadinIcon.DEL.create(),
-                            (e) -> deleteRule(model)
+                            (e) -> onDeleteRule(model)
                     );
+                    Tooltip.forComponent(deleteButton)
+                            .withText("Delete");
                     HorizontalLayout layout = new HorizontalLayout(
                             editButton,
                             deleteButton
@@ -216,31 +226,19 @@ class FirewallRulesEditor extends VerticalLayout {
                     vpnType,
                     direction
             );
-            editRule(rule);
+            onEditRule(rule);
         });
         addRule.addThemeVariants(ButtonVariant.PRIMARY);
 
-        Button saveAllRules = new Button("Apply all Rules", e -> {
-            String fileName = "/openvpn-%s-firewall-rules.json".formatted(
-                    vpnType.name().toLowerCase()
-            );
-            try {
-                firewallService.writeRules(vpnType);
-                ShowNotification.info("Configuration written to " + fileName);
-            } catch (IOException | JSONException ex) {
-                String msg = "Cannot write firewall rules to %s: %s"
-                        .formatted(fileName, ex.getMessage());
-                log.error(msg);
-                ShowNotification.error("Error", msg);
-            }
-        });
+        Button apply = new Button("Apply all Rules", e -> onApply());
         firewallAction = new Text("");
 
         HorizontalLayout buttonsLayout = new HorizontalLayout(
                 addRule,
-                saveAllRules,
+                apply,
                 firewallAction
         );
+        buttonsLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
         add(
                 filterLayout,
@@ -306,7 +304,18 @@ class FirewallRulesEditor extends VerticalLayout {
         return details;
     }
 
-    private void deleteRule(FirewallRuleModel rule) {
+    private void updateDataProvider() {
+        dataProvider.getItems().clear();
+        dataProvider.getItems().addAll(
+                firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
+                        vpnType,
+                        direction
+                ));
+        grid.getDataProvider().refreshAll();
+        firewallAction.setText(getFirewallActionText());
+    }
+
+    private void onDeleteRule(FirewallRuleModel rule) {
         grid.select(rule);
         ConfirmDialog dlg = new ConfirmDialog();
         dlg.setHeader("Delete Rule");
@@ -320,30 +329,20 @@ class FirewallRulesEditor extends VerticalLayout {
         dlg.setConfirmText("Delete");
         dlg.addConfirmListener((e) -> {
             firewallRuleRepository.delete(rule);
+            changes.setRestartRequired(true);
             updateDataProvider();
-            grid.getDataProvider().refreshAll();
         });
 
         dlg.open();
     }
 
-    private void updateDataProvider() {
-        dataProvider.getItems().clear();
-        dataProvider.getItems().addAll(
-                firewallRuleRepository.findAllByVpnTypeAndRuleDirection(
-                        vpnType,
-                        direction
-                ));
-    }
-
-    private void editRule(FirewallRuleModel rule) {
+    private void onEditRule(FirewallRuleModel rule) {
         EditFirewallRule editFirewallRule = new EditFirewallRule(
                 rule,
-                r -> {
+                (r, c) -> {
+                    changes.add(c);
                     firewallRuleRepository.save(r);
                     updateDataProvider();
-                    grid.getDataProvider().refreshAll();
-                    firewallAction.setText(getFirewallActionText());
                 },
                 beanFactory
         );
@@ -351,11 +350,40 @@ class FirewallRulesEditor extends VerticalLayout {
         editFirewallRule.open();
     }
 
+    private void onApply() {
+        String fileName = "";
+        try {
+            if (changes.isRestartRequired()) {
+                fileName = folderFactory.getFirewallRulesPath(vpnType);
+                firewallService.writeRules(fileName, vpnType);
+                ShowNotification.info("Configuration written");
+            } else if (changes.hasMinorChanges()) {
+                fileName = folderFactory.getFirewallUpdatesPath(vpnType);
+                firewallService.writeRulesUpdates(fileName, vpnType, direction, changes);
+            }
+            changes.reset();
+            firewallAction.setText(getFirewallActionText());
+        } catch (IOException | JSONException ex) {
+            String msg = "Cannot write firewall rules to %s: %s"
+                    .formatted(fileName, ex.getMessage());
+            log.error(msg);
+            ShowNotification.error("Error", msg);
+        }
+    }
+
     private String getFirewallActionText() {
-        if (firewallRestartRequired.get()) {
-            return "Firewall Restart required";
+        if (changes.isRestartRequired()) {
+            return "Firewall Restart is required";
         }
 
-        return "";
+        List<String> msgs = new LinkedList<>();
+        if (changes.isWhoChanged()) {
+            msgs.add("User IPs wil be updated");
+        }
+        if (changes.isToChanged() || changes.isFromChanged()) {
+            msgs.add("Host IPs will be updated");
+        }
+
+        return String.join(", ", msgs);
     }
 }

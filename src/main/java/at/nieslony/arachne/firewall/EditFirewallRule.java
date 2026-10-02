@@ -20,7 +20,6 @@ import at.nieslony.arachne.ldap.LdapService;
 import at.nieslony.arachne.usermatcher.EverybodyMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.utils.components.MagicEditableListBox;
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
@@ -35,7 +34,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -48,11 +50,53 @@ public class EditFirewallRule extends Dialog {
 
     private final String TUPEL_WIDTH = "25em";
 
-    private Consumer<FirewallRuleModel> onOk;
+    private final BiConsumer<FirewallRuleModel, Changes> onOk;
+    private final Checkbox everybody;
+    private final Checkbox fromEveryWhere;
+    private final Checkbox toEveryWhere;
+    private final Checkbox everything;
+    private final MagicEditableListBox<FirewallWho> who;
+    private final MagicEditableListBox<FirewallWhere> from;
+    private final MagicEditableListBox<FirewallWhere> to;
+    private final MagicEditableListBox<FirewallWhat> what;
+    private final TextField descriptionField;
+    private final Checkbox isEnabledField;
+
+    private final FirewallRuleModel rule;
+    private final Changes changes;
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Changes {
+
+        private boolean whoChanged = false;
+        private boolean toChanged = false;
+        private boolean fromChanged = false;
+        private boolean restartRequired = false;
+
+        void reset() {
+            whoChanged = false;
+            toChanged = false;
+            fromChanged = false;
+            restartRequired = false;
+        }
+
+        public void add(Changes moreChanges) {
+            whoChanged |= moreChanges.whoChanged;
+            toChanged |= moreChanges.toChanged;
+            fromChanged |= moreChanges.fromChanged;
+            restartRequired |= moreChanges.restartRequired;
+        }
+
+        public boolean hasMinorChanges() {
+            return whoChanged || toChanged || fromChanged;
+        }
+    }
 
     public EditFirewallRule(
             FirewallRuleModel rule,
-            Consumer<FirewallRuleModel> onOk,
+            BiConsumer<FirewallRuleModel, Changes> onOk,
             BeanFactory beanFactory
     ) {
         setDraggable(true);
@@ -62,17 +106,18 @@ public class EditFirewallRule extends Dialog {
             setHeaderTitle("Edit rule");
         }
         this.onOk = onOk;
+        this.rule = rule;
+        this.changes = new Changes();
 
         Binder<FirewallRuleModel> binder = new Binder<>();
+
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setMargin(false);
         mainLayout.setPadding(false);
-        HorizontalLayout ruleTiupelLayout = new HorizontalLayout();
-        ruleTiupelLayout.setMargin(false);
-        ruleTiupelLayout.setPadding(false);
+        HorizontalLayout ruleTupelLayout = new HorizontalLayout();
+        ruleTupelLayout.setMargin(false);
+        ruleTupelLayout.setPadding(false);
 
-        MagicEditableListBox<FirewallWho> who;
-        Checkbox everybody;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.USER) {
             who = new MagicEditableListBox<>(
                     FirewallWho.class,
@@ -82,6 +127,7 @@ public class EditFirewallRule extends Dialog {
                             beanFactory.getBean(LdapService.class)
                     )
             );
+            who.addValueChangeListener(e -> changes.setWhoChanged(true));
             binder.forField(who)
                     .bind(FirewallRuleModel::getWho, FirewallRuleModel::setWho);
 
@@ -96,19 +142,18 @@ public class EditFirewallRule extends Dialog {
                             .getUserMatcherClassName()
                             .equals(EverybodyMatcher.class.getName())
             );
+            everybody.addValidationStatusChangeListener(e -> changes.setRestartRequired(true));
 
             VerticalLayout vbox = new VerticalLayout(everybody, who);
             vbox.setWidth(TUPEL_WIDTH);
             vbox.setMargin(false);
             vbox.setPadding(false);
-            ruleTiupelLayout.add(vbox);
+            ruleTupelLayout.add(vbox);
         } else {
             everybody = null;
             who = null;
         }
 
-        MagicEditableListBox<FirewallWhere> from;
-        Checkbox fromEveryWhere;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.SITE
                 || rule.getRuleDirection() == FirewallRuleModel.RuleDirection.OUTGOING) {
             from = new MagicEditableListBox<>(
@@ -116,6 +161,7 @@ public class EditFirewallRule extends Dialog {
                     "From",
                     () -> new EditFirewallWhere()
             );
+            from.addValueChangeListener(e -> changes.setFromChanged(true));
             binder.forField(from)
                     .bind(FirewallRuleModel::getFrom, FirewallRuleModel::setFrom);
 
@@ -128,19 +174,18 @@ public class EditFirewallRule extends Dialog {
                     && rule.getFrom().size() == 1
                     && rule.getFrom().get(0).getType() == FirewallWhere.Type.Everywhere
             );
+            fromEveryWhere.addValueChangeListener(e -> changes.setRestartRequired(true));
 
             VerticalLayout vbox = new VerticalLayout(fromEveryWhere, from);
             vbox.setWidth(TUPEL_WIDTH);
             vbox.setMargin(false);
             vbox.setPadding(false);
-            ruleTiupelLayout.add(vbox);
+            ruleTupelLayout.add(vbox);
         } else {
             from = null;
             fromEveryWhere = null;
         }
 
-        MagicEditableListBox<FirewallWhere> to;
-        Checkbox toEveryWhere;
         if (rule.getVpnType() == FirewallRuleModel.VpnType.SITE
                 || rule.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING) {
             to = new MagicEditableListBox<>(
@@ -164,6 +209,7 @@ public class EditFirewallRule extends Dialog {
 
                 return layout;
             }));
+            to.addValueChangeListener(e -> changes.setToChanged(true));
             binder.forField(to)
                     .bind(FirewallRuleModel::getTo, FirewallRuleModel::setTo);
 
@@ -176,18 +222,19 @@ public class EditFirewallRule extends Dialog {
                     && rule.getTo().size() == 1
                     && rule.getTo().get(0).getType() == FirewallWhere.Type.Everywhere
             );
+            toEveryWhere.addValueChangeListener(e -> changes.setRestartRequired(true));
 
             VerticalLayout vbox = new VerticalLayout(toEveryWhere, to);
             vbox.setWidth(TUPEL_WIDTH);
             vbox.setMargin(false);
             vbox.setPadding(false);
-            ruleTiupelLayout.add(vbox);
+            ruleTupelLayout.add(vbox);
         } else {
             toEveryWhere = null;
             to = null;
         }
 
-        MagicEditableListBox<FirewallWhat> what = new MagicEditableListBox<>(
+        what = new MagicEditableListBox<>(
                 FirewallWhat.class,
                 "What",
                 () -> new EditFirewallWhat()
@@ -208,10 +255,11 @@ public class EditFirewallRule extends Dialog {
 
             return layout;
         }));
+        what.addValueChangeListener(e -> changes.setRestartRequired(true));
         binder.forField(what)
                 .bind(FirewallRuleModel::getWhat, FirewallRuleModel::setWhat);
 
-        Checkbox everything = new Checkbox(
+        everything = new Checkbox(
                 "Everything",
                 e -> what.setEnabled(!e.getValue())
         );
@@ -220,86 +268,36 @@ public class EditFirewallRule extends Dialog {
                 && rule.getWhat().size() == 1
                 && rule.getWhat().get(0).getType() == FirewallWhat.Type.Everything
         );
+        everything.addValueChangeListener(e -> changes.setRestartRequired(true));
 
         VerticalLayout vbox = new VerticalLayout(everything, what);
         vbox.setWidth(TUPEL_WIDTH);
         vbox.setMargin(false);
         vbox.setPadding(false);
-        ruleTiupelLayout.add(vbox);
+        ruleTupelLayout.add(vbox);
 
-        TextField descriptionField = new TextField("Description");
+        descriptionField = new TextField("Description");
         descriptionField.setWidthFull();
         descriptionField.setClearButtonVisible(true);
         binder.forField(descriptionField)
                 .bind(FirewallRuleModel::getDescription, FirewallRuleModel::setDescription);
 
-        Checkbox isEnabledField = new Checkbox("Enable Rule");
+        isEnabledField = new Checkbox("Enable Rule");
+        isEnabledField.addValueChangeListener(e -> changes.setRestartRequired(true));
         binder.forField(isEnabledField)
                 .bind(FirewallRuleModel::isEnabled, FirewallRuleModel::setEnabled);
 
-        mainLayout.add(
-                ruleTiupelLayout,
+        mainLayout.add(ruleTupelLayout,
                 descriptionField,
                 isEnabledField
         );
 
         add(mainLayout);
 
-        Button okButton = new Button("OK", (ClickEvent<Button> t) -> {
-            close();
-
-            if (who != null) {
-                if (!everybody.getValue()) {
-                    rule.setWho(who.getValue());
-                } else {
-                    if (rule.getWho().size() != 1
-                            || !rule.getWho().get(0)
-                                    .getUserMatcherClassName()
-                                    .equals(EverybodyMatcher.class.getName())) {
-                        rule.setWho(List.of(FirewallWho.createEverybody()));
-                    }
-                }
-            }
-            if (from != null) {
-                if (!fromEveryWhere.getValue()) {
-                    rule.setFrom(from.getValue());
-                } else {
-                    if (rule.getFrom().size() != 1
-                            || rule.getFrom().get(0).getType() != FirewallWhere.Type.Everywhere) {
-                        rule.setFrom(List.of(FirewallWhere.createEverywhere()));
-                    }
-                }
-            }
-            if (to != null) {
-                if (!toEveryWhere.getValue()) {
-                    rule.setTo(to.getValue());
-                } else {
-                    if (rule.getTo().size() != 1
-                            || rule.getTo().get(0).getType() != FirewallWhere.Type.Everywhere) {
-                        rule.setTo(List.of(FirewallWhere.createEverywhere()));
-                    }
-                }
-            }
-            log.info("what.value: " + what.getValue().toString());
-            log.info("rule.what: " + rule.getWhat().toString());
-            if (!everything.getValue()) {
-                rule.setWhat(what.getValue());
-            } else {
-                if (rule.getWhat().size() != 1
-                        || rule.getWhat().get(0).getType() != FirewallWhat.Type.Everything) {
-                    rule.setWhat(List.of(FirewallWhat.createEverything()));
-                }
-            }
-            rule.setEnabled(isEnabledField.getValue());
-            rule.setDescription(descriptionField.getValue());
-
-            onOk.accept(rule);
-        });
+        Button okButton = new Button("OK", e -> onOk());
         okButton.addThemeVariants(ButtonVariant.PRIMARY);
 
-        Button cancelButton = new Button("Cancel", (t) -> {
-            close();
-        });
+        Button cancelButton = new Button("Cancel", e -> close());
 
         getFooter().add(
                 cancelButton,
@@ -308,6 +306,55 @@ public class EditFirewallRule extends Dialog {
 
         binder.setBean(rule);
         binder.validate();
+        changes.reset();
     }
 
+    private void onOk() {
+        close();
+
+        if (who != null) {
+            if (!everybody.getValue()) {
+                rule.setWho(who.getValue());
+            } else {
+                if (rule.getWho().size() != 1
+                        || !rule.getWho().get(0)
+                                .getUserMatcherClassName()
+                                .equals(EverybodyMatcher.class.getName())) {
+                    rule.setWho(List.of(FirewallWho.createEverybody()));
+                }
+            }
+        }
+        if (from != null) {
+            if (!fromEveryWhere.getValue()) {
+                rule.setFrom(from.getValue());
+            } else {
+                if (rule.getFrom().size() != 1
+                        || rule.getFrom().get(0).getType() != FirewallWhere.Type.Everywhere) {
+                    rule.setFrom(List.of(FirewallWhere.createEverywhere()));
+                }
+            }
+        }
+        if (to != null) {
+            if (!toEveryWhere.getValue()) {
+                rule.setTo(to.getValue());
+            } else {
+                if (rule.getTo().size() != 1
+                        || rule.getTo().get(0).getType() != FirewallWhere.Type.Everywhere) {
+                    rule.setTo(List.of(FirewallWhere.createEverywhere()));
+                }
+            }
+        }
+        if (!everything.getValue()) {
+            rule.setWhat(what.getValue());
+        } else {
+            if (rule.getWhat().size() != 1
+                    || rule.getWhat().get(0).getType() != FirewallWhat.Type.Everything) {
+                rule.setWhat(List.of(FirewallWhat.createEverything()));
+            }
+        }
+        rule.setEnabled(isEnabledField.getValue());
+        rule.setDescription(descriptionField.getValue());
+
+        onOk.accept(rule, changes);
+    }
 }

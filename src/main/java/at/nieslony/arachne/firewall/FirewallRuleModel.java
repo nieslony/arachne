@@ -60,7 +60,7 @@ public class FirewallRuleModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+    private Long id = Long.MIN_VALUE;
 
     @Column
     private String description;

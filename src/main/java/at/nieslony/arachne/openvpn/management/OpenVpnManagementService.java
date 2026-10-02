@@ -55,10 +55,13 @@ public class OpenVpnManagementService
     private OpenVpnManagementIf siteManagementIf;
 
     private void writeFirewallConfig(FirewallRuleModel.VpnType vpnType) {
+        String fn = folderFactory.getFirewallRulesPath(vpnType);
         try {
-            firewallService.writeRules(vpnType);
+            firewallService.writeRules(fn, vpnType);
         } catch (IOException ex) {
-            log.warn("Cannot write firewall config: " + ex.getMessage());
+            log.warn("Cannot write firewall config to %s: %s "
+                    .formatted(fn, ex.getMessage())
+            );
         }
     }
 

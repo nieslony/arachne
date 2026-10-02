@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -92,7 +93,71 @@ public class FirewallService {
         }
     }
 
-    public void writeRules(FirewallRuleModel.VpnType vpnType)
+    public void writeRulesUpdates(
+            String fileName,
+            FirewallRuleModel.VpnType vpnType,
+            FirewallRuleModel.RuleDirection direction,
+            EditFirewallRule.Changes changes
+    ) throws IOException, JSONException {
+        /*
+        {
+            incoming:
+                1: {
+                    "destination": []
+                    "who": []
+                }
+        }
+         */
+        OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
+        JSONObject content = new JSONObject();
+        content.put("timestamp", Instant.now().getEpochSecond());
+
+        if (changes.isToChanged()) {
+            JSONObject inRules = new JSONObject();
+            for (var r : firewallRuleRepository
+                    .findAllByVpnTypeAndRuleDirection(vpnType, direction)) {
+                if (r.isEnabled()) {
+                    JSONObject rule = new JSONObject();
+                    rule.put("destination",
+                            buildIpSet(
+                                    r.getTo(),
+                                    openVpnUserSettings
+                            )
+                    );
+                    inRules.put(r.getId().toString(), rule);
+                }
+            }
+            content.put("incoming", inRules);
+        }
+
+        if (changes.isFromChanged()) {
+            JSONObject outRules = new JSONObject();
+            for (var r : firewallRuleRepository
+                    .findAllByVpnTypeAndRuleDirection(vpnType, direction)) {
+                if (r.isEnabled()) {
+                    JSONObject rule = new JSONObject();
+                    rule.put("source",
+                            buildIpSet(
+                                    r.getFrom(),
+                                    openVpnUserSettings
+                            )
+                    );
+                    outRules.put(r.getId().toString(), rule);
+                }
+            }
+            content.put("outgoing", outRules);
+        }
+
+        String rulesStr = content.toString(2) + "\n";
+        Files.deleteIfExists(Path.of(fileName));
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
+            log.info("Writing " + fileName);
+            fileWriter.write(rulesStr);
+            fileWriter.close();
+        }
+    }
+
+    public void writeRules(String fileName, FirewallRuleModel.VpnType vpnType)
             throws IOException, JSONException {
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
 
@@ -191,9 +256,8 @@ public class FirewallService {
         }
         String rulesStr = allRules.toString(2) + "\n";
 
-        String fn = folderFactory.getFirewallRulesPath(vpnType);
-        Files.deleteIfExists(Path.of(fn));
-        try (FileWriter fileWriter = new FileWriter(fn)) {
+        Files.deleteIfExists(Path.of(fileName));
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
             fileWriter.write(rulesStr);
         }
     }
