@@ -17,11 +17,14 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.shared.Tooltip;
@@ -230,12 +233,32 @@ class FirewallRulesEditor extends VerticalLayout {
         });
         addRule.addThemeVariants(ButtonVariant.PRIMARY);
 
-        Button apply = new Button("Apply all Rules", e -> onApply());
+        MenuBar applyMenu = new MenuBar();
+        applyMenu.addItem("Apply Changes", e -> onApply(changes));
+        MenuItem item = applyMenu.addItem("");
+        SubMenu subMenu = item.getSubMenu();
+        subMenu.addItem(
+                "Apply all IP sets",
+                e -> onApply(
+                        new EditFirewallRule.Changes()
+                                .withToChanged(true)
+                                .withFromChanged(true)
+                                .withWhoChanged(true)
+                )
+        );
+        subMenu.addItem(
+                "Enforce Apply of all Rules",
+                e -> onApply(
+                        new EditFirewallRule.Changes()
+                                .withRestartRequired(true)
+                )
+        );
+
         firewallAction = new Text("");
 
         HorizontalLayout buttonsLayout = new HorizontalLayout(
                 addRule,
-                apply,
+                applyMenu,
                 firewallAction
         );
         buttonsLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
@@ -350,7 +373,7 @@ class FirewallRulesEditor extends VerticalLayout {
         editFirewallRule.open();
     }
 
-    private void onApply() {
+    private void onApply(EditFirewallRule.Changes changes) {
         String fileName = "";
         try {
             if (changes.isRestartRequired()) {
