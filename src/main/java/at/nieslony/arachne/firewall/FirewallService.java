@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -80,6 +79,7 @@ public class FirewallService {
                 .filterSubnets(ret)
                 .stream()
                 .sorted()
+                .distinct()
                 .toList();
         log.debug("Built IP set: " + sorted.toString());
         return sorted;
@@ -106,49 +106,53 @@ public class FirewallService {
                     "destination": []
                     "who": []
                 }
+
+            "incoming": [
+                {
+                    "id": 1,
+                    "source": []
+                    "destination": []
+                ]
+            ],
         }
          */
         OpenVpnUserSettings openVpnUserSettings = settings.getSettings(OpenVpnUserSettings.class);
-        JSONObject content = new JSONObject();
-        content.put("timestamp", Instant.now().getEpochSecond());
+        JSONArray jRules = new JSONArray();
 
-        if (changes.isToChanged()) {
-            JSONObject inRules = new JSONObject();
-            for (var r : firewallRuleRepository
-                    .findAllByVpnTypeAndRuleDirection(vpnType, direction)) {
-                if (r.isEnabled()) {
-                    JSONObject rule = new JSONObject();
-                    rule.put("destination",
+        for (var r : firewallRuleRepository
+                .findAllByVpnTypeAndRuleDirection(vpnType, direction)) {
+            if (r.isEnabled()) {
+                JSONObject jRule = new JSONObject();
+                jRule.put("id", r.getId());
+                boolean ignoreToWho
+                        = r.getVpnType() == FirewallRuleModel.VpnType.USER
+                        && r.getRuleDirection() == FirewallRuleModel.RuleDirection.OUTGOING;
+                if (!r.isToEveryWhere() && changes.isToChanged() && !ignoreToWho) {
+                    jRule.put("destination",
                             buildIpSet(
                                     r.getTo(),
                                     openVpnUserSettings
                             )
                     );
-                    inRules.put(r.getId().toString(), rule);
                 }
-            }
-            content.put("incoming", inRules);
-        }
-
-        if (changes.isFromChanged()) {
-            JSONObject outRules = new JSONObject();
-            for (var r : firewallRuleRepository
-                    .findAllByVpnTypeAndRuleDirection(vpnType, direction)) {
-                if (r.isEnabled()) {
-                    JSONObject rule = new JSONObject();
-                    rule.put("source",
+                boolean ignoreFromWho
+                        = r.getVpnType() == FirewallRuleModel.VpnType.USER
+                        && r.getRuleDirection() == FirewallRuleModel.RuleDirection.INCOMING;
+                if (!r.isFromEveryWhere() && changes.isFromChanged() && !ignoreFromWho) {
+                    jRule.put("source",
                             buildIpSet(
                                     r.getFrom(),
                                     openVpnUserSettings
                             )
                     );
-                    outRules.put(r.getId().toString(), rule);
                 }
+                jRules.put(jRule);
             }
-            content.put("outgoing", outRules);
         }
 
-        String rulesStr = content.toString(2) + "\n";
+        JSONObject jContent = new JSONObject();
+        jContent.put(direction.name().toLowerCase(), jRules);
+        String rulesStr = jContent.toString(2) + "\n";
         Files.deleteIfExists(Path.of(fileName));
         try (FileWriter fileWriter = new FileWriter(fileName)) {
             log.info("Writing " + fileName);
