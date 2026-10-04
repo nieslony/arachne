@@ -109,7 +109,9 @@ public class FirewallWhere {
             case Hostname ->
                 hostname;
             case Subnet ->
-                "%s/%d".formatted(subnet, subnetMask);
+                subnetMask == 32
+                ? subnet
+                : "%s/%d".formatted(subnet, subnetMask);
             case ServiceRecord ->
                 "_%s._%s.%s"
                 .formatted(
