@@ -35,9 +35,12 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import java.util.List;
 import java.util.function.BiConsumer;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -68,11 +71,20 @@ public class EditFirewallRule extends Dialog {
     @Getter
     @Setter
     @ToString
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Changes {
 
+        @With
         private boolean whoChanged = false;
+
+        @With
         private boolean toChanged = false;
+
+        @With
         private boolean fromChanged = false;
+
+        @With
         private boolean restartRequired = false;
 
         void reset() {
