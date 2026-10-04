@@ -93,6 +93,16 @@ public class FirewallRuleModel {
         }
         return !who.isEmpty() && !to.isEmpty() && !what.isEmpty();
     }
+
+    @JsonIgnore
+    public Boolean isFromEveryWhere() {
+        return !from.isEmpty() && from.getFirst().getType() == FirewallWhere.Type.Everywhere;
+    }
+
+    @JsonIgnore
+    public Boolean isToEveryWhere() {
+        return !to.isEmpty() && to.getFirst().getType() == FirewallWhere.Type.Everywhere;
+    }
 }
 
 // who  from   to
