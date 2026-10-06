@@ -65,6 +65,8 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.mail.MessagingException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -525,9 +527,8 @@ public class UsersView extends VerticalLayout {
         Button okButton = new Button("OK",
                 event -> {
                     UserModel newUser = new UserModel();
+                    Set<String> roles = new HashSet<>();
                     if (binder.writeBeanIfValid(newUser)) {
-                        userRepository.save(newUser);
-
                         for (Role role : rolesField.getValue()) {
                             RoleRuleModel rrm = new RoleRuleModel(
                                     UsernameMatcher.class,
@@ -535,7 +536,10 @@ public class UsersView extends VerticalLayout {
                                     role
                             );
                             roleRuleRepository.save(rrm);
+                            roles.add(role.name());
                         }
+                        newUser.setRoles(roles);
+                        userRepository.save(newUser);
 
                         dialog.close();
 
