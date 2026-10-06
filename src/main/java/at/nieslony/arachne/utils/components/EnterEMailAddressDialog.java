@@ -58,6 +58,6 @@ public class EnterEMailAddressDialog extends Dialog {
     }
 
     public void setEMail(String email) {
-        emailField.setValue(email);
+        emailField.setValue(email != null ? email : "");
     }
 }
