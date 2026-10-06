@@ -100,8 +100,7 @@ public class RolesView extends VerticalLayout {
                     });
 
                     SubMenu subMenu = menuBar.addItem("").getSubMenu();
-                    subMenu.addItem("Delete…", e -> {
-                    });
+                    subMenu.addItem("Delete…", e -> onDeleteRole(roleRule));
                     HorizontalLayout layout = new HorizontalLayout();
                     layout.addToEnd(menuBar);
                     layout.setPadding(false);
@@ -113,7 +112,6 @@ public class RolesView extends VerticalLayout {
         roleRules.setSizeFull();
         roleRules.setItems(roleRuleRepository.findAll());
 
-        //editRoleBuffered();
         masterDetailLayout = new MasterDetailLayout();
         masterDetailLayout.setMaster(roleRules);
         masterDetailLayout.setMasterSize("50em", true);
@@ -121,6 +119,11 @@ public class RolesView extends VerticalLayout {
 
         add(topButtons, masterDetailLayout);
         setPadding(false);
+    }
+
+    private void onDeleteRole(RoleRuleModel roleRule) {
+        roleRuleRepository.delete(roleRule);
+        roleRules.setItems(roleRuleRepository.findAll());
     }
 
     private Component createEditRuleRule(RoleRuleModel model) {
