@@ -19,8 +19,13 @@ package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.openvpn.OpenVpnSettings;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
+import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.utils.FolderFactory;
+import at.nieslony.arachne.usermatcher.UserMatcher;
+import at.nieslony.arachne.usermatcher.UserMatcherCollector;
+import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,13 +52,19 @@ import org.springframework.stereotype.Service;
 public class FirewallService {
 
     @Autowired
-    FirewallRuleRepository firewallRuleRepository;
+    private FirewallRuleRepository firewallRuleRepository;
 
     @Autowired
-    FolderFactory folderFactory;
+    private OpenVpnManagementService openVpnManagementService;
 
     @Autowired
-    Settings settings;
+    private Settings settings;
+
+    @Autowired
+    private UserMatcherCollector userMatcherCollector;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public FirewallService() throws NoSuchAlgorithmException {
     }
@@ -90,6 +101,71 @@ public class FirewallService {
             return null;
         } else {
             return new LinkedList<>();
+        }
+    }
+
+    public void updateWhos(String fileName)
+            throws IOException, ManagementException {
+        JSONArray incoming = new JSONArray();
+        JSONArray outgoing = new JSONArray();
+        Status.StatusInfo status = openVpnManagementService.getUserManagement().status();
+        for (var r : firewallRuleRepository
+                .findAllByVpnType(FirewallRuleModel.VpnType.USER)) {
+            if (!r.isEnabled()
+                    || r.getWho().isEmpty()
+                    || r.getWho().getFirst().isEverybody()) {
+                continue;
+            }
+            log.info("Updating rule " + r.toString());
+
+            JSONObject jRule = new JSONObject();
+            jRule.put("id", r.getId());
+
+            log.debug("Current connections: " + status.connectionStatus());
+            JSONArray userIps = new JSONArray();
+            for (Status.ConnectionStatus cs : status.connectionStatus()) {
+                log.info("Updating %s's with IP %s IP sets"
+                        .formatted(cs.username(), cs.virtualAddress())
+                );
+                var user = userRepository.findByUsername(cs.username());
+
+                for (FirewallWho who : r.getWho()) {
+                    UserMatcher matcher = userMatcherCollector.buildUserMatcher(
+                            who.getUserMatcherClassName(),
+                            who.getParameter()
+                    );
+                    if (matcher.isUserMatching(user)) {
+                        log.debug("Rule %s matches".formatted(matcher.toString()));
+                        userIps.put(cs.virtualAddress().getHostAddress());
+                        break;
+                    } else {
+                        log.debug("Rule %s does not match".formatted(matcher.toString()));
+                    }
+                }
+                switch (r.getRuleDirection()) {
+                    case FirewallRuleModel.RuleDirection.INCOMING -> {
+                        jRule.put("source", userIps);
+                        incoming.put(jRule);
+                    }
+                    case FirewallRuleModel.RuleDirection.OUTGOING -> {
+                        jRule.put("destination", userIps);
+                        outgoing.put(jRule);
+                    }
+                }
+
+            }
+        }
+
+        JSONObject jRules = new JSONObject();
+        jRules.put("incomoing", incoming);
+        jRules.put("outgoing", outgoing);
+        String rulesStr = jRules.toString(2) + "\n";
+
+        Files.deleteIfExists(Path.of(fileName));
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
+            log.info("Writing " + fileName);
+            fileWriter.write(rulesStr);
+            fileWriter.close();
         }
     }
 

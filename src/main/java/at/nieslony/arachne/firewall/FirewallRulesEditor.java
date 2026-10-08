@@ -5,6 +5,7 @@
 package at.nieslony.arachne.firewall;
 
 import at.nieslony.arachne.ldap.LdapService;
+import at.nieslony.arachne.openvpn.management.ManagementException;
 import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.users.UserRepository;
@@ -238,7 +239,7 @@ class FirewallRulesEditor extends VerticalLayout {
         MenuItem item = applyMenu.addItem("");
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem(
-                "Apply all IP sets",
+                "Refresh all IP sets",
                 e -> onApply(
                         new EditFirewallRule.Changes()
                                 .withToChanged(true)
@@ -247,7 +248,24 @@ class FirewallRulesEditor extends VerticalLayout {
                 )
         );
         subMenu.addItem(
-                "Enforce Apply of all Rules",
+                "Enforce Refresh all User IPs",
+                e -> {
+                    String fn = folderFactory.getFirewallUpdatesPath(vpnType);
+                    try {
+                        firewallService.updateWhos(fn);
+                    } catch (IOException | ManagementException ex) {
+                        log.error("Cannot write %s: %s"
+                                .formatted(fn, ex.getMessage())
+                        );
+                        ShowNotification.error(
+                                "Cannot update User IPs",
+                                ex.getMessage()
+                        );
+                    }
+                }
+        );
+        subMenu.addItem(
+                "Enforce Refresh of all Rules",
                 e -> onApply(
                         new EditFirewallRule.Changes()
                                 .withRestartRequired(true)

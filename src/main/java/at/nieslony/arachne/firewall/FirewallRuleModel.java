@@ -103,6 +103,12 @@ public class FirewallRuleModel {
     public Boolean isToEveryWhere() {
         return !to.isEmpty() && to.getFirst().getType() == FirewallWhere.Type.Everywhere;
     }
+
+    public Boolean isEverybody() {
+        return vpnType == VpnType.USER
+                && !who.isEmpty()
+                && !who.getFirst().getUserMatcherClassName().equalsIgnoreCase(description);
+    }
 }
 
 // who  from   to
