@@ -35,6 +35,7 @@ import java.security.cert.X509CRL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -291,12 +292,12 @@ public class OpenVpnService {
             writer.println("management-client-user %s".formatted(
                     System.getProperty("user.name")
             ));
-            for (String dnsServer : settings.getPushDnsServers()) {
-                writer.println("push \"dhcp-option DNS " + dnsServer + "\"");
-            }
-            for (String domain : settings.getDnsSearch()) {
-                writer.println("push \"DOMAIN-SEARCH " + domain + "\"");
-            }
+            writer.println("push \"dns search-domains %s\""
+                    .formatted(String.join(" ", settings.getDnsSearch()))
+            );
+            writer.println("push \"dns server 1 address %s\""
+                    .formatted(String.join(" ", settings.getPushDnsServers()))
+            );
             for (String route : settings.getPushRoutes()) {
                 String[] components = route.split("/");
                 if (components.length == 2) {
@@ -337,7 +338,46 @@ public class OpenVpnService {
         }
     }
 
-    public String openVpnUserConfig(String username) throws PkiException, SettingsException {
+    private List<String> openVpnUserConfigOptions(String username)
+            throws PkiException, SettingsException {
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        UserModel user = userRepository.findByUsername(username);
+        String serverCertSubject = pki
+                .getServerCert()
+                .getSubjectX500Principal()
+                .getName();
+        List<String> options = new LinkedList<>();
+        options.add("client");
+        options.add("dev tun");
+        options.add("nobind");
+        for (VpnRemote remote : vpnSettings.getRemoteList()) {
+            options.add("remote %s %d %s".formatted(
+                    remote.getRemoteHost(),
+                    remote.getPort(),
+                    remote.getTransportProtocol().name().toLowerCase()
+            ));
+        }
+
+        if (vpnSettings.getConnectRetryMax() != null) {
+            options.add("connect-retry-max %d".formatted(vpnSettings.getConnectRetryMax()));
+        }
+        options.add("server-poll-timeout %d".formatted(vpnSettings.getConnectionTimeout()));
+
+        options.add("verify-x509-name '%s'".formatted(serverCertSubject));
+        if (isOtpRequired(vpnSettings, user)) {
+            options.add("static-challenge \"%s\" %d".formatted(
+                    vpnSettings.getAuthOtpPrompt(),
+                    vpnSettings.getAuthOtpShow() ? 1 : 0
+            ));
+        }
+        options.add("tls-version-min %s".formatted(vpnSettings.getTlsVersionMin().toString()));
+        if (vpnSettings.getTlsVersionMax() != OpenVpnUserSettings.TlsVersion.HIGHEST_SUPPORTED) {
+            options.add("tls-version-max %s".formatted(vpnSettings.getTlsVersionMax().toString()));
+        }
+        return options;
+    }
+
+    public String openVpnUserConfig(String username, boolean includeAuthUserPass) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         UserModel user = userRepository.findByUsername(username);
 
@@ -345,42 +385,11 @@ public class OpenVpnService {
         String privateKey = pki.getUserKeyAsBase64(username);
         String caCert = pki.getRootCertAsBase64();
 
-        String serverCertSubject = pki
-                .getServerCert()
-                .getSubjectX500Principal()
-                .getName();
-
         StringWriter sw = new StringWriter();
         PrintWriter writer = new PrintWriter(sw);
         writeConfigHeader(writer);
-        writer.println("client");
-        writer.println("dev tun");
-        writer.println("nobind");
-
-        for (VpnRemote remote : vpnSettings.getRemoteList()) {
-            writer.println("remote %s %d %s".formatted(
-                    remote.getRemoteHost(),
-                    remote.getPort(),
-                    remote.getTransportProtocol().name().toLowerCase()
-            ));
-        }
-        if (vpnSettings.getConnectRetryMax() != null) {
-            writer.println("connect-retry-max %d".formatted(vpnSettings.getConnectRetryMax()));
-        }
-        writer.println("server-poll-timeout %d".formatted(vpnSettings.getConnectionTimeout()));
-
-        writer.println("verify-x509-name '%s'".formatted(serverCertSubject));
-        if (isOtpRequired(vpnSettings, user)) {
-            writer.println("static-challenge \"%s\" %d".formatted(
-                    vpnSettings.getAuthOtpPrompt(),
-                    vpnSettings.getAuthOtpShow() ? 1 : 0
-            ));
-        }
-        writer.println("tls-version-min %s".formatted(vpnSettings.getTlsVersionMin().toString()));
-        if (vpnSettings.getTlsVersionMax() != OpenVpnUserSettings.TlsVersion.HIGHEST_SUPPORTED) {
-            writer.println("tls-version-max %s".formatted(vpnSettings.getTlsVersionMax().toString()));
-        }
-        if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
+        writer.println(String.join("\n", openVpnUserConfigOptions(username)));
+        if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE && includeAuthUserPass) {
             writer.println("""
                            <auth-user-pass>
                            %s
