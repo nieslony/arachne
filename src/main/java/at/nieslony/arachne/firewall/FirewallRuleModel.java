@@ -60,7 +60,7 @@ public class FirewallRuleModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+    private Long id = Long.MIN_VALUE;
 
     @Column
     private String description;
@@ -92,6 +92,22 @@ public class FirewallRuleModel {
             return false;
         }
         return !who.isEmpty() && !to.isEmpty() && !what.isEmpty();
+    }
+
+    @JsonIgnore
+    public Boolean isFromEveryWhere() {
+        return !from.isEmpty() && from.getFirst().getType() == FirewallWhere.Type.Everywhere;
+    }
+
+    @JsonIgnore
+    public Boolean isToEveryWhere() {
+        return !to.isEmpty() && to.getFirst().getType() == FirewallWhere.Type.Everywhere;
+    }
+
+    public Boolean isEverybody() {
+        return vpnType == VpnType.USER
+                && !who.isEmpty()
+                && !who.getFirst().getUserMatcherClassName().equalsIgnoreCase(description);
     }
 }
 

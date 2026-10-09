@@ -25,6 +25,7 @@ import at.nieslony.arachne.usermatcher.UserMatcher;
 import at.nieslony.arachne.usermatcher.UserMatcherCollector;
 import at.nieslony.arachne.users.UserModel;
 import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.FolderFactory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.IOException;
@@ -74,6 +75,9 @@ public class FirewallRestController {
 
     @Autowired
     private FirewallService firewallService;
+
+    @Autowired
+    private FolderFactory folderFactory;
 
     @Getter
     @Setter
@@ -158,10 +162,13 @@ public class FirewallRestController {
             );
         }
 
+        String fn = folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.USER);
         try {
-            firewallService.writeRules(FirewallRuleModel.VpnType.USER);
+            firewallService.writeRules(fn, FirewallRuleModel.VpnType.USER);
         } catch (IOException | JSONException ex) {
-            log.error("Cannot write firewall rules: " + ex.getMessage());
+            log.error("Cannot write firewall rules to %s: %s"
+                    .formatted(fn, ex.getMessage())
+            );
             throw new HttpResponseException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     username

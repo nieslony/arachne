@@ -197,6 +197,12 @@ public class OpenVpnService {
                 writer.println("firewall-zone = %s".formatted(
                         firewallBasicsSettings.getFirewallZone()
                 ));
+                writer.println("firewall-rules = %s".formatted(
+                        folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.SITE)
+                ));
+                writer.println("firewall-updates = %s".formatted(
+                        folderFactory.getFirewallUpdatesPath(FirewallRuleModel.VpnType.SITE)
+                ));
             }
         } catch (IOException ex) {
             log.error(
@@ -232,6 +238,9 @@ public class OpenVpnService {
                 ));
                 writer.println("firewall-rules = %s".formatted(
                         folderFactory.getFirewallRulesPath(FirewallRuleModel.VpnType.USER)
+                ));
+                writer.println("firewall-updates = %s".formatted(
+                        folderFactory.getFirewallUpdatesPath(FirewallRuleModel.VpnType.USER)
                 ));
                 writer.println("url-firewall-user = %s/api/firewall/matching_rules"
                         .formatted(openVpnSettings.getAuthHttpUrl())
