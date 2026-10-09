@@ -57,9 +57,9 @@ public class ThemeRestController {
             """;
     private static final String MIXED_STYLE
             = """
-                --aura-content-color-scheme: light dark;
+                --aura-content-color-scheme: light;
                 --aura-notification-color-scheme: dark;
-                color-scheme: dark;
+                color-scheme: light dark;
             """;
     private static final String AUTO_STYLE
             = """
