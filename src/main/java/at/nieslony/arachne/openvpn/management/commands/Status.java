@@ -26,7 +26,7 @@ public class Status extends MultiLineCommand<Status.StatusInfo> {
     private static final Pattern CONNECTED_CLIENT = Pattern.compile(
             "^CLIENT_LIST\t"
             + "(?<cn>[a-zA-Z0-9.@-]+)\t"
-            + "(?<realAddr>[0-9.]+):[0-9]+\t"
+            + "((udp|tcp)[46]-server:)?(?<realAddr>[0-9.]+):[0-9]+\t"
             + "(?<virtAddr>[0-9.]+)\t"
             + "(?<virtAddrV6>[a-fA-F0-9:]*)\t"
             + "(?<bytesRcvt>[0-9]+)\t"
