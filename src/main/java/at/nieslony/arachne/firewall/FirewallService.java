@@ -157,7 +157,7 @@ public class FirewallService {
         }
 
         JSONObject jRules = new JSONObject();
-        jRules.put("incomoing", incoming);
+        jRules.put("incoming", incoming);
         jRules.put("outgoing", outgoing);
         String rulesStr = jRules.toString(2) + "\n";
 
