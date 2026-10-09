@@ -35,12 +35,13 @@ import java.security.cert.X509CRL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -386,7 +387,52 @@ public class OpenVpnService {
         return options;
     }
 
-    public String openVpnUserConfig(String username, boolean includeAuthUserPass) throws PkiException, SettingsException {
+    private Map<String, String> openVpnUserVpnData(String username)
+            throws PkiException, SettingsException {
+        OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
+        UserModel user = userRepository.findByUsername(username);
+        String serverCertSubject = pki
+                .getServerCert()
+                .getSubjectX500Principal()
+                .getName();
+        Map<String, String> data = new HashMap<>();
+
+        data.put("remote",
+                "%s:%d"
+                        .formatted(
+                                vpnSettings.getRemote(),
+                                vpnSettings.getListenPort()
+                        )
+        );
+
+        data.put("username", username);
+        data.put("cert-pass-flags", "4");
+        data.put("connection-type", "password-tls");
+        data.put(
+                "password-flags",
+                vpnSettings.getNetworkManagerRememberPassword().getCfgValue().toString()
+        );
+        data.put("dev-type", vpnSettings.getDeviceType());
+        if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
+            data.put("proto-tcp", "yes");
+        }
+        if (isOtpRequired(vpnSettings, user)) {
+            data.put("static-challenge", "\"%s\" %d".formatted(
+                    vpnSettings.getAuthOtpPrompt(),
+                    vpnSettings.getAuthOtpShow() ? 1 : 0
+            ));
+        }
+
+        data.put("verify-x509-name", serverCertSubject);
+        data.put("tls-version-min", vpnSettings.getTlsVersionMin().toString());
+        if (vpnSettings.getTlsVersionMax() != OpenVpnUserSettings.TlsVersion.HIGHEST_SUPPORTED) {
+            data.put("tls-version-max", vpnSettings.getTlsVersionMax().toString());
+        }
+
+        return data;
+    }
+
+    public String openVpnUserConfig(String username) throws PkiException, SettingsException {
         OpenVpnUserSettings vpnSettings = settings.getSettings(OpenVpnUserSettings.class);
         UserModel user = userRepository.findByUsername(username);
 
@@ -398,7 +444,7 @@ public class OpenVpnService {
         PrintWriter writer = new PrintWriter(sw);
         writeConfigHeader(writer);
         writer.println(String.join("\n", openVpnUserConfigOptions(username)));
-        if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE && includeAuthUserPass) {
+        if (vpnSettings.getAuthType() != OpenVpnUserSettings.AuthType.CERTIFICATE) {
             writer.println("""
                            <auth-user-pass>
                            %s
@@ -418,11 +464,6 @@ public class OpenVpnService {
         String caCert = pki.getRootCertAsBase64();
 
         List<String> vpnOpts = new ArrayList<>(Arrays.asList(
-                "ipv4.dns-search %s"
-                        .formatted(String.join(",", vpnSettings.getDnsSearch())),
-                "ipv4.dns %s"
-                        .formatted(String.join(",", vpnSettings.getPushDnsServers())
-                        ),
                 "connection.autoconnect no",
                 "connection.permissions user:$USER"
         ));
@@ -430,7 +471,15 @@ public class OpenVpnService {
             vpnOpts.add("ipv4.never-default yes");
         }
 
-        List<String> vpnData = new ArrayList<>(Arrays.asList(
+        Map<String, String> vpnData = openVpnUserVpnData(username);
+        vpnData.put("ca", "${ca_crt_path@E}");
+        vpnData.put("cert", "${crt_path@E}");
+        vpnData.put("key", "${key_path@E}");
+        vpnData.entrySet().stream()
+                .map(e -> e.getKey() + " = " + e.getValue())
+                .collect(Collectors.joining(", "));
+
+        List<String> _vpnData = new ArrayList<>(Arrays.asList(
                 "ca = ${ca_crt_path@E}",
                 "cert = ${crt_path@E}",
                 "cert-pass-flags = 4",
@@ -508,10 +557,10 @@ public class OpenVpnService {
                         userCert,
                         privateKey,
                         vpnOpts.stream()
-                                .map((o) -> "    " + o)
+                                .map(o -> "    " + o)
                                 .collect(Collectors.joining("\n")),
-                        vpnData.stream()
-                                .map((o) -> "    " + o)
+                        vpnData.entrySet().stream()
+                                .map(e -> "    " + e.getKey() + " = " + e.getValue())
                                 .collect(Collectors.joining(",\n"))
                 );
         return config;
@@ -558,36 +607,10 @@ public class OpenVpnService {
         certs.put("privateKeyFilename", getUserKeyFilename(username));
         certs.put("caCertFilename", getCaCertFilename());
 
-        JSONObject data = new JSONObject();
-        data.put("remote",
-                "%s:%d"
-                        .formatted(
-                                vpnSettings.getRemote(),
-                                vpnSettings.getListenPort()
-                        )
-        );
-        data.put("username", username);
-        data.put("cert-pass-flags", "4");
-        data.put("connection-type", "password-tls");
-        data.put(
-                "password-flags",
-                vpnSettings.getNetworkManagerRememberPassword().getCfgValue()
-        );
-        data.put("dev-type", vpnSettings.getDeviceType());
-        if (vpnSettings.getListenProtocol() == TransportProtocol.TCP) {
-            data.put("proto-tcp", "yes");
-        }
-        if (isOtpRequired(vpnSettings, user)) {
-            data.put("static-challenge", "\"%s\" %d".formatted(
-                    vpnSettings.getAuthOtpPrompt(),
-                    vpnSettings.getAuthOtpShow() ? 1 : 0
-            ));
-        }
+        JSONObject data = new JSONObject(openVpnUserVpnData(username));
 
         JSONObject ipv4 = new JSONObject();
         ipv4.put("never-default", !vpnSettings.getInternetThrouphVpn());
-        ipv4.put("dns-search", new JSONArray(vpnSettings.getDnsSearch()));
-        ipv4.put("dns", new JSONArray(vpnSettings.getPushDnsServers()));
 
         JSONObject json = new JSONObject();
         String conName = vpnSettings.getFormattedClientConfigName(username);

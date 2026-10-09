@@ -81,7 +81,7 @@ public class OpenVpnUserSettings
             return label;
         }
 
-        public int getCfgValue() {
+        public Integer getCfgValue() {
             return cfgValue;
         }
     }
