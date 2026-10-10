@@ -16,6 +16,7 @@
  */
 package at.nieslony.arachne.tasks;
 
+import at.nieslony.arachne.tasks.scheduled.RefreshFirewallWheres;
 import at.nieslony.arachne.tasks.scheduled.RefreshLdapUsers;
 import at.nieslony.arachne.tasks.scheduled.RemoveExpiredOtvLinks;
 import at.nieslony.arachne.tasks.scheduled.UpdateCrl;
@@ -259,6 +260,7 @@ public class TaskScheduler implements BeanFactoryAware {
         taskTypes.add(UpdateWebServerCertificate.class);
         taskTypes.add(RefreshLdapUsers.class);
         taskTypes.add(RemoveExpiredOtvLinks.class);
+        taskTypes.add(RefreshFirewallWheres.class);
 
         killTerminatedTasks();
         registerTaskTypes();
