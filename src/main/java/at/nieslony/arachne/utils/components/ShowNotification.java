@@ -107,7 +107,7 @@ public class ShowNotification {
     }
 
     private static Button createCloseButton(Notification notification) {
-        Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create(),
+        Button closeBtn = new Button(VaadinIcon.CLOSE_CIRCLE.create(),
                 clickEvent -> notification.close());
         closeBtn.addThemeVariants(ButtonVariant.TERTIARY);
 

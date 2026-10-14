@@ -203,7 +203,7 @@ class FirewallRulesEditor extends VerticalLayout {
                     Tooltip.forComponent(editButton)
                             .withText("Edit");
                     Button deleteButton = new Button(
-                            VaadinIcon.DEL.create(),
+                            VaadinIcon.TRASH.create(),
                             (e) -> onDeleteRule(model)
                     );
                     Tooltip.forComponent(deleteButton)
