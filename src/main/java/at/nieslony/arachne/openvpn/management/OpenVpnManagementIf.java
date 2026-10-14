@@ -3,6 +3,7 @@ package at.nieslony.arachne.openvpn.management;
 import at.nieslony.arachne.openvpn.management.commands.Command;
 import at.nieslony.arachne.openvpn.management.commands.DropUser;
 import at.nieslony.arachne.openvpn.management.commands.Hold;
+import at.nieslony.arachne.openvpn.management.commands.KillUser;
 import at.nieslony.arachne.openvpn.management.commands.Pid;
 import at.nieslony.arachne.openvpn.management.commands.RestartServer;
 import at.nieslony.arachne.openvpn.management.commands.Status;
@@ -345,5 +346,10 @@ public class OpenVpnManagementIf {
     public String hold(Hold.HoldParam holdParam) throws ManagementException {
         Hold h = new Hold(commandQueue, holdParam);
         return h.waitForResult();
+    }
+
+    public void killUser(String username) throws ManagementException {
+        KillUser ku = new KillUser(commandQueue, username);
+        ku.waitForResult();
     }
 }

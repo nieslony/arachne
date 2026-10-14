@@ -19,8 +19,11 @@ package at.nieslony.arachne.auth;
 import at.nieslony.arachne.apiindex.ShowApiDetails;
 import at.nieslony.arachne.auth.token.TokenService;
 import at.nieslony.arachne.users.ArachneUserDetails;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.annotation.security.RolesAllowed;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import lombok.AllArgsConstructor;
@@ -49,6 +52,9 @@ public class AuthRestController {
 
     @Autowired
     TokenService tokenService;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Getter
     @Setter
@@ -141,6 +147,23 @@ public class AuthRestController {
         if (userDetails == null || ObjectUtils.isEmpty(userDetails.getUsername())) {
             log.error("UserDetails.getUsername cannot be empty");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        UserModel user = userRepository.findByUsername(userDetails.getUsername());
+        if (user.getLockedUntil() != null) {
+            Instant now = Instant.now();
+            if (now.toEpochMilli() < user.getLockedUntil()) {
+                log.error("User %s is locked until %s"
+                        .formatted(
+                                user.getUsername(),
+                                Instant.ofEpochMilli(user.getLockedUntil())
+                        )
+                );
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            } else {
+                log.info("User %s is no longer locked".formatted(user.getUsername()));
+                user.setLockedUntil(null);
+                userRepository.save(user);
+            }
         }
 
         return getToken(validTime, userDetails);

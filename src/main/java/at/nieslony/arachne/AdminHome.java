@@ -12,11 +12,15 @@ import at.nieslony.arachne.openvpn.management.OpenVpnManagementIf;
 import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.openvpn.management.commands.Status;
 import at.nieslony.arachne.settings.Settings;
+import at.nieslony.arachne.users.UserModel;
+import at.nieslony.arachne.users.UserRepository;
+import at.nieslony.arachne.utils.components.LockUserDialog;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
@@ -44,6 +48,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -56,7 +63,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class AdminHome
         extends VerticalLayout
-        implements BeforeEnterObserver, BeforeLeaveObserver {
+        implements BeforeEnterObserver, BeforeLeaveObserver, BeanFactoryAware {
 
     @Autowired
     private OpenVpnManagementService openVpnManagementService;
@@ -67,6 +74,10 @@ public class AdminHome
     @Autowired
     Settings settings;
 
+    @Autowired
+    UserRepository userRepository;
+
+    private BeanFactory beanFactory;
     private OpenVpnUserSettings openVpnUserSettings;
     private OpenVpnSiteSettings openVpnSiteSettings;
 
@@ -304,6 +315,7 @@ public class AdminHome
         connectedUsersGrid = new Grid<>();
         connectedUsersGrid.addColumn(Status.ConnectionStatus::username)
                 .setSortable(true)
+                .setFlexGrow(1)
                 .setHeader("Common Name");
         connectedUsersGrid.addColumn(
                 source -> DecimalFormat
@@ -311,12 +323,14 @@ public class AdminHome
                         .format(source.byteReceived()))
                 .setSortable(true)
                 .setTextAlign(ColumnTextAlign.END)
+                .setFlexGrow(1)
                 .setHeader("Bytes Received");
         connectedUsersGrid.addColumn(
                 source -> DecimalFormat
                         .getInstance()
                         .format(source.bytesSent()))
                 .setSortable(true)
+                .setFlexGrow(1)
                 .setTextAlign(ColumnTextAlign.END)
                 .setHeader("Bytes Sent");
         connectedUsersGrid.addColumn(
@@ -324,13 +338,23 @@ public class AdminHome
                         .getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM)
                         .format(source.connectedSince()))
                 .setSortable(true)
+                .setFlexGrow(1)
                 .setHeader("Connected since");
         connectedUsersGrid.addColumn(source -> source.realAddress().getHostAddress())
                 .setSortable(true)
+                .setFlexGrow(1)
                 .setHeader("Real Address");
         connectedUsersGrid.addColumn(source -> source.virtualAddress().getHostAddress())
                 .setSortable(true)
+                .setFlexGrow(1)
                 .setHeader("Virtual Address");
+        connectedUsersGrid.addComponentColumn(
+                u -> {
+                    Button drop = new Button("Drop", e -> onDropUser(u.username()));
+                    drop.addThemeVariants(ButtonVariant.PRIMARY);
+                    return drop;
+                }
+        ).setFlexGrow(0);
 
         VerticalLayout layout = new VerticalLayout();
         layout.add(
@@ -341,6 +365,12 @@ public class AdminHome
         layout.setSizeFull();
 
         return layout;
+    }
+
+    private void onDropUser(String ususername) {
+        UserModel user = userRepository.findByUsername(ususername);
+        LockUserDialog dlg = new LockUserDialog(user, beanFactory);
+        dlg.open();
     }
 
     private Component createConnectedSitesView() {
@@ -446,5 +476,10 @@ public class AdminHome
         scheduleTimer(userUpdateIntervalField, this::onRefreshConnectedUsers, updateUsers);
         scheduleTimer(siteUpdateIntervalField, this::onRefreshConnectedSites, updateSites);
         log.info("Page is prepared");
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
     }
 }

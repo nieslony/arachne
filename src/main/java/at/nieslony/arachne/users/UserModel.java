@@ -23,6 +23,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -135,6 +136,9 @@ public class UserModel implements Serializable {
     private boolean expirationEnforced;
 
     @Column
+    private Long lockedUntil;
+
+    @Column
     @Lob
     @ToString.Exclude
     private byte[] avatar;
@@ -178,6 +182,16 @@ public class UserModel implements Serializable {
     public void onSave() {
         log.info("Resetting expiration date");
         lastModified = new Date();
+    }
+
+    @JsonIgnore
+    public boolean isLocked() {
+        if (lockedUntil == null) {
+            return false;
+        }
+        Instant now = Instant.now();
+        Instant lu = Instant.ofEpochMilli(lockedUntil);
+        return (now.isBefore(lu));
     }
 
     public boolean isExpired(int maxAgeMins) {

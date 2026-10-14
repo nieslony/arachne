@@ -14,6 +14,8 @@ import at.nieslony.arachne.onetimeview.OneTimeViewService;
 import at.nieslony.arachne.onetimeview.SetOtpView;
 import at.nieslony.arachne.openvpn.OpenVpnService;
 import at.nieslony.arachne.openvpn.OpenVpnUserSettings;
+import at.nieslony.arachne.openvpn.management.ManagementException;
+import at.nieslony.arachne.openvpn.management.OpenVpnManagementService;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.roles.Role;
 import at.nieslony.arachne.roles.RoleRuleModel;
@@ -111,7 +113,10 @@ public class UsersView extends VerticalLayout {
     private TotpService totpController;
 
     @Autowired
-    OneTimeViewService oneTimeViewService;
+    private OpenVpnManagementService openVpnManagementService;
+
+    @Autowired
+    private OneTimeViewService oneTimeViewService;
 
     Grid<UserModel> usersGrid;
     Grid.Column<UserModel> usernameColumn;
@@ -154,6 +159,19 @@ public class UsersView extends VerticalLayout {
                 findUserButton
         );
         findUsersLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+
+        Set<String> connectedUsers = new HashSet<>();
+        try {
+            connectedUsers.addAll(openVpnManagementService
+                    .getUserManagement()
+                    .status()
+                    .connectionStatus()
+                    .stream()
+                    .map(con -> con.username())
+                    .collect(Collectors.toSet())
+            );
+        } catch (ManagementException ex) {
+        }
 
         usersGrid
                 .addComponentColumn((user) -> {
@@ -235,6 +253,24 @@ public class UsersView extends VerticalLayout {
                 }))
                 .setFlexGrow(0)
                 .setHeader("OTP");
+        usersGrid
+                .addComponentColumn(
+                        u -> {
+                            if (connectedUsers.contains(u.getUsername())) {
+                                var icon = VaadinIcon.CONNECT.create();
+                                icon.setTooltipText("Connected");
+                                return icon;
+                            }
+                            if (u.isLocked()) {
+                                var icon = VaadinIcon.LOCK.create();
+                                icon.setTooltipText("Locked");
+                                return icon;
+                            }
+
+                            return new Text("");
+                        }
+                )
+                .setHeader("Status");
         usersGrid
                 .addComponentColumn(user -> createUserMenu(user))
                 .setWidth("12em")
@@ -364,9 +400,12 @@ public class UsersView extends VerticalLayout {
 
         MenuItem menuItem = menuBar.addItem("");
         SubMenu userMenu = menuItem.getSubMenu();
+        if (user.isLocked()) {
+            userMenu.addItem("Unlock", e -> onUnlockUser(user));
+        }
         if (!user.getUsername().equals(myUsername) && user.getExternalProvider() == null) {
             userMenu.addItem("Change Password...", event -> changePassword(user));
-            userMenu.addItem("Delete...", event -> deleteUser(user));
+            userMenu.addItem("Delete...", event -> onDeleteUser(user));
         }
         if (user.getRoles().contains("USER")) {
             OpenVpnUserSettings openVpnUserSettings
@@ -581,7 +620,7 @@ public class UsersView extends VerticalLayout {
         dlg.open();
     }
 
-    void deleteUser(UserModel user) {
+    void onDeleteUser(UserModel user) {
         ConfirmDialog confirm = new ConfirmDialog();
         String username = user.getUsername();
         confirm.setHeader("Delete user \"%s\"".formatted(username));
@@ -695,5 +734,11 @@ public class UsersView extends VerticalLayout {
 
         dlg.getFooter().add(cancelButton, okButton);
         dlg.open();
+    }
+
+    private void onUnlockUser(UserModel user) {
+        user.setLockedUntil(null);
+        userRepository.save(user);
+        usersGrid.getDataProvider().refreshAll();
     }
 }
