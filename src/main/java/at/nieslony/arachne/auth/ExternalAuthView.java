@@ -34,6 +34,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -71,7 +72,7 @@ public class ExternalAuthView extends VerticalLayout {
 
     private final Button saveButton;
 
-    private Checkbox enableKerberosAuthField;
+    private Switch enableKerberosAuthField;
     private TextField realm;
     private TextField keytabPathField;
     private ComboBox<String> servicePrincipalField;
@@ -80,7 +81,7 @@ public class ExternalAuthView extends VerticalLayout {
 
     private Binder<LdapSettings> ldapBinder;
 
-    private Checkbox preAuthEnabled;
+    private Switch preAuthEnabled;
     private RadioButtonGroup<PreAuthSettings.PreAuthSource> preAuthSource;
     private TextField preAuthEnvVar;
     private TextField preAuthHttpHeader;
@@ -131,7 +132,7 @@ public class ExternalAuthView extends VerticalLayout {
         LdapSettings ldapSettings = settings.getSettings(LdapSettings.class);
         ldapBinder = new Binder<>();
 
-        Checkbox ldapAuthEnabledField = new Checkbox("Enable LDAP Authentication");
+        Switch ldapAuthEnabledField = new Switch("Enable LDAP Authentication");
         ldapBinder.forField(ldapAuthEnabledField)
                 .bind(
                         LdapSettings::isLdapAuthenticationEnabled,
@@ -151,7 +152,7 @@ public class ExternalAuthView extends VerticalLayout {
         }
         kerberosBinder.setBean(kerberosSettings);
 
-        enableKerberosAuthField = new Checkbox("Enable Kerberos Authentication");
+        enableKerberosAuthField = new Switch("Enable Kerberos Authentication");
         kerberosBinder.forField(enableKerberosAuthField)
                 .bind(KerberosSettings::isEnableKrbAuth, KerberosSettings::setEnableKrbAuth);
 
@@ -245,7 +246,7 @@ public class ExternalAuthView extends VerticalLayout {
         preAuthBinder = new Binder<>();
         preAuthBinder.setBean(preAuthSettings);
 
-        preAuthEnabled = new Checkbox("Enable Pre Authentication");
+        preAuthEnabled = new Switch("Enable Pre Authentication");
         preAuthBinder
                 .forField(preAuthEnabled)
                 .bind(PreAuthSettings::isPreAuthtEnabled, PreAuthSettings::setPreAuthtEnabled);

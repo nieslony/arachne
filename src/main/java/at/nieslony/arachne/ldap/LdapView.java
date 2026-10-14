@@ -35,6 +35,7 @@ import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -94,7 +95,7 @@ public class LdapView extends VerticalLayout {
         this.ldapSettings = settings.getSettings(LdapSettings.class);
         this.binder = new Binder<>();
 
-        Checkbox enableLdapUserSource = new Checkbox("Enable LDAP user Source");
+        Switch enableLdapUserSource = new Switch("Enable LDAP user Source");
         enableLdapUserSource.setValue(true);
         binder.forField(enableLdapUserSource)
                 .bind(LdapSettings::isEnableLdapUserSource, LdapSettings::setEnableLdapUserSource);

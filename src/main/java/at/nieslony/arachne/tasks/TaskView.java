@@ -21,6 +21,7 @@ import at.nieslony.arachne.utils.components.GridPaginationControls;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -119,8 +120,8 @@ public class TaskView
         });
         buttonBar.addToStart(menuBar);
 
-        Button autoRefresh = new Button("Autorefresh");
-        autoRefresh.addThemeVariants(ButtonVariant.PRIMARY);
+        Switch autoRefresh = new Switch("Autorefresh");
+        autoRefresh.setValue(true);
         buttonBar.addToEnd(autoRefresh);
 
         refreshInterval = new ComboBox<>();
@@ -131,6 +132,7 @@ public class TaskView
             scheduleRefresh();
         });
         buttonBar.addToEnd(refreshInterval);
+        buttonBar.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
         tasksGrid
                 .addColumn((source) -> {
@@ -228,15 +230,11 @@ public class TaskView
         );
         setPadding(false);
 
-        autoRefresh.addClickListener(e -> {
-            log.debug("Toogling status of Autoreload");
-            if (refreshInterval.isEnabled()) {
-                refreshInterval.setEnabled(false);
-                autoRefresh.removeThemeVariants(ButtonVariant.PRIMARY);
+        autoRefresh.addValueChangeListener(e -> {
+            refreshInterval.setEnabled(e.getValue());
+            if (e.getValue()) {
                 scheduleRefresh();
             } else {
-                refreshInterval.setEnabled(true);
-                autoRefresh.addThemeVariants(ButtonVariant.PRIMARY);
                 refreshTask.cancel(false);
             }
         });
