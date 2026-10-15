@@ -18,9 +18,9 @@ import at.nieslony.arachne.utils.components.LockUserDialog;
 import at.nieslony.arachne.utils.components.YesNoIcon;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
@@ -105,10 +105,20 @@ public class AdminHome
 
         serverVersion = new Text("");
 
-        Accordion content = new Accordion();
-        content.add("Connected Users", createConnectedUsersView());
-        content.add("Connected Sites", createConnectedSitesView());
+        Details connectedUsers = new Details("Connected Users", createConnectedUsersView());
+        connectedUsers.setOpened(true);
+        connectedUsers.setWidthFull();
+
+        Details connectedSites = new Details("Connected Sites", createConnectedSitesView());
+        connectedSites.setOpened(true);
+        connectedSites.setWidthFull();
+
+        VerticalLayout content = new VerticalLayout(
+                connectedUsers,
+                connectedSites
+        );
         content.setWidthFull();
+
         add(
                 serverVersion,
                 content
