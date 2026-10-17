@@ -75,14 +75,14 @@ public class TomcatView extends VerticalLayout {
     private Pki pki;
 
     private final Settings settings;
-    private final TomcatService tomcatService;
+    private final ReverseProxyService tomcatService;
     private final FolderFactory folderFactory;
     private final Binder<TomcatSettings> binder;
     private TomcatSettings tomcatSettings;
 
     public TomcatView(
             Settings settings,
-            TomcatService tomcatService,
+            ReverseProxyService tomcatService,
             FolderFactory folderFactory
     ) {
         this.settings = settings;

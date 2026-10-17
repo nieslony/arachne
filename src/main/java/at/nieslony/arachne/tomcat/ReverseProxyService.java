@@ -22,10 +22,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
-public class TomcatService {
+public class ReverseProxyService {
 
     private final String FN_ARACHNE_CONF = "arachne.conf";
-    private final String FN_ARACHNE_PRE_AUTH_CONF = "arachne-preauth.conf.inc";
 
     @Value("${arachneConfigDir}")
     private String arachneConfigDir;

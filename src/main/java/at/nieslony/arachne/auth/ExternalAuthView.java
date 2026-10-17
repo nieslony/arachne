@@ -24,7 +24,7 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.tomcat.TomcatService;
+import at.nieslony.arachne.tomcat.ReverseProxyService;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
@@ -68,7 +68,7 @@ import org.springframework.util.ObjectUtils;
 public class ExternalAuthView extends VerticalLayout {
 
     private final Settings settings;
-    private final TomcatService tomcatService;
+    private final ReverseProxyService tomcatService;
 
     private final Button saveButton;
 
@@ -91,7 +91,7 @@ public class ExternalAuthView extends VerticalLayout {
 
     public ExternalAuthView(
             Settings settings,
-            TomcatService tomcatService
+            ReverseProxyService tomcatService
     ) {
         this.settings = settings;
         this.tomcatService = tomcatService;
