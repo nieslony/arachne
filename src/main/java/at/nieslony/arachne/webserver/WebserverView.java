@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package at.nieslony.arachne.tomcat;
+package at.nieslony.arachne.webserver;
 
 import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
@@ -63,7 +63,7 @@ import org.springframework.beans.factory.annotation.Value;
 @PageTitle("Integrated Tomcat")
 @RolesAllowed("ADMIN")
 @Slf4j
-public class TomcatView extends VerticalLayout {
+public class WebserverView extends VerticalLayout {
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -80,7 +80,7 @@ public class TomcatView extends VerticalLayout {
     private final Binder<TomcatSettings> binder;
     private TomcatSettings tomcatSettings;
 
-    public TomcatView(
+    public WebserverView(
             Settings settings,
             ReverseProxyService tomcatService,
             FolderFactory folderFactory

@@ -24,7 +24,7 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.tomcat.ReverseProxyService;
+import at.nieslony.arachne.webserver.ReverseProxyService;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;

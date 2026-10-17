@@ -23,7 +23,7 @@ import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTasksView;
 import at.nieslony.arachne.tasks.TaskView;
-import at.nieslony.arachne.tomcat.TomcatView;
+import at.nieslony.arachne.webserver.WebserverView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.ConfigureOtpTokenDialog;
@@ -264,7 +264,7 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
                 VaadinIcon.MAILBOX.create()),
                 new SideNavItem("One Time Views", OneTimeViewOverview.class,
                         VaadinIcon.CLOCK.create()),
-                new SideNavItem("Integrated Tomcat", TomcatView.class,
+                new SideNavItem("Integrated Tomcat", WebserverView.class,
                         VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),

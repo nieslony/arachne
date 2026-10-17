@@ -7,7 +7,7 @@ package at.nieslony.arachne.pki;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
 import at.nieslony.arachne.setup.SetupData;
-import at.nieslony.arachne.tomcat.TomcatSettings;
+import at.nieslony.arachne.webserver.TomcatSettings;
 import jakarta.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;

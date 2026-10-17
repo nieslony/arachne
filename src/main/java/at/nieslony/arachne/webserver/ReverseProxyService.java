@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package at.nieslony.arachne.tomcat;
+package at.nieslony.arachne.webserver;
 
 import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
@@ -39,6 +39,7 @@ public class ReverseProxyService {
     public void saveApacheConfig() {
         TomcatSettings tomcatSettings = settings.getSettings(TomcatSettings.class);
         PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
+        ReverseProxySettings reverseProxySettings = settings.getSettings(ReverseProxySettings.class);
 
         try {
             tomcatSettings.save(settings);

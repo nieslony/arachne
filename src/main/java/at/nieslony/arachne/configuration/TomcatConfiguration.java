@@ -6,7 +6,7 @@ package at.nieslony.arachne.configuration;
 
 import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.settings.Settings;
-import at.nieslony.arachne.tomcat.TomcatSettings;
+import at.nieslony.arachne.webserver.TomcatSettings;
 import at.nieslony.arachne.utils.net.NetUtils;
 import java.io.FileWriter;
 import java.io.IOException;
