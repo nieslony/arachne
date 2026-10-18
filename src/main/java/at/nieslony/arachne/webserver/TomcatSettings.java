@@ -35,7 +35,6 @@ public class TomcatSettings extends AbstractSettingsGroup {
     private int ajpPort = 8009;
     private boolean enableAjpSecret = true;
     private String ajpSecret = createSecret();
-    private String ajpLocation = "/arachne";
 
     private boolean httpsConnectorEnabled = true;
     private int httpsPort = 8443;

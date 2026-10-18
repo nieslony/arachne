@@ -23,13 +23,13 @@ import at.nieslony.arachne.roles.RolesView;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.tasks.RecurringTasksView;
 import at.nieslony.arachne.tasks.TaskView;
-import at.nieslony.arachne.webserver.WebserverView;
 import at.nieslony.arachne.users.ArachneUserDetails;
 import at.nieslony.arachne.users.ChangePasswordDialog;
 import at.nieslony.arachne.users.ConfigureOtpTokenDialog;
 import at.nieslony.arachne.users.EditYourselfDialog;
 import at.nieslony.arachne.users.UserRepository;
 import at.nieslony.arachne.users.UsersView;
+import at.nieslony.arachne.webserver.WebserverView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -260,12 +260,13 @@ public class ViewTemplate extends AppLayout implements HasDynamicTitle {
         SideNavItem apiItem = new SideNavItem("API Index", ApiIndexView.class,
                 VaadinIcon.LIST.create());
         apiItem.setOpenInNewBrowserTab(true);
-        servicesNav.addItem(new SideNavItem("Mail Settings", MailSettingsView.class,
-                VaadinIcon.MAILBOX.create()),
+        servicesNav.addItem(
+                new SideNavItem("Mail Settings", MailSettingsView.class,
+                        VaadinIcon.MAILBOX.create()),
+                new SideNavItem("Webserver", WebserverView.class,
+                        VaadinIcon.CONNECT.create()),
                 new SideNavItem("One Time Views", OneTimeViewOverview.class,
                         VaadinIcon.CLOCK.create()),
-                new SideNavItem("Integrated Tomcat", WebserverView.class,
-                        VaadinIcon.CONNECT.create()),
                 new SideNavItem("Tasks", TaskView.class,
                         VaadinIcon.AUTOMATION.create()),
                 new SideNavItem("Recurring Tasks", RecurringTasksView.class,

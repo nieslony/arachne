@@ -30,6 +30,24 @@ import lombok.ToString;
 @ToString
 public class ReverseProxySettings extends AbstractSettingsGroup {
 
+    public enum AddAuthentication {
+        NONE("None"),
+        KERBEROS("Kerberos");
+
+        private final String label;
+
+        AddAuthentication(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     private String proxyPath = "/arachne";
-    private boolean kerberosAuthEnabled = false;
+
+    private AddAuthentication addAuthentication = AddAuthentication.NONE;
+    private String keytabFile = "/etc/httpd/krb5.keytab";
 }

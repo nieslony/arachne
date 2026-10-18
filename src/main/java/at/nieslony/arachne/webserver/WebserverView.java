@@ -31,6 +31,7 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
@@ -40,6 +41,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -59,11 +62,11 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @author claas
  */
-@Route(value = "tomcat", layout = ViewTemplate.class)
-@PageTitle("Integrated Tomcat")
+@Route(value = "webserver", layout = ViewTemplate.class)
+@PageTitle("Webserver")
 @RolesAllowed("ADMIN")
 @Slf4j
-public class WebserverView extends VerticalLayout {
+public class WebserverView extends TabSheet {
 
     @Value("${tomcatCertPath:${arachneConfigDir}/server.crt}")
     String tomcatCertPath;
@@ -74,27 +77,93 @@ public class WebserverView extends VerticalLayout {
     @Autowired
     private Pki pki;
 
-    private final Settings settings;
-    private final ReverseProxyService tomcatService;
-    private final FolderFactory folderFactory;
-    private final Binder<TomcatSettings> binder;
+    @Autowired
+    private Settings settings;
+
+    @Autowired
+    private ReverseProxyService reverseProxyService;
+
+    @Autowired
+    private ReverseProxyService tomcatService;
+
+    @Autowired
+    private FolderFactory folderFactory;
+
     private TomcatSettings tomcatSettings;
+    Binder<TomcatSettings> tomcatBinder = new Binder<>();
+    Binder<ReverseProxySettings> reverseProxyBinder = new Binder<>();
 
-    public WebserverView(
-            Settings settings,
-            ReverseProxyService tomcatService,
-            FolderFactory folderFactory
-    ) {
-        this.settings = settings;
-
-        this.tomcatService = tomcatService;
-        this.folderFactory = folderFactory;
-        this.binder = new Binder<>(TomcatSettings.class);
+    public WebserverView() {
+        this.tomcatBinder = new Binder<>();
     }
 
     @PostConstruct
     public void init() {
+        add("Integrated Tomcat", createTomcatView());
+        add("Reverse Proxy", createReverseProxyView());
+        setWidthFull();
+    }
+
+    public Component createReverseProxyView() {
+        ReverseProxySettings reverseProxySettings = settings.getSettings(ReverseProxySettings.class);
+        VerticalLayout layout = new VerticalLayout();
+
+        TextField reverseProxyPath = new TextField("Reverse Proxy Path");
+        reverseProxyPath.setClearButtonVisible(true);
+
+        Select<ReverseProxySettings.AddAuthentication> addAuthentication
+                = new Select<>("Add Authentication");
+        addAuthentication.setItems(ReverseProxySettings.AddAuthentication.values());
+
+        TextField kerberosKeytab = new TextField("Kerberos Keytab");
+        kerberosKeytab.setClearButtonVisible(true);
+        kerberosKeytab.setEnabled(false);
+
+        Button writeConfigButton = new Button("Write Config", e -> {
+            try {
+                reverseProxySettings.save(settings);
+                reverseProxyService.saveApacheConfig();
+            } catch (SettingsException ex) {
+
+            }
+        });
+        writeConfigButton.addThemeVariants(ButtonVariant.PRIMARY);
+
+        layout.add(
+                reverseProxyPath,
+                addAuthentication,
+                kerberosKeytab,
+                writeConfigButton
+        );
+
+        addAuthentication.addValueChangeListener(
+                e -> kerberosKeytab.setEnabled(
+                        e.getValue() == ReverseProxySettings.AddAuthentication.KERBEROS)
+        );
+
+        reverseProxyBinder.bind(
+                reverseProxyPath,
+                ReverseProxySettings::getProxyPath,
+                ReverseProxySettings::setProxyPath
+        );
+        reverseProxyBinder.bind(
+                addAuthentication,
+                ReverseProxySettings::getAddAuthentication,
+                ReverseProxySettings::setAddAuthentication
+        );
+        reverseProxyBinder.bind(
+                kerberosKeytab,
+                ReverseProxySettings::getKeytabFile,
+                ReverseProxySettings::setKeytabFile
+        );
+        reverseProxyBinder.setBean(reverseProxySettings);
+
+        return layout;
+    }
+
+    public Component createTomcatView() {
         tomcatSettings = settings.getSettings(TomcatSettings.class);
+
         Button saveAndRestartButton = new Button(
                 "Save and Restart Arachne",
                 e -> onSave()
@@ -102,30 +171,28 @@ public class WebserverView extends VerticalLayout {
         saveAndRestartButton.setDisableOnClick(true);
         saveAndRestartButton.addThemeVariants(ButtonVariant.PRIMARY);
 
-        add(
+        VerticalLayout layout = new VerticalLayout(
                 createAjpDetails(),
                 createHttpsDetails(),
                 saveAndRestartButton
         );
-        setPadding(false);
+        layout.setPadding(false);
 
-        binder.setBean(tomcatSettings);
-        binder.validate();
+        tomcatBinder.setBean(tomcatSettings);
+        tomcatBinder.validate();
+
+        return layout;
     }
 
     private Component createAjpDetails() {
 
-        Checkbox enableAjpField = new Checkbox("Enable AJP Connector");
+        Switch enableAjpField = new Switch("Enable AJP Connector");
         enableAjpField.setValue(true);
 
         IntegerField ajpPortField = new IntegerField("AJP Port");
         ajpPortField.setMin(1);
         ajpPortField.setMax(65535);
         ajpPortField.setStepButtonsVisible(true);
-
-        TextField ajpLocationField = new TextField("Outsite Location");
-        ajpLocationField.setClearButtonVisible(true);
-        ajpLocationField.setWidthFull();
 
         Checkbox enableAjpSecretField = new Checkbox("Enable AJP Secret");
         enableAjpSecretField.setValue(true);
@@ -147,45 +214,41 @@ public class WebserverView extends VerticalLayout {
         ajpSecretLayout.setFlexGrow(1, ajpSecretField);
         ajpSecretLayout.setWidthFull();
 
-        binder.forField(enableAjpField)
+        tomcatBinder.forField(enableAjpField)
                 .bind(TomcatSettings::isEnableAjpConnector, TomcatSettings::setEnableAjpConnector);
-        binder.forField(ajpPortField)
+        tomcatBinder.forField(ajpPortField)
                 .asRequired()
                 .bind(TomcatSettings::getAjpPort, TomcatSettings::setAjpPort);
-        binder.forField(enableAjpSecretField)
+        tomcatBinder.forField(enableAjpSecretField)
                 .bind(TomcatSettings::isEnableAjpSecret, TomcatSettings::setEnableAjpSecret);
-        binder.forField(ajpSecretField)
+        tomcatBinder.forField(ajpSecretField)
                 .asRequired()
                 .bind(TomcatSettings::getAjpSecret, TomcatSettings::setAjpSecret);
-        binder.forField(ajpLocationField)
-                .bind(TomcatSettings::getAjpLocation, TomcatSettings::setAjpLocation);
 
         enableAjpField.addValueChangeListener(
                 e -> {
                     if (e.getValue()) {
                         ajpPortField.setEnabled(true);
                         enableAjpSecretField.setEnabled(true);
-                        ajpSecretField.setEnabled(enableAjpSecretField.getValue());
-                        ajpLocationField.setEnabled(true);
-                        createSecret.setEnabled(true);
+                        ajpSecretField.setEnabled(enableAjpSecretField.getValue() && enableAjpSecretField.getValue());
+                        createSecret.setEnabled(true && enableAjpSecretField.getValue());
                     } else {
                         ajpPortField.setEnabled(false);
                         enableAjpSecretField.setEnabled(false);
                         ajpSecretField.setEnabled(false);
-                        ajpLocationField.setEnabled(false);
                         createSecret.setEnabled(false);
                     }
                 });
         enableAjpSecretField.addValueChangeListener(
                 e -> {
                     ajpSecretField.setEnabled(e.getValue());
+                    createSecret.setEnabled(e.getValue());
                 });
 
         Details ajpDetails = new Details("AJP Connector",
                 new VerticalLayout(
                         enableAjpField,
                         ajpPortField,
-                        ajpLocationField,
                         ajpSecretLayout,
                         createApacheHint()
                 )
@@ -244,7 +307,7 @@ public class WebserverView extends VerticalLayout {
 
     private Component createHttpsDetails() {
 
-        Checkbox httpsEnabledField = new Checkbox("Enable HTTPS");
+        Switch httpsEnabledField = new Switch("Enable HTTPS");
         httpsEnabledField.setValue(true);
 
         IntegerField httpsPortField = new IntegerField("HTTPS Port");
@@ -274,11 +337,11 @@ public class WebserverView extends VerticalLayout {
             certIsSymlinkHint.setVisible(false);
         }
 
-        binder.forField(httpsEnabledField)
+        tomcatBinder.forField(httpsEnabledField)
                 .bind(TomcatSettings::isHttpsConnectorEnabled, TomcatSettings::setHttpsConnectorEnabled);
-        binder.forField(httpsPortField)
+        tomcatBinder.forField(httpsPortField)
                 .bind(TomcatSettings::getHttpsPort, TomcatSettings::setHttpsPort);
-        binder.forField(httpsServerCertAsWebCertField)
+        tomcatBinder.forField(httpsServerCertAsWebCertField)
                 .bind(TomcatSettings::isServerCertAsWebCert, TomcatSettings::setServerCertAsWebCert);
 
         httpsEnabledField.addValueChangeListener(

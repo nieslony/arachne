@@ -24,16 +24,15 @@ import at.nieslony.arachne.kerberos.KeytabFile;
 import at.nieslony.arachne.ldap.LdapSettings;
 import at.nieslony.arachne.settings.Settings;
 import at.nieslony.arachne.settings.SettingsException;
-import at.nieslony.arachne.webserver.ReverseProxyService;
 import at.nieslony.arachne.utils.components.ShowNotification;
 import at.nieslony.arachne.utils.validators.IgnoringInvisibleOrDisabledValidator;
 import at.nieslony.arachne.utils.validators.ServicePrincipalValidator;
+import at.nieslony.arachne.webserver.ReverseProxyService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
@@ -85,8 +84,6 @@ public class ExternalAuthView extends VerticalLayout {
     private RadioButtonGroup<PreAuthSettings.PreAuthSource> preAuthSource;
     private TextField preAuthEnvVar;
     private TextField preAuthHttpHeader;
-    private Checkbox createApacheConfig;
-    private TextField apacheKeytabFile;
     private Binder<PreAuthSettings> preAuthBinder;
 
     public ExternalAuthView(
@@ -286,33 +283,15 @@ public class ExternalAuthView extends VerticalLayout {
         preAuthBinder.forField(preAuthSource)
                 .bind(PreAuthSettings::getPreAuthSource, PreAuthSettings::setPreAuthSource);
 
-        createApacheConfig = new Checkbox("Create Apache Configuration");
-        preAuthBinder
-                .forField(createApacheConfig)
-                .bind(PreAuthSettings::isWriteApachePreAuthConfig, PreAuthSettings::setWriteApachePreAuthConfig);
-
-        apacheKeytabFile = new TextField("Keytab Location");
-        apacheKeytabFile.setWidthFull();
-        apacheKeytabFile.setClearButtonVisible(true);
-        preAuthBinder
-                .forField(apacheKeytabFile)
-                .bind(PreAuthSettings::getKeytabFile, PreAuthSettings::setKeytabFile);
-
         preAuthEnabled.addValueChangeListener((e) -> {
             onEnablePreAuthentication(e.getValue());
-        });
-
-        createApacheConfig.addValueChangeListener((e) -> {
-            apacheKeytabFile.setEnabled(createApacheConfig.getValue());
         });
 
         VerticalLayout layout = new VerticalLayout(
                 preAuthEnabled,
                 preAuthSource,
                 preAuthEnvVar,
-                preAuthHttpHeader,
-                createApacheConfig,
-                apacheKeytabFile
+                preAuthHttpHeader
         );
         layout.setMaxWidth(50, Unit.EM);
 
@@ -332,8 +311,6 @@ public class ExternalAuthView extends VerticalLayout {
     private void onEnablePreAuthentication(boolean enable) {
         preAuthSource.setEnabled(enable);
         preAuthEnvVar.setEnabled(enable);
-        createApacheConfig.setEnabled(enable);
-        apacheKeytabFile.setEnabled(enable && createApacheConfig.getValue());
         preAuthBinder.validate();
     }
 
@@ -345,9 +322,6 @@ public class ExternalAuthView extends VerticalLayout {
             kerberosSettings.save(settings);
             ldapSettings.save(settings);
             preAuthSettings.save(settings);
-            if (preAuthSettings.isWriteApachePreAuthConfig()) {
-                tomcatService.saveApacheConfig();
-            }
             Notification.show("Restarting Arachne");
             Arachne.restart();
         } catch (SettingsException ex) {
