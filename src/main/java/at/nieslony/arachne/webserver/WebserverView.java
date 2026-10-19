@@ -110,14 +110,17 @@ public class WebserverView extends TabSheet {
 
         TextField reverseProxyPath = new TextField("Reverse Proxy Path");
         reverseProxyPath.setClearButtonVisible(true);
+        reverseProxyPath.setWidthFull();
 
         Select<ReverseProxySettings.AddAuthentication> addAuthentication
                 = new Select<>("Add Authentication");
         addAuthentication.setItems(ReverseProxySettings.AddAuthentication.values());
+        addAuthentication.setWidthFull();
 
         TextField kerberosKeytab = new TextField("Kerberos Keytab");
         kerberosKeytab.setClearButtonVisible(true);
         kerberosKeytab.setEnabled(false);
+        kerberosKeytab.setWidthFull();
 
         Button writeConfigButton = new Button("Write Config", e -> {
             try {
@@ -135,6 +138,7 @@ public class WebserverView extends TabSheet {
                 kerberosKeytab,
                 writeConfigButton
         );
+        layout.setMinWidth(32, Unit.EM);
 
         addAuthentication.addValueChangeListener(
                 e -> kerberosKeytab.setEnabled(
