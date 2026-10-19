@@ -50,7 +50,7 @@ public class OpenVpnManagementIf {
     private volatile Command currentCommand = null;
     private volatile SocketChannel clientChannel = null;
     private final Path socketPath;
-    private final String logPrefix;
+    private final String threadName;
 
     private final ExecutorService executorService;
 
@@ -60,11 +60,11 @@ public class OpenVpnManagementIf {
     public OpenVpnManagementIf(
             Runnable onConnect,
             Path socketPath,
-            String logPrefix
+            String threadName
     ) {
         this.onConnect = onConnect;
         this.socketPath = socketPath;
-        this.logPrefix = logPrefix;
+        this.threadName = threadName;
         setManagementConnectionStatus(ManagementConnectionStatus.Disconnected);
 
         executorService = Executors.newFixedThreadPool(5);
@@ -72,7 +72,7 @@ public class OpenVpnManagementIf {
 
     private Runnable createCommandProcessor() {
         return () -> {
-
+            Thread.currentThread().setName("ovmgmt-%s-cmd".formatted(threadName));
             log.info("Starting command processor");
             try {
                 for (;;) {
@@ -104,15 +104,14 @@ public class OpenVpnManagementIf {
                     }
                 }
             } catch (InterruptedException | ExecutionException ex) {
-                log.error("CommandProcessor (%s) interrupted"
-                        .formatted(logPrefix)
-                );
+                log.error("CommandProcessor interrupted");
             }
         };
     }
 
     private Runnable createManagementMsgReader() {
         return () -> {
+            Thread.currentThread().setName("ovmgmt-%s-rdr".formatted(threadName));
             log.info("Starting management message reader");
             StringBuilder currentLine = new StringBuilder();
             ByteBuffer buffer = ByteBuffer.allocate(1024);
@@ -192,6 +191,7 @@ public class OpenVpnManagementIf {
     }
 
     private Runnable createManagementMsgProcessor() {
+        Thread.currentThread().setName("ovmgmt-%s-prc".formatted(threadName));
         log.info("Starting management message processor");
         return () -> {
             try {
@@ -234,33 +234,25 @@ public class OpenVpnManagementIf {
                     }
                 }
             } catch (InterruptedException ex) {
-                log.error("ManagementMsgProcesor (%s) interrupted"
-                        .formatted(logPrefix)
-                );
+                log.error("ManagementMsgProcesor interrupted");
             }
         };
     }
 
     public void run() {
-        log.info("Starting threads (%s)"
-                .formatted(logPrefix)
-        );
+        log.info("Starting %s threads".formatted(threadName));
         managementMsgReader = executorService.submit(createManagementMsgReader());
         managementMsgProcessor = executorService.submit(createManagementMsgProcessor());
         commandProcessor = executorService.submit(createCommandProcessor());
     }
 
     public void stop() {
-        log.info("Cancelling threads (%s)"
-                .formatted(logPrefix)
-        );
+        log.info("Cancelling %s threads".formatted(threadName));
         commandProcessor.cancel(true);
         managementMsgProcessor.cancel(true);
         managementMsgReader.cancel(true);
 
-        log.info("Shutting down executorService (%s)"
-                .formatted(logPrefix)
-        );
+        log.info("Shutting down % executorService".formatted(threadName));
         executorService.shutdownNow();
     }
 
@@ -276,9 +268,7 @@ public class OpenVpnManagementIf {
     }
 
     private synchronized void setManagementConnectionStatus(ManagementConnectionStatus status) {
-        log.debug("New Connection Status %s: %s"
-                .formatted(logPrefix, status.toString())
-        );
+        log.debug("New Connection Status: %s" + status.toString());
         managementConnectionStatus = status;
     }
 
@@ -353,3 +343,7 @@ public class OpenVpnManagementIf {
         ku.waitForResult();
     }
 }
+// nio-8080-exec-1
+// ovmgmt-user-rdr
+// ovmgmt-user-cmd
+// ovmgmt-user-prc
