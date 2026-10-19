@@ -52,6 +52,8 @@ public class OpenVpnManagementIf {
     private final Path socketPath;
     private final String threadName;
 
+    private final WatchService watchService;
+
     private final ExecutorService executorService;
 
     @Getter
@@ -61,11 +63,19 @@ public class OpenVpnManagementIf {
             Runnable onConnect,
             Path socketPath,
             String threadName
-    ) {
+    ) throws IOException {
         this.onConnect = onConnect;
         this.socketPath = socketPath;
         this.threadName = threadName;
         setManagementConnectionStatus(ManagementConnectionStatus.Disconnected);
+
+        watchService = FileSystems.getDefault().newWatchService();
+        socketPath
+                .getParent()
+                .register(
+                        watchService,
+                        StandardWatchEventKinds.ENTRY_CREATE
+                );
 
         executorService = Executors.newFixedThreadPool(5);
     }
@@ -268,7 +278,7 @@ public class OpenVpnManagementIf {
     }
 
     private synchronized void setManagementConnectionStatus(ManagementConnectionStatus status) {
-        log.debug("New Connection Status: %s" + status.toString());
+        log.debug("New Connection Status: " + status.toString());
         managementConnectionStatus = status;
     }
 
@@ -281,11 +291,6 @@ public class OpenVpnManagementIf {
         }
         try {
             //log.info("Waiting for socket to appear.");
-            WatchService watchService = FileSystems.getDefault().newWatchService();
-
-            Path socketDir = socketPath.getParent();
-            socketDir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
-
             WatchKey key;
             while ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
@@ -303,7 +308,7 @@ public class OpenVpnManagementIf {
                 }
                 key.reset();
             }
-        } catch (IOException | InterruptedException ex) {
+        } catch (InterruptedException ex) {
             log.error("Error waiting for socket: " + ex.getMessage());
         }
     }

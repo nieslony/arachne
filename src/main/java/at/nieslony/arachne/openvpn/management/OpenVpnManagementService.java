@@ -66,7 +66,7 @@ public class OpenVpnManagementService
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException {
         log.info("Initializing Management Interface");
         userManagementIf = new OpenVpnManagementIf(
                 () -> writeFirewallConfig(FirewallRuleModel.VpnType.USER),
