@@ -84,9 +84,6 @@ public class WebserverView extends TabSheet {
     private ReverseProxyService reverseProxyService;
 
     @Autowired
-    private ReverseProxyService tomcatService;
-
-    @Autowired
     private FolderFactory folderFactory;
 
     private TomcatSettings tomcatSettings;
@@ -136,7 +133,8 @@ public class WebserverView extends TabSheet {
                 reverseProxyPath,
                 addAuthentication,
                 kerberosKeytab,
-                writeConfigButton
+                writeConfigButton,
+                createApacheHint()
         );
         layout.setMinWidth(32, Unit.EM);
 
@@ -253,8 +251,7 @@ public class WebserverView extends TabSheet {
                 new VerticalLayout(
                         enableAjpField,
                         ajpPortField,
-                        ajpSecretLayout,
-                        createApacheHint()
+                        ajpSecretLayout
                 )
         );
         ajpDetails.setOpened(true);
@@ -269,12 +266,12 @@ public class WebserverView extends TabSheet {
 
             String absApacheConfigFN;
             try {
-                absApacheConfigFN = new File(tomcatService.getApacheConfigFileName())
+                absApacheConfigFN = new File(reverseProxyService.getApacheConfigFileName())
                         .getCanonicalPath();
             } catch (IOException ex) {
                 absApacheConfigFN = "[%s is unresolvable: %s]"
                         .formatted(
-                                tomcatService.getApacheConfigFileName(),
+                                reverseProxyService.getApacheConfigFileName(),
                                 ex.getMessage()
                         );
             }
@@ -378,7 +375,7 @@ public class WebserverView extends TabSheet {
         try {
             pki.updateWebServerCertificate();
             tomcatSettings.save(settings);
-            tomcatService.saveApacheConfig();
+            reverseProxyService.saveApacheConfig();
             Notification.show("Restarting Arachne...").open();
             Arachne.restart();
         } catch (UpdateWebServerCertificateException ex) {
