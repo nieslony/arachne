@@ -262,7 +262,7 @@ public class OpenVpnManagementIf {
         managementMsgProcessor.cancel(true);
         managementMsgReader.cancel(true);
 
-        log.info("Shutting down % executorService".formatted(threadName));
+        log.info("Shutting down %s executorService".formatted(threadName));
         executorService.shutdownNow();
     }
 
