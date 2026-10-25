@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.nieslony</groupId>
     <artifactId>Arachne</artifactId>
-    <version>1.4.15</version>
+    <version>1.4.99</version>
     <packaging>jar</packaging>
     <name>Arachne</name>
     <description>A Web Application for OpenVPN</description>
@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
     </parent>
 
     <repositories>
