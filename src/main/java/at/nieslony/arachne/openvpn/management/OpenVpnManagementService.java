@@ -66,17 +66,17 @@ public class OpenVpnManagementService
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException {
         log.info("Initializing Management Interface");
         userManagementIf = new OpenVpnManagementIf(
                 () -> writeFirewallConfig(FirewallRuleModel.VpnType.USER),
                 Path.of(getUserManagementSocket()),
-                "U"
+                "user"
         );
         siteManagementIf = new OpenVpnManagementIf(
                 () -> writeFirewallConfig(FirewallRuleModel.VpnType.SITE),
                 Path.of(getSiteManagementSocket()),
-                "S"
+                "site"
         );
 
         userManagementIf.run();

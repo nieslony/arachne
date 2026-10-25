@@ -262,7 +262,7 @@ public class LdapView extends VerticalLayout {
 
         binder.addValueChangeListener(e -> {
             LdapSettings ls = binder.getBean();
-            groupsSearchFilter.setValue(ls.getUsersFilter());
+            groupsSearchFilter.setValue(ls.getGroupsFilter());
         });
 
         FormLayout groupsFormLayout = new FormLayout(
