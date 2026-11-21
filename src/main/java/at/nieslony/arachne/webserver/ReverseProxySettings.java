@@ -47,6 +47,7 @@ public class ReverseProxySettings extends AbstractSettingsGroup {
     }
 
     private String proxyPath = "/arachne";
+    private boolean splitIntExtServices = false;
 
     private AddAuthentication addAuthentication = AddAuthentication.NONE;
     private String keytabFile = "/etc/httpd/krb5.keytab";

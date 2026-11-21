@@ -18,6 +18,7 @@ package at.nieslony.arachne.webserver;
 
 import at.nieslony.arachne.Arachne;
 import at.nieslony.arachne.ViewTemplate;
+import at.nieslony.arachne.auth.PreAuthSettings;
 import at.nieslony.arachne.pki.Pki;
 import at.nieslony.arachne.pki.PkiException;
 import at.nieslony.arachne.pki.UpdateWebServerCertificateException;
@@ -103,11 +104,14 @@ public class WebserverView extends TabSheet {
 
     public Component createReverseProxyView() {
         ReverseProxySettings reverseProxySettings = settings.getSettings(ReverseProxySettings.class);
+        PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
         VerticalLayout layout = new VerticalLayout();
 
         TextField reverseProxyPath = new TextField("Reverse Proxy Path");
         reverseProxyPath.setClearButtonVisible(true);
         reverseProxyPath.setWidthFull();
+
+        Checkbox splitIntextService = new Checkbox("Split config into internal and external URIs");
 
         Select<ReverseProxySettings.AddAuthentication> addAuthentication
                 = new Select<>("Add Authentication");
@@ -131,8 +135,15 @@ public class WebserverView extends TabSheet {
 
         layout.add(
                 reverseProxyPath,
-                addAuthentication,
-                kerberosKeytab,
+                splitIntextService
+        );
+        if (preAuthSettings.isPreAuthtEnabled()) {
+            layout.add(
+                    addAuthentication,
+                    kerberosKeytab
+            );
+        }
+        layout.add(
                 writeConfigButton,
                 createApacheHint()
         );
@@ -147,6 +158,11 @@ public class WebserverView extends TabSheet {
                 reverseProxyPath,
                 ReverseProxySettings::getProxyPath,
                 ReverseProxySettings::setProxyPath
+        );
+        reverseProxyBinder.bind(
+                splitIntextService,
+                ReverseProxySettings::isSplitIntExtServices,
+                ReverseProxySettings::setSplitIntExtServices
         );
         reverseProxyBinder.bind(
                 addAuthentication,
