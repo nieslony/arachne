@@ -9,7 +9,7 @@
 %endif
 
 Name:           arachne
-Version:        1.4.15
+Version:        1.4.99
 
 Release:        1
 License:        GPLv3
