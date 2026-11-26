@@ -169,7 +169,7 @@ public class OpenVpnManagementServiceTest {
     }
 
     @BeforeAll
-    public void startManagementIf() throws InterruptedException {
+    public void startManagementIf() throws InterruptedException, IOException {
         mgmtIf = new OpenVpnManagementIf(
                 () -> {
                 },
