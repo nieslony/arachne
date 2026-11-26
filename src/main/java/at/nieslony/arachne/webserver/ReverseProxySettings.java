@@ -32,7 +32,8 @@ public class ReverseProxySettings extends AbstractSettingsGroup {
 
     public enum AddAuthentication {
         NONE("None"),
-        KERBEROS("Kerberos");
+        KERBEROS("Kerberos"),
+        LDAP("Ldap");
 
         private final String label;
 

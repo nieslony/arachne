@@ -34,10 +34,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.Switch;
 import com.vaadin.flow.component.details.Details;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -48,13 +46,13 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,6 +86,7 @@ public class WebserverView extends TabSheet {
     private FolderFactory folderFactory;
 
     private TomcatSettings tomcatSettings;
+    private ReverseProxySettings reverseProxySettings;
     Binder<TomcatSettings> tomcatBinder = new Binder<>();
     Binder<ReverseProxySettings> reverseProxyBinder = new Binder<>();
 
@@ -103,7 +102,7 @@ public class WebserverView extends TabSheet {
     }
 
     public Component createReverseProxyView() {
-        ReverseProxySettings reverseProxySettings = settings.getSettings(ReverseProxySettings.class);
+        reverseProxySettings = settings.getSettings(ReverseProxySettings.class);
         PreAuthSettings preAuthSettings = settings.getSettings(PreAuthSettings.class);
         VerticalLayout layout = new VerticalLayout();
 
@@ -111,7 +110,7 @@ public class WebserverView extends TabSheet {
         reverseProxyPath.setClearButtonVisible(true);
         reverseProxyPath.setWidthFull();
 
-        Checkbox splitIntextService = new Checkbox("Split config into internal and external URIs");
+        Checkbox splitIntExtService = new Checkbox("Split config into internal and external URIs");
 
         Select<ReverseProxySettings.AddAuthentication> addAuthentication
                 = new Select<>("Add Authentication");
@@ -123,19 +122,16 @@ public class WebserverView extends TabSheet {
         kerberosKeytab.setEnabled(false);
         kerberosKeytab.setWidthFull();
 
-        Button writeConfigButton = new Button("Write Config", e -> {
-            try {
-                reverseProxySettings.save(settings);
-                reverseProxyService.saveApacheConfig();
-            } catch (SettingsException ex) {
-
-            }
-        });
+        Button writeConfigButton = new Button("Write Config");
         writeConfigButton.addThemeVariants(ButtonVariant.PRIMARY);
+
+        Markdown apacheHint = new Markdown();
 
         layout.add(
                 reverseProxyPath,
-                splitIntextService
+                splitIntExtService,
+                addAuthentication,
+                kerberosKeytab
         );
         if (preAuthSettings.isPreAuthtEnabled()) {
             layout.add(
@@ -145,7 +141,7 @@ public class WebserverView extends TabSheet {
         }
         layout.add(
                 writeConfigButton,
-                createApacheHint()
+                apacheHint
         );
         layout.setMinWidth(32, Unit.EM);
 
@@ -154,13 +150,24 @@ public class WebserverView extends TabSheet {
                         e.getValue() == ReverseProxySettings.AddAuthentication.KERBEROS)
         );
 
+        writeConfigButton.addClickListener(e -> {
+            try {
+                reverseProxySettings.save(settings);
+                reverseProxyService.saveApacheConfig();
+
+                apacheHint.setContent(createApacheHint(reverseProxySettings));
+            } catch (SettingsException ex) {
+
+            }
+        });
+
         reverseProxyBinder.bind(
                 reverseProxyPath,
                 ReverseProxySettings::getProxyPath,
                 ReverseProxySettings::setProxyPath
         );
         reverseProxyBinder.bind(
-                splitIntextService,
+                splitIntExtService,
                 ReverseProxySettings::isSplitIntExtServices,
                 ReverseProxySettings::setSplitIntExtServices
         );
@@ -276,50 +283,42 @@ public class WebserverView extends TabSheet {
         return ajpDetails;
     }
 
-    private Component createApacheHint() {
-        if (tomcatSettings.isEnableAjpConnector()) {
-            Div msg = new Div();
+    private String createApacheHint(ReverseProxySettings reverseProxySettings) {
+        String cfgMsg;
+        if (reverseProxySettings.isSplitIntExtServices()) {
+            cfgMsg = """
+                    You can find the configuration for Apache HTTP Server
 
-            String absApacheConfigFN;
-            try {
-                absApacheConfigFN = new File(reverseProxyService.getApacheConfigFileName())
-                        .getCanonicalPath();
-            } catch (IOException ex) {
-                absApacheConfigFN = "[%s is unresolvable: %s]"
-                        .formatted(
-                                reverseProxyService.getApacheConfigFileName(),
-                                ex.getMessage()
-                        );
-            }
+                      * public access at ***%s***
 
-            Span apacheConfigFN = new Span(absApacheConfigFN);
-            apacheConfigFN.getStyle().setFontWeight(Style.FontWeight.BOLD);
+                      + internal access at ***%s***
 
-            Span apacheCfgFolder = new Span("/etc/httpd/conf.d");
-            apacheCfgFolder.getStyle().setFontWeight(Style.FontWeight.BOLD);
-            msg.add(
-                    new Paragraph(
-                            new Text("""
-                                    You can also find a configuration for Apache
-                                     HTTP Server at
-                                    """
-                            ),
-                            apacheConfigFN,
-                            new Text(".")
-                    ),
-                    new Paragraph(
-                            new Text("""
-                                  Please copy or symlink it to your apache
-                                  configuration folder e.g.
-                                     """),
-                            apacheCfgFolder,
-                            new Text(" and restart apache.")
-                    )
+                    """.formatted(
+                    reverseProxyService.getApacheExtConfigFileName(),
+                    reverseProxyService.getApacheIntConfigFileName()
             );
-            return msg;
         } else {
-            return new Text("");
+            cfgMsg = """
+                    You can find the configuration for Apache HTTP
+                    Server at ***%s***.
+
+                    """.formatted(
+                    reverseProxyService.getApacheConfigFileName()
+            );
         }
+
+        final String[] testApacheConfFolder = {
+            "/etc/httpd/conf.d",
+            "/etc/apache2/conf-enabled"
+        };
+        for (String p : testApacheConfFolder) {
+            if (Files.isDirectory(Path.of(p))) {
+                return cfgMsg + """
+                                Please copy or symlink it to ***%s***.
+                                """.formatted(p);
+            }
+        }
+        return cfgMsg;
     }
 
     private Component createHttpsDetails() {
