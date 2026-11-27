@@ -207,7 +207,6 @@ public class OpenVpnManagementIf {
             try {
                 for (;;) {
                     String curLine = managementMsgQueue.take();
-                    //log.debug("Processing line: »%s«".formatted(curLine));
                     if (curLine.startsWith(">INFO:")) {
                         log.info("Connected to management interface, got INFO");
                         setManagementConnectionStatus(ManagementConnectionStatus.Connected);
@@ -257,17 +256,17 @@ public class OpenVpnManagementIf {
     }
 
     public void stop() {
-        log.info("Cancelling %s threads".formatted(threadName));
+        log.debug("Cancelling %s threads".formatted(threadName));
         commandProcessor.cancel(true);
         managementMsgProcessor.cancel(true);
         managementMsgReader.cancel(true);
 
-        log.info("Shutting down % executorService".formatted(threadName));
+        log.debug("Shutting down %s executorService".formatted(threadName));
         executorService.shutdownNow();
     }
 
     private void connectToManagementInterface() throws IOException {
-        //log.info("Connecting to management Socket");
+        log.debug("Connecting to management Socket");
         clientChannel = SocketChannel.open(StandardProtocolFamily.UNIX);
         UnixDomainSocketAddress address = UnixDomainSocketAddress.of(
                 socketPath
