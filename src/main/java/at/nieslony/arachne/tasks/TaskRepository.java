@@ -28,9 +28,9 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface TaskRepository extends JpaRepository<TaskModel, Long> {
 
-    public List<TaskModel> findAllByTaskClassNameAndStatus(String taskClassName, TaskModel.Status status);
+    public List<TaskModel> findAllByTaskClassNameAndStatus(String taskClassName, TaskModel.TaskStatus status);
 
-    public List<TaskModel> findAllByStatus(TaskModel.Status status);
+    public List<TaskModel> findAllByStatus(TaskModel.TaskStatus status);
 
     @Query("""
         SELECT t FROM TaskModel t

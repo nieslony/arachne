@@ -80,8 +80,8 @@ public class TaskScheduler implements BeanFactoryAware {
 
     private void killTerminatedTasks() {
         log.info("Kill terminated tasks");
-        for (TaskModel task : taskRepository.findAllByStatus(TaskModel.Status.RUNNING)) {
-            task.setStatus(TaskModel.Status.ERROR);
+        for (TaskModel task : taskRepository.findAllByStatus(TaskModel.TaskStatus.RUNNING)) {
+            task.setStatus(TaskModel.TaskStatus.ERROR);
             task.setStatusMsg("Killed during Server Termination");
             log.info("Killing " + task.getTaskClassName());
             taskRepository.save(task);
@@ -152,7 +152,7 @@ public class TaskScheduler implements BeanFactoryAware {
     public void scheduleTasks() {
         log.info("Scheduling tasks");
         var alreadyScheduledTasks = taskRepository.findAllByStatus(
-                TaskModel.Status.SCHEDULED
+                TaskModel.TaskStatus.SCHEDULED
         );
         for (var recurringTask : recurringTaskRepository.findAll()) {
             String taskClassName = recurringTask.getClassName();
@@ -168,7 +168,7 @@ public class TaskScheduler implements BeanFactoryAware {
                     TaskModel model = new TaskModel();
                     model.setScheduled(next);
                     model.setTaskClassName(taskClassName);
-                    model.setStatus(TaskModel.Status.SCHEDULED);
+                    model.setStatus(TaskModel.TaskStatus.SCHEDULED);
                     log.info("Scheduling task %s for %s".formatted(
                             model.getTaskClassName(), next.toString()
                     ));
@@ -235,7 +235,7 @@ public class TaskScheduler implements BeanFactoryAware {
                             ex.getMessage());
             log.error(msg);
             model.setStatusMsg(msg);
-            model.setStatus(TaskModel.Status.ERROR);
+            model.setStatus(TaskModel.TaskStatus.ERROR);
             taskRepository.save(model);
             return;
         }
@@ -269,7 +269,7 @@ public class TaskScheduler implements BeanFactoryAware {
     public void runTask(Class<? extends Task> taskClass, Runnable onStart, Runnable onStop) {
         TaskModel taskModel = new TaskModel();
         taskModel.setTaskClassName(taskClass.getName());
-        taskModel.setStatus(TaskModel.Status.WAITING);
+        taskModel.setStatus(TaskModel.TaskStatus.WAITING);
         runTask(taskClass, taskRepository.save(taskModel), onStart, onStop);
     }
 
@@ -285,7 +285,7 @@ public class TaskScheduler implements BeanFactoryAware {
                     Task task;
                     try {
                         log.info("Task %s started".formatted(taskModel.getTaskClassName()));
-                        taskModel.setStatus(TaskModel.Status.RUNNING);
+                        taskModel.setStatus(TaskModel.TaskStatus.RUNNING);
                         taskModel.setStarted(new Date());
                         taskRepository.save(taskModel);
                         if (onStart != null) {
@@ -293,7 +293,7 @@ public class TaskScheduler implements BeanFactoryAware {
                         }
                         task = taskClass.getDeclaredConstructor().newInstance();
                         String msg = task.run(beanFactory);
-                        taskModel.setStatus(TaskModel.Status.SUCCESS);
+                        taskModel.setStatus(TaskModel.TaskStatus.SUCCESS);
                         if (msg != null && !msg.isEmpty()) {
                             taskModel.setStatusMsg(msg);
                         }
@@ -305,7 +305,7 @@ public class TaskScheduler implements BeanFactoryAware {
                                         msg
                                 )
                         );
-                        taskModel.setStatus(TaskModel.Status.ERROR);
+                        taskModel.setStatus(TaskModel.TaskStatus.ERROR);
                         taskModel.setStatusMsg(msg);
                     }
                     taskModel.setStopped(new Date());

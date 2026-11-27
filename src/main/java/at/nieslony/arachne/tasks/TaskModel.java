@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TaskModel {
 
-    public enum Status {
+    public enum TaskStatus {
         WAITING("Waiting"),
         SCHEDULED("Scheduled"),
         RUNNING("Running"),
@@ -50,7 +50,7 @@ public class TaskModel {
 
         private final String status;
 
-        private Status(String status) {
+        private TaskStatus(String status) {
             this.status = status;
         }
 
@@ -77,7 +77,7 @@ public class TaskModel {
     private Date stopped;
 
     @Column(nullable = false)
-    private Status status;
+    private TaskStatus status;
 
     @Column
     private String statusMsg;

@@ -197,7 +197,7 @@ public class TaskView
                 .setHeader("Status");
         tasksGrid.addComponentColumn(
                 (source) -> {
-                    if (source.getStatus() == TaskModel.Status.SCHEDULED) {
+                    if (source.getStatus() == TaskModel.TaskStatus.SCHEDULED) {
                         Button button = new Button("Reschedule...", (t) -> {
                             Dialog dlg = createRescheduleDialog(source, () -> {
                                 taskRepository.save(source);
@@ -240,7 +240,7 @@ public class TaskView
         });
     }
 
-    private Icon createStatusIcon(TaskModel.Status status) {
+    private Icon createStatusIcon(TaskModel.TaskStatus status) {
         var icon = switch (status) {
             case ERROR ->
                 VaadinIcon.EXCLAMATION.create();

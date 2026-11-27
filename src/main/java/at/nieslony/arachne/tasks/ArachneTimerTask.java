@@ -53,12 +53,12 @@ public class ArachneTimerTask extends TimerTask {
 
     @Override
     public void run() {
-        taskModel.setStatus(TaskModel.Status.RUNNING);
+        taskModel.setStatus(TaskModel.TaskStatus.RUNNING);
         taskModel.setStarted();
         taskRepository.save(taskModel);
         try {
             task.run(beanFactory);
-            taskModel.setStatus(TaskModel.Status.SUCCESS);
+            taskModel.setStatus(TaskModel.TaskStatus.SUCCESS);
         } catch (Exception ex) {
             log.error(
                     "Error executing task %s: %s"
@@ -68,7 +68,7 @@ public class ArachneTimerTask extends TimerTask {
                             )
             );
             taskModel.setStatusMsg(ex.getMessage());
-            taskModel.setStatus(TaskModel.Status.ERROR);
+            taskModel.setStatus(TaskModel.TaskStatus.ERROR);
         }
         taskModel.setStopped();
         taskRepository.save(taskModel);
@@ -79,7 +79,7 @@ public class ArachneTimerTask extends TimerTask {
                     = new Date().getTime()
                     + future.get().getDelay(TimeUnit.MILLISECONDS);
                     TaskModel newTaskModel = new TaskModel();
-                    newTaskModel.setStatus(TaskModel.Status.SCHEDULED);
+                    newTaskModel.setStatus(TaskModel.TaskStatus.SCHEDULED);
                     newTaskModel.setScheduled(new Date(nextRun));
                     newTaskModel.setTaskClassName(taskModel.getTaskClassName());
                     taskRepository.save(newTaskModel);
